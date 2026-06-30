@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/router.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
@@ -34,6 +35,13 @@ class _LarnesAppState extends State<LarnesApp> {
     return MaterialApp.router(
       title: 'LARNES',
       theme: buildLarnesTheme(),
+      locale: const Locale('ru'),
+      supportedLocales: const [Locale('ru'), Locale('en')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: _router,
     );
   }

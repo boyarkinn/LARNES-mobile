@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 
 class RegisterProfileScreen extends StatefulWidget {
-  const RegisterProfileScreen({super.key, required this.flow});
+  const RegisterProfileScreen({
+    super.key,
+    required this.flow,
+    required this.authSession,
+  });
 
   final RegisterFlowData flow;
+  final AuthSession authSession;
 
   @override
   State<RegisterProfileScreen> createState() => _RegisterProfileScreenState();
@@ -16,31 +23,144 @@ class RegisterProfileScreen extends StatefulWidget {
 class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _patronymicController = TextEditingController();
+  final _networkNameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordRepeatController = TextEditingController();
+  final _dateOfBirthController = TextEditingController();
+
+  String? _selectedCity;
+  List<String> _cities = const ['Москва'];
+  bool _isLoadingConfig = true;
+  bool _isSubmitting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.flow.accountType == RegisterAccountType.networkOwner &&
+        widget.flow.channel == RegisterContactChannel.email) {
+      _emailController.text = widget.flow.contact;
+    }
+    _loadConfig();
+  }
 
   @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _patronymicController.dispose();
+    _networkNameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _passwordRepeatController.dispose();
+    _dateOfBirthController.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (_passwordController.text != _passwordRepeatController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пароли не совпадают')),
-      );
+  Future<void> _loadConfig() async {
+    try {
+      final config = await widget.authSession.registerApi.fetchConfig();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _cities = config.cities.isEmpty ? const ['Москва'] : config.cities;
+        _selectedCity = _cities.first;
+        _isLoadingConfig = false;
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingConfig = false);
+      }
+    }
+  }
+
+  Future<void> _pickDateOfBirth() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 25),
+      firstDate: DateTime(1940),
+      lastDate: now,
+      locale: const Locale('ru'),
+    );
+    if (picked != null) {
+      final month = picked.month.toString().padLeft(2, '0');
+      final day = picked.day.toString().padLeft(2, '0');
+      _dateOfBirthController.text = '${picked.year}-$month-$day';
+    }
+  }
+
+  Map<String, String> _buildProfilePayload() {
+    final payload = <String, String>{
+      'firstName': _firstNameController.text.trim(),
+      'password': _passwordController.text,
+      'confirmPassword': _passwordRepeatController.text,
+    };
+
+    switch (widget.flow.accountType) {
+      case RegisterAccountType.parent:
+        break;
+      case RegisterAccountType.teacher:
+        payload['lastName'] = _lastNameController.text.trim();
+        payload['patronymic'] = _patronymicController.text.trim();
+        payload['dateOfBirth'] = _dateOfBirthController.text.trim();
+        payload['city'] = _selectedCity ?? _cities.first;
+        break;
+      case RegisterAccountType.networkOwner:
+        payload['lastName'] = _lastNameController.text.trim();
+        payload['patronymic'] = _patronymicController.text.trim();
+        payload['networkDisplayName'] = _networkNameController.text.trim();
+        if (widget.flow.channel == RegisterContactChannel.sms) {
+          payload['email'] = _emailController.text.trim();
+        }
+        break;
+    }
+
+    return payload;
+  }
+
+  Future<void> _submit() async {
+    if (widget.flow.verificationToken.isEmpty) {
+      setState(() => _error = 'Сначала подтвердите контакт кодом');
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Регистрация на сервере — следующий этап (mobile API)'),
-      ),
-    );
+    if (_passwordController.text != _passwordRepeatController.text) {
+      setState(() => _error = 'Пароли не совпадают');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+    });
+
+    try {
+      final result = await widget.authSession.registerApi.register(
+        flow: widget.flow,
+        verificationToken: widget.flow.verificationToken,
+        profile: _buildProfilePayload(),
+      );
+      if (!mounted) {
+        return;
+      }
+      await widget.authSession.completeRegistration(result);
+      if (!mounted) {
+        return;
+      }
+      context.go('/home');
+    } on RegisterApiException catch (error) {
+      setState(() => _error = error.message);
+    } catch (_) {
+      setState(() => _error = 'Не удалось создать аккаунт.');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override
@@ -48,13 +168,91 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     return AuthScaffold(
       showBackButton: true,
       onBack: () => context.pop(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AuthHeader(
-            title: 'Профиль',
-            subtitle: 'Шаг 3 из 3 — ${widget.flow.accountType.label}',
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthHeader(
+              title: 'Профиль',
+              subtitle: 'Шаг 3 из 3 — ${widget.flow.accountType.label}',
+            ),
+            if (_error != null) AuthErrorBanner(message: _error!),
+            ..._buildFields(),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: _isSubmitting || _isLoadingConfig ? null : _submit,
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Создать аккаунт'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildFields() {
+    switch (widget.flow.accountType) {
+      case RegisterAccountType.parent:
+        return [
+          AuthTextField(
+            controller: _firstNameController,
+            label: 'Имя',
+            textInputAction: TextInputAction.next,
           ),
+          const SizedBox(height: 12),
+          _passwordFields(),
+        ];
+      case RegisterAccountType.teacher:
+        return [
+          AuthTextField(
+            controller: _lastNameController,
+            label: 'Фамилия',
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          AuthTextField(
+            controller: _firstNameController,
+            label: 'Имя',
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          AuthTextField(
+            controller: _patronymicController,
+            label: 'Отчество',
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          AuthTextField(
+            controller: _dateOfBirthController,
+            label: 'Дата рождения',
+            readOnly: true,
+            onTap: _pickDateOfBirth,
+          ),
+          const SizedBox(height: 12),
+          DropdownMenu<String>(
+            initialSelection: _selectedCity,
+            label: const Text('Город'),
+            dropdownMenuEntries: _cities
+                .map((city) => DropdownMenuEntry(value: city, label: city))
+                .toList(),
+            onSelected: (value) => setState(() => _selectedCity = value),
+          ),
+          const SizedBox(height: 12),
+          _passwordFields(),
+        ];
+      case RegisterAccountType.networkOwner:
+        return [
+          AuthTextField(
+            controller: _networkNameController,
+            label: 'Название сети',
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
           AuthTextField(
             controller: _firstNameController,
             label: 'Имя',
@@ -68,25 +266,47 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
           ),
           const SizedBox(height: 12),
           AuthTextField(
-            controller: _passwordController,
-            label: 'Пароль',
-            obscureText: true,
+            controller: _patronymicController,
+            label: 'Отчество',
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
-            controller: _passwordRepeatController,
-            label: 'Повторите пароль',
-            obscureText: true,
-            textInputAction: TextInputAction.done,
-          ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _submit,
-            child: const Text('Создать аккаунт'),
-          ),
-        ],
-      ),
+          if (widget.flow.channel == RegisterContactChannel.email)
+            AuthTextField(
+              controller: _emailController,
+              label: 'Email',
+              readOnly: true,
+            )
+          else
+            AuthTextField(
+              controller: _emailController,
+              label: 'Email',
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+            ),
+          const SizedBox(height: 12),
+          _passwordFields(),
+        ];
+    }
+  }
+
+  Widget _passwordFields() {
+    return Column(
+      children: [
+        AuthTextField(
+          controller: _passwordController,
+          label: 'Пароль',
+          obscureText: true,
+          textInputAction: TextInputAction.next,
+        ),
+        const SizedBox(height: 12),
+        AuthTextField(
+          controller: _passwordRepeatController,
+          label: 'Повторите пароль',
+          obscureText: true,
+          textInputAction: TextInputAction.done,
+        ),
+      ],
     );
   }
 }

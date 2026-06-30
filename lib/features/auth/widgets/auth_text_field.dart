@@ -9,6 +9,8 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType,
     this.textInputAction,
     this.autofillHints,
+    this.readOnly = false,
+    this.onTap,
   });
 
   final TextEditingController controller;
@@ -17,6 +19,8 @@ class AuthTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final Iterable<String>? autofillHints;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +30,8 @@ class AuthTextField extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       autofillHints: autofillHints,
+      readOnly: readOnly,
+      onTap: onTap,
       decoration: InputDecoration(labelText: label),
     );
   }

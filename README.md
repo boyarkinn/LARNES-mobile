@@ -16,7 +16,7 @@ flutter run -d emulator-5554
 Эмулятор + локальный Next.js:
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3200
 ```
 
 Prod по умолчанию: `https://larnes.online`

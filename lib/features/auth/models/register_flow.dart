@@ -28,20 +28,24 @@ class RegisterFlowData {
     required this.accountType,
     this.contact = '',
     this.channel = RegisterContactChannel.sms,
+    this.verificationToken = '',
   });
 
   final RegisterAccountType accountType;
   final String contact;
   final RegisterContactChannel channel;
+  final String verificationToken;
 
   RegisterFlowData copyWith({
     String? contact,
     RegisterContactChannel? channel,
+    String? verificationToken,
   }) {
     return RegisterFlowData(
       accountType: accountType,
       contact: contact ?? this.contact,
       channel: channel ?? this.channel,
+      verificationToken: verificationToken ?? this.verificationToken,
     );
   }
 }

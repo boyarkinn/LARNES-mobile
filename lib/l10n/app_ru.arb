@@ -96,6 +96,50 @@
   "parentLoadChildrenFailed": "Не удалось загрузить список детей.",
   "parentCreateChildFailed": "Не удалось создать профиль.",
   "parentHomeworkSoon": "Список ДЗ — в следующем шаге.",
+  "parentHomeworkLoadFailed": "Не удалось загрузить домашние задания.",
+  "parentHomeworkListTitle": "ДЗ — {name}",
+  "@parentHomeworkListTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "parentHomeworkBack": "Назад",
+  "parentHomeworkSentAt": "Отправлено",
+  "parentHomeworkDeadline": "Дедлайн",
+  "parentHomeworkNoDeadline": "Не указан",
+  "parentHomeworkProgress": "Прогресс",
+  "parentHomeworkProgressValue": "{current} / {total}",
+  "@parentHomeworkProgressValue": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlaySoon": "Прохождение задания — в следующем шаге.",
+  "parentHomeworkEmptyDue": "Нет заданий, которые нужно сделать сейчас.",
+  "parentHomeworkEmptyCompleted": "Пока нет выполненных заданий.",
+  "parentHomeworkEmptyOverdue": "Нет просроченных заданий.",
+  "parentHomeworkEmptyUpcoming": "Нет предстоящих заданий.",
+  "parentHomeworkTabDue": "Сделать ({count})",
+  "@parentHomeworkTabDue": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabCompleted": "Выполненные ({count})",
+  "@parentHomeworkTabCompleted": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabOverdue": "Просроченные ({count})",
+  "@parentHomeworkTabOverdue": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabUpcoming": "Предстоящие ({count})",
+  "@parentHomeworkTabUpcoming": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkStatusAssigned": "Не начато",
+  "parentHomeworkStatusInProgress": "В процессе",
+  "parentHomeworkStatusCompleted": "Выполнено",
+  "parentHomeworkStatusOverdue": "Просрочено",
   "parentAccountTitle": "Аккаунт",
   "parentAccountBackToPicker": "Назад",
   "parentAccountBackToAccount": "К аккаунту",

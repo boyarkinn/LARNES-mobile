@@ -19,6 +19,7 @@ import 'package:larnes_mobile/features/parent/screens/account/account_login_scre
 import 'package:larnes_mobile/features/parent/screens/account/account_password_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_profile_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/child_picker_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/homework_list_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
@@ -165,6 +166,18 @@ GoRouter createAppRouter(AuthSession authSession) {
               }
               return StudyHubScreen(childId: childId);
             },
+            routes: [
+              GoRoute(
+                path: 'homework',
+                builder: (context, state) {
+                  final childId = state.pathParameters['childId'];
+                  if (childId == null || childId.isEmpty) {
+                    return const ChildPickerScreen();
+                  }
+                  return HomeworkListScreen(childId: childId);
+                },
+              ),
+            ],
           ),
         ],
       ),

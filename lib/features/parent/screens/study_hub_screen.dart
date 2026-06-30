@@ -100,11 +100,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                     HomeworkDirectionCard(
                       title: l10n.parentHomeworkTitle,
                       subtitle: subtitle,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.parentHomeworkSoon)),
-                        );
-                      },
+                      onTap: () => context.push('/parent/${widget.childId}/homework'),
                     ),
                   ],
                 ),

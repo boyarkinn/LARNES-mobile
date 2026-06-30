@@ -674,6 +674,132 @@ abstract class AppLocalizations {
   /// **'Homework list — coming in the next step.'**
   String get parentHomeworkSoon;
 
+  /// No description provided for @parentHomeworkLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load homework.'**
+  String get parentHomeworkLoadFailed;
+
+  /// No description provided for @parentHomeworkListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Homework — {name}'**
+  String parentHomeworkListTitle(String name);
+
+  /// No description provided for @parentHomeworkBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get parentHomeworkBack;
+
+  /// No description provided for @parentHomeworkSentAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get parentHomeworkSentAt;
+
+  /// No description provided for @parentHomeworkDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Deadline'**
+  String get parentHomeworkDeadline;
+
+  /// No description provided for @parentHomeworkNoDeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get parentHomeworkNoDeadline;
+
+  /// No description provided for @parentHomeworkProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get parentHomeworkProgress;
+
+  /// No description provided for @parentHomeworkProgressValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {total}'**
+  String parentHomeworkProgressValue(int current, int total);
+
+  /// No description provided for @parentHomeworkPlaySoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignment player — coming in the next step.'**
+  String get parentHomeworkPlaySoon;
+
+  /// No description provided for @parentHomeworkEmptyDue.
+  ///
+  /// In en, this message translates to:
+  /// **'No assignments to do right now.'**
+  String get parentHomeworkEmptyDue;
+
+  /// No description provided for @parentHomeworkEmptyCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'No completed assignments yet.'**
+  String get parentHomeworkEmptyCompleted;
+
+  /// No description provided for @parentHomeworkEmptyOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'No overdue assignments.'**
+  String get parentHomeworkEmptyOverdue;
+
+  /// No description provided for @parentHomeworkEmptyUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming assignments.'**
+  String get parentHomeworkEmptyUpcoming;
+
+  /// No description provided for @parentHomeworkTabDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due ({count})'**
+  String parentHomeworkTabDue(int count);
+
+  /// No description provided for @parentHomeworkTabCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed ({count})'**
+  String parentHomeworkTabCompleted(int count);
+
+  /// No description provided for @parentHomeworkTabOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue ({count})'**
+  String parentHomeworkTabOverdue(int count);
+
+  /// No description provided for @parentHomeworkTabUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming ({count})'**
+  String parentHomeworkTabUpcoming(int count);
+
+  /// No description provided for @parentHomeworkStatusAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Not started'**
+  String get parentHomeworkStatusAssigned;
+
+  /// No description provided for @parentHomeworkStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get parentHomeworkStatusInProgress;
+
+  /// No description provided for @parentHomeworkStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get parentHomeworkStatusCompleted;
+
+  /// No description provided for @parentHomeworkStatusOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get parentHomeworkStatusOverdue;
+
   /// No description provided for @parentAccountTitle.
   ///
   /// In en, this message translates to:

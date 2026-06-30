@@ -320,6 +320,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkSoon => 'Homework list — coming in the next step.';
 
   @override
+  String get parentHomeworkLoadFailed => 'Could not load homework.';
+
+  @override
+  String parentHomeworkListTitle(String name) {
+    return 'Homework — $name';
+  }
+
+  @override
+  String get parentHomeworkBack => 'Back';
+
+  @override
+  String get parentHomeworkSentAt => 'Sent';
+
+  @override
+  String get parentHomeworkDeadline => 'Deadline';
+
+  @override
+  String get parentHomeworkNoDeadline => 'Not set';
+
+  @override
+  String get parentHomeworkProgress => 'Progress';
+
+  @override
+  String parentHomeworkProgressValue(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get parentHomeworkPlaySoon =>
+      'Assignment player — coming in the next step.';
+
+  @override
+  String get parentHomeworkEmptyDue => 'No assignments to do right now.';
+
+  @override
+  String get parentHomeworkEmptyCompleted => 'No completed assignments yet.';
+
+  @override
+  String get parentHomeworkEmptyOverdue => 'No overdue assignments.';
+
+  @override
+  String get parentHomeworkEmptyUpcoming => 'No upcoming assignments.';
+
+  @override
+  String parentHomeworkTabDue(int count) {
+    return 'Due ($count)';
+  }
+
+  @override
+  String parentHomeworkTabCompleted(int count) {
+    return 'Completed ($count)';
+  }
+
+  @override
+  String parentHomeworkTabOverdue(int count) {
+    return 'Overdue ($count)';
+  }
+
+  @override
+  String parentHomeworkTabUpcoming(int count) {
+    return 'Upcoming ($count)';
+  }
+
+  @override
+  String get parentHomeworkStatusAssigned => 'Not started';
+
+  @override
+  String get parentHomeworkStatusInProgress => 'In progress';
+
+  @override
+  String get parentHomeworkStatusCompleted => 'Completed';
+
+  @override
+  String get parentHomeworkStatusOverdue => 'Overdue';
+
+  @override
   String get parentAccountTitle => 'Account';
 
   @override

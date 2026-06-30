@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
+import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {
@@ -125,6 +126,38 @@ class ParentApi {
         throw ParentApiException(l10n.parentUpdateChildFailed);
       }
       return ParentChild.fromJson(Map<String, dynamic>.from(child));
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<ParentHomeworkListPage> listHomework(
+    String childId, {
+    ParentHomeworkTab tab = ParentHomeworkTab.due,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/homework',
+        queryParameters: {
+          'tab': tab.apiValue,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentHomeworkLoadFailed),
+        );
+      }
+      return ParentHomeworkListPage.fromJson(data);
     } on DioException catch (error) {
       throw ParentApiException(
         _messageFromBody(

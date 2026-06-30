@@ -138,6 +138,50 @@
   "parentLoadChildrenFailed": "Could not load children.",
   "parentCreateChildFailed": "Could not create profile.",
   "parentHomeworkSoon": "Homework list — coming in the next step.",
+  "parentHomeworkLoadFailed": "Could not load homework.",
+  "parentHomeworkListTitle": "Homework — {name}",
+  "@parentHomeworkListTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "parentHomeworkBack": "Back",
+  "parentHomeworkSentAt": "Sent",
+  "parentHomeworkDeadline": "Deadline",
+  "parentHomeworkNoDeadline": "Not set",
+  "parentHomeworkProgress": "Progress",
+  "parentHomeworkProgressValue": "{current} / {total}",
+  "@parentHomeworkProgressValue": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlaySoon": "Assignment player — coming in the next step.",
+  "parentHomeworkEmptyDue": "No assignments to do right now.",
+  "parentHomeworkEmptyCompleted": "No completed assignments yet.",
+  "parentHomeworkEmptyOverdue": "No overdue assignments.",
+  "parentHomeworkEmptyUpcoming": "No upcoming assignments.",
+  "parentHomeworkTabDue": "Due ({count})",
+  "@parentHomeworkTabDue": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabCompleted": "Completed ({count})",
+  "@parentHomeworkTabCompleted": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabOverdue": "Overdue ({count})",
+  "@parentHomeworkTabOverdue": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkTabUpcoming": "Upcoming ({count})",
+  "@parentHomeworkTabUpcoming": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "parentHomeworkStatusAssigned": "Not started",
+  "parentHomeworkStatusInProgress": "In progress",
+  "parentHomeworkStatusCompleted": "Completed",
+  "parentHomeworkStatusOverdue": "Overdue",
   "parentAccountTitle": "Account",
   "parentAccountBackToPicker": "Back",
   "parentAccountBackToAccount": "Back to account",

@@ -322,6 +322,84 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentHomeworkSoon => 'Список ДЗ — в следующем шаге.';
 
   @override
+  String get parentHomeworkLoadFailed =>
+      'Не удалось загрузить домашние задания.';
+
+  @override
+  String parentHomeworkListTitle(String name) {
+    return 'ДЗ — $name';
+  }
+
+  @override
+  String get parentHomeworkBack => 'Назад';
+
+  @override
+  String get parentHomeworkSentAt => 'Отправлено';
+
+  @override
+  String get parentHomeworkDeadline => 'Дедлайн';
+
+  @override
+  String get parentHomeworkNoDeadline => 'Не указан';
+
+  @override
+  String get parentHomeworkProgress => 'Прогресс';
+
+  @override
+  String parentHomeworkProgressValue(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String get parentHomeworkPlaySoon =>
+      'Прохождение задания — в следующем шаге.';
+
+  @override
+  String get parentHomeworkEmptyDue =>
+      'Нет заданий, которые нужно сделать сейчас.';
+
+  @override
+  String get parentHomeworkEmptyCompleted => 'Пока нет выполненных заданий.';
+
+  @override
+  String get parentHomeworkEmptyOverdue => 'Нет просроченных заданий.';
+
+  @override
+  String get parentHomeworkEmptyUpcoming => 'Нет предстоящих заданий.';
+
+  @override
+  String parentHomeworkTabDue(int count) {
+    return 'Сделать ($count)';
+  }
+
+  @override
+  String parentHomeworkTabCompleted(int count) {
+    return 'Выполненные ($count)';
+  }
+
+  @override
+  String parentHomeworkTabOverdue(int count) {
+    return 'Просроченные ($count)';
+  }
+
+  @override
+  String parentHomeworkTabUpcoming(int count) {
+    return 'Предстоящие ($count)';
+  }
+
+  @override
+  String get parentHomeworkStatusAssigned => 'Не начато';
+
+  @override
+  String get parentHomeworkStatusInProgress => 'В процессе';
+
+  @override
+  String get parentHomeworkStatusCompleted => 'Выполнено';
+
+  @override
+  String get parentHomeworkStatusOverdue => 'Просрочено';
+
+  @override
   String get parentAccountTitle => 'Аккаунт';
 
   @override

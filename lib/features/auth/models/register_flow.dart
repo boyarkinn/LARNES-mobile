@@ -1,12 +1,11 @@
 enum RegisterAccountType {
-  parent('parent', 'Родитель'),
-  teacher('teacher', 'Учитель'),
-  networkOwner('network-owner', 'Владелец сети');
+  parent('parent'),
+  teacher('teacher'),
+  networkOwner('network-owner');
 
-  const RegisterAccountType(this.routeSlug, this.label);
+  const RegisterAccountType(this.routeSlug);
 
   final String routeSlug;
-  final String label;
 
   static RegisterAccountType? fromSlug(String? slug) {
     if (slug == null) {

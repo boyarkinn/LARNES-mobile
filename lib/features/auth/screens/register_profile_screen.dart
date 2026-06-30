@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterProfileScreen extends StatefulWidget {
   const RegisterProfileScreen({super.key, required this.flow});
@@ -79,7 +82,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       initialDate: DateTime(now.year - 25),
       firstDate: DateTime(1940),
       lastDate: now,
-      locale: const Locale('ru'),
+      locale: Localizations.localeOf(context),
     );
     if (picked != null) {
       final month = picked.month.toString().padLeft(2, '0');
@@ -118,13 +121,15 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = context.l10n;
+
     if (widget.flow.verificationToken.isEmpty) {
-      setState(() => _error = 'Сначала подтвердите контакт кодом');
+      setState(() => _error = l10n.verifyContactFirst);
       return;
     }
 
     if (_passwordController.text != _passwordRepeatController.text) {
-      setState(() => _error = 'Пароли не совпадают');
+      setState(() => _error = l10n.passwordsDoNotMatch);
       return;
     }
 
@@ -134,10 +139,12 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     });
 
     try {
+      final locale = LocaleScope.of(context).localeCode;
       final result = await AuthScope.of(context).registerApi.register(
         flow: widget.flow,
         verificationToken: widget.flow.verificationToken,
         profile: _buildProfilePayload(),
+        locale: locale,
       );
       if (!mounted) {
         return;
@@ -150,7 +157,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {
-      setState(() => _error = 'Не удалось создать аккаунт.');
+      setState(() => _error = l10n.createAccountFailed);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -160,6 +167,8 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return AuthScaffold(
       showBackButton: true,
       onBack: () => context.pop(),
@@ -168,11 +177,13 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AuthHeader(
-              title: 'Профиль',
-              subtitle: 'Шаг 3 из 3 — ${widget.flow.accountType.label}',
+              title: l10n.profileTitle,
+              subtitle: l10n.registerStep3Subtitle(
+                widget.flow.accountType.label(context),
+              ),
             ),
             if (_error != null) AuthErrorBanner(message: _error!),
-            ..._buildFields(),
+            ..._buildFields(l10n),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: _isSubmitting || _isLoadingConfig ? null : _submit,
@@ -182,7 +193,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Создать аккаунт'),
+                  : Text(l10n.createAccountButton),
             ),
           ],
         ),
@@ -190,114 +201,114 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     );
   }
 
-  List<Widget> _buildFields() {
+  List<Widget> _buildFields(AppLocalizations l10n) {
     switch (widget.flow.accountType) {
       case RegisterAccountType.parent:
         return [
           AuthTextField(
             controller: _firstNameController,
-            label: 'Имя',
+            label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          _passwordFields(),
+          _passwordFields(l10n),
         ];
       case RegisterAccountType.teacher:
         return [
           AuthTextField(
             controller: _lastNameController,
-            label: 'Фамилия',
+            label: l10n.lastNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _firstNameController,
-            label: 'Имя',
+            label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _patronymicController,
-            label: 'Отчество',
+            label: l10n.patronymicLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _dateOfBirthController,
-            label: 'Дата рождения',
+            label: l10n.dateOfBirthLabel,
             readOnly: true,
             onTap: _pickDateOfBirth,
           ),
           const SizedBox(height: 12),
           DropdownMenu<String>(
             initialSelection: _selectedCity,
-            label: const Text('Город'),
+            label: Text(l10n.cityLabel),
             dropdownMenuEntries: _cities
                 .map((city) => DropdownMenuEntry(value: city, label: city))
                 .toList(),
             onSelected: (value) => setState(() => _selectedCity = value),
           ),
           const SizedBox(height: 12),
-          _passwordFields(),
+          _passwordFields(l10n),
         ];
       case RegisterAccountType.networkOwner:
         return [
           AuthTextField(
             controller: _networkNameController,
-            label: 'Название сети',
+            label: l10n.networkNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _firstNameController,
-            label: 'Имя',
+            label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _lastNameController,
-            label: 'Фамилия',
+            label: l10n.lastNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           AuthTextField(
             controller: _patronymicController,
-            label: 'Отчество',
+            label: l10n.patronymicLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           if (widget.flow.channel == RegisterContactChannel.email)
             AuthTextField(
               controller: _emailController,
-              label: 'Email',
+              label: l10n.emailLabel,
               readOnly: true,
             )
           else
             AuthTextField(
               controller: _emailController,
-              label: 'Email',
+              label: l10n.emailLabel,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
             ),
           const SizedBox(height: 12),
-          _passwordFields(),
+          _passwordFields(l10n),
         ];
     }
   }
 
-  Widget _passwordFields() {
+  Widget _passwordFields(AppLocalizations l10n) {
     return Column(
       children: [
         AuthTextField(
           controller: _passwordController,
-          label: 'Пароль',
+          label: l10n.passwordLabel,
           obscureText: true,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 12),
         AuthTextField(
           controller: _passwordRepeatController,
-          label: 'Повторите пароль',
+          label: l10n.repeatPasswordLabel,
           obscureText: true,
           textInputAction: TextInputAction.done,
         ),

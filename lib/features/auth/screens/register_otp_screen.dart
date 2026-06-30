@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
+import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/turnstile_widget.dart';
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterOtpScreen extends StatefulWidget {
   const RegisterOtpScreen({super.key, required this.flow});
@@ -71,9 +73,10 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   }
 
   Future<void> _continue() async {
+    final l10n = context.l10n;
     final code = _otpController.text.trim();
     if (code.length < 6) {
-      setState(() => _error = 'Введите 6-значный код');
+      setState(() => _error = l10n.enterSixDigitCode);
       return;
     }
 
@@ -84,10 +87,12 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     });
 
     try {
+      final locale = LocaleScope.of(context).localeCode;
       final verificationToken = await AuthScope.of(context).registerApi.verifyOtp(
         channel: widget.flow.channel,
         contact: widget.flow.contact,
         code: code,
+        locale: locale,
       );
       if (!mounted) {
         return;
@@ -100,7 +105,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {
-      setState(() => _error = 'Не удалось проверить код.');
+      setState(() => _error = l10n.verifyCodeFailed);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -109,9 +114,10 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   }
 
   Future<void> _resend() async {
+    final l10n = context.l10n;
     final config = _config ?? MobileConfig.fallback;
     if (config.turnstileRequired && (_turnstileToken == null || _turnstileToken!.isEmpty)) {
-      setState(() => _error = 'Подтвердите, что вы не робот');
+      setState(() => _error = l10n.confirmNotRobot);
       return;
     }
 
@@ -122,16 +128,18 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     });
 
     try {
+      final locale = LocaleScope.of(context).localeCode;
       await AuthScope.of(context).registerApi.resendOtp(
         channel: widget.flow.channel,
         contact: widget.flow.contact,
         turnstileToken: _turnstileToken,
+        locale: locale,
       );
       if (!mounted) {
         return;
       }
       setState(() {
-        _successMessage = 'Код отправлен снова';
+        _successMessage = l10n.codeResent;
         _turnstileToken = null;
         _turnstileResetKey += 1;
       });
@@ -140,7 +148,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
       setState(() => _error = error.message);
       _resetTurnstileAfterFailedResend(config);
     } catch (_) {
-      setState(() => _error = 'Не удалось отправить код снова.');
+      setState(() => _error = l10n.resendFailed);
       _resetTurnstileAfterFailedResend(config);
     } finally {
       if (mounted) {
@@ -175,6 +183,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final config = _config ?? MobileConfig.fallback;
     final canResend = _secondsLeft == 0 && !_isResending;
 
@@ -185,8 +194,8 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthHeader(
-            title: 'Код подтверждения',
-            subtitle: 'Отправили на ${_maskContact(widget.flow.contact)}',
+            title: l10n.otpTitle,
+            subtitle: l10n.otpSentTo(_maskContact(widget.flow.contact)),
           ),
           if (_error != null) AuthErrorBanner(message: _error!),
           if (_successMessage != null)
@@ -211,11 +220,11 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
             ],
             TextButton(
               onPressed: _resend,
-              child: const Text('Отправить код снова'),
+              child: Text(l10n.resendCode),
             ),
           ] else
             Text(
-              'Повторная отправка через $_secondsLeft с',
+              l10n.resendCooldown(_secondsLeft),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13, color: Colors.grey),
             ),
@@ -228,7 +237,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Продолжить'),
+                : Text(l10n.continueButton),
           ),
         ],
       ),

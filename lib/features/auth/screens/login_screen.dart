@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.authSession});
@@ -34,9 +36,11 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final locale = LocaleScope.of(context).localeCode;
       final homePath = await widget.authSession.login(
         login: _loginController.text.trim(),
         password: _passwordController.text,
+        locale: locale,
       );
       if (!mounted) {
         return;
@@ -45,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {
-      setState(() => _error = 'Не удалось войти. Попробуйте позже.');
+      setState(() => _error = context.l10n.loginFailed);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -65,18 +69,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return AuthScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const AuthHeader(
-            title: 'Вход',
-            subtitle: 'Телефон, email или логин и пароль',
+          AuthHeader(
+            title: l10n.loginTitle,
+            subtitle: l10n.loginSubtitle,
           ),
           if (_error != null) AuthErrorBanner(message: _error!),
           AuthTextField(
             controller: _loginController,
-            label: 'Телефон, email или логин',
+            label: l10n.loginFieldLabel,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username],
@@ -84,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           AuthTextField(
             controller: _passwordController,
-            label: 'Пароль',
+            label: l10n.passwordLabel,
             obscureText: true,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
@@ -95,10 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
             child: TextButton(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Сброс пароля — в следующем этапе')),
+                  SnackBar(content: Text(l10n.forgotPasswordComingSoon)),
                 );
               },
-              child: const Text('Забыли пароль?'),
+              child: Text(l10n.forgotPassword),
             ),
           ),
           const SizedBox(height: 8),
@@ -110,12 +116,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Войти'),
+                : Text(l10n.signInButton),
           ),
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => context.push('/register'),
-            child: const Text('Нет аккаунта? Зарегистрироваться'),
+            child: Text(l10n.noAccountRegister),
           ),
         ],
       ),

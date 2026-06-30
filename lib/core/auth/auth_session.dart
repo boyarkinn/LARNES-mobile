@@ -48,8 +48,13 @@ class AuthSession extends ChangeNotifier {
   Future<String> login({
     required String login,
     required String password,
+    String locale = 'ru',
   }) async {
-    final result = await _authApi.login(login: login, password: password);
+    final result = await _authApi.login(
+      login: login,
+      password: password,
+      locale: locale,
+    );
     _user = result.user;
     notifyListeners();
     return result.homePath;

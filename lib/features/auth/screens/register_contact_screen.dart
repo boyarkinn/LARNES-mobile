@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
+import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/turnstile_widget.dart';
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterContactScreen extends StatefulWidget {
   const RegisterContactScreen({super.key, required this.accountType});
@@ -69,15 +71,16 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
   }
 
   Future<void> _continue() async {
+    final l10n = context.l10n;
     final contact = _contactController.text.trim();
     if (contact.isEmpty) {
-      setState(() => _error = 'Введите контакт');
+      setState(() => _error = l10n.enterContact);
       return;
     }
 
     final config = _config ?? MobileConfig.fallback;
     if (config.turnstileRequired && (_turnstileToken == null || _turnstileToken!.isEmpty)) {
-      setState(() => _error = 'Подтвердите, что вы не робот');
+      setState(() => _error = l10n.confirmNotRobot);
       return;
     }
 
@@ -87,10 +90,12 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
     });
 
     try {
+      final locale = LocaleScope.of(context).localeCode;
       final normalized = await AuthScope.of(context).registerApi.sendOtp(
         channel: _channel,
         contact: contact,
         turnstileToken: _turnstileToken,
+        locale: locale,
       );
       if (!mounted) {
         return;
@@ -132,6 +137,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isPhone = _channel == RegisterContactChannel.sms;
     final config = _config ?? MobileConfig.fallback;
 
@@ -142,19 +148,19 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           AuthHeader(
-            title: widget.accountType.label,
-            subtitle: 'Шаг 1 из 3 — подтверждение контакта',
+            title: widget.accountType.label(context),
+            subtitle: l10n.registerStep1Subtitle,
           ),
           if (_error != null) AuthErrorBanner(message: _error!),
           SegmentedButton<RegisterContactChannel>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: RegisterContactChannel.sms,
-                label: Text('Телефон'),
+                label: Text(l10n.phoneChannel),
               ),
               ButtonSegment(
                 value: RegisterContactChannel.email,
-                label: Text('Почта'),
+                label: Text(l10n.emailChannel),
               ),
             ],
             selected: {_channel},
@@ -170,7 +176,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
           const SizedBox(height: 16),
           AuthTextField(
             controller: _contactController,
-            label: isPhone ? 'Телефон' : 'Email',
+            label: isPhone ? l10n.phoneLabel : l10n.emailLabel,
             keyboardType:
                 isPhone ? TextInputType.phone : TextInputType.emailAddress,
           ),
@@ -197,7 +203,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Получить код'),
+                : Text(l10n.getCodeButton),
           ),
         ],
       ),

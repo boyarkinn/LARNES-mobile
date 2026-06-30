@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:larnes_mobile/features/auth/widgets/language_switcher.dart';
 
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
@@ -19,13 +20,13 @@ class AuthScaffold extends StatelessWidget {
       decoration: larnesAuthBackground(),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: showBackButton
-            ? AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: BackButton(onPressed: onBack),
-              )
-            : null,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: showBackButton,
+          leading: showBackButton ? BackButton(onPressed: onBack) : null,
+          actions: const [LanguageSwitcher()],
+        ),
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),

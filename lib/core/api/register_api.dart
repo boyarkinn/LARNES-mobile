@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
@@ -15,13 +17,17 @@ Map<String, dynamic>? _asJsonMap(dynamic body) {
   return null;
 }
 
-String _messageFromBody(dynamic body, {String fallback = 'Ошибка запроса.'}) {
+String _messageFromBody(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) {
   final map = _asJsonMap(body);
   final message = map?['message'];
   if (message is String && message.isNotEmpty) {
     return message;
   }
-  return fallback;
+  return fallback ?? l10n.requestError;
 }
 
 class RegisterApi {
@@ -60,6 +66,7 @@ class RegisterApi {
     String? turnstileToken,
     String locale = 'ru',
   }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/auth/register/send-otp',
@@ -73,16 +80,16 @@ class RegisterApi {
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw RegisterApiException(_messageFromBody(data));
+        throw RegisterApiException(_messageFromBody(data, l10n));
       }
       final normalized = data['contact'] as String?;
       if (normalized == null || normalized.isEmpty) {
-        throw const RegisterApiException('Не удалось отправить код.');
+        throw RegisterApiException(l10n.sendCodeFailed);
       }
       return normalized;
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
       );
     }
   }
@@ -93,6 +100,7 @@ class RegisterApi {
     required String code,
     String locale = 'ru',
   }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/auth/register/verify-otp',
@@ -105,16 +113,16 @@ class RegisterApi {
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw RegisterApiException(_messageFromBody(data));
+        throw RegisterApiException(_messageFromBody(data, l10n));
       }
       final token = data['verificationToken'] as String?;
       if (token == null || token.isEmpty) {
-        throw const RegisterApiException('Не удалось подтвердить контакт.');
+        throw RegisterApiException(l10n.verifyContactFailed);
       }
       return token;
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
       );
     }
   }
@@ -125,6 +133,7 @@ class RegisterApi {
     String? turnstileToken,
     String locale = 'ru',
   }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/auth/register/resend-otp',
@@ -138,11 +147,11 @@ class RegisterApi {
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw RegisterApiException(_messageFromBody(data));
+        throw RegisterApiException(_messageFromBody(data, l10n));
       }
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
       );
     }
   }
@@ -153,6 +162,7 @@ class RegisterApi {
     required Map<String, String> profile,
     String locale = 'ru',
   }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/auth/register',
@@ -167,11 +177,11 @@ class RegisterApi {
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw RegisterApiException(_messageFromBody(data));
+        throw RegisterApiException(_messageFromBody(data, l10n));
       }
       final token = data['token'] as String?;
       if (token == null || token.isEmpty) {
-        throw const RegisterApiException('Не удалось создать аккаунт.');
+        throw RegisterApiException(l10n.createAccountFailed);
       }
       await _client.tokenStorage.writeToken(token);
       return LoginResult(
@@ -182,7 +192,7 @@ class RegisterApi {
       );
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
       );
     }
   }
@@ -202,12 +212,12 @@ class RegisterApi {
     }
   }
 
-  static String _networkMessage(DioException error) {
+  static String _networkMessage(DioException error, AppLocalizations l10n) {
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout) {
-      return 'Нет связи с сервером. Проверьте интернет.';
+      return l10n.noConnection;
     }
-    return 'Не удалось выполнить запрос.';
+    return l10n.requestFailed;
   }
 }
 

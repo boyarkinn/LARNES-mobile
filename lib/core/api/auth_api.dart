@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 
 class AuthUser {
@@ -62,6 +64,7 @@ class AuthApi {
     required String password,
     String locale = 'ru',
   }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/api/mobile/auth/login',
@@ -69,11 +72,11 @@ class AuthApi {
       );
       final data = response.data;
       if (data == null || data['status'] != 'success') {
-        throw AuthApiException(_messageFromBody(data));
+        throw AuthApiException(_messageFromBody(data, l10n));
       }
       final token = data['token'] as String?;
       if (token == null || token.isEmpty) {
-        throw const AuthApiException('Не удалось получить токен.');
+        throw AuthApiException(l10n.tokenFetchFailed);
       }
       await _client.tokenStorage.writeToken(token);
       return LoginResult(
@@ -85,9 +88,9 @@ class AuthApi {
     } on DioException catch (error) {
       final body = error.response?.data;
       if (body is Map<String, dynamic>) {
-        throw AuthApiException(_messageFromBody(body));
+        throw AuthApiException(_messageFromBody(body, l10n));
       }
-      throw AuthApiException(_networkMessage(error));
+      throw AuthApiException(_networkMessage(error, l10n));
     }
   }
 
@@ -112,20 +115,20 @@ class AuthApi {
 
   Future<void> logout() => _client.tokenStorage.clearToken();
 
-  static String _messageFromBody(Map<String, dynamic>? body) {
+  static String _messageFromBody(Map<String, dynamic>? body, AppLocalizations l10n) {
     final message = body?['message'];
     if (message is String && message.isNotEmpty) {
       return message;
     }
-    return 'Ошибка запроса.';
+    return l10n.requestError;
   }
 
-  static String _networkMessage(DioException error) {
+  static String _networkMessage(DioException error, AppLocalizations l10n) {
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout) {
-      return 'Нет связи с сервером. Проверьте интернет.';
+      return l10n.noConnection;
     }
-    return 'Не удалось выполнить запрос.';
+    return l10n.requestFailed;
   }
 }
 

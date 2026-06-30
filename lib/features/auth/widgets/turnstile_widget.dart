@@ -7,6 +7,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
 import 'package:larnes_mobile/core/config/turnstile_url.dart';
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class TurnstileWidget extends StatefulWidget {
   const TurnstileWidget({
@@ -103,7 +104,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
             setState(() {
               _isBooting = false;
               _isVerifying = false;
-              _error = 'Не удалось загрузить проверку';
+              _error = context.l10n.turnstileLoadFailed;
             });
           },
           onNavigationRequest: (request) {
@@ -144,7 +145,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
       }
       setState(() {
         _isBooting = false;
-        _error = 'Не удалось загрузить проверку. Потяните экран вниз и попробуйте снова.';
+        _error = context.l10n.turnstileLoadFailedPull;
       });
     });
   }
@@ -190,7 +191,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
             _challengeRevealed = false;
             _isVerifying = false;
             _isBooting = false;
-            _error = 'Проверка истекла. Нажмите ещё раз.';
+            _error = context.l10n.turnstileExpired;
           });
         }
       case 'error':
@@ -203,8 +204,8 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
             _isVerifying = false;
             _isBooting = reason == 'init-timeout';
             _error = reason == 'init-timeout'
-                ? 'Не удалось загрузить проверку. Нажмите ещё раз.'
-                : 'Проверка не пройдена. Нажмите ещё раз.';
+                ? context.l10n.turnstileLoadFailedTap
+                : context.l10n.turnstileFailed;
           });
         }
     }
@@ -254,7 +255,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
         }
         setState(() {
           _isVerifying = false;
-          _error = 'Проверка ещё загружается. Подождите пару секунд.';
+          _error = context.l10n.turnstileStillLoading;
         });
         return;
       }
@@ -264,7 +265,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
       }
       setState(() {
         _isVerifying = false;
-        _error = 'Не удалось запустить проверку';
+        _error = context.l10n.turnstileStartFailed;
       });
       return;
     }
@@ -280,7 +281,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
       }
       setState(() {
         _isVerifying = false;
-        _error = 'Проверка не завершилась. Нажмите ещё раз.';
+        _error = context.l10n.turnstileNotCompleted;
       });
     });
   }
@@ -337,7 +338,8 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
     );
   }
 
-  Widget _buildResolvedCard() {
+  Widget _buildResolvedCard(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       height: _cardHeight,
       padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -353,24 +355,24 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
             background: LarnesColors.teal.withValues(alpha: 0.18),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Проверка пройдена',
-                  style: TextStyle(
+                  l10n.turnstileVerified,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: LarnesColors.textPrimary,
                     height: 1.2,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'Можно продолжить регистрацию',
-                  style: TextStyle(
+                  l10n.turnstileCanContinue,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: LarnesColors.textSecondary,
                     height: 1.2,
@@ -389,13 +391,14 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
     );
   }
 
-  Widget _buildInviteCard() {
+  Widget _buildInviteCard(BuildContext context) {
+    final l10n = context.l10n;
     final canTap = !_isBooting && !_isVerifying;
     final subtitle = _isBooting
-        ? 'Подготовка...'
+        ? l10n.turnstilePreparing
         : _isVerifying
-            ? 'Проверка...'
-            : 'Нажмите для проверки';
+            ? l10n.turnstileVerifying
+            : l10n.turnstileTapToVerify;
 
     return Material(
       color: Colors.transparent,
@@ -419,9 +422,9 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Защита от ботов',
-                      style: TextStyle(
+                    Text(
+                      l10n.turnstileBotProtection,
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: LarnesColors.textPrimary,
@@ -476,7 +479,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
     );
   }
 
-  Widget _buildChallengeSlot() {
+  Widget _buildChallengeSlot(BuildContext context) {
     final controller = _controller;
 
     if (_challengeRevealed && controller != null) {
@@ -490,7 +493,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
         children: [
           if (controller != null)
             _buildWebViewSlot(controller, visible: false, height: 8),
-          _buildInviteCard(),
+          _buildInviteCard(context),
         ],
       ),
     );
@@ -501,7 +504,7 @@ class _TurnstileWidgetState extends State<TurnstileWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_captchaResolved) _buildResolvedCard() else _buildChallengeSlot(),
+        if (_captchaResolved) _buildResolvedCard(context) else _buildChallengeSlot(context),
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(

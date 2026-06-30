@@ -1,0 +1,113 @@
+{
+  "@@locale": "en",
+  "appTitle": "LARNES",
+  "loginTitle": "Sign in",
+  "loginSubtitle": "Phone, email or username and password",
+  "loginFieldLabel": "Phone, email or username",
+  "passwordLabel": "Password",
+  "forgotPassword": "Forgot password?",
+  "forgotPasswordComingSoon": "Password reset — coming soon",
+  "signInButton": "Sign in",
+  "noAccountRegister": "No account? Register",
+  "loginFailed": "Sign in failed. Try again later.",
+  "registerTitle": "Register",
+  "registerSubtitle": "Choose account type",
+  "accountTypeParent": "Parent",
+  "accountTypeTeacher": "Teacher",
+  "accountTypeNetworkOwner": "Network owner",
+  "alreadyHaveAccount": "Already have an account? Sign in",
+  "registerStep1Subtitle": "Step 1 of 3 — contact verification",
+  "phoneChannel": "Phone",
+  "emailChannel": "Email",
+  "phoneLabel": "Phone",
+  "emailLabel": "Email",
+  "getCodeButton": "Get code",
+  "enterContact": "Enter contact",
+  "confirmNotRobot": "Confirm you are not a robot",
+  "otpTitle": "Verification code",
+  "otpSentTo": "Sent to {contact}",
+  "@otpSentTo": {
+    "placeholders": {
+      "contact": {
+        "type": "String"
+      }
+    }
+  },
+  "enterSixDigitCode": "Enter the 6-digit code",
+  "resendCode": "Resend code",
+  "resendCooldown": "Resend in {seconds} s",
+  "@resendCooldown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "continueButton": "Continue",
+  "codeResent": "Code sent again",
+  "verifyCodeFailed": "Could not verify code.",
+  "resendFailed": "Could not resend code.",
+  "profileTitle": "Profile",
+  "registerStep3Subtitle": "Step 3 of 3 — {accountType}",
+  "@registerStep3Subtitle": {
+    "placeholders": {
+      "accountType": {
+        "type": "String"
+      }
+    }
+  },
+  "createAccountButton": "Create account",
+  "verifyContactFirst": "Verify your contact with a code first",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "createAccountFailed": "Could not create account.",
+  "firstNameLabel": "First name",
+  "lastNameLabel": "Last name",
+  "patronymicLabel": "Patronymic",
+  "dateOfBirthLabel": "Date of birth",
+  "cityLabel": "City",
+  "networkNameLabel": "Network name",
+  "repeatPasswordLabel": "Repeat password",
+  "loggedInTitle": "You're signed in",
+  "nameValue": "Name: {name}",
+  "@nameValue": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "roleValue": "Role: {role}",
+  "@roleValue": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "homePlaceholder": "Role dashboard (parent / teacher / network) will appear here.",
+  "logoutButton": "Sign out",
+  "emptyValue": "—",
+  "turnstileVerified": "Verification passed",
+  "turnstileCanContinue": "You can continue registration",
+  "turnstileBotProtection": "Bot protection",
+  "turnstilePreparing": "Preparing...",
+  "turnstileVerifying": "Verifying...",
+  "turnstileTapToVerify": "Tap to verify",
+  "turnstileLoadFailed": "Could not load verification",
+  "turnstileLoadFailedPull": "Could not load verification. Pull down and try again.",
+  "turnstileExpired": "Verification expired. Tap again.",
+  "turnstileLoadFailedTap": "Could not load verification. Tap again.",
+  "turnstileFailed": "Verification failed. Tap again.",
+  "turnstileStillLoading": "Verification is still loading. Wait a few seconds.",
+  "turnstileStartFailed": "Could not start verification",
+  "turnstileNotCompleted": "Verification did not complete. Tap again.",
+  "languageLabel": "Language",
+  "languageRu": "Русский",
+  "languageEn": "English",
+  "noConnection": "No server connection. Check your internet.",
+  "requestFailed": "Request failed.",
+  "requestError": "Request error.",
+  "sendCodeFailed": "Could not send code.",
+  "verifyContactFailed": "Could not verify contact.",
+  "tokenFetchFailed": "Could not get token."
+}

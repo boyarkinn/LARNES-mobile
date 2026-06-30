@@ -4,6 +4,9 @@ import 'package:larnes_mobile/trainers/catalog/trainer_direction.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_param_validators.dart';
 import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_trainer.dart';
+import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/math/number_composition/number_composition_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
@@ -22,6 +25,12 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       AbacusShowTrainer(params: params),
   TrainerKey.dotsDigitAbacus: ({required params, onComplete}) =>
       DotsDigitAbacusTrainer(params: params),
+  TrainerKey.digitFindTap: ({required params, onComplete}) =>
+      DigitFindTapTrainer(params: params, onComplete: onComplete),
+  TrainerKey.fruitCountTap: ({required params, onComplete}) =>
+      FruitCountTapTrainer(params: params, onComplete: onComplete),
+  TrainerKey.numberComposition: ({required params, onComplete}) =>
+      NumberCompositionTrainer(params: params, onComplete: onComplete),
 };
 
 final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {

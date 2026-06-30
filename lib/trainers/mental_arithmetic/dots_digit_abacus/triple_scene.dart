@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dot_group.dart';
+import 'package:larnes_mobile/trainers/shared/dot_group.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 

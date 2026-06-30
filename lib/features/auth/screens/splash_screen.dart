@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required this.authSession});
@@ -24,7 +25,8 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
     if (widget.authSession.isAuthenticated) {
-      context.go('/home');
+      final accountType = widget.authSession.user?.accountType;
+      context.go(mapHomePathToMobile(accountType == 'parent' ? '/parent' : '/home'));
     } else {
       context.go('/login');
     }

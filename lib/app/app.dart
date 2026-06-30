@@ -31,7 +31,11 @@ class _LarnesAppState extends State<LarnesApp> {
     _localeController.addListener(_onStateChanged);
   }
 
-  void _onStateChanged() => setState(() {});
+  void _onStateChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void dispose() {

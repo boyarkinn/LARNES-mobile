@@ -109,5 +109,34 @@
   "requestError": "Request error.",
   "sendCodeFailed": "Could not send code.",
   "verifyContactFailed": "Could not verify contact.",
-  "tokenFetchFailed": "Could not get token."
+  "tokenFetchFailed": "Could not get token.",
+  "parentChildPickerTitle": "Who is studying today?",
+  "parentAddChild": "Add a child",
+  "parentAccount": "Account",
+  "parentBack": "Back",
+  "parentStudyTitle": "What are we studying today?",
+  "parentHomeworkTitle": "Homework",
+  "parentHomeworkEmptyHint": "No assignments yet",
+  "parentHomeworkAssignmentCount": "{count, plural, =1{1 assignment} other{{count} assignments}}",
+  "@parentHomeworkAssignmentCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parentChildFormTitle": "New child profile",
+  "parentChildFormLastName": "Last name",
+  "parentChildFormFirstName": "First name",
+  "parentChildFormPatronymic": "Patronymic (optional)",
+  "parentChildFormDateOfBirth": "Date of birth",
+  "parentChildFormGender": "Gender",
+  "parentChildFormGenderMale": "M",
+  "parentChildFormGenderFemale": "F",
+  "parentChildFormGenderRequired": "Select gender",
+  "parentChildFormSubmit": "Create profile",
+  "parentLoadChildrenFailed": "Could not load children.",
+  "parentCreateChildFailed": "Could not create profile.",
+  "parentHomeworkSoon": "Homework list — coming in the next step.",
+  "parentAccountSoon": "Account settings — coming soon."
 }

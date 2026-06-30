@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -45,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) {
         return;
       }
-      context.go(_mapHomePath(homePath));
+      context.go(mapHomePathToMobile(homePath));
     } on AuthApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {
@@ -55,16 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => _isSubmitting = false);
       }
     }
-  }
-
-  String _mapHomePath(String webPath) {
-    if (webPath.startsWith('/teacher')) {
-      return '/home';
-    }
-    if (webPath.startsWith('/network')) {
-      return '/home';
-    }
-    return '/home';
   }
 
   @override

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
+import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 
 class AuthSession extends ChangeNotifier {
@@ -26,22 +28,36 @@ class AuthSession extends ChangeNotifier {
   /// Через ApiClient — ленивая инициализация, устойчивее к hot reload.
   RegisterApi get registerApi => _client.registerApi;
 
+  ParentApi get parentApi => _client.parentApi;
+
+  void _notifySafely() {
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.idle ||
+        phase == SchedulerPhase.postFrameCallbacks) {
+      notifyListeners();
+      return;
+    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+  }
+
   Future<String> completeRegistration(LoginResult result) async {
     _user = result.user;
-    notifyListeners();
+    _notifySafely();
     return result.homePath;
   }
 
   Future<void> bootstrap() async {
     _isLoading = true;
-    notifyListeners();
+    _notifySafely();
     try {
       _user = await _authApi.fetchSession();
     } catch (_) {
       _user = null;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _notifySafely();
     }
   }
 
@@ -56,13 +72,13 @@ class AuthSession extends ChangeNotifier {
       locale: locale,
     );
     _user = result.user;
-    notifyListeners();
+    _notifySafely();
     return result.homePath;
   }
 
   Future<void> logout() async {
     await _authApi.logout();
     _user = null;
-    notifyListeners();
+    _notifySafely();
   }
 }

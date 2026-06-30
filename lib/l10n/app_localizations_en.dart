@@ -247,4 +247,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tokenFetchFailed => 'Could not get token.';
+
+  @override
+  String get parentChildPickerTitle => 'Who is studying today?';
+
+  @override
+  String get parentAddChild => 'Add a child';
+
+  @override
+  String get parentAccount => 'Account';
+
+  @override
+  String get parentBack => 'Back';
+
+  @override
+  String get parentStudyTitle => 'What are we studying today?';
+
+  @override
+  String get parentHomeworkTitle => 'Homework';
+
+  @override
+  String get parentHomeworkEmptyHint => 'No assignments yet';
+
+  @override
+  String parentHomeworkAssignmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count assignments',
+      one: '1 assignment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentChildFormTitle => 'New child profile';
+
+  @override
+  String get parentChildFormLastName => 'Last name';
+
+  @override
+  String get parentChildFormFirstName => 'First name';
+
+  @override
+  String get parentChildFormPatronymic => 'Patronymic (optional)';
+
+  @override
+  String get parentChildFormDateOfBirth => 'Date of birth';
+
+  @override
+  String get parentChildFormGender => 'Gender';
+
+  @override
+  String get parentChildFormGenderMale => 'M';
+
+  @override
+  String get parentChildFormGenderFemale => 'F';
+
+  @override
+  String get parentChildFormGenderRequired => 'Select gender';
+
+  @override
+  String get parentChildFormSubmit => 'Create profile';
+
+  @override
+  String get parentLoadChildrenFailed => 'Could not load children.';
+
+  @override
+  String get parentCreateChildFailed => 'Could not create profile.';
+
+  @override
+  String get parentHomeworkSoon => 'Homework list — coming in the next step.';
+
+  @override
+  String get parentAccountSoon => 'Account settings — coming soon.';
 }

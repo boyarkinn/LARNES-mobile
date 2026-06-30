@@ -247,4 +247,80 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tokenFetchFailed => 'Не удалось получить токен.';
+
+  @override
+  String get parentChildPickerTitle => 'Кто сегодня занимается?';
+
+  @override
+  String get parentAddChild => 'Добавить ребёнка';
+
+  @override
+  String get parentAccount => 'Аккаунт';
+
+  @override
+  String get parentBack => 'Назад';
+
+  @override
+  String get parentStudyTitle => 'Что изучаем сегодня?';
+
+  @override
+  String get parentHomeworkTitle => 'Домашние задания';
+
+  @override
+  String get parentHomeworkEmptyHint => 'Пока нет заданий';
+
+  @override
+  String parentHomeworkAssignmentCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# заданий',
+      many: '# заданий',
+      few: '# задания',
+      one: '# задание',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentChildFormTitle => 'Новый профиль ребёнка';
+
+  @override
+  String get parentChildFormLastName => 'Фамилия';
+
+  @override
+  String get parentChildFormFirstName => 'Имя';
+
+  @override
+  String get parentChildFormPatronymic => 'Отчество (необязательно)';
+
+  @override
+  String get parentChildFormDateOfBirth => 'Дата рождения';
+
+  @override
+  String get parentChildFormGender => 'Пол';
+
+  @override
+  String get parentChildFormGenderMale => 'М';
+
+  @override
+  String get parentChildFormGenderFemale => 'Ж';
+
+  @override
+  String get parentChildFormGenderRequired => 'Укажите пол';
+
+  @override
+  String get parentChildFormSubmit => 'Создать профиль';
+
+  @override
+  String get parentLoadChildrenFailed => 'Не удалось загрузить список детей.';
+
+  @override
+  String get parentCreateChildFailed => 'Не удалось создать профиль.';
+
+  @override
+  String get parentHomeworkSoon => 'Список ДЗ — в следующем шаге.';
+
+  @override
+  String get parentAccountSoon => 'Настройки аккаунта — скоро.';
 }

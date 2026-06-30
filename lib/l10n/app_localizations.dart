@@ -547,6 +547,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not get token.'**
   String get tokenFetchFailed;
+
+  /// No description provided for @parentChildPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is studying today?'**
+  String get parentChildPickerTitle;
+
+  /// No description provided for @parentAddChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a child'**
+  String get parentAddChild;
+
+  /// No description provided for @parentAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get parentAccount;
+
+  /// No description provided for @parentBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get parentBack;
+
+  /// No description provided for @parentStudyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What are we studying today?'**
+  String get parentStudyTitle;
+
+  /// No description provided for @parentHomeworkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Homework'**
+  String get parentHomeworkTitle;
+
+  /// No description provided for @parentHomeworkEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No assignments yet'**
+  String get parentHomeworkEmptyHint;
+
+  /// No description provided for @parentHomeworkAssignmentCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 assignment} other{{count} assignments}}'**
+  String parentHomeworkAssignmentCount(int count);
+
+  /// No description provided for @parentChildFormTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New child profile'**
+  String get parentChildFormTitle;
+
+  /// No description provided for @parentChildFormLastName.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get parentChildFormLastName;
+
+  /// No description provided for @parentChildFormFirstName.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get parentChildFormFirstName;
+
+  /// No description provided for @parentChildFormPatronymic.
+  ///
+  /// In en, this message translates to:
+  /// **'Patronymic (optional)'**
+  String get parentChildFormPatronymic;
+
+  /// No description provided for @parentChildFormDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get parentChildFormDateOfBirth;
+
+  /// No description provided for @parentChildFormGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
+  String get parentChildFormGender;
+
+  /// No description provided for @parentChildFormGenderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get parentChildFormGenderMale;
+
+  /// No description provided for @parentChildFormGenderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'F'**
+  String get parentChildFormGenderFemale;
+
+  /// No description provided for @parentChildFormGenderRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select gender'**
+  String get parentChildFormGenderRequired;
+
+  /// No description provided for @parentChildFormSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create profile'**
+  String get parentChildFormSubmit;
+
+  /// No description provided for @parentLoadChildrenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load children.'**
+  String get parentLoadChildrenFailed;
+
+  /// No description provided for @parentCreateChildFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create profile.'**
+  String get parentCreateChildFailed;
+
+  /// No description provided for @parentHomeworkSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Homework list — coming in the next step.'**
+  String get parentHomeworkSoon;
+
+  /// No description provided for @parentAccountSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Account settings — coming soon.'**
+  String get parentAccountSoon;
 }
 
 class _AppLocalizationsDelegate

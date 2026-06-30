@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -149,11 +150,11 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       if (!mounted) {
         return;
       }
-      await AuthScope.of(context).completeRegistration(result);
+      final homePath = await AuthScope.of(context).completeRegistration(result);
       if (!mounted) {
         return;
       }
-      context.go('/home');
+      context.go(mapHomePathToMobile(homePath));
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {

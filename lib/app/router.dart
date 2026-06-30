@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/screens/login_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_contact_screen.dart';
@@ -7,11 +8,38 @@ import 'package:larnes_mobile/features/auth/screens/register_otp_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/add_child_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/child_picker_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
 GoRouter createAppRouter(AuthSession authSession) {
   return GoRouter(
     initialLocation: '/splash',
+    refreshListenable: authSession,
+    redirect: (context, state) {
+      final path = state.matchedLocation;
+      final isAuthRoute = path == '/login' ||
+          path == '/splash' ||
+          path.startsWith('/register');
+      final isParentRoute = path == '/parent' || path.startsWith('/parent/');
+
+      if (!authSession.isLoading &&
+          !authSession.isAuthenticated &&
+          !isAuthRoute) {
+        return '/login';
+      }
+
+      if (authSession.isAuthenticated && isParentRoute && !isParentAccount(authSession.user?.accountType)) {
+        return '/home';
+      }
+
+      if (authSession.isAuthenticated && (path == '/login' || path == '/splash')) {
+        return mapHomePathToMobile(authSession.user?.accountType == 'parent' ? '/parent' : '/home');
+      }
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: '/splash',
@@ -53,6 +81,26 @@ GoRouter createAppRouter(AuthSession authSession) {
                 return const RegisterTypeScreen();
               }
               return RegisterProfileScreen(flow: flow);
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/parent',
+        builder: (context, state) => const ChildPickerScreen(),
+        routes: [
+          GoRoute(
+            path: 'children/new',
+            builder: (context, state) => const AddChildScreen(),
+          ),
+          GoRoute(
+            path: ':childId',
+            builder: (context, state) {
+              final childId = state.pathParameters['childId'];
+              if (childId == null || childId.isEmpty) {
+                return const ChildPickerScreen();
+              }
+              return StudyHubScreen(childId: childId);
             },
           ),
         ],

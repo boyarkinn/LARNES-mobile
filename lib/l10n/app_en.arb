@@ -158,6 +158,29 @@
     }
   },
   "parentHomeworkPlaySoon": "Assignment player — coming in the next step.",
+  "parentHomeworkPlayLoadFailed": "Could not load assignment.",
+  "parentHomeworkPlayAdvanceFailed": "Could not save progress.",
+  "parentHomeworkPlayProgress": "Step {current} of {total}",
+  "@parentHomeworkPlayProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlayNext": "Next",
+  "parentHomeworkPlayFinish": "Finish",
+  "parentHomeworkPlayCompletedTitle": "Homework completed",
+  "parentHomeworkPlayBackToList": "Back to homework list",
+  "parentHomeworkPlayExit": "Exit",
+  "parentHomeworkPlayEmpty": "This assignment has no trainers yet.",
+  "parentHomeworkPlayStepLabel": "Step {step}",
+  "@parentHomeworkPlayStepLabel": {
+    "placeholders": {
+      "step": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlayTrainerSoon": "Trainer — coming in the next update.",
+  "parentHomeworkPlayInteractiveHint": "Complete the task on screen",
   "parentHomeworkEmptyDue": "No assignments to do right now.",
   "parentHomeworkEmptyCompleted": "No completed assignments yet.",
   "parentHomeworkEmptyOverdue": "No overdue assignments.",

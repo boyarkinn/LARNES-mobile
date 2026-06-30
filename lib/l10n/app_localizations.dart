@@ -728,6 +728,78 @@ abstract class AppLocalizations {
   /// **'Assignment player — coming in the next step.'**
   String get parentHomeworkPlaySoon;
 
+  /// No description provided for @parentHomeworkPlayLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load assignment.'**
+  String get parentHomeworkPlayLoadFailed;
+
+  /// No description provided for @parentHomeworkPlayAdvanceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save progress.'**
+  String get parentHomeworkPlayAdvanceFailed;
+
+  /// No description provided for @parentHomeworkPlayProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String parentHomeworkPlayProgress(int current, int total);
+
+  /// No description provided for @parentHomeworkPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get parentHomeworkPlayNext;
+
+  /// No description provided for @parentHomeworkPlayFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get parentHomeworkPlayFinish;
+
+  /// No description provided for @parentHomeworkPlayCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Homework completed'**
+  String get parentHomeworkPlayCompletedTitle;
+
+  /// No description provided for @parentHomeworkPlayBackToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to homework list'**
+  String get parentHomeworkPlayBackToList;
+
+  /// No description provided for @parentHomeworkPlayExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get parentHomeworkPlayExit;
+
+  /// No description provided for @parentHomeworkPlayEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'This assignment has no trainers yet.'**
+  String get parentHomeworkPlayEmpty;
+
+  /// No description provided for @parentHomeworkPlayStepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step}'**
+  String parentHomeworkPlayStepLabel(int step);
+
+  /// No description provided for @parentHomeworkPlayTrainerSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer — coming in the next update.'**
+  String get parentHomeworkPlayTrainerSoon;
+
+  /// No description provided for @parentHomeworkPlayInteractiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the task on screen'**
+  String get parentHomeworkPlayInteractiveHint;
+
   /// No description provided for @parentHomeworkEmptyDue.
   ///
   /// In en, this message translates to:

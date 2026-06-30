@@ -355,6 +355,48 @@ class AppLocalizationsRu extends AppLocalizations {
       'Прохождение задания — в следующем шаге.';
 
   @override
+  String get parentHomeworkPlayLoadFailed => 'Не удалось загрузить задание.';
+
+  @override
+  String get parentHomeworkPlayAdvanceFailed =>
+      'Не удалось сохранить прогресс.';
+
+  @override
+  String parentHomeworkPlayProgress(int current, int total) {
+    return 'Шаг $current из $total';
+  }
+
+  @override
+  String get parentHomeworkPlayNext => 'Далее';
+
+  @override
+  String get parentHomeworkPlayFinish => 'Завершить';
+
+  @override
+  String get parentHomeworkPlayCompletedTitle => 'Домашнее задание выполнено';
+
+  @override
+  String get parentHomeworkPlayBackToList => 'К списку ДЗ';
+
+  @override
+  String get parentHomeworkPlayExit => 'Выйти';
+
+  @override
+  String get parentHomeworkPlayEmpty => 'В задании пока нет тренажёров.';
+
+  @override
+  String parentHomeworkPlayStepLabel(int step) {
+    return 'Шаг $step';
+  }
+
+  @override
+  String get parentHomeworkPlayTrainerSoon =>
+      'Тренажёр — в следующем обновлении.';
+
+  @override
+  String get parentHomeworkPlayInteractiveHint => 'Выполните задание на экране';
+
+  @override
   String get parentHomeworkEmptyDue =>
       'Нет заданий, которые нужно сделать сейчас.';
 

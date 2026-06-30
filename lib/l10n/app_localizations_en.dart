@@ -352,6 +352,47 @@ class AppLocalizationsEn extends AppLocalizations {
       'Assignment player — coming in the next step.';
 
   @override
+  String get parentHomeworkPlayLoadFailed => 'Could not load assignment.';
+
+  @override
+  String get parentHomeworkPlayAdvanceFailed => 'Could not save progress.';
+
+  @override
+  String parentHomeworkPlayProgress(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get parentHomeworkPlayNext => 'Next';
+
+  @override
+  String get parentHomeworkPlayFinish => 'Finish';
+
+  @override
+  String get parentHomeworkPlayCompletedTitle => 'Homework completed';
+
+  @override
+  String get parentHomeworkPlayBackToList => 'Back to homework list';
+
+  @override
+  String get parentHomeworkPlayExit => 'Exit';
+
+  @override
+  String get parentHomeworkPlayEmpty => 'This assignment has no trainers yet.';
+
+  @override
+  String parentHomeworkPlayStepLabel(int step) {
+    return 'Step $step';
+  }
+
+  @override
+  String get parentHomeworkPlayTrainerSoon =>
+      'Trainer — coming in the next update.';
+
+  @override
+  String get parentHomeworkPlayInteractiveHint => 'Complete the task on screen';
+
+  @override
   String get parentHomeworkEmptyDue => 'No assignments to do right now.';
 
   @override

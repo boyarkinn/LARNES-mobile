@@ -97,6 +97,22 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
     _load(silent: _page != null);
   }
 
+  Future<void> _openAssignment(String assignmentId) async {
+    final completed = await context.push<bool>(
+      '/parent/${widget.childId}/homework/$assignmentId',
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (completed == true) {
+      setState(() => _activeTab = ParentHomeworkTab.completed);
+    }
+
+    await _load(silent: _page != null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -172,11 +188,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
               if (i > 0) const SizedBox(height: 12),
               HomeworkAssignmentCard(
                 assignment: assignments[i],
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.parentHomeworkPlaySoon)),
-                  );
-                },
+                onTap: () => _openAssignment(assignments[i].assignmentId),
               ),
             ],
         ],

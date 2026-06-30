@@ -90,3 +90,71 @@ class ParentHomeworkListPage {
   final Map<ParentHomeworkTab, int> counts;
   final List<ParentHomeworkAssignment> assignments;
 }
+
+class ParentHomeworkPlayStep {
+  const ParentHomeworkPlayStep({
+    required this.id,
+    required this.trainerKey,
+    required this.params,
+    required this.sortOrder,
+  });
+
+  factory ParentHomeworkPlayStep.fromJson(Map<String, dynamic> json) {
+    final rawParams = json['params'];
+    return ParentHomeworkPlayStep(
+      id: json['id'] as String,
+      trainerKey: json['trainerKey'] as String,
+      params: rawParams is Map
+          ? Map<String, dynamic>.from(rawParams)
+          : const {},
+      sortOrder: json['sortOrder'] as int? ?? 0,
+    );
+  }
+
+  final String id;
+  final String trainerKey;
+  final Map<String, dynamic> params;
+  final int sortOrder;
+}
+
+class ParentHomeworkPlaySnapshot {
+  const ParentHomeworkPlaySnapshot({
+    required this.assignmentId,
+    required this.childId,
+    required this.recipientId,
+    required this.title,
+    required this.status,
+    required this.currentStepIndex,
+    required this.steps,
+  });
+
+  factory ParentHomeworkPlaySnapshot.fromJson(Map<String, dynamic> json) {
+    final steps = (json['steps'] as List<dynamic>? ?? const [])
+        .map(
+          (item) => ParentHomeworkPlayStep.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
+
+    return ParentHomeworkPlaySnapshot(
+      assignmentId: json['assignmentId'] as String,
+      childId: json['childId'] as String,
+      recipientId: json['recipientId'] as String,
+      title: json['title'] as String,
+      status: json['status'] as String,
+      currentStepIndex: json['currentStepIndex'] as int? ?? 0,
+      steps: steps,
+    );
+  }
+
+  final String assignmentId;
+  final String childId;
+  final String recipientId;
+  final String title;
+  final String status;
+  final int currentStepIndex;
+  final List<ParentHomeworkPlayStep> steps;
+
+  bool get isCompleted => status == 'completed';
+}

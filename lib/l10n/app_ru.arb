@@ -116,6 +116,29 @@
     }
   },
   "parentHomeworkPlaySoon": "Прохождение задания — в следующем шаге.",
+  "parentHomeworkPlayLoadFailed": "Не удалось загрузить задание.",
+  "parentHomeworkPlayAdvanceFailed": "Не удалось сохранить прогресс.",
+  "parentHomeworkPlayProgress": "Шаг {current} из {total}",
+  "@parentHomeworkPlayProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlayNext": "Далее",
+  "parentHomeworkPlayFinish": "Завершить",
+  "parentHomeworkPlayCompletedTitle": "Домашнее задание выполнено",
+  "parentHomeworkPlayBackToList": "К списку ДЗ",
+  "parentHomeworkPlayExit": "Выйти",
+  "parentHomeworkPlayEmpty": "В задании пока нет тренажёров.",
+  "parentHomeworkPlayStepLabel": "Шаг {step}",
+  "@parentHomeworkPlayStepLabel": {
+    "placeholders": {
+      "step": {"type": "int"}
+    }
+  },
+  "parentHomeworkPlayTrainerSoon": "Тренажёр — в следующем обновлении.",
+  "parentHomeworkPlayInteractiveHint": "Выполните задание на экране",
   "parentHomeworkEmptyDue": "Нет заданий, которые нужно сделать сейчас.",
   "parentHomeworkEmptyCompleted": "Пока нет выполненных заданий.",
   "parentHomeworkEmptyOverdue": "Нет просроченных заданий.",

@@ -169,6 +169,75 @@ class ParentApi {
     }
   }
 
+  Future<ParentHomeworkPlaySnapshot> fetchHomeworkSnapshot(
+    String childId,
+    String assignmentId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/homework/$assignmentId',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentHomeworkPlayLoadFailed),
+        );
+      }
+      final snapshot = data['snapshot'];
+      if (snapshot is! Map) {
+        throw ParentApiException(l10n.parentHomeworkPlayLoadFailed);
+      }
+      return ParentHomeworkPlaySnapshot.fromJson(
+        Map<String, dynamic>.from(snapshot),
+      );
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<void> advanceHomeworkStep({
+    required String childId,
+    required String assignmentId,
+    required int nextStepIndex,
+    required int totalSteps,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/homework/$assignmentId/advance',
+        data: {
+          'nextStepIndex': nextStepIndex,
+          'totalSteps': totalSteps,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentHomeworkPlayAdvanceFailed),
+        );
+      }
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
   Future<void> deleteChild(String childId, {String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {

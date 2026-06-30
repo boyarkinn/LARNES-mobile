@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
 
@@ -29,8 +30,11 @@ class ApiClient {
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
+  RegisterApi? _registerApi;
 
   Dio get dio => _dio;
 
   TokenStorage get tokenStorage => _tokenStorage;
+
+  RegisterApi get registerApi => _registerApi ??= RegisterApi(this);
 }

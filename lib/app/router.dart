@@ -32,10 +32,7 @@ GoRouter createAppRouter(AuthSession authSession) {
               if (type == null) {
                 return const RegisterTypeScreen();
               }
-              return RegisterContactScreen(
-                accountType: type,
-                authSession: authSession,
-              );
+              return RegisterContactScreen(accountType: type);
             },
           ),
           GoRoute(
@@ -45,10 +42,7 @@ GoRouter createAppRouter(AuthSession authSession) {
               if (flow is! RegisterFlowData) {
                 return const RegisterTypeScreen();
               }
-              return RegisterOtpScreen(
-                flow: flow,
-                authSession: authSession,
-              );
+              return RegisterOtpScreen(flow: flow);
             },
           ),
           GoRoute(
@@ -58,10 +52,7 @@ GoRouter createAppRouter(AuthSession authSession) {
               if (flow is! RegisterFlowData) {
                 return const RegisterTypeScreen();
               }
-              return RegisterProfileScreen(
-                flow: flow,
-                authSession: authSession,
-              );
+              return RegisterProfileScreen(flow: flow);
             },
           ),
         ],

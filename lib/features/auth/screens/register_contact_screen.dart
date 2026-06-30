@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
-import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
@@ -9,14 +9,9 @@ import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/turnstile_widget.dart';
 
 class RegisterContactScreen extends StatefulWidget {
-  const RegisterContactScreen({
-    super.key,
-    required this.accountType,
-    required this.authSession,
-  });
+  const RegisterContactScreen({super.key, required this.accountType});
 
   final RegisterAccountType accountType;
-  final AuthSession authSession;
 
   @override
   State<RegisterContactScreen> createState() => _RegisterContactScreenState();
@@ -27,14 +22,25 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
   final _contactController = TextEditingController();
   MobileConfig? _config;
   String? _turnstileToken;
+  int _turnstileResetKey = 0;
   bool _isLoadingConfig = true;
   bool _isSubmitting = false;
   String? _error;
 
+  bool _configLoaded = false;
+
   @override
   void initState() {
     super.initState();
-    _loadConfig();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_configLoaded) {
+      _configLoaded = true;
+      _loadConfig();
+    }
   }
 
   @override
@@ -45,7 +51,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
 
   Future<void> _loadConfig() async {
     try {
-      final config = await widget.authSession.registerApi.fetchConfig();
+      final config = await AuthScope.of(context).registerApi.fetchConfig();
       if (mounted) {
         setState(() {
           _config = config;
@@ -81,7 +87,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
     });
 
     try {
-      final normalized = await widget.authSession.registerApi.sendOtp(
+      final normalized = await AuthScope.of(context).registerApi.sendOtp(
         channel: _channel,
         contact: contact,
         turnstileToken: _turnstileToken,
@@ -102,13 +108,26 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
       );
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
-    } catch (_) {
-      setState(() => _error = 'Не удалось отправить код. Попробуйте позже.');
+      _resetTurnstile();
+    } catch (error) {
+      setState(() => _error = error.toString());
+      _resetTurnstile();
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  void _resetTurnstile() {
+    final config = _config ?? MobileConfig.fallback;
+    if (!config.turnstileRequired) {
+      return;
+    }
+    setState(() {
+      _turnstileToken = null;
+      _turnstileResetKey += 1;
+    });
   }
 
   @override
@@ -143,6 +162,7 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
               setState(() {
                 _channel = value.first;
                 _turnstileToken = null;
+                _turnstileResetKey += 1;
                 _error = null;
               });
             },
@@ -159,10 +179,12 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
               padding: EdgeInsets.only(top: 12),
               child: LinearProgressIndicator(),
             )
-          else if (config.turnstileRequired && config.turnstileSiteKey.isNotEmpty) ...[
+          else if (config.turnstileRequired && config.turnstilePageUrl.isNotEmpty) ...[
             const SizedBox(height: 12),
             TurnstileWidget(
-              siteKey: config.turnstileSiteKey,
+              key: ValueKey('turnstile-${widget.accountType.routeSlug}-$_channel'),
+              pageUrl: config.turnstilePageUrl,
+              resetKey: _turnstileResetKey,
               onTokenChanged: (token) => setState(() => _turnstileToken = token),
             ),
           ],

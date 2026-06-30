@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/router.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 
 class LarnesApp extends StatefulWidget {
@@ -43,6 +44,12 @@ class _LarnesAppState extends State<LarnesApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: _router,
+      builder: (context, child) {
+        return AuthScope(
+          authSession: _authSession,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

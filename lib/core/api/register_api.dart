@@ -2,7 +2,27 @@ import 'package:dio/dio.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
+import 'package:larnes_mobile/core/config/turnstile_url.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+
+Map<String, dynamic>? _asJsonMap(dynamic body) {
+  if (body is Map<String, dynamic>) {
+    return body;
+  }
+  if (body is Map) {
+    return Map<String, dynamic>.from(body);
+  }
+  return null;
+}
+
+String _messageFromBody(dynamic body, {String fallback = 'Ошибка запроса.'}) {
+  final map = _asJsonMap(body);
+  final message = map?['message'];
+  if (message is String && message.isNotEmpty) {
+    return message;
+  }
+  return fallback;
+}
 
 class RegisterApi {
   RegisterApi(this._client);
@@ -16,11 +36,16 @@ class RegisterApi {
     }
 
     try {
-      final response = await _client.dio.get<Map<String, dynamic>>('/api/mobile/config');
-      final data = response.data;
+      final response = await _client.dio.get('/api/mobile/config');
+      final data = _asJsonMap(response.data);
       if (data != null && data['status'] == 'success') {
         _cachedConfig = MobileConfig.fromJson(data);
-        return _cachedConfig!;
+        return MobileConfig(
+          cities: _cachedConfig!.cities,
+          turnstilePageUrl: normalizeTurnstilePageUrl(_cachedConfig!.turnstilePageUrl),
+          turnstileRequired: _cachedConfig!.turnstileRequired,
+          turnstileSiteKey: _cachedConfig!.turnstileSiteKey,
+        );
       }
     } on DioException {
       // Fallback for offline dev.
@@ -36,7 +61,7 @@ class RegisterApi {
     String locale = 'ru',
   }) async {
     try {
-      final response = await _client.dio.post<Map<String, dynamic>>(
+      final response = await _client.dio.post(
         '/api/mobile/auth/register/send-otp',
         data: {
           'channel': _channelValue(channel),
@@ -46,7 +71,7 @@ class RegisterApi {
             'turnstileToken': turnstileToken,
         },
       );
-      final data = response.data;
+      final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw RegisterApiException(_messageFromBody(data));
       }
@@ -56,11 +81,9 @@ class RegisterApi {
       }
       return normalized;
     } on DioException catch (error) {
-      final body = error.response?.data;
-      if (body is Map<String, dynamic>) {
-        throw RegisterApiException(_messageFromBody(body));
-      }
-      throw RegisterApiException(_networkMessage(error));
+      throw RegisterApiException(
+        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+      );
     }
   }
 
@@ -71,7 +94,7 @@ class RegisterApi {
     String locale = 'ru',
   }) async {
     try {
-      final response = await _client.dio.post<Map<String, dynamic>>(
+      final response = await _client.dio.post(
         '/api/mobile/auth/register/verify-otp',
         data: {
           'channel': _channelValue(channel),
@@ -80,7 +103,7 @@ class RegisterApi {
           'locale': locale,
         },
       );
-      final data = response.data;
+      final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw RegisterApiException(_messageFromBody(data));
       }
@@ -90,11 +113,9 @@ class RegisterApi {
       }
       return token;
     } on DioException catch (error) {
-      final body = error.response?.data;
-      if (body is Map<String, dynamic>) {
-        throw RegisterApiException(_messageFromBody(body));
-      }
-      throw RegisterApiException(_networkMessage(error));
+      throw RegisterApiException(
+        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+      );
     }
   }
 
@@ -105,7 +126,7 @@ class RegisterApi {
     String locale = 'ru',
   }) async {
     try {
-      final response = await _client.dio.post<Map<String, dynamic>>(
+      final response = await _client.dio.post(
         '/api/mobile/auth/register/resend-otp',
         data: {
           'channel': _channelValue(channel),
@@ -115,16 +136,14 @@ class RegisterApi {
             'turnstileToken': turnstileToken,
         },
       );
-      final data = response.data;
+      final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw RegisterApiException(_messageFromBody(data));
       }
     } on DioException catch (error) {
-      final body = error.response?.data;
-      if (body is Map<String, dynamic>) {
-        throw RegisterApiException(_messageFromBody(body));
-      }
-      throw RegisterApiException(_networkMessage(error));
+      throw RegisterApiException(
+        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+      );
     }
   }
 
@@ -135,7 +154,7 @@ class RegisterApi {
     String locale = 'ru',
   }) async {
     try {
-      final response = await _client.dio.post<Map<String, dynamic>>(
+      final response = await _client.dio.post(
         '/api/mobile/auth/register',
         data: {
           'accountType': _accountTypeValue(flow.accountType),
@@ -146,7 +165,7 @@ class RegisterApi {
           ...profile,
         },
       );
-      final data = response.data;
+      final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw RegisterApiException(_messageFromBody(data));
       }
@@ -162,11 +181,9 @@ class RegisterApi {
         user: AuthUser.fromJson(data['user'] as Map<String, dynamic>),
       );
     } on DioException catch (error) {
-      final body = error.response?.data;
-      if (body is Map<String, dynamic>) {
-        throw RegisterApiException(_messageFromBody(body));
-      }
-      throw RegisterApiException(_networkMessage(error));
+      throw RegisterApiException(
+        _messageFromBody(error.response?.data, fallback: _networkMessage(error)),
+      );
     }
   }
 
@@ -183,14 +200,6 @@ class RegisterApi {
       case RegisterAccountType.networkOwner:
         return 'network_owner';
     }
-  }
-
-  static String _messageFromBody(Map<String, dynamic>? body) {
-    final message = body?['message'];
-    if (message is String && message.isNotEmpty) {
-      return message;
-    }
-    return 'Ошибка запроса.';
   }
 
   static String _networkMessage(DioException error) {

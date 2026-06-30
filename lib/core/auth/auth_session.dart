@@ -4,14 +4,15 @@ import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 
 class AuthSession extends ChangeNotifier {
-  AuthSession({ApiClient? apiClient}) : _client = apiClient ?? ApiClient() {
-    _authApi = AuthApi(_client);
-    _registerApi = RegisterApi(_client);
+  factory AuthSession({ApiClient? apiClient}) {
+    final client = apiClient ?? ApiClient();
+    return AuthSession._(client);
   }
 
+  AuthSession._(this._client) : _authApi = AuthApi(_client);
+
   final ApiClient _client;
-  late final AuthApi _authApi;
-  late final RegisterApi _registerApi;
+  final AuthApi _authApi;
 
   AuthUser? _user;
   bool _isLoading = true;
@@ -21,7 +22,9 @@ class AuthSession extends ChangeNotifier {
   bool get isAuthenticated => _user != null;
 
   AuthApi get authApi => _authApi;
-  RegisterApi get registerApi => _registerApi;
+
+  /// Через ApiClient — ленивая инициализация, устойчивее к hot reload.
+  RegisterApi get registerApi => _client.registerApi;
 
   Future<String> completeRegistration(LoginResult result) async {
     _user = result.user;

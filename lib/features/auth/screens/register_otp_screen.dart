@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
-import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
@@ -12,14 +12,9 @@ import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/turnstile_widget.dart';
 
 class RegisterOtpScreen extends StatefulWidget {
-  const RegisterOtpScreen({
-    super.key,
-    required this.flow,
-    required this.authSession,
-  });
+  const RegisterOtpScreen({super.key, required this.flow});
 
   final RegisterFlowData flow;
-  final AuthSession authSession;
 
   @override
   State<RegisterOtpScreen> createState() => _RegisterOtpScreenState();
@@ -52,7 +47,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   }
 
   Future<void> _loadConfig() async {
-    final config = await widget.authSession.registerApi.fetchConfig();
+    final config = await AuthScope.of(context).registerApi.fetchConfig();
     if (mounted) {
       setState(() => _config = config);
     }
@@ -89,7 +84,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     });
 
     try {
-      final verificationToken = await widget.authSession.registerApi.verifyOtp(
+      final verificationToken = await AuthScope.of(context).registerApi.verifyOtp(
         channel: widget.flow.channel,
         contact: widget.flow.contact,
         code: code,
@@ -127,7 +122,7 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     });
 
     try {
-      await widget.authSession.registerApi.resendOtp(
+      await AuthScope.of(context).registerApi.resendOtp(
         channel: widget.flow.channel,
         contact: widget.flow.contact,
         turnstileToken: _turnstileToken,
@@ -143,13 +138,25 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
       _startCooldown();
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
+      _resetTurnstileAfterFailedResend(config);
     } catch (_) {
       setState(() => _error = 'Не удалось отправить код снова.');
+      _resetTurnstileAfterFailedResend(config);
     } finally {
       if (mounted) {
         setState(() => _isResending = false);
       }
     }
+  }
+
+  void _resetTurnstileAfterFailedResend(MobileConfig config) {
+    if (!config.turnstileRequired) {
+      return;
+    }
+    setState(() {
+      _turnstileToken = null;
+      _turnstileResetKey += 1;
+    });
   }
 
   String _maskContact(String contact) {
@@ -193,10 +200,10 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
           OtpInput(controller: _otpController),
           const SizedBox(height: 12),
           if (canResend) ...[
-            if (config.turnstileRequired && config.turnstileSiteKey.isNotEmpty) ...[
+            if (config.turnstileRequired && config.turnstilePageUrl.isNotEmpty) ...[
               TurnstileWidget(
-                key: ValueKey(_turnstileResetKey),
-                siteKey: config.turnstileSiteKey,
+                key: ValueKey('turnstile-resend-$_turnstileResetKey'),
+                pageUrl: config.turnstilePageUrl,
                 resetKey: _turnstileResetKey,
                 onTokenChanged: (token) => setState(() => _turnstileToken = token),
               ),

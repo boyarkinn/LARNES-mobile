@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:larnes_mobile/app/theme/larnes_theme.dart';
 
 class OtpInput extends StatefulWidget {
   const OtpInput({
@@ -19,10 +20,26 @@ class _OtpInputState extends State<OtpInput> {
   late final List<FocusNode> _nodes;
   late final List<TextEditingController> _cells;
 
+  static const _cellHeight = 60.0;
+  static const _digitStyle = TextStyle(
+    fontSize: 24,
+    fontWeight: FontWeight.w600,
+    height: 1,
+    color: LarnesColors.textPrimary,
+  );
+
   @override
   void initState() {
     super.initState();
-    _nodes = List.generate(widget.length, (_) => FocusNode());
+    _nodes = List.generate(widget.length, (index) {
+      final node = FocusNode();
+      node.addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+      return node;
+    });
     _cells = List.generate(widget.length, (_) => TextEditingController());
     _syncFromParent(widget.controller.text);
     widget.controller.addListener(_onParentChanged);
@@ -73,25 +90,65 @@ class _OtpInputState extends State<OtpInput> {
     _emit();
   }
 
+  BoxDecoration _cellBoxDecoration(bool isFocused) {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: isFocused ? LarnesColors.indigo : LarnesColors.border,
+        width: isFocused ? 1.5 : 1,
+      ),
+    );
+  }
+
+  static const _hiddenFieldDecoration = InputDecoration(
+    counterText: '',
+    isCollapsed: true,
+    border: InputBorder.none,
+    enabledBorder: InputBorder.none,
+    focusedBorder: InputBorder.none,
+    disabledBorder: InputBorder.none,
+    errorBorder: InputBorder.none,
+    focusedErrorBorder: InputBorder.none,
+    contentPadding: EdgeInsets.zero,
+  );
+
+  Widget _buildCell(int index) {
+    final isFocused = _nodes[index].hasFocus;
+
+    return Expanded(
+      child: SizedBox(
+        height: _cellHeight,
+        child: DecoratedBox(
+          decoration: _cellBoxDecoration(isFocused),
+          child: Center(
+            child: TextField(
+              controller: _cells[index],
+              focusNode: _nodes[index],
+              textAlign: TextAlign.center,
+              textAlignVertical: TextAlignVertical.center,
+              style: _digitStyle,
+              keyboardType: TextInputType.number,
+              maxLength: 1,
+              decoration: _hiddenFieldDecoration,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (value) => _onChanged(index, value),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(widget.length, (index) {
-        return SizedBox(
-          width: 44,
-          child: TextField(
-            controller: _cells[index],
-            focusNode: _nodes[index],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            maxLength: 1,
-            decoration: const InputDecoration(counterText: ''),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (value) => _onChanged(index, value),
-          ),
-        );
-      }),
+      children: [
+        for (var index = 0; index < widget.length; index++) ...[
+          if (index > 0) const SizedBox(width: 8),
+          _buildCell(index),
+        ],
+      ],
     );
   }
 }

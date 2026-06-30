@@ -13,13 +13,19 @@ flutter run -d emulator-5554
 
 ## API (dev)
 
-Эмулятор + локальный Next.js:
+Эмулятор + локальный Next.js (`npm run dev` в `platform/`):
+
+```powershell
+flutter run -d emulator-5554
+```
+
+В **debug** по умолчанию API: `http://10.0.2.2:3200`. Явно:
 
 ```powershell
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3200
 ```
 
-Prod по умолчанию: `https://larnes.online`
+Prod release: `https://larnes.online`
 
 ## Документация
 

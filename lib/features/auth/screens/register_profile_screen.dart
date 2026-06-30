@@ -1,20 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
-import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 
 class RegisterProfileScreen extends StatefulWidget {
-  const RegisterProfileScreen({
-    super.key,
-    required this.flow,
-    required this.authSession,
-  });
+  const RegisterProfileScreen({super.key, required this.flow});
 
   final RegisterFlowData flow;
-  final AuthSession authSession;
 
   @override
   State<RegisterProfileScreen> createState() => _RegisterProfileScreenState();
@@ -61,7 +56,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
 
   Future<void> _loadConfig() async {
     try {
-      final config = await widget.authSession.registerApi.fetchConfig();
+      final config = await AuthScope.of(context).registerApi.fetchConfig();
       if (!mounted) {
         return;
       }
@@ -139,7 +134,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     });
 
     try {
-      final result = await widget.authSession.registerApi.register(
+      final result = await AuthScope.of(context).registerApi.register(
         flow: widget.flow,
         verificationToken: widget.flow.verificationToken,
         profile: _buildProfilePayload(),
@@ -147,7 +142,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       if (!mounted) {
         return;
       }
-      await widget.authSession.completeRegistration(result);
+      await AuthScope.of(context).completeRegistration(result);
       if (!mounted) {
         return;
       }

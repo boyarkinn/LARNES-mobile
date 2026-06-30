@@ -320,5 +320,208 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkSoon => 'Homework list — coming in the next step.';
 
   @override
-  String get parentAccountSoon => 'Account settings — coming soon.';
+  String get parentAccountTitle => 'Account';
+
+  @override
+  String get parentAccountBackToPicker => 'Back';
+
+  @override
+  String get parentAccountBackToAccount => 'Back to account';
+
+  @override
+  String get parentAccountNotSet => 'Not set';
+
+  @override
+  String get parentAccountLoadFailed => 'Could not load account.';
+
+  @override
+  String get parentAccountSaveFailed => 'Could not save changes.';
+
+  @override
+  String get parentAccountSave => 'Save';
+
+  @override
+  String get parentAccountSaveCity => 'Save city';
+
+  @override
+  String get parentAccountSaveLogin => 'Save login';
+
+  @override
+  String get parentAccountSavePassword => 'Save password';
+
+  @override
+  String get parentAccountCancel => 'Cancel';
+
+  @override
+  String get parentAccountSectionProfile => 'Profile';
+
+  @override
+  String get parentAccountSectionChildren => 'Children';
+
+  @override
+  String get parentAccountSectionCity => 'City';
+
+  @override
+  String get parentAccountSectionContacts => 'Contacts';
+
+  @override
+  String get parentAccountSectionSecurity => 'Security';
+
+  @override
+  String get parentAccountSectionLanguage => 'Language';
+
+  @override
+  String get parentAccountFieldFullName => 'Full name';
+
+  @override
+  String get parentAccountFieldDateOfBirth => 'Date of birth';
+
+  @override
+  String get parentAccountFieldChildren => 'Profiles';
+
+  @override
+  String get parentAccountFieldCity => 'City';
+
+  @override
+  String get parentAccountFieldLogin => 'Login';
+
+  @override
+  String get parentAccountActionChangeProfile => 'Change name';
+
+  @override
+  String get parentAccountActionChangeDateOfBirth => 'Change date of birth';
+
+  @override
+  String get parentAccountActionManageChildren => 'Manage children';
+
+  @override
+  String get parentAccountActionChangeCity => 'Change city';
+
+  @override
+  String get parentAccountActionChangePhone => 'Change phone';
+
+  @override
+  String get parentAccountActionChangeEmail => 'Change email';
+
+  @override
+  String get parentAccountActionChangeLogin => 'Change login';
+
+  @override
+  String get parentAccountActionChangePassword => 'Change password';
+
+  @override
+  String get parentAccountActionLogoutAll => 'Sign out on all devices';
+
+  @override
+  String parentAccountChildrenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count profiles',
+      one: '1 profile',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentAccountCityNotSet => 'City not set';
+
+  @override
+  String get parentAccountDateOfBirthNotSet => 'Date of birth not set';
+
+  @override
+  String get parentAccountContactVerified => 'Verified';
+
+  @override
+  String get parentAccountContactNotVerified => 'Not verified';
+
+  @override
+  String get parentAccountContactChangeSoon =>
+      'Contact change — coming in the next step.';
+
+  @override
+  String get parentAccountProfileTitle => 'Change name';
+
+  @override
+  String get parentAccountDateOfBirthTitle => 'Change date of birth';
+
+  @override
+  String get parentAccountCityTitle => 'Change city';
+
+  @override
+  String get parentAccountLoginTitle => 'Change login';
+
+  @override
+  String get parentAccountPasswordTitle => 'Change password';
+
+  @override
+  String get parentAccountCurrentPassword => 'Current password';
+
+  @override
+  String get parentAccountNewLogin => 'New login';
+
+  @override
+  String get parentAccountConfirmNewLogin => 'Confirm new login';
+
+  @override
+  String get parentAccountNewPassword => 'New password';
+
+  @override
+  String get parentAccountConfirmNewPassword => 'Confirm new password';
+
+  @override
+  String get parentAccountLogoutAllTitle => 'Sign out on all devices?';
+
+  @override
+  String get parentAccountLogoutAllMessage =>
+      'All active sessions will end. You will need to sign in again.';
+
+  @override
+  String get parentAccountLogoutAllConfirm => 'Sign out everywhere';
+
+  @override
+  String get parentAccountChildrenTitle => 'Children';
+
+  @override
+  String get parentAccountChildrenProfiles => 'Profiles';
+
+  @override
+  String get parentAccountChildrenActions => 'Actions';
+
+  @override
+  String get parentAccountChildrenEmpty => 'No children added yet.';
+
+  @override
+  String get parentAccountChildrenBackToList => 'Back to list';
+
+  @override
+  String get parentAccountChildSummary => 'Profile';
+
+  @override
+  String get parentAccountChildAge => 'Age';
+
+  @override
+  String get parentAccountEditChild => 'Edit profile';
+
+  @override
+  String get parentAccountEditChildTitle => 'Edit profile';
+
+  @override
+  String get parentAccountChildBackToProfile => 'Back to profile';
+
+  @override
+  String get parentAccountDeleteChildTitle => 'Delete child?';
+
+  @override
+  String get parentAccountDeleteChildMessage =>
+      'This profile will be permanently deleted.';
+
+  @override
+  String get parentAccountDeleteChildConfirm => 'Delete child';
+
+  @override
+  String get parentUpdateChildFailed => 'Could not update child profile.';
+
+  @override
+  String get parentDeleteChildFailed => 'Could not delete child profile.';
 }

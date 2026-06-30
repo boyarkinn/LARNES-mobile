@@ -11,6 +11,12 @@ class AuthUser {
     this.firstName,
     this.lastName,
     this.phone,
+    this.patronymic,
+    this.city,
+    this.dateOfBirth,
+    this.login,
+    this.phoneVerified = false,
+    this.emailVerified = false,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -21,6 +27,12 @@ class AuthUser {
       firstName: json['firstName'] as String?,
       lastName: json['lastName'] as String?,
       phone: json['phone'] as String?,
+      patronymic: json['patronymic'] as String?,
+      city: json['city'] as String?,
+      dateOfBirth: json['dateOfBirth'] as String?,
+      login: json['login'] as String?,
+      phoneVerified: json['phoneVerifiedAt'] != null,
+      emailVerified: json['emailVerifiedAt'] != null,
     );
   }
 
@@ -30,6 +42,12 @@ class AuthUser {
   final String? firstName;
   final String? lastName;
   final String? phone;
+  final String? patronymic;
+  final String? city;
+  final String? dateOfBirth;
+  final String? login;
+  final bool phoneVerified;
+  final bool emailVerified;
 
   String get displayName {
     final parts = [firstName, lastName].whereType<String>().where((s) => s.isNotEmpty);
@@ -37,6 +55,16 @@ class AuthUser {
       return parts.join(' ');
     }
     return email ?? phone ?? id;
+  }
+
+  String get fullName {
+    final parts = [lastName, firstName, patronymic]
+        .whereType<String>()
+        .where((part) => part.isNotEmpty);
+    if (parts.isNotEmpty) {
+      return parts.join(' ');
+    }
+    return displayName;
   }
 }
 

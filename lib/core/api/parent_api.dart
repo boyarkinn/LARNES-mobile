@@ -105,6 +105,59 @@ class ParentApi {
     }
   }
 
+  Future<ParentChild> updateChild({
+    required String childId,
+    required CreateChildPayload payload,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.patch(
+        '/api/mobile/parent/children/$childId',
+        data: payload.toJson(locale),
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentUpdateChildFailed));
+      }
+      final child = data['child'];
+      if (child is! Map) {
+        throw ParentApiException(l10n.parentUpdateChildFailed);
+      }
+      return ParentChild.fromJson(Map<String, dynamic>.from(child));
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<void> deleteChild(String childId, {String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.delete(
+        '/api/mobile/parent/children/$childId',
+        data: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentDeleteChildFailed));
+      }
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
   static String _networkMessage(DioException error, AppLocalizations l10n) {
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout) {

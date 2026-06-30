@@ -4,21 +4,20 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/widgets/add_child_card.dart';
-import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
+import 'package:larnes_mobile/features/parent/utils/child_display.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
-class ChildPickerScreen extends StatefulWidget {
-  const ChildPickerScreen({super.key});
+class AccountChildrenScreen extends StatefulWidget {
+  const AccountChildrenScreen({super.key});
 
   @override
-  State<ChildPickerScreen> createState() => _ChildPickerScreenState();
+  State<AccountChildrenScreen> createState() => _AccountChildrenScreenState();
 }
 
-class _ChildPickerScreenState extends State<ChildPickerScreen> {
+class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
   bool _isLoading = true;
-  bool _isRefreshing = false;
   String? _error;
   List<ParentChild> _children = const [];
   bool _wasInactive = false;
@@ -39,7 +38,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     if (_wasInactive) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          _load(refreshing: _children.isNotEmpty);
+          _load(silent: _children.isNotEmpty);
         }
       });
     }
@@ -52,10 +51,8 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     super.deactivate();
   }
 
-  Future<void> _load({bool refreshing = false}) async {
-    if (refreshing) {
-      setState(() => _isRefreshing = true);
-    } else if (_children.isEmpty) {
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
       setState(() {
         _isLoading = true;
         _error = null;
@@ -71,7 +68,6 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       setState(() {
         _children = children;
         _isLoading = false;
-        _isRefreshing = false;
         _error = null;
       });
     } on ParentApiException catch (error) {
@@ -79,7 +75,6 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
         setState(() {
           _error = error.message;
           _isLoading = false;
-          _isRefreshing = false;
         });
       }
     } catch (_) {
@@ -87,28 +82,14 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
         setState(() {
           _error = context.l10n.parentLoadChildrenFailed;
           _isLoading = false;
-          _isRefreshing = false;
         });
       }
     }
   }
 
-  Future<void> _openAddChild() async {
-    final createdId = await context.push<String>('/parent/children/new');
-    if (!mounted) {
-      return;
-    }
-
-    await _load(refreshing: true);
-
-    if (!mounted || createdId == null) {
-      return;
-    }
-
-    await context.push('/parent/$createdId');
-    if (mounted) {
-      await _load(refreshing: true);
-    }
+  String _childTitle(ParentChild child) {
+    final lines = childDisplayNameLines(child);
+    return '${lines.lastName} ${lines.givenName}'.trim();
   }
 
   @override
@@ -116,16 +97,15 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     final l10n = context.l10n;
 
     return ParentScaffold(
-      title: l10n.parentChildPickerTitle,
-      accountLabel: l10n.parentAccount,
-      onAccount: () => context.push('/parent/account'),
-      body: _buildBody(),
+      title: l10n.parentAccountChildrenTitle,
+      backLabel: l10n.parentAccountBackToAccount,
+      onBack: () => context.pop(),
+      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody() {
-    final l10n = context.l10n;
-    if (_isLoading && _children.isEmpty && _error == null) {
+  Widget _buildBody(dynamic l10n) {
+    if (_isLoading && _children.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -146,31 +126,43 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: () => _load(refreshing: true),
+      onRefresh: () => _load(silent: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         children: [
-          if (_isRefreshing)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: LinearProgressIndicator(),
+          if (_children.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(l10n.parentAccountChildrenEmpty, style: const TextStyle(fontSize: 14)),
             ),
-          for (final child in _children) ...[
-            ChildProfileCard(
-              child: child,
+          if (_children.isNotEmpty)
+            AccountSection(
+              title: l10n.parentAccountChildrenProfiles,
+              child: Column(
+                children: [
+                  for (var i = 0; i < _children.length; i++) ...[
+                    if (i > 0) const AccountDivider(),
+                    AccountActionRow(
+                      label: _childTitle(_children[i]),
+                      onTap: () => context.push('/parent/account/children/${_children[i].id}'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          AccountSection(
+            title: l10n.parentAccountChildrenActions,
+            child: AccountActionRow(
+              label: l10n.parentAddChild,
               onTap: () async {
-                await context.push('/parent/${child.id}');
+                await context.push('/parent/children/new');
                 if (mounted) {
-                  await _load(refreshing: true);
+                  await _load(silent: true);
                 }
               },
             ),
-            const SizedBox(height: 12),
-          ],
-          AddChildCard(
-            label: l10n.parentAddChild,
-            onTap: _openAddChild,
           ),
         ],
       ),

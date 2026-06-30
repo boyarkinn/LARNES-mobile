@@ -9,6 +9,15 @@ import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/add_child_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_child_detail_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_children_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_city_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_date_of_birth_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_edit_child_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_login_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_password_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_profile_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/child_picker_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
@@ -89,6 +98,60 @@ GoRouter createAppRouter(AuthSession authSession) {
         path: '/parent',
         builder: (context, state) => const ChildPickerScreen(),
         routes: [
+          GoRoute(
+            path: 'account',
+            builder: (context, state) => const AccountHubScreen(),
+            routes: [
+              GoRoute(
+                path: 'profile',
+                builder: (context, state) => const AccountProfileScreen(),
+              ),
+              GoRoute(
+                path: 'date-of-birth',
+                builder: (context, state) => const AccountDateOfBirthScreen(),
+              ),
+              GoRoute(
+                path: 'city',
+                builder: (context, state) => const AccountCityScreen(),
+              ),
+              GoRoute(
+                path: 'login',
+                builder: (context, state) => const AccountLoginScreen(),
+              ),
+              GoRoute(
+                path: 'password',
+                builder: (context, state) => const AccountPasswordScreen(),
+              ),
+              GoRoute(
+                path: 'children',
+                builder: (context, state) => const AccountChildrenScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':childId',
+                    builder: (context, state) {
+                      final childId = state.pathParameters['childId'];
+                      if (childId == null || childId.isEmpty) {
+                        return const AccountChildrenScreen();
+                      }
+                      return AccountChildDetailScreen(childId: childId);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const AccountChildrenScreen();
+                          }
+                          return AccountEditChildScreen(childId: childId);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
           GoRoute(
             path: 'children/new',
             builder: (context, state) => const AddChildScreen(),

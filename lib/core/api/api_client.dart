@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
@@ -33,6 +34,7 @@ class ApiClient {
   final TokenStorage _tokenStorage;
   RegisterApi? _registerApi;
   ParentApi? _parentApi;
+  ParentAccountApi? _parentAccountApi;
 
   Dio get dio => _dio;
 
@@ -41,4 +43,6 @@ class ApiClient {
   RegisterApi get registerApi => _registerApi ??= RegisterApi(this);
 
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
+
+  ParentAccountApi get parentAccountApi => _parentAccountApi ??= ParentAccountApi(this);
 }

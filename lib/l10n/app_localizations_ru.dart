@@ -322,5 +322,210 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentHomeworkSoon => 'Список ДЗ — в следующем шаге.';
 
   @override
-  String get parentAccountSoon => 'Настройки аккаунта — скоро.';
+  String get parentAccountTitle => 'Аккаунт';
+
+  @override
+  String get parentAccountBackToPicker => 'Назад';
+
+  @override
+  String get parentAccountBackToAccount => 'К аккаунту';
+
+  @override
+  String get parentAccountNotSet => 'Не указано';
+
+  @override
+  String get parentAccountLoadFailed => 'Не удалось загрузить аккаунт.';
+
+  @override
+  String get parentAccountSaveFailed => 'Не удалось сохранить изменения.';
+
+  @override
+  String get parentAccountSave => 'Сохранить';
+
+  @override
+  String get parentAccountSaveCity => 'Сохранить город';
+
+  @override
+  String get parentAccountSaveLogin => 'Сохранить логин';
+
+  @override
+  String get parentAccountSavePassword => 'Сохранить пароль';
+
+  @override
+  String get parentAccountCancel => 'Отмена';
+
+  @override
+  String get parentAccountSectionProfile => 'Профиль';
+
+  @override
+  String get parentAccountSectionChildren => 'Дети';
+
+  @override
+  String get parentAccountSectionCity => 'Город';
+
+  @override
+  String get parentAccountSectionContacts => 'Контакты';
+
+  @override
+  String get parentAccountSectionSecurity => 'Безопасность';
+
+  @override
+  String get parentAccountSectionLanguage => 'Язык';
+
+  @override
+  String get parentAccountFieldFullName => 'ФИО';
+
+  @override
+  String get parentAccountFieldDateOfBirth => 'Дата рождения';
+
+  @override
+  String get parentAccountFieldChildren => 'Профили';
+
+  @override
+  String get parentAccountFieldCity => 'Город';
+
+  @override
+  String get parentAccountFieldLogin => 'Логин';
+
+  @override
+  String get parentAccountActionChangeProfile => 'Сменить ФИО';
+
+  @override
+  String get parentAccountActionChangeDateOfBirth => 'Сменить дату рождения';
+
+  @override
+  String get parentAccountActionManageChildren => 'Управление детьми';
+
+  @override
+  String get parentAccountActionChangeCity => 'Сменить город';
+
+  @override
+  String get parentAccountActionChangePhone => 'Сменить телефон';
+
+  @override
+  String get parentAccountActionChangeEmail => 'Сменить email';
+
+  @override
+  String get parentAccountActionChangeLogin => 'Сменить логин';
+
+  @override
+  String get parentAccountActionChangePassword => 'Сменить пароль';
+
+  @override
+  String get parentAccountActionLogoutAll => 'Выйти на всех устройствах';
+
+  @override
+  String parentAccountChildrenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# профилей',
+      many: '# профилей',
+      few: '# профиля',
+      one: '# профиль',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentAccountCityNotSet => 'Город не указан';
+
+  @override
+  String get parentAccountDateOfBirthNotSet => 'Дата рождения не указана';
+
+  @override
+  String get parentAccountContactVerified => 'Подтверждён';
+
+  @override
+  String get parentAccountContactNotVerified => 'Не подтверждён';
+
+  @override
+  String get parentAccountContactChangeSoon =>
+      'Смена контакта — в следующем этапе.';
+
+  @override
+  String get parentAccountProfileTitle => 'Сменить ФИО';
+
+  @override
+  String get parentAccountDateOfBirthTitle => 'Сменить дату рождения';
+
+  @override
+  String get parentAccountCityTitle => 'Сменить город';
+
+  @override
+  String get parentAccountLoginTitle => 'Сменить логин';
+
+  @override
+  String get parentAccountPasswordTitle => 'Сменить пароль';
+
+  @override
+  String get parentAccountCurrentPassword => 'Текущий пароль';
+
+  @override
+  String get parentAccountNewLogin => 'Новый логин';
+
+  @override
+  String get parentAccountConfirmNewLogin => 'Подтвердите новый логин';
+
+  @override
+  String get parentAccountNewPassword => 'Новый пароль';
+
+  @override
+  String get parentAccountConfirmNewPassword => 'Подтвердите новый пароль';
+
+  @override
+  String get parentAccountLogoutAllTitle => 'Выйти на всех устройствах?';
+
+  @override
+  String get parentAccountLogoutAllMessage =>
+      'Все активные сессии будут завершены. Потребуется войти снова.';
+
+  @override
+  String get parentAccountLogoutAllConfirm => 'Выйти везде';
+
+  @override
+  String get parentAccountChildrenTitle => 'Дети';
+
+  @override
+  String get parentAccountChildrenProfiles => 'Профили';
+
+  @override
+  String get parentAccountChildrenActions => 'Действия';
+
+  @override
+  String get parentAccountChildrenEmpty => 'Пока нет добавленных детей.';
+
+  @override
+  String get parentAccountChildrenBackToList => 'К списку';
+
+  @override
+  String get parentAccountChildSummary => 'Профиль';
+
+  @override
+  String get parentAccountChildAge => 'Возраст';
+
+  @override
+  String get parentAccountEditChild => 'Редактировать профиль';
+
+  @override
+  String get parentAccountEditChildTitle => 'Редактирование';
+
+  @override
+  String get parentAccountChildBackToProfile => 'К профилю';
+
+  @override
+  String get parentAccountDeleteChildTitle => 'Удалить ребёнка?';
+
+  @override
+  String get parentAccountDeleteChildMessage =>
+      'Профиль будет удалён без возможности восстановления.';
+
+  @override
+  String get parentAccountDeleteChildConfirm => 'Удалить ребёнка';
+
+  @override
+  String get parentUpdateChildFailed => 'Не удалось обновить профиль ребёнка.';
+
+  @override
+  String get parentDeleteChildFailed => 'Не удалось удалить профиль ребёнка.';
 }

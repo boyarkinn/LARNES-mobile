@@ -674,11 +674,395 @@ abstract class AppLocalizations {
   /// **'Homework list — coming in the next step.'**
   String get parentHomeworkSoon;
 
-  /// No description provided for @parentAccountSoon.
+  /// No description provided for @parentAccountTitle.
   ///
   /// In en, this message translates to:
-  /// **'Account settings — coming soon.'**
-  String get parentAccountSoon;
+  /// **'Account'**
+  String get parentAccountTitle;
+
+  /// No description provided for @parentAccountBackToPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get parentAccountBackToPicker;
+
+  /// No description provided for @parentAccountBackToAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to account'**
+  String get parentAccountBackToAccount;
+
+  /// No description provided for @parentAccountNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get parentAccountNotSet;
+
+  /// No description provided for @parentAccountLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load account.'**
+  String get parentAccountLoadFailed;
+
+  /// No description provided for @parentAccountSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save changes.'**
+  String get parentAccountSaveFailed;
+
+  /// No description provided for @parentAccountSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get parentAccountSave;
+
+  /// No description provided for @parentAccountSaveCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Save city'**
+  String get parentAccountSaveCity;
+
+  /// No description provided for @parentAccountSaveLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Save login'**
+  String get parentAccountSaveLogin;
+
+  /// No description provided for @parentAccountSavePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get parentAccountSavePassword;
+
+  /// No description provided for @parentAccountCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get parentAccountCancel;
+
+  /// No description provided for @parentAccountSectionProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get parentAccountSectionProfile;
+
+  /// No description provided for @parentAccountSectionChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Children'**
+  String get parentAccountSectionChildren;
+
+  /// No description provided for @parentAccountSectionCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get parentAccountSectionCity;
+
+  /// No description provided for @parentAccountSectionContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get parentAccountSectionContacts;
+
+  /// No description provided for @parentAccountSectionSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get parentAccountSectionSecurity;
+
+  /// No description provided for @parentAccountSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get parentAccountSectionLanguage;
+
+  /// No description provided for @parentAccountFieldFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get parentAccountFieldFullName;
+
+  /// No description provided for @parentAccountFieldDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get parentAccountFieldDateOfBirth;
+
+  /// No description provided for @parentAccountFieldChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles'**
+  String get parentAccountFieldChildren;
+
+  /// No description provided for @parentAccountFieldCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get parentAccountFieldCity;
+
+  /// No description provided for @parentAccountFieldLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get parentAccountFieldLogin;
+
+  /// No description provided for @parentAccountActionChangeProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Change name'**
+  String get parentAccountActionChangeProfile;
+
+  /// No description provided for @parentAccountActionChangeDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Change date of birth'**
+  String get parentAccountActionChangeDateOfBirth;
+
+  /// No description provided for @parentAccountActionManageChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage children'**
+  String get parentAccountActionManageChildren;
+
+  /// No description provided for @parentAccountActionChangeCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Change city'**
+  String get parentAccountActionChangeCity;
+
+  /// No description provided for @parentAccountActionChangePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone'**
+  String get parentAccountActionChangePhone;
+
+  /// No description provided for @parentAccountActionChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get parentAccountActionChangeEmail;
+
+  /// No description provided for @parentAccountActionChangeLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Change login'**
+  String get parentAccountActionChangeLogin;
+
+  /// No description provided for @parentAccountActionChangePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get parentAccountActionChangePassword;
+
+  /// No description provided for @parentAccountActionLogoutAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out on all devices'**
+  String get parentAccountActionLogoutAll;
+
+  /// No description provided for @parentAccountChildrenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 profile} other{{count} profiles}}'**
+  String parentAccountChildrenCount(int count);
+
+  /// No description provided for @parentAccountCityNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'City not set'**
+  String get parentAccountCityNotSet;
+
+  /// No description provided for @parentAccountDateOfBirthNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth not set'**
+  String get parentAccountDateOfBirthNotSet;
+
+  /// No description provided for @parentAccountContactVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get parentAccountContactVerified;
+
+  /// No description provided for @parentAccountContactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get parentAccountContactNotVerified;
+
+  /// No description provided for @parentAccountContactChangeSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact change — coming in the next step.'**
+  String get parentAccountContactChangeSoon;
+
+  /// No description provided for @parentAccountProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change name'**
+  String get parentAccountProfileTitle;
+
+  /// No description provided for @parentAccountDateOfBirthTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change date of birth'**
+  String get parentAccountDateOfBirthTitle;
+
+  /// No description provided for @parentAccountCityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change city'**
+  String get parentAccountCityTitle;
+
+  /// No description provided for @parentAccountLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change login'**
+  String get parentAccountLoginTitle;
+
+  /// No description provided for @parentAccountPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get parentAccountPasswordTitle;
+
+  /// No description provided for @parentAccountCurrentPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get parentAccountCurrentPassword;
+
+  /// No description provided for @parentAccountNewLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'New login'**
+  String get parentAccountNewLogin;
+
+  /// No description provided for @parentAccountConfirmNewLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new login'**
+  String get parentAccountConfirmNewLogin;
+
+  /// No description provided for @parentAccountNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get parentAccountNewPassword;
+
+  /// No description provided for @parentAccountConfirmNewPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get parentAccountConfirmNewPassword;
+
+  /// No description provided for @parentAccountLogoutAllTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out on all devices?'**
+  String get parentAccountLogoutAllTitle;
+
+  /// No description provided for @parentAccountLogoutAllMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All active sessions will end. You will need to sign in again.'**
+  String get parentAccountLogoutAllMessage;
+
+  /// No description provided for @parentAccountLogoutAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out everywhere'**
+  String get parentAccountLogoutAllConfirm;
+
+  /// No description provided for @parentAccountChildrenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Children'**
+  String get parentAccountChildrenTitle;
+
+  /// No description provided for @parentAccountChildrenProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Profiles'**
+  String get parentAccountChildrenProfiles;
+
+  /// No description provided for @parentAccountChildrenActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get parentAccountChildrenActions;
+
+  /// No description provided for @parentAccountChildrenEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No children added yet.'**
+  String get parentAccountChildrenEmpty;
+
+  /// No description provided for @parentAccountChildrenBackToList.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to list'**
+  String get parentAccountChildrenBackToList;
+
+  /// No description provided for @parentAccountChildSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get parentAccountChildSummary;
+
+  /// No description provided for @parentAccountChildAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get parentAccountChildAge;
+
+  /// No description provided for @parentAccountEditChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get parentAccountEditChild;
+
+  /// No description provided for @parentAccountEditChildTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get parentAccountEditChildTitle;
+
+  /// No description provided for @parentAccountChildBackToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to profile'**
+  String get parentAccountChildBackToProfile;
+
+  /// No description provided for @parentAccountDeleteChildTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete child?'**
+  String get parentAccountDeleteChildTitle;
+
+  /// No description provided for @parentAccountDeleteChildMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile will be permanently deleted.'**
+  String get parentAccountDeleteChildMessage;
+
+  /// No description provided for @parentAccountDeleteChildConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete child'**
+  String get parentAccountDeleteChildConfirm;
+
+  /// No description provided for @parentUpdateChildFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update child profile.'**
+  String get parentUpdateChildFailed;
+
+  /// No description provided for @parentDeleteChildFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete child profile.'**
+  String get parentDeleteChildFailed;
 }
 
 class _AppLocalizationsDelegate

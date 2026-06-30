@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
+import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 
@@ -29,6 +30,23 @@ class AuthSession extends ChangeNotifier {
   RegisterApi get registerApi => _client.registerApi;
 
   ParentApi get parentApi => _client.parentApi;
+
+  ParentAccountApi get parentAccountApi => _client.parentAccountApi;
+
+  void applyUser(AuthUser user) {
+    _user = user;
+    _notifySafely();
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      final user = await _authApi.fetchSession();
+      _user = user;
+      _notifySafely();
+    } catch (_) {
+      // keep current user on transient errors
+    }
+  }
 
   void _notifySafely() {
     final phase = SchedulerBinding.instance.schedulerPhase;
@@ -80,5 +98,9 @@ class AuthSession extends ChangeNotifier {
     await _authApi.logout();
     _user = null;
     _notifySafely();
+  }
+
+  Future<void> persistToken(String token) async {
+    await _client.tokenStorage.writeToken(token);
   }
 }

@@ -126,12 +126,6 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     }
   }
 
-  void _showSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.parentAccountContactChangeSoon)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -258,7 +252,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 const AccountDivider(),
                 AccountActionRow(
                   label: l10n.parentAccountActionChangePhone,
-                  onTap: _showSoon,
+                  onTap: () => context.push('/parent/account/phone'),
                 ),
                 const AccountDivider(),
                 AccountFieldRow(
@@ -275,7 +269,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 const AccountDivider(),
                 AccountActionRow(
                   label: l10n.parentAccountActionChangeEmail,
-                  onTap: _showSoon,
+                  onTap: () => context.push('/parent/account/email'),
                 ),
                 const AccountDivider(),
                 AccountFieldRow(

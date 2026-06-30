@@ -569,6 +569,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountLoginTitle => 'Change login';
 
   @override
+  String get parentAccountPhoneTitle => 'Change phone';
+
+  @override
+  String get parentAccountEmailTitle => 'Change email';
+
+  @override
+  String get parentAccountNewPhone => 'New phone';
+
+  @override
+  String get parentAccountNewEmail => 'New email';
+
+  @override
+  String get parentAccountSendCode => 'Get code';
+
+  @override
+  String get parentAccountVerifyContact => 'Confirm';
+
+  @override
   String get parentAccountPasswordTitle => 'Change password';
 
   @override

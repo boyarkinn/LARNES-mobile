@@ -9,6 +9,7 @@ import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/add_child_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_change_contact_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_child_detail_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_children_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_city_screen.dart';
@@ -119,6 +120,18 @@ GoRouter createAppRouter(AuthSession authSession) {
               GoRoute(
                 path: 'login',
                 builder: (context, state) => const AccountLoginScreen(),
+              ),
+              GoRoute(
+                path: 'phone',
+                builder: (context, state) => const AccountChangeContactScreen(
+                  channel: AccountContactChangeChannel.phone,
+                ),
+              ),
+              GoRoute(
+                path: 'email',
+                builder: (context, state) => const AccountChangeContactScreen(
+                  channel: AccountContactChangeChannel.email,
+                ),
               ),
               GoRoute(
                 path: 'password',

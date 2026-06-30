@@ -576,6 +576,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountLoginTitle => 'Сменить логин';
 
   @override
+  String get parentAccountPhoneTitle => 'Сменить телефон';
+
+  @override
+  String get parentAccountEmailTitle => 'Сменить email';
+
+  @override
+  String get parentAccountNewPhone => 'Новый телефон';
+
+  @override
+  String get parentAccountNewEmail => 'Новый email';
+
+  @override
+  String get parentAccountSendCode => 'Получить код';
+
+  @override
+  String get parentAccountVerifyContact => 'Подтвердить';
+
+  @override
   String get parentAccountPasswordTitle => 'Сменить пароль';
 
   @override

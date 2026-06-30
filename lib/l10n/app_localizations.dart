@@ -1118,6 +1118,42 @@ abstract class AppLocalizations {
   /// **'Change login'**
   String get parentAccountLoginTitle;
 
+  /// No description provided for @parentAccountPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone'**
+  String get parentAccountPhoneTitle;
+
+  /// No description provided for @parentAccountEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get parentAccountEmailTitle;
+
+  /// No description provided for @parentAccountNewPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'New phone'**
+  String get parentAccountNewPhone;
+
+  /// No description provided for @parentAccountNewEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get parentAccountNewEmail;
+
+  /// No description provided for @parentAccountSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Get code'**
+  String get parentAccountSendCode;
+
+  /// No description provided for @parentAccountVerifyContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get parentAccountVerifyContact;
+
   /// No description provided for @parentAccountPasswordTitle.
   ///
   /// In en, this message translates to:

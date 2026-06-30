@@ -636,6 +636,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountChildAge => 'Age';
 
   @override
+  String get parentAccountEditChildProfile => 'Edit profile';
+
+  @override
+  String get parentChildEducationTitle => 'Learning';
+
+  @override
+  String get parentChildEducationEmpty => 'No teachers or networks linked yet.';
+
+  @override
+  String get parentChildTutorSection => 'Tutor';
+
+  @override
+  String get parentChildTeacherLabel => 'Teacher';
+
+  @override
+  String get parentChildGroupsLabel => 'Groups';
+
+  @override
+  String get parentChildGroupLabel => 'Group';
+
+  @override
+  String get parentChildTutorNoGroups => 'Not added to any groups yet.';
+
+  @override
+  String parentChildNetworkSection(String name) {
+    return 'Network \"$name\"';
+  }
+
+  @override
+  String get parentChildNetworkNoGroups =>
+      'Enrolled in network; no group assigned yet.';
+
+  @override
+  String parentChildResponsibleTeacher(String name) {
+    return 'Teacher: $name';
+  }
+
+  @override
+  String get parentChildTeacherNotAssigned =>
+      'No responsible teacher assigned.';
+
+  @override
   String get parentAccountEditChild => 'Edit profile';
 
   @override

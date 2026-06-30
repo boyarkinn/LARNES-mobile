@@ -273,6 +273,32 @@
   "parentAccountChildrenBackToList": "Back to list",
   "parentAccountChildSummary": "Profile",
   "parentAccountChildAge": "Age",
+  "parentAccountEditChildProfile": "Edit profile",
+  "parentChildEducationTitle": "Learning",
+  "parentChildEducationEmpty": "No teachers or networks linked yet.",
+  "parentChildTutorSection": "Tutor",
+  "parentChildTeacherLabel": "Teacher",
+  "parentChildGroupsLabel": "Groups",
+  "parentChildGroupLabel": "Group",
+  "parentChildTutorNoGroups": "Not added to any groups yet.",
+  "parentChildNetworkSection": "Network \"{name}\"",
+  "@parentChildNetworkSection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentChildNetworkNoGroups": "Enrolled in network; no group assigned yet.",
+  "parentChildResponsibleTeacher": "Teacher: {name}",
+  "@parentChildResponsibleTeacher": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentChildTeacherNotAssigned": "No responsible teacher assigned.",
   "parentAccountEditChild": "Edit profile",
   "parentAccountEditChildTitle": "Edit profile",
   "parentAccountChildBackToProfile": "Back to profile",

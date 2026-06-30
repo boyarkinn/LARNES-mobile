@@ -111,12 +111,14 @@ class AccountActionRow extends StatelessWidget {
   const AccountActionRow({
     super.key,
     required this.label,
+    this.subtitle,
     this.onTap,
     this.destructive = false,
     this.enabled = true,
   });
 
   final String label;
+  final String? subtitle;
   final VoidCallback? onTap;
   final bool destructive;
   final bool enabled;
@@ -137,9 +139,24 @@ class AccountActionRow extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(color: color, fontSize: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(color: color, fontSize: 14),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          color: LarnesColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               if (enabled)
@@ -147,6 +164,59 @@ class AccountActionRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class AccountLabeledRow extends StatelessWidget {
+  const AccountLabeledRow({
+    super.key,
+    required this.label,
+    this.value,
+    this.hint,
+  });
+
+  final String label;
+  final String? value;
+  final String? hint;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: LarnesColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+            ),
+          ),
+          if (value != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              value!,
+              style: const TextStyle(
+                color: LarnesColors.textSecondary,
+                fontSize: 14,
+              ),
+            ),
+          ],
+          if (hint != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              hint!,
+              style: const TextStyle(
+                color: LarnesColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

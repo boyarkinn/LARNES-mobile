@@ -231,6 +231,32 @@
   "parentAccountChildrenBackToList": "К списку",
   "parentAccountChildSummary": "Профиль",
   "parentAccountChildAge": "Возраст",
+  "parentAccountEditChildProfile": "Редактировать данные",
+  "parentChildEducationTitle": "Обучение",
+  "parentChildEducationEmpty": "Пока нет привязок к педагогам и сетям.",
+  "parentChildTutorSection": "Репетитор",
+  "parentChildTeacherLabel": "Педагог",
+  "parentChildGroupsLabel": "Группы",
+  "parentChildGroupLabel": "Группа",
+  "parentChildTutorNoGroups": "Пока не добавлен в группы.",
+  "parentChildNetworkSection": "Сеть «{name}»",
+  "@parentChildNetworkSection": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentChildNetworkNoGroups": "В сети, группа пока не назначена.",
+  "parentChildResponsibleTeacher": "Педагог: {name}",
+  "@parentChildResponsibleTeacher": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentChildTeacherNotAssigned": "Ответственный педагог не назначен.",
   "parentAccountEditChild": "Редактировать профиль",
   "parentAccountEditChildTitle": "Редактирование",
   "parentAccountChildBackToProfile": "К профилю",

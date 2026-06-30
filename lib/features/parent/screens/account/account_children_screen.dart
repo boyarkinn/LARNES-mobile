@@ -145,6 +145,9 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
                     if (i > 0) const AccountDivider(),
                     AccountActionRow(
                       label: _childTitle(_children[i]),
+                      subtitle: _children[i].ageYears != null
+                          ? formatChildAgeYears(_children[i].ageYears!, LocaleScope.of(context).localeCode)
+                          : null,
                       onTap: () => context.push('/parent/account/children/${_children[i].id}'),
                     ),
                   ],

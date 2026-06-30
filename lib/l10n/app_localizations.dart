@@ -1250,6 +1250,78 @@ abstract class AppLocalizations {
   /// **'Age'**
   String get parentAccountChildAge;
 
+  /// No description provided for @parentAccountEditChildProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile'**
+  String get parentAccountEditChildProfile;
+
+  /// No description provided for @parentChildEducationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get parentChildEducationTitle;
+
+  /// No description provided for @parentChildEducationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No teachers or networks linked yet.'**
+  String get parentChildEducationEmpty;
+
+  /// No description provided for @parentChildTutorSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Tutor'**
+  String get parentChildTutorSection;
+
+  /// No description provided for @parentChildTeacherLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher'**
+  String get parentChildTeacherLabel;
+
+  /// No description provided for @parentChildGroupsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get parentChildGroupsLabel;
+
+  /// No description provided for @parentChildGroupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get parentChildGroupLabel;
+
+  /// No description provided for @parentChildTutorNoGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added to any groups yet.'**
+  String get parentChildTutorNoGroups;
+
+  /// No description provided for @parentChildNetworkSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Network \"{name}\"'**
+  String parentChildNetworkSection(String name);
+
+  /// No description provided for @parentChildNetworkNoGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrolled in network; no group assigned yet.'**
+  String get parentChildNetworkNoGroups;
+
+  /// No description provided for @parentChildResponsibleTeacher.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher: {name}'**
+  String parentChildResponsibleTeacher(String name);
+
+  /// No description provided for @parentChildTeacherNotAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'No responsible teacher assigned.'**
+  String get parentChildTeacherNotAssigned;
+
   /// No description provided for @parentAccountEditChild.
   ///
   /// In en, this message translates to:

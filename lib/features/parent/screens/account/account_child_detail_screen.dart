@@ -4,7 +4,6 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/utils/account_display.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
@@ -22,7 +21,7 @@ class AccountChildDetailScreen extends StatefulWidget {
 class _AccountChildDetailScreenState extends State<AccountChildDetailScreen> {
   bool _isLoading = true;
   String? _error;
-  ParentChild? _child;
+  ParentChildDetail? _detail;
 
   @override
   void initState() {
@@ -47,7 +46,7 @@ class _AccountChildDetailScreenState extends State<AccountChildDetailScreen> {
         return;
       }
       setState(() {
-        _child = detail.child;
+        _detail = detail;
         _isLoading = false;
       });
     } on ParentApiException catch (error) {
@@ -72,20 +71,10 @@ class _AccountChildDetailScreenState extends State<AccountChildDetailScreen> {
     return '${lines.lastName} ${lines.givenName}'.trim();
   }
 
-  String _genderLabel(String? gender, dynamic l10n) {
-    if (gender == 'male') {
-      return l10n.parentChildFormGenderMale;
-    }
-    if (gender == 'female') {
-      return l10n.parentChildFormGenderFemale;
-    }
-    return l10n.parentAccountNotSet;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final child = _child;
+    final child = _detail?.child;
 
     return ParentScaffold(
       title: child != null ? _title(child) : l10n.parentAccountChildrenTitle,
@@ -100,7 +89,7 @@ class _AccountChildDetailScreenState extends State<AccountChildDetailScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_error != null || _child == null) {
+    if (_error != null || _detail == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -109,44 +98,111 @@ class _AccountChildDetailScreenState extends State<AccountChildDetailScreen> {
       );
     }
 
-    final child = _child!;
+    final detail = _detail!;
+    final child = detail.child;
+    final education = detail.education;
     final localeCode = LocaleScope.of(context).localeCode;
     final age = child.ageYears;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
       children: [
-        AccountSection(
-          title: l10n.parentAccountChildSummary,
-          child: Column(
-            children: [
-              if (age != null)
-                AccountFieldRow(
-                  label: l10n.parentAccountChildAge,
-                  value: formatChildAgeYears(age, localeCode),
-                ),
-              if (age != null) const AccountDivider(),
-              AccountFieldRow(
-                label: l10n.parentChildFormDateOfBirth,
-                value: formatAccountDateOfBirth(child.dateOfBirth, localeCode),
-              ),
-              const AccountDivider(),
-              AccountFieldRow(
-                label: l10n.parentChildFormGender,
-                value: _genderLabel(child.gender, l10n),
-              ),
-            ],
+        if (age != null) ...[
+          AccountSection(
+            title: l10n.parentAccountChildSummary,
+            child: AccountFieldRow(
+              label: l10n.parentAccountChildAge,
+              value: formatChildAgeYears(age, localeCode),
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
+        ],
+        if (!education.hasEducation)
+          AccountSection(
+            title: l10n.parentChildEducationTitle,
+            child: AccountLabeledRow(label: l10n.parentChildEducationEmpty),
+          ),
+        if (!education.hasEducation) const SizedBox(height: 20),
+        ..._buildTutorSections(l10n, education),
+        ..._buildNetworkSections(l10n, education),
         AccountSection(
           title: l10n.parentAccountChildrenActions,
           child: AccountActionRow(
-            label: l10n.parentAccountEditChild,
+            label: l10n.parentAccountEditChildProfile,
             onTap: () => context.push('/parent/account/children/${widget.childId}/edit'),
           ),
         ),
       ],
     );
+  }
+
+  List<Widget> _buildTutorSections(dynamic l10n, ChildEducationContext education) {
+    if (education.tutors.isEmpty) {
+      return const [];
+    }
+
+    return [
+      AccountSection(
+        title: l10n.parentChildTutorSection,
+        child: Column(
+          children: [
+            for (var tutorIndex = 0; tutorIndex < education.tutors.length; tutorIndex++) ...[
+              if (tutorIndex > 0) const AccountDivider(),
+              AccountFieldRow(
+                label: l10n.parentChildTeacherLabel,
+                value: education.tutors[tutorIndex].teacherName,
+              ),
+              if (education.tutors[tutorIndex].groups.isNotEmpty)
+                for (final group in education.tutors[tutorIndex].groups) ...[
+                  const AccountDivider(),
+                  AccountFieldRow(
+                    label: group.name,
+                    value: l10n.parentChildGroupLabel,
+                  ),
+                ]
+              else ...[
+                const AccountDivider(),
+                AccountLabeledRow(
+                  label: l10n.parentChildGroupsLabel,
+                  hint: l10n.parentChildTutorNoGroups,
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+      const SizedBox(height: 20),
+    ];
+  }
+
+  List<Widget> _buildNetworkSections(dynamic l10n, ChildEducationContext education) {
+    if (education.networks.isEmpty) {
+      return const [];
+    }
+
+    return [
+      for (final network in education.networks) ...[
+        AccountSection(
+          title: l10n.parentChildNetworkSection(network.networkName),
+          child: network.groups.isEmpty
+              ? AccountLabeledRow(label: l10n.parentChildNetworkNoGroups)
+              : Column(
+                  children: [
+                    for (var i = 0; i < network.groups.length; i++) ...[
+                      if (i > 0) const AccountDivider(),
+                      AccountLabeledRow(
+                        label: network.groups[i].groupName,
+                        value: network.groups[i].centerLabel,
+                        hint: network.groups[i].teacherName != null
+                            ? l10n.parentChildResponsibleTeacher(network.groups[i].teacherName!)
+                            : l10n.parentChildTeacherNotAssigned,
+                      ),
+                    ],
+                  ],
+                ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    ];
   }
 }

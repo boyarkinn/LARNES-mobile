@@ -643,6 +643,48 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountChildAge => 'Возраст';
 
   @override
+  String get parentAccountEditChildProfile => 'Редактировать данные';
+
+  @override
+  String get parentChildEducationTitle => 'Обучение';
+
+  @override
+  String get parentChildEducationEmpty =>
+      'Пока нет привязок к педагогам и сетям.';
+
+  @override
+  String get parentChildTutorSection => 'Репетитор';
+
+  @override
+  String get parentChildTeacherLabel => 'Педагог';
+
+  @override
+  String get parentChildGroupsLabel => 'Группы';
+
+  @override
+  String get parentChildGroupLabel => 'Группа';
+
+  @override
+  String get parentChildTutorNoGroups => 'Пока не добавлен в группы.';
+
+  @override
+  String parentChildNetworkSection(String name) {
+    return 'Сеть «$name»';
+  }
+
+  @override
+  String get parentChildNetworkNoGroups => 'В сети, группа пока не назначена.';
+
+  @override
+  String parentChildResponsibleTeacher(String name) {
+    return 'Педагог: $name';
+  }
+
+  @override
+  String get parentChildTeacherNotAssigned =>
+      'Ответственный педагог не назначен.';
+
+  @override
   String get parentAccountEditChild => 'Редактировать профиль';
 
   @override

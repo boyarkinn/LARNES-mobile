@@ -5,10 +5,11 @@ import 'package:larnes_mobile/trainers/math/number_composition/dot_choice_bar.da
 import 'package:larnes_mobile/trainers/math/number_composition/equation_scene.dart';
 import 'package:larnes_mobile/trainers/math/number_composition/number_composition_model.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongFeedbackMs = 550;
-const _phaseAdvanceMs = 800;
-const _completeDelayMs = 900;
+const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
+const _phaseAdvanceMs = TrainerTimings.phaseAdvanceMs;
+const _completeDelayMs = TrainerTimings.completeDelayMs;
 
 String _phasePrompt(CompositionPhase phase, int whole, int knownPart) {
   switch (phase) {

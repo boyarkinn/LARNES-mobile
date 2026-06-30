@@ -7,9 +7,10 @@ import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_field_scene.da
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_icon.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongFeedbackMs = 550;
-const _completeDelayMs = 900;
+const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
+const _completeDelayMs = TrainerTimings.completeDelayMs;
 
 class FruitCountTapTrainer extends StatefulWidget {
   const FruitCountTapTrainer({

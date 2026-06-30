@@ -5,9 +5,10 @@ import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_field_scene.dar
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongFeedbackMs = 550;
-const _completeDelayMs = 900;
+const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
+const _completeDelayMs = TrainerTimings.completeDelayMs;
 
 class DigitFindTapTrainer extends StatefulWidget {
   const DigitFindTapTrainer({

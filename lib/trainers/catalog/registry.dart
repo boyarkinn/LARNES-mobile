@@ -6,6 +6,9 @@ import 'package:larnes_mobile/trainers/catalog/trainer_param_validators.dart';
 import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_trainer.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_trainer.dart';
+import 'package:larnes_mobile/trainers/math/digit_trace/digit_trace_trainer.dart';
+import 'package:larnes_mobile/trainers/math/shop_pay/shop_pay_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_composition/number_composition_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show_trainer.dart';
@@ -31,6 +34,12 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       FruitCountTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.numberComposition: ({required params, onComplete}) =>
       NumberCompositionTrainer(params: params, onComplete: onComplete),
+  TrainerKey.shopPay: ({required params, onComplete}) =>
+      ShopPayTrainer(params: params, onComplete: onComplete),
+  TrainerKey.digitTrace: ({required params, onComplete}) =>
+      DigitTraceTrainer(params: params, onComplete: onComplete),
+  TrainerKey.flashcardDigitMatch: ({required params, onComplete}) =>
+      FlashcardDigitMatchTrainer(params: params, onComplete: onComplete),
 };
 
 final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {

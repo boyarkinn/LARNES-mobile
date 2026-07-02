@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 

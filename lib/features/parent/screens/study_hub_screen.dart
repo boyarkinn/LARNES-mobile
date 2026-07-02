@@ -3,8 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/parent/models/parent_child.dart';
+import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/widgets/homework_direction_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/features/parent/widgets/program_direction_card.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class StudyHubScreen extends StatefulWidget {
@@ -20,6 +24,8 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   String? _error;
   int _homeworkCount = 0;
+  List<ParentProgramCard> _programs = const [];
+  bool _wasInactive = false;
 
   @override
   void initState() {
@@ -31,24 +37,50 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
     });
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  @override
+  void activate() {
+    super.activate();
+    if (_wasInactive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _load(refreshing: true);
+        }
+      });
+    }
+    _wasInactive = false;
+  }
+
+  @override
+  void deactivate() {
+    _wasInactive = true;
+    super.deactivate();
+  }
+
+  Future<void> _load({bool refreshing = false}) async {
+    if (!refreshing) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final detail = await AuthScope.of(context).parentApi.fetchChild(
-        widget.childId,
-        locale: locale,
-      );
+      final api = AuthScope.of(context).parentApi;
+      final results = await Future.wait([
+        api.fetchChild(widget.childId, locale: locale),
+        api.listPrograms(widget.childId, locale: locale),
+      ]);
       if (!mounted) {
         return;
       }
+      final detail = results[0] as ParentChildDetail;
+      final programs = results[1] as List<ParentProgramCard>;
       setState(() {
         _homeworkCount = detail.homeworkCount;
+        _programs = programs;
         _isLoading = false;
+        _error = null;
       });
     } on ParentApiException catch (error) {
       if (mounted) {
@@ -65,6 +97,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
         });
       }
     }
+  }
+
+  String _programSubtitle(AppLocalizations l10n, ParentProgramCard program) {
+    return switch (program.progressStatus) {
+      ParentProgramProgressStatus.completed => l10n.parentProgramDirectionCompleted,
+      ParentProgramProgressStatus.inProgress => l10n.parentProgramDirectionContinue,
+      ParentProgramProgressStatus.notStarted => l10n.parentProgramDirectionStart,
+    };
   }
 
   @override
@@ -102,6 +142,16 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                       subtitle: subtitle,
                       onTap: () => context.push('/parent/${widget.childId}/homework'),
                     ),
+                    for (final program in _programs) ...[
+                      const SizedBox(height: 12),
+                      ProgramDirectionCard(
+                        program: program,
+                        subtitle: _programSubtitle(l10n, program),
+                        onTap: () => context.push(
+                          '/parent/${widget.childId}/programs/${program.programId}',
+                        ),
+                      ),
+                    ],
                   ],
                 ),
     );

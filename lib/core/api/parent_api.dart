@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
+import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {
@@ -192,6 +193,113 @@ class ParentApi {
       }
       return ParentHomeworkPlaySnapshot.fromJson(
         Map<String, dynamic>.from(snapshot),
+      );
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<List<ParentProgramCard>> listPrograms(
+    String childId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/programs',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentProgramLoadFailed),
+        );
+      }
+      final programs = data['programs'] as List<dynamic>? ?? const [];
+      return programs
+          .map(
+            (item) => ParentProgramCard.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<ParentProgramPlaySnapshot> fetchProgramSnapshot(
+    String childId,
+    String programId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/programs/$programId',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentProgramPlayLoadFailed),
+        );
+      }
+      final snapshot = data['snapshot'];
+      if (snapshot is! Map) {
+        throw ParentApiException(l10n.parentProgramPlayLoadFailed);
+      }
+      return ParentProgramPlaySnapshot.fromJson(
+        Map<String, dynamic>.from(snapshot),
+      );
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<ParentProgramCompleteLessonResult> completeProgramLesson({
+    required String childId,
+    required String programId,
+    required int topicOrdinal,
+    required int lessonOrdinal,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/programs/$programId/complete-lesson',
+        data: {
+          'topicOrdinal': topicOrdinal,
+          'lessonOrdinal': lessonOrdinal,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentProgramPlayCompleteFailed),
+        );
+      }
+      return ParentProgramCompleteLessonResult(
+        progressStatus: data['progressStatus'] as String? ?? 'in_progress',
       );
     } on DioException catch (error) {
       throw ParentApiException(

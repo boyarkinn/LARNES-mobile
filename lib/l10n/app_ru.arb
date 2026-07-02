@@ -264,5 +264,36 @@
   "parentAccountDeleteChildMessage": "Профиль будет удалён без возможности восстановления.",
   "parentAccountDeleteChildConfirm": "Удалить ребёнка",
   "parentUpdateChildFailed": "Не удалось обновить профиль ребёнка.",
-  "parentDeleteChildFailed": "Не удалось удалить профиль ребёнка."
+  "parentDeleteChildFailed": "Не удалось удалить профиль ребёнка.",
+  "parentProgramLoadFailed": "Не удалось загрузить программы.",
+  "parentProgramDirectionStart": "Начать",
+  "parentProgramDirectionContinue": "Продолжить",
+  "parentProgramDirectionCompleted": "Пройдено",
+  "parentProgramStatusInProgress": "В процессе",
+  "parentProgramStatusCompleted": "Пройдено",
+  "parentProgramPlayLoadFailed": "Не удалось загрузить программу.",
+  "parentProgramPlayCompleteFailed": "Не удалось сохранить прогресс.",
+  "parentProgramPlayLessonProgress": "Тема {topic} · Урок {lesson} · шаг {current} из {total}",
+  "@parentProgramPlayLessonProgress": {
+    "placeholders": {
+      "topic": {"type": "int"},
+      "lesson": {"type": "int"},
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentProgramPlayNext": "Далее",
+  "parentProgramPlayFinish": "Завершить",
+  "parentProgramPlayCompletedTitle": "Программа завершена",
+  "parentProgramPlayBackToHub": "К занятиям",
+  "parentProgramPlayExit": "Выйти",
+  "parentProgramPlayEmptyProgram": "В программе пока нет тренажёров для прохождения.",
+  "parentProgramPlayEmptyLesson": "В уроке {lesson} темы {topic} пока нет тренажёров. Попросите методиста добавить задания.",
+  "@parentProgramPlayEmptyLesson": {
+    "placeholders": {
+      "topic": {"type": "int"},
+      "lesson": {"type": "int"}
+    }
+  },
+  "parentProgramPlayInteractiveHint": "Выполните задание на экране"
 }

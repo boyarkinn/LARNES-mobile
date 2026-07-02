@@ -701,4 +701,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDeleteChildFailed => 'Could not delete child profile.';
+
+  @override
+  String get parentProgramLoadFailed => 'Could not load programs.';
+
+  @override
+  String get parentProgramDirectionStart => 'Start';
+
+  @override
+  String get parentProgramDirectionContinue => 'Continue';
+
+  @override
+  String get parentProgramDirectionCompleted => 'Completed';
+
+  @override
+  String get parentProgramStatusInProgress => 'In progress';
+
+  @override
+  String get parentProgramStatusCompleted => 'Completed';
+
+  @override
+  String get parentProgramPlayLoadFailed => 'Could not load program.';
+
+  @override
+  String get parentProgramPlayCompleteFailed => 'Could not save progress.';
+
+  @override
+  String parentProgramPlayLessonProgress(
+    int topic,
+    int lesson,
+    int current,
+    int total,
+  ) {
+    return 'Topic $topic · Lesson $lesson · step $current of $total';
+  }
+
+  @override
+  String get parentProgramPlayNext => 'Next';
+
+  @override
+  String get parentProgramPlayFinish => 'Finish';
+
+  @override
+  String get parentProgramPlayCompletedTitle => 'Program completed';
+
+  @override
+  String get parentProgramPlayBackToHub => 'Back to study';
+
+  @override
+  String get parentProgramPlayExit => 'Exit';
+
+  @override
+  String get parentProgramPlayEmptyProgram =>
+      'This program has no trainers to play yet.';
+
+  @override
+  String parentProgramPlayEmptyLesson(int topic, int lesson) {
+    return 'Lesson $lesson in topic $topic has no trainers yet. Ask your teacher to add tasks.';
+  }
+
+  @override
+  String get parentProgramPlayInteractiveHint => 'Complete the task on screen';
 }

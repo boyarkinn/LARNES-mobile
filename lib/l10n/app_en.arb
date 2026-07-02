@@ -306,5 +306,36 @@
   "parentAccountDeleteChildMessage": "This profile will be permanently deleted.",
   "parentAccountDeleteChildConfirm": "Delete child",
   "parentUpdateChildFailed": "Could not update child profile.",
-  "parentDeleteChildFailed": "Could not delete child profile."
+  "parentDeleteChildFailed": "Could not delete child profile.",
+  "parentProgramLoadFailed": "Could not load programs.",
+  "parentProgramDirectionStart": "Start",
+  "parentProgramDirectionContinue": "Continue",
+  "parentProgramDirectionCompleted": "Completed",
+  "parentProgramStatusInProgress": "In progress",
+  "parentProgramStatusCompleted": "Completed",
+  "parentProgramPlayLoadFailed": "Could not load program.",
+  "parentProgramPlayCompleteFailed": "Could not save progress.",
+  "parentProgramPlayLessonProgress": "Topic {topic} · Lesson {lesson} · step {current} of {total}",
+  "@parentProgramPlayLessonProgress": {
+    "placeholders": {
+      "topic": {"type": "int"},
+      "lesson": {"type": "int"},
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "parentProgramPlayNext": "Next",
+  "parentProgramPlayFinish": "Finish",
+  "parentProgramPlayCompletedTitle": "Program completed",
+  "parentProgramPlayBackToHub": "Back to study",
+  "parentProgramPlayExit": "Exit",
+  "parentProgramPlayEmptyProgram": "This program has no trainers to play yet.",
+  "parentProgramPlayEmptyLesson": "Lesson {lesson} in topic {topic} has no trainers yet. Ask your teacher to add tasks.",
+  "@parentProgramPlayEmptyLesson": {
+    "placeholders": {
+      "topic": {"type": "int"},
+      "lesson": {"type": "int"}
+    }
+  },
+  "parentProgramPlayInteractiveHint": "Complete the task on screen"
 }

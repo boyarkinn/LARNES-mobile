@@ -1369,6 +1369,113 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not delete child profile.'**
   String get parentDeleteChildFailed;
+
+  /// No description provided for @parentProgramLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load programs.'**
+  String get parentProgramLoadFailed;
+
+  /// No description provided for @parentProgramDirectionStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get parentProgramDirectionStart;
+
+  /// No description provided for @parentProgramDirectionContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get parentProgramDirectionContinue;
+
+  /// No description provided for @parentProgramDirectionCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get parentProgramDirectionCompleted;
+
+  /// No description provided for @parentProgramStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get parentProgramStatusInProgress;
+
+  /// No description provided for @parentProgramStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get parentProgramStatusCompleted;
+
+  /// No description provided for @parentProgramPlayLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load program.'**
+  String get parentProgramPlayLoadFailed;
+
+  /// No description provided for @parentProgramPlayCompleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save progress.'**
+  String get parentProgramPlayCompleteFailed;
+
+  /// No description provided for @parentProgramPlayLessonProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Topic {topic} · Lesson {lesson} · step {current} of {total}'**
+  String parentProgramPlayLessonProgress(
+    int topic,
+    int lesson,
+    int current,
+    int total,
+  );
+
+  /// No description provided for @parentProgramPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get parentProgramPlayNext;
+
+  /// No description provided for @parentProgramPlayFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get parentProgramPlayFinish;
+
+  /// No description provided for @parentProgramPlayCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Program completed'**
+  String get parentProgramPlayCompletedTitle;
+
+  /// No description provided for @parentProgramPlayBackToHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to study'**
+  String get parentProgramPlayBackToHub;
+
+  /// No description provided for @parentProgramPlayExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get parentProgramPlayExit;
+
+  /// No description provided for @parentProgramPlayEmptyProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'This program has no trainers to play yet.'**
+  String get parentProgramPlayEmptyProgram;
+
+  /// No description provided for @parentProgramPlayEmptyLesson.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson {lesson} in topic {topic} has no trainers yet. Ask your teacher to add tasks.'**
+  String parentProgramPlayEmptyLesson(int topic, int lesson);
+
+  /// No description provided for @parentProgramPlayInteractiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the task on screen'**
+  String get parentProgramPlayInteractiveHint;
 }
 
 class _AppLocalizationsDelegate

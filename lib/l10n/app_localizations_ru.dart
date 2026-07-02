@@ -708,4 +708,66 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentDeleteChildFailed => 'Не удалось удалить профиль ребёнка.';
+
+  @override
+  String get parentProgramLoadFailed => 'Не удалось загрузить программы.';
+
+  @override
+  String get parentProgramDirectionStart => 'Начать';
+
+  @override
+  String get parentProgramDirectionContinue => 'Продолжить';
+
+  @override
+  String get parentProgramDirectionCompleted => 'Пройдено';
+
+  @override
+  String get parentProgramStatusInProgress => 'В процессе';
+
+  @override
+  String get parentProgramStatusCompleted => 'Пройдено';
+
+  @override
+  String get parentProgramPlayLoadFailed => 'Не удалось загрузить программу.';
+
+  @override
+  String get parentProgramPlayCompleteFailed =>
+      'Не удалось сохранить прогресс.';
+
+  @override
+  String parentProgramPlayLessonProgress(
+    int topic,
+    int lesson,
+    int current,
+    int total,
+  ) {
+    return 'Тема $topic · Урок $lesson · шаг $current из $total';
+  }
+
+  @override
+  String get parentProgramPlayNext => 'Далее';
+
+  @override
+  String get parentProgramPlayFinish => 'Завершить';
+
+  @override
+  String get parentProgramPlayCompletedTitle => 'Программа завершена';
+
+  @override
+  String get parentProgramPlayBackToHub => 'К занятиям';
+
+  @override
+  String get parentProgramPlayExit => 'Выйти';
+
+  @override
+  String get parentProgramPlayEmptyProgram =>
+      'В программе пока нет тренажёров для прохождения.';
+
+  @override
+  String parentProgramPlayEmptyLesson(int topic, int lesson) {
+    return 'В уроке $lesson темы $topic пока нет тренажёров. Попросите методиста добавить задания.';
+  }
+
+  @override
+  String get parentProgramPlayInteractiveHint => 'Выполните задание на экране';
 }

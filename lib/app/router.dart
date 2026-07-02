@@ -22,6 +22,7 @@ import 'package:larnes_mobile/features/parent/screens/account/account_profile_sc
 import 'package:larnes_mobile/features/parent/screens/child_picker_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/homework_list_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/homework_player_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/program_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
@@ -209,6 +210,23 @@ GoRouter createAppRouter(AuthSession authSession) {
                     },
                   ),
                 ],
+              ),
+              GoRoute(
+                path: 'programs/:programId',
+                builder: (context, state) {
+                  final childId = state.pathParameters['childId'];
+                  final programId = state.pathParameters['programId'];
+                  if (childId == null ||
+                      childId.isEmpty ||
+                      programId == null ||
+                      programId.isEmpty) {
+                    return const ChildPickerScreen();
+                  }
+                  return ProgramPlayerScreen(
+                    childId: childId,
+                    programId: programId,
+                  );
+                },
               ),
             ],
           ),

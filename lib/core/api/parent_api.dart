@@ -205,14 +205,50 @@ class ParentApi {
     }
   }
 
-  Future<List<ParentProgramCard>> listPrograms(
+  Future<List<ParentDirectionCard>> listDirections(
     String childId, {
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.get(
-        '/api/mobile/parent/children/$childId/programs',
+        '/api/mobile/parent/children/$childId/directions',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentDirectionLoadFailed),
+        );
+      }
+      final directions = data['directions'] as List<dynamic>? ?? const [];
+      return directions
+          .map(
+            (item) => ParentDirectionCard.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<List<ParentProgramCard>> listProgramsInDirection(
+    String childId,
+    String directionId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/directions/$directionId/programs',
         queryParameters: {'locale': locale},
       );
       final data = _asJsonMap(response.data);

@@ -78,9 +78,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get enterContact => 'Введите контакт';
 
   @override
-  String get confirmNotRobot => 'Подтвердите, что вы не робот';
-
-  @override
   String get otpTitle => 'Код подтверждения';
 
   @override
@@ -174,52 +171,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get emptyValue => '—';
-
-  @override
-  String get turnstileVerified => 'Проверка пройдена';
-
-  @override
-  String get turnstileCanContinue => 'Можно продолжить регистрацию';
-
-  @override
-  String get turnstileBotProtection => 'Защита от ботов';
-
-  @override
-  String get turnstilePreparing => 'Подготовка...';
-
-  @override
-  String get turnstileVerifying => 'Проверка...';
-
-  @override
-  String get turnstileTapToVerify => 'Нажмите для проверки';
-
-  @override
-  String get turnstileLoadFailed => 'Не удалось загрузить проверку';
-
-  @override
-  String get turnstileLoadFailedPull =>
-      'Не удалось загрузить проверку. Потяните экран вниз и попробуйте снова.';
-
-  @override
-  String get turnstileExpired => 'Проверка истекла. Нажмите ещё раз.';
-
-  @override
-  String get turnstileLoadFailedTap =>
-      'Не удалось загрузить проверку. Нажмите ещё раз.';
-
-  @override
-  String get turnstileFailed => 'Проверка не пройдена. Нажмите ещё раз.';
-
-  @override
-  String get turnstileStillLoading =>
-      'Проверка ещё загружается. Подождите пару секунд.';
-
-  @override
-  String get turnstileStartFailed => 'Не удалось запустить проверку';
-
-  @override
-  String get turnstileNotCompleted =>
-      'Проверка не завершилась. Нажмите ещё раз.';
 
   @override
   String get languageLabel => 'Язык';
@@ -711,6 +662,29 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentProgramLoadFailed => 'Не удалось загрузить программы.';
+
+  @override
+  String get parentDirectionLoadFailed => 'Не удалось загрузить направления.';
+
+  @override
+  String parentLearningDirectionProgramCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# программ',
+      many: '# программ',
+      few: '# программы',
+      one: '# программа',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentDirectionProgramsBack => 'К занятиям';
+
+  @override
+  String get parentDirectionProgramsEmpty =>
+      'В этом направлении пока нет опубликованных программ.';
 
   @override
   String get parentProgramDirectionStart => 'Начать';

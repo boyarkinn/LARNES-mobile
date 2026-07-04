@@ -4,7 +4,6 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
-import 'package:larnes_mobile/core/config/turnstile_url.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {
@@ -46,12 +45,7 @@ class RegisterApi {
       final data = _asJsonMap(response.data);
       if (data != null && data['status'] == 'success') {
         _cachedConfig = MobileConfig.fromJson(data);
-        return MobileConfig(
-          cities: _cachedConfig!.cities,
-          turnstilePageUrl: normalizeTurnstilePageUrl(_cachedConfig!.turnstilePageUrl),
-          turnstileRequired: _cachedConfig!.turnstileRequired,
-          turnstileSiteKey: _cachedConfig!.turnstileSiteKey,
-        );
+        return _cachedConfig!;
       }
     } on DioException {
       // Fallback for offline dev.
@@ -63,7 +57,6 @@ class RegisterApi {
   Future<String> sendOtp({
     required RegisterContactChannel channel,
     required String contact,
-    String? turnstileToken,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
@@ -74,8 +67,6 @@ class RegisterApi {
           'channel': _channelValue(channel),
           'contact': contact,
           'locale': locale,
-          if (turnstileToken != null && turnstileToken.isNotEmpty)
-            'turnstileToken': turnstileToken,
         },
       );
       final data = _asJsonMap(response.data);
@@ -130,7 +121,6 @@ class RegisterApi {
   Future<void> resendOtp({
     required RegisterContactChannel channel,
     required String contact,
-    String? turnstileToken,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
@@ -141,8 +131,6 @@ class RegisterApi {
           'channel': _channelValue(channel),
           'contact': contact,
           'locale': locale,
-          if (turnstileToken != null && turnstileToken.isNotEmpty)
-            'turnstileToken': turnstileToken,
         },
       );
       final data = _asJsonMap(response.data);

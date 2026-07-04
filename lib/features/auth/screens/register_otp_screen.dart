@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
-import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
-import 'package:larnes_mobile/features/auth/widgets/turnstile_widget.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterOtpScreen extends StatefulWidget {
@@ -24,9 +22,6 @@ class RegisterOtpScreen extends StatefulWidget {
 
 class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   final _otpController = TextEditingController();
-  MobileConfig? _config;
-  String? _turnstileToken;
-  int _turnstileResetKey = 0;
   bool _isSubmitting = false;
   bool _isResending = false;
   String? _error;
@@ -38,7 +33,6 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   void initState() {
     super.initState();
     _startCooldown();
-    _loadConfig();
   }
 
   @override
@@ -46,13 +40,6 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     _cooldownTimer?.cancel();
     _otpController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadConfig() async {
-    final config = await AuthScope.of(context).registerApi.fetchConfig();
-    if (mounted) {
-      setState(() => _config = config);
-    }
   }
 
   void _startCooldown() {
@@ -115,11 +102,6 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
 
   Future<void> _resend() async {
     final l10n = context.l10n;
-    final config = _config ?? MobileConfig.fallback;
-    if (config.turnstileRequired && (_turnstileToken == null || _turnstileToken!.isEmpty)) {
-      setState(() => _error = l10n.confirmNotRobot);
-      return;
-    }
 
     setState(() {
       _isResending = true;
@@ -132,39 +114,22 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
       await AuthScope.of(context).registerApi.resendOtp(
         channel: widget.flow.channel,
         contact: widget.flow.contact,
-        turnstileToken: _turnstileToken,
         locale: locale,
       );
       if (!mounted) {
         return;
       }
-      setState(() {
-        _successMessage = l10n.codeResent;
-        _turnstileToken = null;
-        _turnstileResetKey += 1;
-      });
+      setState(() => _successMessage = l10n.codeResent);
       _startCooldown();
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
-      _resetTurnstileAfterFailedResend(config);
     } catch (_) {
       setState(() => _error = l10n.resendFailed);
-      _resetTurnstileAfterFailedResend(config);
     } finally {
       if (mounted) {
         setState(() => _isResending = false);
       }
     }
-  }
-
-  void _resetTurnstileAfterFailedResend(MobileConfig config) {
-    if (!config.turnstileRequired) {
-      return;
-    }
-    setState(() {
-      _turnstileToken = null;
-      _turnstileResetKey += 1;
-    });
   }
 
   String _maskContact(String contact) {
@@ -184,7 +149,6 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final config = _config ?? MobileConfig.fallback;
     final canResend = _secondsLeft == 0 && !_isResending;
 
     return AuthScaffold(
@@ -208,21 +172,12 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
             ),
           OtpInput(controller: _otpController),
           const SizedBox(height: 12),
-          if (canResend) ...[
-            if (config.turnstileRequired && config.turnstilePageUrl.isNotEmpty) ...[
-              TurnstileWidget(
-                key: ValueKey('turnstile-resend-$_turnstileResetKey'),
-                pageUrl: config.turnstilePageUrl,
-                resetKey: _turnstileResetKey,
-                onTokenChanged: (token) => setState(() => _turnstileToken = token),
-              ),
-              const SizedBox(height: 8),
-            ],
+          if (canResend)
             TextButton(
               onPressed: _resend,
               child: Text(l10n.resendCode),
-            ),
-          ] else
+            )
+          else
             Text(
               l10n.resendCooldown(_secondsLeft),
               textAlign: TextAlign.center,

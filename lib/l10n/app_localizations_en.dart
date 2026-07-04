@@ -78,9 +78,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterContact => 'Enter contact';
 
   @override
-  String get confirmNotRobot => 'Confirm you are not a robot';
-
-  @override
   String get otpTitle => 'Verification code';
 
   @override
@@ -174,52 +171,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyValue => '—';
-
-  @override
-  String get turnstileVerified => 'Verification passed';
-
-  @override
-  String get turnstileCanContinue => 'You can continue registration';
-
-  @override
-  String get turnstileBotProtection => 'Bot protection';
-
-  @override
-  String get turnstilePreparing => 'Preparing...';
-
-  @override
-  String get turnstileVerifying => 'Verifying...';
-
-  @override
-  String get turnstileTapToVerify => 'Tap to verify';
-
-  @override
-  String get turnstileLoadFailed => 'Could not load verification';
-
-  @override
-  String get turnstileLoadFailedPull =>
-      'Could not load verification. Pull down and try again.';
-
-  @override
-  String get turnstileExpired => 'Verification expired. Tap again.';
-
-  @override
-  String get turnstileLoadFailedTap =>
-      'Could not load verification. Tap again.';
-
-  @override
-  String get turnstileFailed => 'Verification failed. Tap again.';
-
-  @override
-  String get turnstileStillLoading =>
-      'Verification is still loading. Wait a few seconds.';
-
-  @override
-  String get turnstileStartFailed => 'Could not start verification';
-
-  @override
-  String get turnstileNotCompleted =>
-      'Verification did not complete. Tap again.';
 
   @override
   String get languageLabel => 'Language';
@@ -704,6 +655,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentProgramLoadFailed => 'Could not load programs.';
+
+  @override
+  String get parentDirectionLoadFailed => 'Could not load directions.';
+
+  @override
+  String parentLearningDirectionProgramCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# programs',
+      one: '# program',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentDirectionProgramsBack => 'Back to study';
+
+  @override
+  String get parentDirectionProgramsEmpty =>
+      'No published programs in this direction yet.';
 
   @override
   String get parentProgramDirectionStart => 'Start';

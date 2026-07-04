@@ -15,6 +15,32 @@ enum ParentProgramProgressStatus {
   }
 }
 
+class ParentDirectionCard {
+  const ParentDirectionCard({
+    required this.directionId,
+    required this.directionSlug,
+    required this.directionTitle,
+    required this.programCount,
+    required this.sortOrder,
+  });
+
+  factory ParentDirectionCard.fromJson(Map<String, dynamic> json) {
+    return ParentDirectionCard(
+      directionId: json['directionId'] as String,
+      directionSlug: json['directionSlug'] as String,
+      directionTitle: json['directionTitle'] as String,
+      programCount: json['programCount'] as int? ?? 0,
+      sortOrder: json['sortOrder'] as int? ?? 0,
+    );
+  }
+
+  final String directionId;
+  final String directionSlug;
+  final String directionTitle;
+  final int programCount;
+  final int sortOrder;
+}
+
 class ParentProgramCard {
   const ParentProgramCard({
     required this.programId,

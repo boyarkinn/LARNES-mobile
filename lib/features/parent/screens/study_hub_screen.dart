@@ -7,8 +7,6 @@ import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/widgets/homework_direction_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
-import 'package:larnes_mobile/features/parent/widgets/program_direction_card.dart';
-import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class StudyHubScreen extends StatefulWidget {
@@ -24,7 +22,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   String? _error;
   int _homeworkCount = 0;
-  List<ParentProgramCard> _programs = const [];
+  List<ParentDirectionCard> _directions = const [];
   bool _wasInactive = false;
 
   @override
@@ -69,16 +67,16 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       final api = AuthScope.of(context).parentApi;
       final results = await Future.wait([
         api.fetchChild(widget.childId, locale: locale),
-        api.listPrograms(widget.childId, locale: locale),
+        api.listDirections(widget.childId, locale: locale),
       ]);
       if (!mounted) {
         return;
       }
       final detail = results[0] as ParentChildDetail;
-      final programs = results[1] as List<ParentProgramCard>;
+      final directions = results[1] as List<ParentDirectionCard>;
       setState(() {
         _homeworkCount = detail.homeworkCount;
-        _programs = programs;
+        _directions = directions;
         _isLoading = false;
         _error = null;
       });
@@ -97,14 +95,6 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
         });
       }
     }
-  }
-
-  String _programSubtitle(AppLocalizations l10n, ParentProgramCard program) {
-    return switch (program.progressStatus) {
-      ParentProgramProgressStatus.completed => l10n.parentProgramDirectionCompleted,
-      ParentProgramProgressStatus.inProgress => l10n.parentProgramDirectionContinue,
-      ParentProgramProgressStatus.notStarted => l10n.parentProgramDirectionStart,
-    };
   }
 
   @override
@@ -142,13 +132,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                       subtitle: subtitle,
                       onTap: () => context.push('/parent/${widget.childId}/homework'),
                     ),
-                    for (final program in _programs) ...[
+                    for (final direction in _directions) ...[
                       const SizedBox(height: 12),
-                      ProgramDirectionCard(
-                        program: program,
-                        subtitle: _programSubtitle(l10n, program),
+                      HomeworkDirectionCard(
+                        title: direction.directionTitle,
+                        subtitle: l10n.parentLearningDirectionProgramCount(direction.programCount),
                         onTap: () => context.push(
-                          '/parent/${widget.childId}/programs/${program.programId}',
+                          '/parent/${widget.childId}/directions/${direction.directionId}',
+                          extra: direction.directionTitle,
                         ),
                       ),
                     ],

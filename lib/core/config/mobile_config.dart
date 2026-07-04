@@ -1,10 +1,5 @@
 class MobileConfig {
-  const MobileConfig({
-    required this.cities,
-    required this.turnstilePageUrl,
-    required this.turnstileRequired,
-    required this.turnstileSiteKey,
-  });
+  const MobileConfig({required this.cities});
 
   factory MobileConfig.fromJson(Map<String, dynamic> json) {
     final citiesRaw = json['cities'];
@@ -12,21 +7,10 @@ class MobileConfig {
       cities: citiesRaw is List
           ? citiesRaw.whereType<String>().toList(growable: false)
           : const [],
-      turnstilePageUrl: json['turnstilePageUrl'] as String? ?? '',
-      turnstileRequired: json['turnstileRequired'] == true,
-      turnstileSiteKey: json['turnstileSiteKey'] as String? ?? '',
     );
   }
 
-  static const fallback = MobileConfig(
-    cities: ['Москва'],
-    turnstilePageUrl: '',
-    turnstileRequired: false,
-    turnstileSiteKey: '',
-  );
+  static const fallback = MobileConfig(cities: ['Москва']);
 
   final List<String> cities;
-  final String turnstilePageUrl;
-  final bool turnstileRequired;
-  final String turnstileSiteKey;
 }

@@ -236,12 +236,6 @@ abstract class AppLocalizations {
   /// **'Enter contact'**
   String get enterContact;
 
-  /// No description provided for @confirmNotRobot.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm you are not a robot'**
-  String get confirmNotRobot;
-
   /// No description provided for @otpTitle.
   ///
   /// In en, this message translates to:
@@ -409,90 +403,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'—'**
   String get emptyValue;
-
-  /// No description provided for @turnstileVerified.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification passed'**
-  String get turnstileVerified;
-
-  /// No description provided for @turnstileCanContinue.
-  ///
-  /// In en, this message translates to:
-  /// **'You can continue registration'**
-  String get turnstileCanContinue;
-
-  /// No description provided for @turnstileBotProtection.
-  ///
-  /// In en, this message translates to:
-  /// **'Bot protection'**
-  String get turnstileBotProtection;
-
-  /// No description provided for @turnstilePreparing.
-  ///
-  /// In en, this message translates to:
-  /// **'Preparing...'**
-  String get turnstilePreparing;
-
-  /// No description provided for @turnstileVerifying.
-  ///
-  /// In en, this message translates to:
-  /// **'Verifying...'**
-  String get turnstileVerifying;
-
-  /// No description provided for @turnstileTapToVerify.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to verify'**
-  String get turnstileTapToVerify;
-
-  /// No description provided for @turnstileLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load verification'**
-  String get turnstileLoadFailed;
-
-  /// No description provided for @turnstileLoadFailedPull.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load verification. Pull down and try again.'**
-  String get turnstileLoadFailedPull;
-
-  /// No description provided for @turnstileExpired.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification expired. Tap again.'**
-  String get turnstileExpired;
-
-  /// No description provided for @turnstileLoadFailedTap.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load verification. Tap again.'**
-  String get turnstileLoadFailedTap;
-
-  /// No description provided for @turnstileFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification failed. Tap again.'**
-  String get turnstileFailed;
-
-  /// No description provided for @turnstileStillLoading.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification is still loading. Wait a few seconds.'**
-  String get turnstileStillLoading;
-
-  /// No description provided for @turnstileStartFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not start verification'**
-  String get turnstileStartFailed;
-
-  /// No description provided for @turnstileNotCompleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification did not complete. Tap again.'**
-  String get turnstileNotCompleted;
 
   /// No description provided for @languageLabel.
   ///
@@ -1375,6 +1285,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load programs.'**
   String get parentProgramLoadFailed;
+
+  /// No description provided for @parentDirectionLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load directions.'**
+  String get parentDirectionLoadFailed;
+
+  /// No description provided for @parentLearningDirectionProgramCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {# program} other {# programs}}'**
+  String parentLearningDirectionProgramCount(int count);
+
+  /// No description provided for @parentDirectionProgramsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to study'**
+  String get parentDirectionProgramsBack;
+
+  /// No description provided for @parentDirectionProgramsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No published programs in this direction yet.'**
+  String get parentDirectionProgramsEmpty;
 
   /// No description provided for @parentProgramDirectionStart.
   ///

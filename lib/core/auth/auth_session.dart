@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
@@ -49,14 +50,14 @@ class AuthSession extends ChangeNotifier {
   }
 
   void _notifySafely() {
-    final phase = SchedulerBinding.instance.schedulerPhase;
-    if (phase == SchedulerPhase.idle ||
-        phase == SchedulerPhase.postFrameCallbacks) {
-      notifyListeners();
+    if (!hasListeners) {
       return;
     }
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
+
+    scheduleMicrotask(() {
+      if (hasListeners) {
+        notifyListeners();
+      }
     });
   }
 

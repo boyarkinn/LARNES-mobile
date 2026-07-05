@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -105,7 +107,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       return;
     }
 
-    await context.push('/parent/$createdId');
+    await ParentChildRoutes.openChild(context, createdId);
     if (mounted) {
       await _load(refreshing: true);
     }
@@ -117,8 +119,6 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
 
     return ParentScaffold(
       title: l10n.parentChildPickerTitle,
-      accountLabel: l10n.parentAccount,
-      onAccount: () => context.push('/parent/account'),
       body: _buildBody(),
     );
   }
@@ -136,11 +136,43 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: ParentColors.inkMuted),
+              ),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                onPressed: _load,
+                child: Text(l10n.continueButton),
+              ),
             ],
           ),
+        ),
+      );
+    }
+
+    if (_children.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () => _load(refreshing: true),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: AddChildCard(
+                    variant: AddChildCardVariant.empty,
+                    label: l10n.parentAddChild,
+                    onTap: _openAddChild,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -149,28 +181,37 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       onRefresh: () => _load(refreshing: true),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        padding: const EdgeInsets.fromLTRB(16, 22, 16, 36),
         children: [
           if (_isRefreshing)
             const Padding(
-              padding: EdgeInsets.only(bottom: 12),
+              padding: EdgeInsets.only(bottom: ParentChildCardMetrics.pickerListGap),
               child: LinearProgressIndicator(),
             ),
-          for (final child in _children) ...[
-            ChildProfileCard(
-              child: child,
-              onTap: () async {
-                await context.push('/parent/${child.id}');
-                if (mounted) {
-                  await _load(refreshing: true);
-                }
-              },
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+              child: Column(
+                children: [
+                  for (final child in _children) ...[
+                    ChildProfileCard(
+                      child: child,
+                      onTap: () async {
+                        await ParentChildRoutes.openChild(context, child.id);
+                        if (mounted) {
+                          await _load(refreshing: true);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  ],
+                  AddChildCard(
+                    label: l10n.parentAddChild,
+                    onTap: _openAddChild,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-          ],
-          AddChildCard(
-            label: l10n.parentAddChild,
-            onTap: _openAddChild,
           ),
         ],
       ),

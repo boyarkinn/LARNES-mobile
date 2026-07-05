@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
+enum LanguageSwitcherVariant { auth, parent }
+
 class LanguageSwitcher extends StatefulWidget {
-  const LanguageSwitcher({super.key});
+  const LanguageSwitcher({
+    super.key,
+    this.variant = LanguageSwitcherVariant.auth,
+  });
+
+  final LanguageSwitcherVariant variant;
 
   @override
   State<LanguageSwitcher> createState() => _LanguageSwitcherState();
@@ -89,6 +97,10 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.variant == LanguageSwitcherVariant.parent) {
+      return _ParentLanguageSwitcherButton(onTap: _openMenu, anchorKey: _anchorKey);
+    }
+
     final current = LocaleScope.of(context).locale.languageCode.toUpperCase();
 
     return Padding(
@@ -145,6 +157,71 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
                   Icons.keyboard_arrow_down_rounded,
                   size: 18,
                   color: LarnesColors.textSecondary.withValues(alpha: 0.85),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ParentLanguageSwitcherButton extends StatefulWidget {
+  const _ParentLanguageSwitcherButton({
+    required this.onTap,
+    required this.anchorKey,
+  });
+
+  final VoidCallback onTap;
+  final GlobalKey anchorKey;
+
+  @override
+  State<_ParentLanguageSwitcherButton> createState() =>
+      _ParentLanguageSwitcherButtonState();
+}
+
+class _ParentLanguageSwitcherButtonState extends State<_ParentLanguageSwitcherButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = LocaleScope.of(context).locale.languageCode.toUpperCase();
+
+    return GestureDetector(
+      key: widget.anchorKey,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _pressed ? 0.97 : 1,
+        duration: ParentMotion.tapDuration,
+        curve: ParentMotion.curve,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: _pressed ? ParentColors.shellDeep : ParentColors.shell,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  current,
+                  style: const TextStyle(
+                    color: ParentColors.surface,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: ParentColors.surface,
                 ),
               ],
             ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -98,8 +98,10 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   }
 
   Future<void> _openAssignment(String assignmentId) async {
-    final completed = await context.push<bool>(
-      '/parent/${widget.childId}/homework/$assignmentId',
+    final completed = await ParentChildRoutes.pushForChild<bool>(
+      context,
+      childId: widget.childId,
+      segment: 'homework/$assignmentId',
     );
 
     if (!mounted) {
@@ -122,15 +124,20 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
     return ParentScaffold(
       title: title,
-      backLabel: l10n.parentHomeworkBack,
-      onBack: () => context.pop(),
+      subBar: HomeworkListTabs(
+        activeTab: _activeTab,
+        counts: _page?.counts ?? const {},
+        onTabSelected: _selectTab,
+      ),
       body: _buildBody(l10n),
     );
   }
 
   Widget _buildBody(dynamic l10n) {
     if (_isLoading && _page == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: ParentColors.shell),
+      );
     }
 
     if (_error != null && _page == null) {
@@ -142,7 +149,11 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
             children: [
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                onPressed: _load,
+                child: Text(l10n.continueButton),
+              ),
             ],
           ),
         ),
@@ -154,43 +165,46 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
 
     return RefreshIndicator(
       onRefresh: () => _load(silent: true),
+      color: ParentColors.shell,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
-          HomeworkListTabs(
-            activeTab: _activeTab,
-            counts: page.counts,
-            onTabSelected: _selectTab,
-          ),
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: LinearProgressIndicator(),
+              child: LinearProgressIndicator(color: ParentColors.shell),
             ),
           const SizedBox(height: 16),
           if (assignments.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: parentCardDecoration(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 20),
               child: Text(
                 homeworkEmptyMessage(l10n, _activeTab),
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: LarnesColors.textSecondary,
+                  color: ParentColors.inkMuted,
                 ),
               ),
             )
           else
-            for (var i = 0; i < assignments.length; i++) ...[
-              if (i > 0) const SizedBox(height: 12),
-              HomeworkAssignmentCard(
-                assignment: assignments[i],
-                onTap: () => _openAssignment(assignments[i].assignmentId),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+                child: Column(
+                  children: [
+                    for (var i = 0; i < assignments.length; i++) ...[
+                      if (i > 0) const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                      HomeworkAssignmentCard(
+                        assignment: assignments[i],
+                        onTap: () => _openAssignment(assignments[i].assignmentId),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ],
+            ),
         ],
       ),
     );

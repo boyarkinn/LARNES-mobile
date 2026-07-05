@@ -15,6 +15,19 @@ enum ParentProgramProgressStatus {
   }
 }
 
+/// Extra для маршрута direction programs (slug нужен для hub card tokens).
+class DirectionProgramsRouteExtra {
+  const DirectionProgramsRouteExtra({
+    required this.directionTitle,
+    required this.directionSlug,
+    this.sortOrder = 0,
+  });
+
+  final String directionTitle;
+  final String directionSlug;
+  final int sortOrder;
+}
+
 class ParentDirectionCard {
   const ParentDirectionCard({
     required this.directionId,

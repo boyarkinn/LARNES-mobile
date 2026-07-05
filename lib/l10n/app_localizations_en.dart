@@ -215,6 +215,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentStudyTitle => 'What are we studying today?';
 
   @override
+  String get parentStudyProfileCard => 'Profile';
+
+  @override
   String get parentHomeworkTitle => 'Homework';
 
   @override
@@ -259,7 +262,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentChildFormGenderRequired => 'Select gender';
 
   @override
+  String get parentChildFormCardColor => 'Favorite color';
+
+  @override
+  String get parentChildFormAvatar => 'Character';
+
+  @override
+  String get parentChildFormCardColorOrange => 'Orange';
+
+  @override
+  String get parentChildFormCardColorEmerald => 'Emerald';
+
+  @override
+  String get parentChildFormCardColorViolet => 'Violet';
+
+  @override
+  String get parentChildFormCardColorSky => 'Sky blue';
+
+  @override
+  String get parentChildFormCardColorRose => 'Rose';
+
+  @override
+  String get parentChildFormCardColorAmber => 'Amber';
+
+  @override
+  String get parentChildFormAvatarFox => 'Fox';
+
+  @override
+  String get parentChildFormAvatarBear => 'Bear';
+
+  @override
+  String get parentChildFormAvatarOwl => 'Owl';
+
+  @override
   String get parentChildFormSubmit => 'Create profile';
+
+  @override
+  String get parentChildFormAutosaveSaved => 'Saved';
+
+  @override
+  String get parentChildFormAutosaveFailed => 'Could not save';
+
+  @override
+  String get parentClassroomQrTitle => 'Classroom QR';
+
+  @override
+  String get parentClassroomQrAlt => 'Child classroom QR code';
+
+  @override
+  String parentClassroomQrVersion(int version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get parentClassroomQrPrint => 'Print';
+
+  @override
+  String get parentClassroomQrRegenerate => 'Reissue';
+
+  @override
+  String get parentClassroomQrRevoke => 'Revoke';
+
+  @override
+  String get parentClassroomQrIssue => 'Issue QR';
+
+  @override
+  String get parentClassroomQrRevokedHint =>
+      'QR revoked. Printed cards no longer work.';
+
+  @override
+  String get parentClassroomQrCancel => 'Cancel';
+
+  @override
+  String get parentClassroomQrConfirmRegenerateTitle => 'Reissue QR?';
+
+  @override
+  String get parentClassroomQrConfirmRegenerateMessage =>
+      'The old QR will stop working. You will need to print a new one.';
+
+  @override
+  String get parentClassroomQrConfirmRevokeTitle => 'Revoke QR?';
+
+  @override
+  String get parentClassroomQrConfirmRevokeMessage =>
+      'Sign-in with the current QR will be blocked until you issue a new one.';
 
   @override
   String get parentLoadChildrenFailed => 'Could not load children.';

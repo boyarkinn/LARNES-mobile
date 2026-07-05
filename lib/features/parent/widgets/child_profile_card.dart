@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
+import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
-import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_avatar.dart';
 
+/// Name-tag карточка ребёнка на picker (Morning Desk v4).
+/// Эталон: platform/src/components/parent/child-profile-card.tsx
 class ChildProfileCard extends StatelessWidget {
   const ChildProfileCard({
     super.key,
@@ -20,50 +25,194 @@ class ChildProfileCard extends StatelessWidget {
     final locale = LocaleScope.of(context).localeCode;
     final names = childDisplayNameLines(child);
     final age = child.ageYears;
+    final tokens = childCardColorTokens(child.cardColor);
+    final nameStyle = GoogleFonts.fredoka(
+      fontSize: 19,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.015 * 19,
+      height: 1.1,
+      color: ParentColors.ink,
+    );
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
+    return ParentScaleTap(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(ParentRadii.card),
+        child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          constraints: const BoxConstraints(minHeight: ParentChildCardMetrics.minHeight),
           decoration: parentCardDecoration(),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (names.lastName.isNotEmpty)
-                Text(
-                  names.lastName,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: LarnesColors.textPrimary,
+              _ColorBand(color: tokens.tag),
+              Transform.translate(
+                offset: const Offset(0, -ParentChildCardMetrics.innerOverlap),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    ParentChildCardMetrics.innerHorizontalPadding,
+                    0,
+                    ParentChildCardMetrics.innerHorizontalPadding,
+                    ParentChildCardMetrics.innerBottomPadding,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _AvatarRing(
+                            tokens: tokens,
+                            avatarSlug: child.avatarSlug,
+                          ),
+                          const SizedBox(width: ParentChildCardMetrics.rowGap),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: ParentChildCardMetrics.metaTopPadding,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (names.lastName.isNotEmpty)
+                                    Text(names.lastName, style: nameStyle),
+                                  if (names.givenName.isNotEmpty) ...[
+                                    if (names.lastName.isNotEmpty)
+                                      const SizedBox(height: ParentChildCardMetrics.nameLineGap),
+                                    Text(names.givenName, style: nameStyle),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (age != null) ...[
+                        const SizedBox(height: ParentChildCardMetrics.footerTopPadding),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _AgePill(
+                            label: formatChildAgeYears(age, locale).toUpperCase(),
+                            tokens: tokens,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              if (names.givenName.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  names.givenName,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: LarnesColors.textPrimary,
-                  ),
-                ),
-              ],
-              if (age != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  formatChildAgeYears(age, locale),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: LarnesColors.textSecondary,
-                  ),
-                ),
-              ],
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ColorBand extends StatelessWidget {
+  const _ColorBand({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: ParentChildCardMetrics.bandHeight,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: color),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 4,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AvatarRing extends StatelessWidget {
+  const _AvatarRing({
+    required this.tokens,
+    required this.avatarSlug,
+  });
+
+  final ChildCardColorTokens tokens;
+  final ChildAvatarSlug avatarSlug;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: ParentChildCardMetrics.avatarRingSize,
+      height: ParentChildCardMetrics.avatarRingSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: tokens.soft,
+        border: Border.all(color: ParentColors.surface, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: tokens.tag,
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: tokens.tagDeep,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: ChildAvatar(
+        slug: avatarSlug,
+        size: ParentChildCardMetrics.avatarImageSize,
+      ),
+    );
+  }
+}
+
+class _AgePill extends StatelessWidget {
+  const _AgePill({
+    required this.label,
+    required this.tokens,
+  });
+
+  final String label;
+  final ChildCardColorTokens tokens;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: tokens.tag,
+        borderRadius: BorderRadius.circular(7),
+        boxShadow: [
+          BoxShadow(
+            color: tokens.tagDeep,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        child: Text(
+          label,
+          style: GoogleFonts.onest(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.03 * 12,
+            color: Colors.white,
           ),
         ),
       ),

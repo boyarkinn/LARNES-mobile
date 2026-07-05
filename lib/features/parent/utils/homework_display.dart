@@ -43,6 +43,29 @@ String homeworkEmptyMessage(AppLocalizations l10n, ParentHomeworkTab tab) {
   }
 }
 
+String buildHomeworkCardSubtitle(
+  AppLocalizations l10n,
+  ParentHomeworkAssignment assignment,
+  String localeCode,
+) {
+  final statusLabel = homeworkStatusLabel(l10n, assignment.displayStatus);
+  final deadlineLabel = assignment.deadline == null
+      ? l10n.parentHomeworkNoDeadline
+      : formatHomeworkDeadline(assignment.deadline, localeCode);
+  final parts = <String>['$statusLabel · $deadlineLabel'];
+
+  if (assignment.totalSteps > 0) {
+    parts.add(
+      l10n.parentHomeworkProgressValue(
+        assignment.currentStepIndex,
+        assignment.totalSteps,
+      ),
+    );
+  }
+
+  return parts.join(' · ');
+}
+
 String homeworkStatusLabel(AppLocalizations l10n, String displayStatus) {
   switch (displayStatus) {
     case 'assigned':

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
-import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
-import 'package:larnes_mobile/features/parent/widgets/homework_direction_card.dart';
+import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class StudyHubScreen extends StatefulWidget {
@@ -21,7 +22,6 @@ class StudyHubScreen extends StatefulWidget {
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   String? _error;
-  int _homeworkCount = 0;
   List<ParentDirectionCard> _directions = const [];
   bool _wasInactive = false;
 
@@ -64,18 +64,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final api = AuthScope.of(context).parentApi;
-      final results = await Future.wait([
-        api.fetchChild(widget.childId, locale: locale),
-        api.listDirections(widget.childId, locale: locale),
-      ]);
+      final directions = await AuthScope.of(context).parentApi.listDirections(
+        widget.childId,
+        locale: locale,
+      );
       if (!mounted) {
         return;
       }
-      final detail = results[0] as ParentChildDetail;
-      final directions = results[1] as List<ParentDirectionCard>;
       setState(() {
-        _homeworkCount = detail.homeworkCount;
         _directions = directions;
         _isLoading = false;
         _error = null;
@@ -100,51 +96,88 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final subtitle = _homeworkCount > 0
-        ? l10n.parentHomeworkAssignmentCount(_homeworkCount)
-        : l10n.parentHomeworkEmptyHint;
 
     return ParentScaffold(
       title: l10n.parentStudyTitle,
-      backLabel: l10n.parentBack,
-      onBack: () => context.pop(),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
-                      ],
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    final l10n = context.l10n;
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 36),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+            child: Column(
+              children: [
+                StudyHubCard(
+                  title: l10n.parentStudyProfileCard,
+                  tokens: profileHubCardTokens,
+                  icon: HubCardIconKind.profile,
+                  onTap: () => ParentChildRoutes.pushForChild(
+                    context,
+                    childId: widget.childId,
+                    segment: 'profile',
+                  ),
+                ),
+                const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                StudyHubCard(
+                  title: l10n.parentHomeworkTitle,
+                  tokens: homeworkHubCardTokens(),
+                  icon: HubCardIconKind.homework,
+                  onTap: () => ParentChildRoutes.pushForChild(
+                    context,
+                    childId: widget.childId,
+                    segment: 'homework',
+                  ),
+                ),
+                if (_error != null) ...[
+                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: ParentColors.inkMuted),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                    onPressed: _load,
+                    child: Text(l10n.continueButton),
+                  ),
+                ],
+                for (final direction in _directions) ...[
+                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  StudyHubCard(
+                    title: direction.directionTitle,
+                    tokens: directionHubCardTokens(
+                      direction.directionSlug,
+                      sortOrder: direction.sortOrder,
+                    ),
+                    icon: resolveDirectionHubIconKind(direction.directionSlug),
+                    onTap: () => ParentChildRoutes.pushForChild(
+                      context,
+                      childId: widget.childId,
+                      segment: 'directions/${direction.directionId}',
+                      extra: DirectionProgramsRouteExtra(
+                        directionTitle: direction.directionTitle,
+                        directionSlug: direction.directionSlug,
+                        sortOrder: direction.sortOrder,
+                      ),
                     ),
                   ),
-                )
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                  children: [
-                    HomeworkDirectionCard(
-                      title: l10n.parentHomeworkTitle,
-                      subtitle: subtitle,
-                      onTap: () => context.push('/parent/${widget.childId}/homework'),
-                    ),
-                    for (final direction in _directions) ...[
-                      const SizedBox(height: 12),
-                      HomeworkDirectionCard(
-                        title: direction.directionTitle,
-                        subtitle: l10n.parentLearningDirectionProgramCount(direction.programCount),
-                        onTap: () => context.push(
-                          '/parent/${widget.childId}/directions/${direction.directionId}',
-                          extra: direction.directionTitle,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

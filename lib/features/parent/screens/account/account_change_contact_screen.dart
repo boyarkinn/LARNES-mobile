@@ -7,6 +7,7 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -221,18 +222,16 @@ class _AccountChangeContactScreenState extends State<AccountChangeContactScreen>
     final title = _isPhone ? l10n.parentAccountPhoneTitle : l10n.parentAccountEmailTitle;
     final canResend = _secondsLeft == 0 && !_isResending;
 
-    return ParentScaffold(
-      title: title,
-      backLabel: l10n.parentAccountBackToAccount,
-      onBack: () {
-        if (_otpStep) {
+    return PopScope(
+      canPop: !_otpStep,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _otpStep) {
           _backToForm();
-        } else {
-          context.pop();
         }
       },
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      child: ParentScaffold(
+        title: title,
+        body: AccountDeskFormShell(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -261,15 +260,10 @@ class _AccountChangeContactScreenState extends State<AccountChangeContactScreen>
                 textInputAction: TextInputAction.done,
               ),
               const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _sendCode,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.parentAccountSendCode),
+              AccountPrimaryButton(
+                label: l10n.parentAccountSendCode,
+                isLoading: _isSubmitting,
+                onPressed: _sendCode,
               ),
             ] else ...[
               Text(
@@ -291,19 +285,15 @@ class _AccountChangeContactScreenState extends State<AccountChangeContactScreen>
                   style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               const SizedBox(height: 12),
-              FilledButton(
-                onPressed: _isSubmitting ? null : _verifyCode,
-                child: _isSubmitting
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.parentAccountVerifyContact),
+              AccountPrimaryButton(
+                label: l10n.parentAccountVerifyContact,
+                isLoading: _isSubmitting,
+                onPressed: _verifyCode,
               ),
             ],
           ],
         ),
+      ),
       ),
     );
   }

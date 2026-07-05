@@ -5,6 +5,9 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
+import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -21,6 +24,8 @@ class _AddChildScreenState extends State<AddChildScreen> {
   final _patronymicController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   String? _gender;
+  ChildCardColor _cardColor = defaultChildCardColor;
+  ChildAvatarSlug _avatarSlug = defaultChildAvatarSlug;
   bool _isSubmitting = false;
   String? _error;
 
@@ -71,6 +76,8 @@ class _AddChildScreenState extends State<AddChildScreen> {
           patronymic: _patronymicController.text.trim(),
           dateOfBirth: _dateOfBirthController.text.trim(),
           gender: gender,
+          cardColor: _cardColor,
+          avatarSlug: _avatarSlug,
         ),
         locale: locale,
       );
@@ -95,8 +102,6 @@ class _AddChildScreenState extends State<AddChildScreen> {
 
     return ParentScaffold(
       title: l10n.parentChildFormTitle,
-      backLabel: l10n.parentBack,
-      onBack: () => context.pop(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Column(
@@ -146,6 +151,13 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   _error = null;
                 });
               },
+            ),
+            const SizedBox(height: 16),
+            ChildProfileAppearanceFields(
+              cardColor: _cardColor,
+              avatarSlug: _avatarSlug,
+              onCardColorChanged: (color) => setState(() => _cardColor = color),
+              onAvatarSlugChanged: (slug) => setState(() => _avatarSlug = slug),
             ),
             const SizedBox(height: 24),
             FilledButton(

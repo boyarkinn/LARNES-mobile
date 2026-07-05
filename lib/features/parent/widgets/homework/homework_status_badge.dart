@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/parent/utils/homework_display.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
+/// Эталон: platform `.parent-status-badge`
 class HomeworkStatusBadge extends StatelessWidget {
   const HomeworkStatusBadge({super.key, required this.displayStatus});
 
@@ -23,7 +25,7 @@ class HomeworkStatusBadge extends StatelessWidget {
           homeworkStatusLabel(l10n, displayStatus),
           style: TextStyle(
             color: colors.$2,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -34,11 +36,13 @@ class HomeworkStatusBadge extends StatelessWidget {
   (Color, Color) _colorsForStatus(String status) {
     switch (status) {
       case 'completed':
-        return (const Color(0xFFDCFCE7), const Color(0xFF166534));
+        return (const Color(0xFFDCFCE7), const Color(0xFF15803D));
       case 'in_progress':
-        return (const Color(0xFFDBEAFE), const Color(0xFF1E40AF));
+        return (const Color(0xFFDBEAFE), const Color(0xFF1D4ED8));
       case 'overdue':
         return (const Color(0xFFFEE2E2), const Color(0xFFB91C1C));
+      case 'assigned':
+        return (ParentColors.shellSoft, ParentColors.shellDeep);
       default:
         return (const Color(0xFFF3F4F6), const Color(0xFF374151));
     }

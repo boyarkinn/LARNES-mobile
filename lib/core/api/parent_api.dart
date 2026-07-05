@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
+import 'package:larnes_mobile/features/parent/models/child_classroom_qr.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
@@ -368,6 +369,69 @@ class ParentApi {
           _messageFromBody(data, l10n, fallback: l10n.parentHomeworkPlayAdvanceFailed),
         );
       }
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<ChildClassroomQrState> fetchChildClassroomQr(
+    String childId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/classroom-qr',
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n));
+      }
+      final qr = data['classroomQr'];
+      if (qr is! Map) {
+        throw ParentApiException(l10n.requestError);
+      }
+      return ChildClassroomQrState.fromJson(Map<String, dynamic>.from(qr));
+    } on DioException catch (error) {
+      throw ParentApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
+  Future<ChildClassroomQrState> mutateChildClassroomQr({
+    required String childId,
+    required ChildClassroomQrAction action,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/classroom-qr',
+        data: {
+          'action': action.name,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n));
+      }
+      final qr = data['classroomQr'];
+      if (qr is! Map) {
+        throw ParentApiException(l10n.requestError);
+      }
+      return ChildClassroomQrState.fromJson(Map<String, dynamic>.from(qr));
     } on DioException catch (error) {
       throw ParentApiException(
         _messageFromBody(

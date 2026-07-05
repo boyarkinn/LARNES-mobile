@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
-import 'package:larnes_mobile/features/parent/widgets/homework_direction_card.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
+import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -15,11 +18,15 @@ class DirectionProgramsScreen extends StatefulWidget {
     required this.childId,
     required this.directionId,
     required this.directionTitle,
+    this.directionSlug = '',
+    this.sortOrder = 0,
   });
 
   final String childId;
   final String directionId;
   final String directionTitle;
+  final String directionSlug;
+  final int sortOrder;
 
   @override
   State<DirectionProgramsScreen> createState() => _DirectionProgramsScreenState();
@@ -85,6 +92,11 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
         : l10n.parentProgramDirectionStart;
   }
 
+  ChildCardColorTokens get _cardTokens =>
+      directionHubCardTokens(widget.directionSlug, sortOrder: widget.sortOrder);
+
+  HubCardIconKind get _iconKind => resolveDirectionHubIconKind(widget.directionSlug);
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -92,10 +104,8 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
 
     return ParentScaffold(
       title: widget.directionTitle,
-      backLabel: l10n.parentDirectionProgramsBack,
-      onBack: () => context.pop(),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: ParentColors.shell))
           : _error != null
               ? Center(
                   child: Padding(
@@ -105,7 +115,11 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
                       children: [
                         Text(_error!, textAlign: TextAlign.center),
                         const SizedBox(height: 16),
-                        FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
+                        FilledButton(
+                          style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                          onPressed: _load,
+                          child: Text(l10n.continueButton),
+                        ),
                       ],
                     ),
                   ),
@@ -113,28 +127,40 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
               : track == null
                   ? const SizedBox.shrink()
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                       children: [
-                        switch (track.kind) {
-                          DirectionTrackKind.empty => Text(
-                              l10n.parentDirectionProgramsEmpty,
-                              textAlign: TextAlign.center,
-                            ),
-                          DirectionTrackKind.allCompleted => HomeworkDirectionCard(
-                              title: l10n.parentProgramTrackCompleted,
-                              subtitle: '',
-                              onTap: null,
-                            ),
-                          DirectionTrackKind.active => HomeworkDirectionCard(
-                              title: _activeCtaLabel(l10n, track),
-                              subtitle: track.title ?? '',
-                              onTap: track.programId == null
-                                  ? null
-                                  : () => context.push(
-                                        '/parent/${widget.childId}/programs/${track.programId}',
-                                      ),
-                            ),
-                        },
+                        Center(
+                          child: ConstrainedBox(
+                            constraints:
+                                const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+                            child: switch (track.kind) {
+                              DirectionTrackKind.empty => Text(
+                                  l10n.parentDirectionProgramsEmpty,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: ParentColors.inkMuted),
+                                ),
+                              DirectionTrackKind.allCompleted => StudyHubCard(
+                                  title: l10n.parentProgramTrackCompleted,
+                                  tokens: _cardTokens,
+                                  icon: _iconKind,
+                                  staticCard: true,
+                                ),
+                              DirectionTrackKind.active => StudyHubCard(
+                                  title: _activeCtaLabel(l10n, track),
+                                  subtitle: track.title ?? '',
+                                  tokens: _cardTokens,
+                                  icon: _iconKind,
+                                  onTap: track.programId == null
+                                      ? null
+                                      : () => ParentChildRoutes.pushForChild(
+                                            context,
+                                            childId: widget.childId,
+                                            segment: 'programs/${track.programId}',
+                                          ),
+                                ),
+                            },
+                          ),
+                        ),
                       ],
                     ),
     );

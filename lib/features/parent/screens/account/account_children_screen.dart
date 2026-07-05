@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
@@ -92,14 +93,19 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
     return '${lines.lastName} ${lines.givenName}'.trim();
   }
 
+  Future<void> _openAddChild() async {
+    await context.push('/parent/children/new');
+    if (mounted) {
+      await _load(silent: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     return ParentScaffold(
       title: l10n.parentAccountChildrenTitle,
-      backLabel: l10n.parentAccountBackToAccount,
-      onBack: () => context.pop(),
       body: _buildBody(l10n),
     );
   }
@@ -116,59 +122,52 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center),
+              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: ParentColors.inkMuted)),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                onPressed: _load,
+                child: Text(l10n.continueButton),
+              ),
             ],
           ),
         ),
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => _load(silent: true),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        children: [
-          if (_children.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(l10n.parentAccountChildrenEmpty, style: const TextStyle(fontSize: 14)),
-            ),
-          if (_children.isNotEmpty)
-            AccountSection(
-              title: l10n.parentAccountChildrenProfiles,
-              child: Column(
-                children: [
-                  for (var i = 0; i < _children.length; i++) ...[
-                    if (i > 0) const AccountDivider(),
-                    AccountActionRow(
-                      label: _childTitle(_children[i]),
-                      subtitle: _children[i].ageYears != null
-                          ? formatChildAgeYears(_children[i].ageYears!, LocaleScope.of(context).localeCode)
-                          : null,
-                      onTap: () => context.push('/parent/account/children/${_children[i].id}'),
-                    ),
-                  ],
+    final localeCode = LocaleScope.of(context).localeCode;
+
+    return AccountDeskShell(
+      refreshIndicator: () => _load(silent: true),
+      children: [
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountChildrenProfiles,
+          child: Column(
+            children: [
+              if (_children.isEmpty)
+                AccountEmptyText(text: l10n.parentAccountChildrenEmpty)
+              else
+                for (var i = 0; i < _children.length; i++) ...[
+                  if (i > 0) const AccountDivider(),
+                  AccountChildRow(
+                    name: _childTitle(_children[i]),
+                    meta: _children[i].ageYears != null
+                        ? formatChildAgeYears(_children[i].ageYears!, localeCode)
+                        : null,
+                    onTap: () => context.push('/parent/${_children[i].id}/profile?from=account'),
+                  ),
                 ],
-              ),
-            ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountChildrenActions,
-            child: AccountActionRow(
-              label: l10n.parentAddChild,
-              onTap: () async {
-                await context.push('/parent/children/new');
-                if (mounted) {
-                  await _load(silent: true);
-                }
-              },
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountChildrenActions,
+          child: AccountLinkRow(
+            label: l10n.parentAddChild,
+            onTap: _openAddChild,
+          ),
+        ),
+      ],
     );
   }
 }

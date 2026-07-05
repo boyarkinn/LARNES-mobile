@@ -488,6 +488,12 @@ abstract class AppLocalizations {
   /// **'What are we studying today?'**
   String get parentStudyTitle;
 
+  /// No description provided for @parentStudyProfileCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get parentStudyProfileCard;
+
   /// No description provided for @parentHomeworkTitle.
   ///
   /// In en, this message translates to:
@@ -560,11 +566,167 @@ abstract class AppLocalizations {
   /// **'Select gender'**
   String get parentChildFormGenderRequired;
 
+  /// No description provided for @parentChildFormCardColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite color'**
+  String get parentChildFormCardColor;
+
+  /// No description provided for @parentChildFormAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Character'**
+  String get parentChildFormAvatar;
+
+  /// No description provided for @parentChildFormCardColorOrange.
+  ///
+  /// In en, this message translates to:
+  /// **'Orange'**
+  String get parentChildFormCardColorOrange;
+
+  /// No description provided for @parentChildFormCardColorEmerald.
+  ///
+  /// In en, this message translates to:
+  /// **'Emerald'**
+  String get parentChildFormCardColorEmerald;
+
+  /// No description provided for @parentChildFormCardColorViolet.
+  ///
+  /// In en, this message translates to:
+  /// **'Violet'**
+  String get parentChildFormCardColorViolet;
+
+  /// No description provided for @parentChildFormCardColorSky.
+  ///
+  /// In en, this message translates to:
+  /// **'Sky blue'**
+  String get parentChildFormCardColorSky;
+
+  /// No description provided for @parentChildFormCardColorRose.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get parentChildFormCardColorRose;
+
+  /// No description provided for @parentChildFormCardColorAmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Amber'**
+  String get parentChildFormCardColorAmber;
+
+  /// No description provided for @parentChildFormAvatarFox.
+  ///
+  /// In en, this message translates to:
+  /// **'Fox'**
+  String get parentChildFormAvatarFox;
+
+  /// No description provided for @parentChildFormAvatarBear.
+  ///
+  /// In en, this message translates to:
+  /// **'Bear'**
+  String get parentChildFormAvatarBear;
+
+  /// No description provided for @parentChildFormAvatarOwl.
+  ///
+  /// In en, this message translates to:
+  /// **'Owl'**
+  String get parentChildFormAvatarOwl;
+
   /// No description provided for @parentChildFormSubmit.
   ///
   /// In en, this message translates to:
   /// **'Create profile'**
   String get parentChildFormSubmit;
+
+  /// No description provided for @parentChildFormAutosaveSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get parentChildFormAutosaveSaved;
+
+  /// No description provided for @parentChildFormAutosaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save'**
+  String get parentChildFormAutosaveFailed;
+
+  /// No description provided for @parentClassroomQrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Classroom QR'**
+  String get parentClassroomQrTitle;
+
+  /// No description provided for @parentClassroomQrAlt.
+  ///
+  /// In en, this message translates to:
+  /// **'Child classroom QR code'**
+  String get parentClassroomQrAlt;
+
+  /// No description provided for @parentClassroomQrVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version}'**
+  String parentClassroomQrVersion(int version);
+
+  /// No description provided for @parentClassroomQrPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get parentClassroomQrPrint;
+
+  /// No description provided for @parentClassroomQrRegenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Reissue'**
+  String get parentClassroomQrRegenerate;
+
+  /// No description provided for @parentClassroomQrRevoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get parentClassroomQrRevoke;
+
+  /// No description provided for @parentClassroomQrIssue.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue QR'**
+  String get parentClassroomQrIssue;
+
+  /// No description provided for @parentClassroomQrRevokedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'QR revoked. Printed cards no longer work.'**
+  String get parentClassroomQrRevokedHint;
+
+  /// No description provided for @parentClassroomQrCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get parentClassroomQrCancel;
+
+  /// No description provided for @parentClassroomQrConfirmRegenerateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reissue QR?'**
+  String get parentClassroomQrConfirmRegenerateTitle;
+
+  /// No description provided for @parentClassroomQrConfirmRegenerateMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The old QR will stop working. You will need to print a new one.'**
+  String get parentClassroomQrConfirmRegenerateMessage;
+
+  /// No description provided for @parentClassroomQrConfirmRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke QR?'**
+  String get parentClassroomQrConfirmRevokeTitle;
+
+  /// No description provided for @parentClassroomQrConfirmRevokeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in with the current QR will be blocked until you issue a new one.'**
+  String get parentClassroomQrConfirmRevokeMessage;
 
   /// No description provided for @parentLoadChildrenFailed.
   ///

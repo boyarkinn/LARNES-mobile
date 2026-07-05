@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
-import 'package:larnes_mobile/features/auth/widgets/language_switcher.dart';
+import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/utils/account_display.dart';
+import 'package:larnes_mobile/features/parent/utils/child_display.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_language_picker.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -20,6 +23,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
   bool _isLoading = true;
   String? _error;
   ParentAccountSnapshot? _snapshot;
+  List<ParentChild> _children = const [];
   bool _wasInactive = false;
 
   @override
@@ -61,13 +65,18 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final snapshot = await AuthScope.of(context).parentAccountApi.fetchAccount(locale: locale);
+      final auth = AuthScope.of(context);
+      final results = await Future.wait([
+        auth.parentAccountApi.fetchAccount(locale: locale),
+        auth.parentApi.listChildren(locale: locale),
+      ]);
       if (!mounted) {
         return;
       }
-      AuthScope.of(context).applyUser(snapshot.user);
+      auth.applyUser((results[0] as ParentAccountSnapshot).user);
       setState(() {
-        _snapshot = snapshot;
+        _snapshot = results[0] as ParentAccountSnapshot;
+        _children = results[1] as List<ParentChild>;
         _isLoading = false;
         _error = null;
       });
@@ -126,14 +135,24 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     }
   }
 
+  Future<void> _openAddChild() async {
+    await context.push('/parent/children/new');
+    if (mounted) {
+      await _load(silent: true);
+    }
+  }
+
+  String _childTitle(ParentChild child) {
+    final lines = childDisplayNameLines(child);
+    return '${lines.lastName} ${lines.givenName}'.trim();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     return ParentScaffold(
       title: l10n.parentAccountTitle,
-      backLabel: l10n.parentAccountBackToPicker,
-      onBack: () => context.pop(),
       body: _buildBody(l10n),
     );
   }
@@ -150,9 +169,13 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center),
+              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: ParentColors.inkMuted)),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: Text(l10n.continueButton)),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                onPressed: _load,
+                child: Text(l10n.continueButton),
+              ),
             ],
           ),
         ),
@@ -164,173 +187,130 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     final formattedDob = formatAccountDateOfBirth(user.dateOfBirth, localeCode);
     const passwordMask = '••••••••';
 
-    return RefreshIndicator(
-      onRefresh: () => _load(silent: true),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-        children: [
-          AccountSection(
-            title: l10n.parentAccountSectionProfile,
-            child: Column(
-              children: [
-                AccountFieldRow(
-                  label: l10n.parentAccountFieldFullName,
-                  value: user.fullName.isNotEmpty ? user.fullName : l10n.parentAccountNotSet,
-                  muted: user.fullName.isEmpty,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangeProfile,
-                  onTap: () => context.push('/parent/account/profile'),
-                ),
-                const AccountDivider(),
-                AccountFieldRow(
-                  label: l10n.parentAccountFieldDateOfBirth,
-                  value: formattedDob.isNotEmpty ? formattedDob : l10n.parentAccountDateOfBirthNotSet,
-                  muted: formattedDob.isEmpty,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangeDateOfBirth,
-                  onTap: () => context.push('/parent/account/date-of-birth'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountSectionChildren,
-            child: Column(
-              children: [
-                AccountFieldRow(
-                  label: l10n.parentAccountFieldChildren,
-                  value: formatChildrenCount(l10n, _snapshot!.childrenCount),
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionManageChildren,
-                  onTap: () => context.push('/parent/account/children'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountSectionCity,
-            child: Column(
-              children: [
-                AccountFieldRow(
-                  label: l10n.parentAccountFieldCity,
-                  value: user.city ?? l10n.parentAccountCityNotSet,
-                  muted: user.city == null || user.city!.isEmpty,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangeCity,
-                  onTap: () => context.push('/parent/account/city'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountSectionContacts,
-            child: Column(
-              children: [
-                AccountFieldRow(
-                  label: l10n.phoneLabel,
-                  value: user.phone ?? l10n.parentAccountNotSet,
-                  muted: user.phone == null,
-                  badgeLabel: user.phone != null
-                      ? (user.phoneVerified
-                          ? l10n.parentAccountContactVerified
-                          : l10n.parentAccountContactNotVerified)
-                      : null,
-                  badgeVerified: user.phoneVerified,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangePhone,
-                  onTap: () => context.push('/parent/account/phone'),
-                ),
-                const AccountDivider(),
-                AccountFieldRow(
-                  label: l10n.emailLabel,
-                  value: user.email ?? l10n.parentAccountNotSet,
-                  muted: user.email == null,
-                  badgeLabel: user.email != null
-                      ? (user.emailVerified
-                          ? l10n.parentAccountContactVerified
-                          : l10n.parentAccountContactNotVerified)
-                      : null,
-                  badgeVerified: user.emailVerified,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangeEmail,
-                  onTap: () => context.push('/parent/account/email'),
-                ),
-                const AccountDivider(),
-                AccountFieldRow(
-                  label: l10n.parentAccountFieldLogin,
-                  value: user.login ?? l10n.parentAccountNotSet,
-                  muted: user.login == null,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangeLogin,
-                  onTap: () => context.push('/parent/account/login'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountSectionSecurity,
-            child: Column(
-              children: [
-                AccountFieldRow(
-                  label: l10n.passwordLabel,
-                  value: passwordMask,
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionChangePassword,
-                  onTap: () => context.push('/parent/account/password'),
-                ),
-                const AccountDivider(),
-                AccountActionRow(
-                  label: l10n.parentAccountActionLogoutAll,
-                  destructive: true,
-                  onTap: _logoutAll,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          AccountSection(
-            title: l10n.parentAccountSectionLanguage,
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: LanguageSwitcher(),
+    return AccountDeskShell(
+      refreshIndicator: () => _load(silent: true),
+      children: [
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionProfile,
+          child: Column(
+            children: [
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldFullName,
+                value: user.fullName.isNotEmpty ? user.fullName : l10n.parentAccountNotSet,
+                valueMuted: user.fullName.isEmpty,
+                onTap: () => context.push('/parent/account/profile'),
               ),
-            ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldDateOfBirth,
+                value: formattedDob.isNotEmpty ? formattedDob : l10n.parentAccountDateOfBirthNotSet,
+                valueMuted: formattedDob.isEmpty,
+                onTap: () => context.push('/parent/account/date-of-birth'),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
-          OutlinedButton(
-            onPressed: _logout,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red.shade700,
-              side: BorderSide(color: Colors.red.shade300),
-              minimumSize: const Size.fromHeight(48),
-            ),
-            child: Text(l10n.logoutButton),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionChildren,
+          child: Column(
+            children: [
+              if (_children.isEmpty)
+                AccountEmptyText(text: l10n.parentAccountChildrenEmpty)
+              else
+                for (var i = 0; i < _children.length; i++) ...[
+                  if (i > 0) const AccountDivider(),
+                  AccountChildRow(
+                    name: _childTitle(_children[i]),
+                    meta: _children[i].ageYears != null
+                        ? formatChildAgeYears(_children[i].ageYears!, localeCode)
+                        : null,
+                    onTap: () => context.push('/parent/${_children[i].id}/profile?from=account'),
+                  ),
+                ],
+              if (_children.isNotEmpty) const AccountDivider(),
+              AccountLinkRow(
+                label: l10n.parentAddChild,
+                onTap: _openAddChild,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionCity,
+          child: AccountFieldGroup(
+            label: l10n.parentAccountFieldCity,
+            value: user.city ?? l10n.parentAccountCityNotSet,
+            valueMuted: user.city == null || user.city!.isEmpty,
+            onTap: () => context.push('/parent/account/city'),
+          ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionContacts,
+          child: Column(
+            children: [
+              AccountFieldGroup(
+                label: l10n.phoneLabel,
+                value: user.phone ?? l10n.parentAccountNotSet,
+                valueMuted: user.phone == null,
+                badgeLabel: user.phone != null
+                    ? (user.phoneVerified
+                        ? l10n.parentAccountContactVerified
+                        : l10n.parentAccountContactNotVerified)
+                    : null,
+                badgeVerified: user.phoneVerified,
+                onTap: () => context.push('/parent/account/phone'),
+              ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.emailLabel,
+                value: user.email ?? l10n.parentAccountNotSet,
+                valueMuted: user.email == null,
+                badgeLabel: user.email != null
+                    ? (user.emailVerified
+                        ? l10n.parentAccountContactVerified
+                        : l10n.parentAccountContactNotVerified)
+                    : null,
+                badgeVerified: user.emailVerified,
+                onTap: () => context.push('/parent/account/email'),
+              ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldLogin,
+                value: user.login ?? l10n.parentAccountNotSet,
+                valueMuted: user.login == null,
+                onTap: () => context.push('/parent/account/login'),
+              ),
+            ],
+          ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionLanguage,
+          child: const AccountLanguagePicker(),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionSecurity,
+          child: Column(
+            children: [
+              AccountFieldGroup(
+                label: l10n.passwordLabel,
+                value: passwordMask,
+                onTap: () => context.push('/parent/account/password'),
+              ),
+              const AccountDivider(),
+              AccountDestructiveButton(
+                label: l10n.parentAccountActionLogoutAll,
+                onTap: _logoutAll,
+              ),
+              const AccountDivider(),
+              AccountDestructiveButton(
+                label: l10n.logoutButton,
+                onTap: _logout,
+                filled: true,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

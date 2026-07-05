@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -75,10 +76,7 @@ class _AccountPasswordScreenState extends State<AccountPasswordScreen> {
 
     return ParentScaffold(
       title: l10n.parentAccountPasswordTitle,
-      backLabel: l10n.parentAccountBackToAccount,
-      onBack: () => context.pop(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+      body: AccountDeskFormShell(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -104,11 +102,10 @@ class _AccountPasswordScreenState extends State<AccountPasswordScreen> {
               textInputAction: TextInputAction.done,
             ),
             const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(l10n.parentAccountSavePassword),
+            AccountPrimaryButton(
+              label: l10n.parentAccountSavePassword,
+              isLoading: _isSubmitting,
+              onPressed: _submit,
             ),
           ],
         ),

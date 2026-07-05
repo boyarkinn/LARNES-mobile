@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
-import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 class UnimplementedTrainer extends StatelessWidget {

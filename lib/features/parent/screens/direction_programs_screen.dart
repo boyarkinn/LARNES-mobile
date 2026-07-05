@@ -4,8 +4,8 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
+import 'package:larnes_mobile/features/parent/widgets/homework_direction_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
-import 'package:larnes_mobile/features/parent/widgets/program_direction_card.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -28,7 +28,7 @@ class DirectionProgramsScreen extends StatefulWidget {
 class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
   bool _isLoading = true;
   String? _error;
-  List<ParentProgramCard> _programs = const [];
+  DirectionTrack? _track;
 
   @override
   void initState() {
@@ -49,7 +49,7 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
     try {
       final locale = LocaleScope.read(context).localeCode;
       final api = AuthScope.of(context).parentApi;
-      final programs = await api.listProgramsInDirection(
+      final track = await api.fetchDirectionTrack(
         widget.childId,
         widget.directionId,
         locale: locale,
@@ -58,7 +58,7 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
         return;
       }
       setState(() {
-        _programs = programs;
+        _track = track;
         _isLoading = false;
         _error = null;
       });
@@ -79,17 +79,16 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
     }
   }
 
-  String _programSubtitle(AppLocalizations l10n, ParentProgramCard program) {
-    return switch (program.progressStatus) {
-      ParentProgramProgressStatus.completed => l10n.parentProgramDirectionCompleted,
-      ParentProgramProgressStatus.inProgress => l10n.parentProgramDirectionContinue,
-      ParentProgramProgressStatus.notStarted => l10n.parentProgramDirectionStart,
-    };
+  String _activeCtaLabel(AppLocalizations l10n, DirectionTrack track) {
+    return track.progressStatus == ParentProgramProgressStatus.inProgress
+        ? l10n.parentProgramDirectionContinue
+        : l10n.parentProgramDirectionStart;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final track = _track;
 
     return ParentScaffold(
       title: widget.directionTitle,
@@ -111,30 +110,32 @@ class _DirectionProgramsScreenState extends State<DirectionProgramsScreen> {
                     ),
                   ),
                 )
-              : _programs.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          l10n.parentDirectionProgramsEmpty,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  : ListView.separated(
+              : track == null
+                  ? const SizedBox.shrink()
+                  : ListView(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                      itemCount: _programs.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final program = _programs[index];
-                        return ProgramDirectionCard(
-                          program: program,
-                          subtitle: _programSubtitle(l10n, program),
-                          onTap: () => context.push(
-                            '/parent/${widget.childId}/programs/${program.programId}',
-                          ),
-                        );
-                      },
+                      children: [
+                        switch (track.kind) {
+                          DirectionTrackKind.empty => Text(
+                              l10n.parentDirectionProgramsEmpty,
+                              textAlign: TextAlign.center,
+                            ),
+                          DirectionTrackKind.allCompleted => HomeworkDirectionCard(
+                              title: l10n.parentProgramTrackCompleted,
+                              subtitle: '',
+                              onTap: null,
+                            ),
+                          DirectionTrackKind.active => HomeworkDirectionCard(
+                              title: _activeCtaLabel(l10n, track),
+                              subtitle: track.title ?? '',
+                              onTap: track.programId == null
+                                  ? null
+                                  : () => context.push(
+                                        '/parent/${widget.childId}/programs/${track.programId}',
+                                      ),
+                            ),
+                        },
+                      ],
                     ),
     );
   }

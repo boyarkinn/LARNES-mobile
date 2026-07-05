@@ -302,6 +302,7 @@
   },
   "parentDirectionProgramsBack": "Back to study",
   "parentDirectionProgramsEmpty": "No published programs in this direction yet.",
+  "parentProgramTrackCompleted": "Direction completed",
   "parentProgramDirectionStart": "Start",
   "parentProgramDirectionContinue": "Continue",
   "parentProgramDirectionCompleted": "Completed",

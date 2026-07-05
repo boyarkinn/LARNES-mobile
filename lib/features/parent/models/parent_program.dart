@@ -41,6 +41,50 @@ class ParentDirectionCard {
   final int sortOrder;
 }
 
+enum DirectionTrackKind {
+  active('active'),
+  allCompleted('all_completed'),
+  empty('empty');
+
+  const DirectionTrackKind(this.apiValue);
+
+  final String apiValue;
+
+  static DirectionTrackKind fromApiValue(String? value) {
+    return DirectionTrackKind.values.firstWhere(
+      (kind) => kind.apiValue == value,
+      orElse: () => DirectionTrackKind.empty,
+    );
+  }
+}
+
+class DirectionTrack {
+  const DirectionTrack({
+    required this.kind,
+    this.programId,
+    this.progressStatus,
+    this.title,
+  });
+
+  factory DirectionTrack.fromJson(Map<String, dynamic> json) {
+    final kind = DirectionTrackKind.fromApiValue(json['kind'] as String?);
+
+    return DirectionTrack(
+      kind: kind,
+      programId: json['programId'] as String?,
+      progressStatus: json['progressStatus'] == null
+          ? null
+          : ParentProgramProgressStatus.fromApiValue(json['progressStatus'] as String?),
+      title: json['title'] as String?,
+    );
+  }
+
+  final DirectionTrackKind kind;
+  final String? programId;
+  final ParentProgramProgressStatus? progressStatus;
+  final String? title;
+}
+
 class ParentProgramCard {
   const ParentProgramCard({
     required this.programId,

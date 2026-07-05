@@ -240,7 +240,7 @@ class ParentApi {
     }
   }
 
-  Future<List<ParentProgramCard>> listProgramsInDirection(
+  Future<DirectionTrack> fetchDirectionTrack(
     String childId,
     String directionId, {
     String locale = 'ru',
@@ -257,14 +257,11 @@ class ParentApi {
           _messageFromBody(data, l10n, fallback: l10n.parentProgramLoadFailed),
         );
       }
-      final programs = data['programs'] as List<dynamic>? ?? const [];
-      return programs
-          .map(
-            (item) => ParentProgramCard.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ),
-          )
-          .toList();
+      final track = data['track'];
+      if (track is! Map) {
+        throw ParentApiException(l10n.parentProgramLoadFailed);
+      }
+      return DirectionTrack.fromJson(Map<String, dynamic>.from(track));
     } on DioException catch (error) {
       throw ParentApiException(
         _messageFromBody(

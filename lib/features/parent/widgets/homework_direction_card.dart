@@ -12,42 +12,55 @@ class HomeworkDirectionCard extends StatelessWidget {
 
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: parentCardDecoration(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: LarnesColors.textPrimary,
-                ),
+      child: onTap == null
+          ? Ink(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: parentCardDecoration(),
+              child: _content(),
+            )
+          : InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: Ink(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: parentCardDecoration(),
+                child: _content(),
               ),
-              const SizedBox(height: 10),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: LarnesColors.textSecondary,
-                ),
-              ),
-            ],
+            ),
+    );
+  }
+
+  Widget _content() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: LarnesColors.textPrimary,
           ),
         ),
-      ),
+        if (subtitle.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              fontSize: 14,
+              color: LarnesColors.textSecondary,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -678,6 +678,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'No published programs in this direction yet.';
 
   @override
+  String get parentProgramTrackCompleted => 'Direction completed';
+
+  @override
   String get parentProgramDirectionStart => 'Start';
 
   @override

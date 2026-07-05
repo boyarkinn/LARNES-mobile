@@ -260,6 +260,7 @@
   },
   "parentDirectionProgramsBack": "К занятиям",
   "parentDirectionProgramsEmpty": "В этом направлении пока нет опубликованных программ.",
+  "parentProgramTrackCompleted": "Направление пройдено",
   "parentProgramDirectionStart": "Начать",
   "parentProgramDirectionContinue": "Продолжить",
   "parentProgramDirectionCompleted": "Пройдено",

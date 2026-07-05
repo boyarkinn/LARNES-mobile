@@ -687,6 +687,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'В этом направлении пока нет опубликованных программ.';
 
   @override
+  String get parentProgramTrackCompleted => 'Направление пройдено';
+
+  @override
   String get parentProgramDirectionStart => 'Начать';
 
   @override

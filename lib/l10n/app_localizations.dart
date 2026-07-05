@@ -1310,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'No published programs in this direction yet.'**
   String get parentDirectionProgramsEmpty;
 
+  /// No description provided for @parentProgramTrackCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction completed'**
+  String get parentProgramTrackCompleted;
+
   /// No description provided for @parentProgramDirectionStart.
   ///
   /// In en, this message translates to:

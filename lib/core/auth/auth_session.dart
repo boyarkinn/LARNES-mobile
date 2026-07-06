@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
+import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
@@ -33,6 +34,8 @@ class AuthSession extends ChangeNotifier {
   ParentApi get parentApi => _client.parentApi;
 
   ParentAccountApi get parentAccountApi => _client.parentAccountApi;
+
+  NetworkApi get networkApi => _client.networkApi;
 
   void applyUser(AuthUser user) {
     _user = user;

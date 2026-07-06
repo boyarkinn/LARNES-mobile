@@ -27,8 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
     if (widget.authSession.isAuthenticated) {
-      final accountType = widget.authSession.user?.accountType;
-      context.go(mapHomePathToMobile(accountType == 'parent' ? '/parent' : '/home'));
+      context.go(defaultMobileHomeForAccountType(widget.authSession.user?.accountType));
     } else {
       context.go('/login');
     }

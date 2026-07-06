@@ -1578,6 +1578,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Complete the task on screen'**
   String get parentProgramPlayInteractiveHint;
+
+  /// No description provided for @networkCentersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My centers'**
+  String get networkCentersTitle;
+
+  /// No description provided for @networkCentersSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your centers'**
+  String get networkCentersSectionTitle;
+
+  /// No description provided for @networkDevicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Network devices'**
+  String get networkDevicesTitle;
+
+  /// No description provided for @networkDevicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablets and other clients in your network. Classroom and slot show current placement.'**
+  String get networkDevicesHint;
+
+  /// No description provided for @networkCentersEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not have any centers yet'**
+  String get networkCentersEmptyTitle;
+
+  /// No description provided for @networkCentersEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create centers in the web network panel.'**
+  String get networkCentersEmptyDescription;
+
+  /// No description provided for @networkDevicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No devices yet. They appear after enrolling a tablet.'**
+  String get networkDevicesEmpty;
+
+  /// No description provided for @networkLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load network data.'**
+  String get networkLoadFailed;
+
+  /// No description provided for @networkDeviceOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get networkDeviceOnline;
+
+  /// No description provided for @networkDeviceOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get networkDeviceOffline;
+
+  /// No description provided for @networkDeviceUnassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned'**
+  String get networkDeviceUnassigned;
+
+  /// No description provided for @networkDeviceKindTablet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get networkDeviceKindTablet;
+
+  /// No description provided for @networkDeviceKindLaptop.
+  ///
+  /// In en, this message translates to:
+  /// **'Laptop'**
+  String get networkDeviceKindLaptop;
+
+  /// No description provided for @networkDeviceKindPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get networkDeviceKindPhone;
+
+  /// No description provided for @networkDeviceSlotValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Slot {slot}'**
+  String networkDeviceSlotValue(String slot);
 }
 
 class _AppLocalizationsDelegate

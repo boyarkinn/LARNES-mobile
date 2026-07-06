@@ -9,6 +9,7 @@ import 'package:larnes_mobile/features/auth/screens/register_otp_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
+import 'package:larnes_mobile/features/network/screens/network_centers_screen.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_change_contact_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_child_detail_screen.dart';
@@ -39,27 +40,12 @@ GoRouter createAppRouter(AuthSession authSession) {
     initialLocation: '/splash',
     refreshListenable: authSession,
     redirect: (context, state) {
-      final path = state.matchedLocation;
-      final isAuthRoute = path == '/login' ||
-          path == '/splash' ||
-          path.startsWith('/register');
-      final isParentRoute = path == '/parent' || path.startsWith('/parent/');
-
-      if (!authSession.isLoading &&
-          !authSession.isAuthenticated &&
-          !isAuthRoute) {
-        return '/login';
-      }
-
-      if (authSession.isAuthenticated && isParentRoute && !isParentAccount(authSession.user?.accountType)) {
-        return '/home';
-      }
-
-      if (authSession.isAuthenticated && (path == '/login' || path == '/splash')) {
-        return mapHomePathToMobile(authSession.user?.accountType == 'parent' ? '/parent' : '/home');
-      }
-
-      return null;
+      return resolveAppRedirect(
+        isLoading: authSession.isLoading,
+        isAuthenticated: authSession.isAuthenticated,
+        path: state.matchedLocation,
+        accountType: authSession.user?.accountType,
+      );
     },
     routes: [
       GoRoute(
@@ -301,6 +287,10 @@ GoRouter createAppRouter(AuthSession authSession) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/network',
+        builder: (context, state) => const NetworkCentersScreen(),
       ),
       GoRoute(
         path: '/home',

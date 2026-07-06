@@ -833,4 +833,54 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentProgramPlayInteractiveHint => 'Выполните задание на экране';
+
+  @override
+  String get networkCentersTitle => 'Мои центры';
+
+  @override
+  String get networkCentersSectionTitle => 'Ваши центры';
+
+  @override
+  String get networkDevicesTitle => 'Устройства сети';
+
+  @override
+  String get networkDevicesHint =>
+      'Планшеты и другие клиенты сети. Класс и слот — текущее размещение.';
+
+  @override
+  String get networkCentersEmptyTitle => 'У вас пока нет центров';
+
+  @override
+  String get networkCentersEmptyDescription =>
+      'Центры создаются в web-панели сети.';
+
+  @override
+  String get networkDevicesEmpty =>
+      'Пока нет устройств. Они появятся после привязки планшета.';
+
+  @override
+  String get networkLoadFailed => 'Не удалось загрузить данные сети.';
+
+  @override
+  String get networkDeviceOnline => 'Онлайн';
+
+  @override
+  String get networkDeviceOffline => 'Офлайн';
+
+  @override
+  String get networkDeviceUnassigned => 'Не размещён';
+
+  @override
+  String get networkDeviceKindTablet => 'Планшет';
+
+  @override
+  String get networkDeviceKindLaptop => 'Ноутбук';
+
+  @override
+  String get networkDeviceKindPhone => 'Телефон';
+
+  @override
+  String networkDeviceSlotValue(String slot) {
+    return 'Слот $slot';
+  }
 }

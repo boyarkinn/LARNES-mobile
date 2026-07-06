@@ -322,5 +322,25 @@
       "lesson": {"type": "int"}
     }
   },
-  "parentProgramPlayInteractiveHint": "Выполните задание на экране"
+  "parentProgramPlayInteractiveHint": "Выполните задание на экране",
+  "networkCentersTitle": "Мои центры",
+  "networkCentersSectionTitle": "Ваши центры",
+  "networkDevicesTitle": "Устройства сети",
+  "networkDevicesHint": "Планшеты и другие клиенты сети. Класс и слот — текущее размещение.",
+  "networkCentersEmptyTitle": "У вас пока нет центров",
+  "networkCentersEmptyDescription": "Центры создаются в web-панели сети.",
+  "networkDevicesEmpty": "Пока нет устройств. Они появятся после привязки планшета.",
+  "networkLoadFailed": "Не удалось загрузить данные сети.",
+  "networkDeviceOnline": "Онлайн",
+  "networkDeviceOffline": "Офлайн",
+  "networkDeviceUnassigned": "Не размещён",
+  "networkDeviceKindTablet": "Планшет",
+  "networkDeviceKindLaptop": "Ноутбук",
+  "networkDeviceKindPhone": "Телефон",
+  "networkDeviceSlotValue": "Слот {slot}",
+  "@networkDeviceSlotValue": {
+    "placeholders": {
+      "slot": {"type": "String"}
+    }
+  }
 }

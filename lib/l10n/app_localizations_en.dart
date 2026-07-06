@@ -823,4 +823,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentProgramPlayInteractiveHint => 'Complete the task on screen';
+
+  @override
+  String get networkCentersTitle => 'My centers';
+
+  @override
+  String get networkCentersSectionTitle => 'Your centers';
+
+  @override
+  String get networkDevicesTitle => 'Network devices';
+
+  @override
+  String get networkDevicesHint =>
+      'Tablets and other clients in your network. Classroom and slot show current placement.';
+
+  @override
+  String get networkCentersEmptyTitle => 'You do not have any centers yet';
+
+  @override
+  String get networkCentersEmptyDescription =>
+      'Create centers in the web network panel.';
+
+  @override
+  String get networkDevicesEmpty =>
+      'No devices yet. They appear after enrolling a tablet.';
+
+  @override
+  String get networkLoadFailed => 'Could not load network data.';
+
+  @override
+  String get networkDeviceOnline => 'Online';
+
+  @override
+  String get networkDeviceOffline => 'Offline';
+
+  @override
+  String get networkDeviceUnassigned => 'Unassigned';
+
+  @override
+  String get networkDeviceKindTablet => 'Tablet';
+
+  @override
+  String get networkDeviceKindLaptop => 'Laptop';
+
+  @override
+  String get networkDeviceKindPhone => 'Phone';
+
+  @override
+  String networkDeviceSlotValue(String slot) {
+    return 'Slot $slot';
+  }
 }

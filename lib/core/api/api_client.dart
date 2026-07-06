@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
@@ -35,6 +36,7 @@ class ApiClient {
   RegisterApi? _registerApi;
   ParentApi? _parentApi;
   ParentAccountApi? _parentAccountApi;
+  NetworkApi? _networkApi;
 
   Dio get dio => _dio;
 
@@ -45,4 +47,6 @@ class ApiClient {
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
 
   ParentAccountApi get parentAccountApi => _parentAccountApi ??= ParentAccountApi(this);
+
+  NetworkApi get networkApi => _networkApi ??= NetworkApi(this);
 }

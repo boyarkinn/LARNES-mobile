@@ -52,6 +52,7 @@ class KioskSessionController extends ChangeNotifier {
   KioskScanResult? get scanResult => _scanResult;
   String? get scanError => _scanError;
   String? get scanErrorCode => _scanErrorCode;
+  String? get activeProgramId => _scanResult?.programId;
 
   void updateDeviceContext(KioskDeviceContext deviceContext) {
     _deviceContext = deviceContext;
@@ -92,7 +93,14 @@ class KioskSessionController extends ChangeNotifier {
       _scanResult = result;
       _scanError = null;
       _scanErrorCode = null;
-      _mode = KioskSessionMode.result;
+      _mode = modeFromScanOutcome(result.outcome);
+
+      if (_mode == KioskSessionMode.play &&
+          (result.programId == null || result.programId!.isEmpty)) {
+        _mode = KioskSessionMode.result;
+        _scanError = 'Missing programId';
+      }
+
       notifyListeners();
     } on KioskApiException catch (error) {
       if (error.statusCode == 401) {
@@ -113,6 +121,7 @@ class KioskSessionController extends ChangeNotifier {
     _syncInFlight = true;
     try {
       final payload = await _kioskApi.pollCommands(since: _since);
+      var commandProcessed = false;
 
       if (payload.commands.isNotEmpty) {
         final latest = payload.commands.last;
@@ -131,9 +140,16 @@ class KioskSessionController extends ChangeNotifier {
         _mode = nextMode;
         _since = payload.commandSeq;
         _pendingAck = payload.commandSeq;
+        commandProcessed = true;
         notifyListeners();
       } else if (payload.commandSeq > _since) {
         _since = payload.commandSeq;
+      }
+
+      if (!commandProcessed &&
+          _mode != KioskSessionMode.play &&
+          _mode != KioskSessionMode.result) {
+        await _refreshDeviceContextAndReconcileMode();
       }
 
       await _kioskApi.heartbeat(ackSeq: _pendingAck);
@@ -147,6 +163,36 @@ class KioskSessionController extends ChangeNotifier {
     } finally {
       _syncInFlight = false;
     }
+  }
+
+  Future<void> _refreshDeviceContextAndReconcileMode() async {
+    final device = await _kioskApi.getDeviceMe();
+    _deviceContext = device;
+
+    final lesson = device.lesson;
+    if (lesson != null && lesson.commandSeq > _since) {
+      _since = lesson.commandSeq;
+    }
+
+    final resolved = resolveInitialModeFromLesson(lesson);
+    if (resolved == _mode) {
+      return;
+    }
+
+    if (resolved == KioskSessionMode.idle) {
+      await _kioskApi.childLogout();
+      await _childSessionTokenStorage.clearToken();
+      _scanResult = null;
+      _scanError = null;
+      _scanErrorCode = null;
+    } else if (resolved == KioskSessionMode.scan) {
+      _scanError = null;
+      _scanErrorCode = null;
+      _scanResult = null;
+    }
+
+    _mode = resolved;
+    notifyListeners();
   }
 
   @override

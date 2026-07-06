@@ -1,10 +1,21 @@
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 
 enum KioskSessionMode {
   idle,
   scan,
   result,
+  play,
+}
+
+KioskSessionMode modeFromScanOutcome(KioskScanOutcome outcome) {
+  switch (outcome) {
+    case KioskScanOutcome.play:
+      return KioskSessionMode.play;
+    case KioskScanOutcome.noProgram:
+      return KioskSessionMode.result;
+  }
 }
 
 KioskSessionMode modeFromCommand(KioskDeviceCommandKind command) {

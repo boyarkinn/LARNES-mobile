@@ -17,19 +17,32 @@ class FakeKioskSessionApi implements KioskSessionApi {
     this.scanResult,
     this.scanError,
     this.pollError,
+    this.deviceMeResponse,
   });
 
   final List<KioskCommandsResponse> pollResponses;
   final KioskScanResult? scanResult;
   final KioskApiException? scanError;
   final KioskApiException? pollError;
+  final KioskDeviceContext? deviceMeResponse;
 
   int pollCalls = 0;
+  int getDeviceMeCalls = 0;
   int heartbeatCalls = 0;
   int? lastHeartbeatAck;
   int childLogoutCalls = 0;
   int scanCalls = 0;
   String? lastScanToken;
+
+  @override
+  Future<KioskDeviceContext> getDeviceMe({String locale = 'ru'}) async {
+    getDeviceMeCalls += 1;
+    return deviceMeResponse ??
+        KioskDeviceContext(
+          deviceId: '55555555-5555-4555-8555-555555555555',
+          kind: NetworkDeviceKind.phone,
+        );
+  }
 
   @override
   Future<KioskCommandsResponse> pollCommands({
@@ -142,6 +155,13 @@ void main() {
             commands: [],
           ),
         ],
+        deviceMeResponse: _deviceContext(
+          lesson: const KioskDeviceLessonBinding(
+            commandSeq: 3,
+            lessonSessionId: 'lesson-id',
+            status: 'idle_child',
+          ),
+        ),
       );
 
       final controller = KioskSessionController(
@@ -163,6 +183,40 @@ void main() {
       expect(api.childLogoutCalls, 0);
       expect(api.heartbeatCalls, 1);
       expect(api.lastHeartbeatAck, isNull);
+
+      controller.dispose();
+    });
+
+    test('sync cycle reconciles scan from devices/me when poll skips command', () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [
+          const KioskCommandsResponse(
+            since: 0,
+            commandSeq: 1,
+            commands: [],
+          ),
+        ],
+        deviceMeResponse: _deviceContext(
+          lesson: const KioskDeviceLessonBinding(
+            commandSeq: 1,
+            lessonSessionId: 'lesson-id',
+            status: 'waiting_scan',
+          ),
+        ),
+      );
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+        deviceContext: _deviceContext(),
+        onDeviceUnauthorized: () {},
+      );
+
+      await controller.runSyncCycle();
+
+      expect(controller.mode, KioskSessionMode.scan);
+      expect(api.getDeviceMeCalls, 1);
+      expect(api.heartbeatCalls, 1);
 
       controller.dispose();
     });
@@ -193,13 +247,39 @@ void main() {
       expect(api.scanCalls, 1);
       expect(api.lastScanToken, 'qr-token');
       expect(await childStorage.readToken(), 'child-jwt-token');
-      expect(controller.mode, KioskSessionMode.result);
+      expect(controller.mode, KioskSessionMode.play);
+      expect(controller.activeProgramId, '77777777-7777-4777-8777-777777777777');
       expect(controller.scanResult?.childDisplayName, 'Anna');
 
       controller.dispose();
     });
 
-    test('idle command clears result mode', () async {
+    test('submitScan with no_program switches to result', () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [],
+        scanResult: const KioskScanResult(
+          outcome: KioskScanOutcome.noProgram,
+          childId: '88888888-8888-4888-8888-888888888888',
+          childDisplayName: 'Anna',
+          childSessionToken: 'child-jwt-token',
+        ),
+      );
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+        deviceContext: _deviceContext(),
+        initialMode: KioskSessionMode.scan,
+        onDeviceUnauthorized: () {},
+      );
+
+      await controller.submitScan('qr-token');
+
+      expect(controller.mode, KioskSessionMode.result);
+      controller.dispose();
+    });
+
+    test('idle command clears play mode', () async {
       final api = FakeKioskSessionApi(
         pollResponses: [
           KioskCommandsResponse(
@@ -232,13 +312,63 @@ void main() {
       );
 
       await controller.submitScan('qr-token');
-      expect(controller.mode, KioskSessionMode.result);
+      expect(controller.mode, KioskSessionMode.play);
 
       await controller.runSyncCycle();
 
       expect(controller.mode, KioskSessionMode.idle);
       expect(controller.scanResult, isNull);
       expect(api.childLogoutCalls, 1);
+
+      controller.dispose();
+    });
+
+    test('reset_child command during play switches to scan and clears child',
+        () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [
+          KioskCommandsResponse(
+            since: 2,
+            commandSeq: 4,
+            commands: const [
+              KioskDeviceCommand(
+                command: KioskDeviceCommandKind.resetChild,
+                seq: 4,
+              ),
+            ],
+          ),
+        ],
+        scanResult: const KioskScanResult(
+          outcome: KioskScanOutcome.play,
+          childId: '88888888-8888-4888-8888-888888888888',
+          childDisplayName: 'Anna',
+          childSessionToken: 'child-jwt-token',
+          programId: '77777777-7777-4777-8777-777777777777',
+        ),
+      );
+      final childStorage = MemoryChildSessionTokenStorage();
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: childStorage,
+        deviceContext: _deviceContext(),
+        initialMode: KioskSessionMode.scan,
+        initialCommandSeq: 2,
+        onDeviceUnauthorized: () {},
+      );
+
+      await controller.submitScan('qr-token');
+      expect(controller.mode, KioskSessionMode.play);
+      expect(await childStorage.hasToken(), isTrue);
+
+      await controller.runSyncCycle();
+
+      expect(controller.mode, KioskSessionMode.scan);
+      expect(controller.scanResult, isNull);
+      expect(controller.activeProgramId, isNull);
+      expect(await childStorage.hasToken(), isFalse);
+      expect(api.childLogoutCalls, 1);
+      expect(api.getDeviceMeCalls, 0);
 
       controller.dispose();
     });

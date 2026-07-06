@@ -73,6 +73,7 @@ class KioskApi implements KioskSessionApi {
 
   final KioskApiClient _client;
 
+  @override
   Future<KioskDeviceContext> getDeviceMe({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {

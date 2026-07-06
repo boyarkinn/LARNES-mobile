@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
+import 'package:larnes_mobile/core/api/child_session_api_client.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
@@ -8,6 +9,7 @@ import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controlle
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_scan_error_message.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_scan_result_view.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -18,18 +20,32 @@ class KioskShell extends StatefulWidget {
     super.key,
     this.syncInterval = kioskSyncInterval,
     this.mockScanner = false,
+    this.childSessionTokenStorage,
+    this.childSessionApiClient,
+    this.onControllerReady,
   });
 
   final Duration syncInterval;
   final bool mockScanner;
+  final ChildSessionTokenStorage? childSessionTokenStorage;
+  final ChildSessionApiClient? childSessionApiClient;
+
+  /// Widget tests: capture controller and drive [KioskSessionController.runSyncCycle].
+  @visibleForTesting
+  final void Function(KioskSessionController controller)? onControllerReady;
 
   @override
   State<KioskShell> createState() => _KioskShellState();
 }
 
 class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
-  final ChildSessionTokenStorage _childSessionTokenStorage =
-      ChildSessionTokenStorage();
+  late final ChildSessionTokenStorage _childSessionTokenStorage =
+      widget.childSessionTokenStorage ?? ChildSessionTokenStorage();
+  late final ChildSessionApiClient _childSessionApiClient =
+      widget.childSessionApiClient ??
+          ChildSessionApiClient(
+            childSessionTokenStorage: _childSessionTokenStorage,
+          );
 
   bool _isLoading = true;
   String? _error;
@@ -90,6 +106,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
         _controller = controller;
         _isLoading = false;
       });
+      widget.onControllerReady?.call(controller);
     } on KioskApiException catch (error) {
       if (!mounted) {
         return;
@@ -121,17 +138,33 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final controller = _controller;
+    if (controller == null) {
+      return _buildScaffold(context);
+    }
+
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => _buildScaffold(context),
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
+    final controller = _controller;
+    final hideSettings =
+        _isLoading || _error != null || controller?.mode == KioskSessionMode.play;
+
     return Scaffold(
       body: SafeArea(
         child: Stack(
           children: [
             Positioned.fill(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: EdgeInsets.all(controller?.mode == KioskSessionMode.play ? 0 : 24),
                 child: _buildBody(context),
               ),
             ),
-            if (!_isLoading && _error == null && _controller != null)
+            if (!hideSettings && controller != null)
               Positioned(
                 top: 8,
                 right: 8,
@@ -175,17 +208,16 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (context, _) {
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
-          child: KeyedSubtree(
-            key: ValueKey(controller.mode),
-            child: _buildModeContent(context, controller, l10n, theme),
-          ),
-        );
-      },
+    final switchKey = controller.mode == KioskSessionMode.play
+        ? '${controller.mode.name}-${controller.activeProgramId}'
+        : controller.mode.name;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      child: KeyedSubtree(
+        key: ValueKey(switchKey),
+        child: _buildModeContent(context, controller, l10n, theme),
+      ),
     );
   }
 
@@ -221,6 +253,18 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
               await controller.submitScan(token);
             },
           ),
+        );
+      case KioskSessionMode.play:
+        final programId = controller.activeProgramId;
+        if (programId == null) {
+          return const SizedBox.shrink();
+        }
+
+        return KioskProgramPlayerView(
+          programId: programId,
+          programApi: _childSessionApiClient.kioskProgramApi,
+          childDisplayName: controller.scanResult?.childDisplayName,
+          locale: Localizations.localeOf(context).languageCode,
         );
       case KioskSessionMode.result:
         final result = controller.scanResult;

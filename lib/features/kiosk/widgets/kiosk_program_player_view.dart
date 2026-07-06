@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
-import 'package:larnes_mobile/core/api/parent_api.dart';
-import 'package:larnes_mobile/core/auth/auth_scope.dart';
-import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/utils/program_player_lesson_bounds.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
@@ -11,21 +8,27 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 
-class ProgramPlayerScreen extends StatefulWidget {
-  const ProgramPlayerScreen({
+class KioskProgramPlayerView extends StatefulWidget {
+  const KioskProgramPlayerView({
     super.key,
-    required this.childId,
     required this.programId,
+    required this.programApi,
+    this.childDisplayName,
+    this.onExit,
+    this.locale = 'ru',
   });
 
-  final String childId;
   final String programId;
+  final KioskProgramGateway programApi;
+  final String? childDisplayName;
+  final VoidCallback? onExit;
+  final String locale;
 
   @override
-  State<ProgramPlayerScreen> createState() => _ProgramPlayerScreenState();
+  State<KioskProgramPlayerView> createState() => _KioskProgramPlayerViewState();
 }
 
-class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
+class _KioskProgramPlayerViewState extends State<KioskProgramPlayerView> {
   bool _isLoading = true;
   String? _loadError;
   ParentProgramPlaySnapshot? _snapshot;
@@ -51,11 +54,9 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     });
 
     try {
-      final locale = LocaleScope.read(context).localeCode;
-      final snapshot = await AuthScope.of(context).parentApi.fetchProgramSnapshot(
-        widget.childId,
+      final snapshot = await widget.programApi.fetchPlaySnapshot(
         widget.programId,
-        locale: locale,
+        locale: widget.locale,
       );
 
       if (!mounted) {
@@ -68,7 +69,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
         _isCompleted = snapshot.isCompleted;
         _isLoading = false;
       });
-    } on ParentApiException catch (error) {
+    } on KioskProgramApiException catch (error) {
       if (mounted) {
         setState(() {
           _loadError = error.message;
@@ -108,13 +109,11 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     });
 
     try {
-      final locale = LocaleScope.read(context).localeCode;
-      final result = await AuthScope.of(context).parentApi.completeProgramLesson(
-        childId: widget.childId,
+      final result = await widget.programApi.completeLesson(
         programId: widget.programId,
         topicOrdinal: step.topicOrdinal,
         lessonOrdinal: step.lessonOrdinal,
-        locale: locale,
+        locale: widget.locale,
       );
 
       if (!mounted) {
@@ -129,7 +128,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
           _stepIndex += 1;
         }
       });
-    } on ParentApiException catch (error) {
+    } on KioskProgramApiException catch (error) {
       if (mounted) {
         setState(() {
           _advanceError = error.message;
@@ -146,24 +145,29 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     }
   }
 
-  void _exit() {
-    context.pop(_isCompleted || (_snapshot?.isCompleted ?? false));
+  void _handleExit() {
+    widget.onExit?.call();
+  }
+
+  String _eyebrow(AppLocalizations l10n, ProgramPlayerLessonBounds lessonBounds) {
+    final childName = widget.childDisplayName?.trim();
+    if (childName != null && childName.isNotEmpty) {
+      return childName.toUpperCase();
+    }
+
+    return l10n
+        .parentProgramPlayLessonProgress(
+          lessonBounds.topicOrdinal,
+          lessonBounds.lessonOrdinal,
+          lessonBounds.currentInLesson,
+          lessonBounds.totalInLesson,
+        )
+        .toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          return;
-        }
-        _exit();
-      },
-      child: _buildContent(l10n),
-    );
+    return _buildContent(context.l10n);
   }
 
   Widget _buildContent(AppLocalizations l10n) {
@@ -192,7 +196,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       return ParentPlayerState(
         message: message,
         actionLabel: l10n.parentProgramPlayBackToHub,
-        onAction: _exit,
+        onAction: _handleExit,
       );
     }
 
@@ -201,7 +205,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
         title: l10n.parentProgramPlayCompletedTitle,
         message: snapshot.title,
         actionLabel: l10n.parentProgramPlayBackToHub,
-        onAction: _exit,
+        onAction: _handleExit,
       );
     }
 
@@ -210,17 +214,11 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     final isInteractive = isTrainerInteractive(step.trainerKey);
 
     return ParentPlayerShell(
-      eyebrow: l10n
-          .parentProgramPlayLessonProgress(
-            lessonBounds.topicOrdinal,
-            lessonBounds.lessonOrdinal,
-            lessonBounds.currentInLesson,
-            lessonBounds.totalInLesson,
-          )
-          .toUpperCase(),
+      eyebrow: _eyebrow(l10n, lessonBounds),
       title: snapshot.title,
       exitLabel: l10n.parentProgramPlayExit,
-      onExit: _exit,
+      onExit: _handleExit,
+      showExitButton: false,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

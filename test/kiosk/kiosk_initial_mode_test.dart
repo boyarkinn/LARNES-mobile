@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 
 void main() {
@@ -61,6 +62,19 @@ void main() {
           ),
         ),
         5,
+      );
+    });
+  });
+
+  group('modeFromScanOutcome', () {
+    test('maps scan outcomes to session modes', () {
+      expect(
+        modeFromScanOutcome(KioskScanOutcome.play),
+        KioskSessionMode.play,
+      );
+      expect(
+        modeFromScanOutcome(KioskScanOutcome.noProgram),
+        KioskSessionMode.result,
       );
     });
   });

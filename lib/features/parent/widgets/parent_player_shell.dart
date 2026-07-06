@@ -13,6 +13,7 @@ class ParentPlayerShell extends StatelessWidget {
     required this.onExit,
     required this.body,
     this.footer,
+    this.showExitButton = true,
   });
 
   final String eyebrow;
@@ -21,6 +22,7 @@ class ParentPlayerShell extends StatelessWidget {
   final VoidCallback onExit;
   final Widget body;
   final Widget? footer;
+  final bool showExitButton;
 
   @override
   Widget build(BuildContext context) {
@@ -61,17 +63,18 @@ class ParentPlayerShell extends StatelessWidget {
                       ],
                     ),
                   ),
-                  TextButton(
-                    onPressed: onExit,
-                    style: TextButton.styleFrom(
-                      foregroundColor: ParentColors.inkMuted,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                  if (showExitButton)
+                    TextButton(
+                      onPressed: onExit,
+                      style: TextButton.styleFrom(
+                        foregroundColor: ParentColors.inkMuted,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                      child: Text(exitLabel),
                     ),
-                    child: Text(exitLabel),
-                  ),
                 ],
               ),
             ),

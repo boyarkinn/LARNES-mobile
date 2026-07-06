@@ -4,15 +4,79 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
-import 'package:larnes_mobile/core/auth/auth_scope.dart';
+import 'package:larnes_mobile/core/api/child_session_api_client.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
+import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_settings_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
+import 'memory_child_session_token_storage.dart';
 import 'memory_device_token_storage.dart';
+
+const _programId = '77777777-7777-4777-8777-777777777777';
+
+ChildSessionApiClient createMockChildSessionApiClient({
+  required MemoryChildSessionTokenStorage storage,
+  String programTitle = 'Program A',
+}) {
+  final dio = Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl));
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        if (options.path.contains('/play-snapshot')) {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              data: {
+                'status': 'success',
+                'snapshot': {
+                  'childId': '88888888-8888-4888-8888-888888888888',
+                  'programId': _programId,
+                  'title': programTitle,
+                  'status': 'in_progress',
+                  'topicOrdinal': 1,
+                  'lessonOrdinal': 1,
+                  'steps': [
+                    {
+                      'id': 'step-1',
+                      'trainerKey': 'unknown-trainer',
+                      'params': {},
+                      'topicOrdinal': 1,
+                      'lessonOrdinal': 1,
+                      'isLastInLesson': true,
+                      'isLastInProgram': false,
+                    },
+                  ],
+                },
+              },
+            ),
+          );
+          return;
+        }
+
+        handler.reject(
+          DioException(
+            requestOptions: options,
+            type: DioExceptionType.badResponse,
+            response: Response(
+              requestOptions: options,
+              statusCode: 404,
+            ),
+          ),
+        );
+      },
+    ),
+  );
+
+  return ChildSessionApiClient(
+    childSessionTokenStorage: storage,
+    dio: dio,
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +84,7 @@ void main() {
 
   KioskRouteState kioskRouteStateWithMock({
     Map<String, dynamic>? deviceMeData,
+    Map<String, dynamic>? scanData,
   }) {
     final tokenStorage = MemoryDeviceTokenStorage();
     final kioskRouteState = KioskRouteState(deviceTokenStorage: tokenStorage);
@@ -53,7 +118,7 @@ void main() {
                 data: {
                   'since': 0,
                   'commandSeq': 0,
-                  'commands': [],
+                  'commands': <Map<String, dynamic>>[],
                 },
               ),
             );
@@ -75,14 +140,15 @@ void main() {
             handler.resolve(
               Response(
                 requestOptions: options,
-                data: {
-                  'ok': true,
-                  'outcome': 'play',
-                  'programId': '77777777-7777-4777-8777-777777777777',
-                  'childId': '88888888-8888-4888-8888-888888888888',
-                  'childDisplayName': 'Анна Петрова',
-                  'childSessionToken': 'child-jwt-token',
-                },
+                data: scanData ??
+                    {
+                      'ok': true,
+                      'outcome': 'play',
+                      'programId': _programId,
+                      'childId': '88888888-8888-4888-8888-888888888888',
+                      'childDisplayName': 'Анна Петрова',
+                      'childSessionToken': 'child-jwt-token',
+                    },
               ),
             );
             return;
@@ -237,7 +303,9 @@ void main() {
       expect(find.textContaining('Center A'), findsOneWidget);
     });
 
-    testWidgets('shows result after mock scan success', (tester) async {
+    testWidgets('opens program player after mock scan success', (tester) async {
+      final childStorage = MemoryChildSessionTokenStorage();
+      final childClient = createMockChildSessionApiClient(storage: childStorage);
       final kioskRouteState = kioskRouteStateWithMock(
         deviceMeData: {
           'deviceId': '55555555-5555-4555-8555-555555555555',
@@ -260,9 +328,67 @@ void main() {
         routes: [
           GoRoute(
             path: '/kiosk',
-            builder: (context, state) => const KioskShell(
+            builder: (context, state) => KioskShell(
               syncInterval: Duration(days: 1),
               mockScanner: true,
+              childSessionTokenStorage: childStorage,
+              childSessionApiClient: childClient,
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        wrap(kioskRouteState: kioskRouteState, router: router),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Включить камеру'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Program A'), findsOneWidget);
+      expect(find.text('АННА ПЕТРОВА'), findsOneWidget);
+      expect(find.text('Программа назначена'), findsNothing);
+      expect(find.text('Настройки'), findsNothing);
+    });
+
+    testWidgets('shows result after no_program scan', (tester) async {
+      final childStorage = MemoryChildSessionTokenStorage();
+      final childClient = createMockChildSessionApiClient(storage: childStorage);
+      final kioskRouteState = kioskRouteStateWithMock(
+        deviceMeData: {
+          'deviceId': '55555555-5555-4555-8555-555555555555',
+          'kind': 'phone',
+          'centerName': 'Center A',
+          'classroomTitle': 'Room 1',
+          'slotLabel': 'M1',
+          'lesson': {
+            'commandSeq': 2,
+            'lessonSessionId': '66666666-6666-4666-8666-666666666666',
+            'pendingCommand': 'open_scan',
+            'status': 'waiting_scan',
+          },
+        },
+        scanData: {
+          'ok': true,
+          'outcome': 'no_program',
+          'childId': '88888888-8888-4888-8888-888888888888',
+          'childDisplayName': 'Анна Петрова',
+          'childSessionToken': 'child-jwt-token',
+        },
+      );
+      await kioskRouteState.persistDeviceToken('device-jwt-token');
+
+      final router = GoRouter(
+        initialLocation: '/kiosk',
+        routes: [
+          GoRoute(
+            path: '/kiosk',
+            builder: (context, state) => KioskShell(
+              syncInterval: Duration(days: 1),
+              mockScanner: true,
+              childSessionTokenStorage: childStorage,
+              childSessionApiClient: childClient,
             ),
           ),
         ],
@@ -278,7 +404,7 @@ void main() {
 
       expect(find.text('Ребёнок на занятии'), findsOneWidget);
       expect(find.text('Анна Петрова'), findsOneWidget);
-      expect(find.text('Программа назначена'), findsOneWidget);
+      expect(find.text('Пока нет программы для этого ребёнка.'), findsOneWidget);
     });
   });
 }

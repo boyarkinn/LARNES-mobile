@@ -90,7 +90,7 @@ class ChildClassroomQrCardState extends State<ChildClassroomQrCard> {
     });
 
     try {
-      final locale = LocaleScope.of(context).localeCode;
+      final locale = LocaleScope.read(context).localeCode;
       final state = await AuthScope.of(context).parentApi.mutateChildClassroomQr(
             childId: widget.childId,
             action: action,
@@ -238,6 +238,11 @@ class ChildClassroomQrCardState extends State<ChildClassroomQrCard> {
 
   Widget _buildQrBody(dynamic l10n) {
     final state = _state;
+
+    if (_error != null && state == null) {
+      return const SizedBox.shrink();
+    }
+
     if (state?.active == true && state?.qrDataUrl != null) {
       final bytes = decodeQrDataUrl(state!.qrDataUrl!);
       return Column(
@@ -266,10 +271,14 @@ class ChildClassroomQrCardState extends State<ChildClassroomQrCard> {
       );
     }
 
-    return Text(
-      l10n.parentClassroomQrRevokedHint,
-      style: const TextStyle(color: ParentColors.inkMuted, fontSize: 14),
-    );
+    if (state != null && !state.active) {
+      return Text(
+        l10n.parentClassroomQrRevokedHint,
+        style: const TextStyle(color: ParentColors.inkMuted, fontSize: 14),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildActions(dynamic l10n) {

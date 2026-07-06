@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/screens/login_screen.dart';
@@ -9,6 +10,9 @@ import 'package:larnes_mobile/features/auth/screens/register_otp_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
+import 'package:larnes_mobile/features/kiosk/screens/kiosk_enroll_screen.dart';
+import 'package:larnes_mobile/features/kiosk/screens/kiosk_settings_screen.dart';
+import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
 import 'package:larnes_mobile/features/network/screens/network_centers_screen.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_change_contact_screen.dart';
@@ -35,22 +39,29 @@ import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 final _parentChildrenNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentChildren');
 final _parentAccountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentAccount');
 
-GoRouter createAppRouter(AuthSession authSession) {
+GoRouter createAppRouter({
+  required AuthSession authSession,
+  required KioskRouteState kioskRouteState,
+}) {
   return GoRouter(
     initialLocation: '/splash',
-    refreshListenable: authSession,
+    refreshListenable: Listenable.merge([authSession, kioskRouteState]),
     redirect: (context, state) {
       return resolveAppRedirect(
         isLoading: authSession.isLoading,
         isAuthenticated: authSession.isAuthenticated,
         path: state.matchedLocation,
         accountType: authSession.user?.accountType,
+        hasDeviceToken: kioskRouteState.hasDeviceToken,
       );
     },
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => SplashScreen(authSession: authSession),
+        builder: (context, state) => SplashScreen(
+          authSession: authSession,
+          kioskRouteState: kioskRouteState,
+        ),
       ),
       GoRoute(
         path: '/login',
@@ -291,6 +302,20 @@ GoRouter createAppRouter(AuthSession authSession) {
       GoRoute(
         path: '/network',
         builder: (context, state) => const NetworkCentersScreen(),
+      ),
+      GoRoute(
+        path: '/kiosk/enroll',
+        builder: (context, state) => const KioskEnrollScreen(),
+      ),
+      GoRoute(
+        path: '/kiosk',
+        builder: (context, state) => const KioskShell(),
+        routes: [
+          GoRoute(
+            path: 'settings',
+            builder: (context, state) => const KioskSettingsScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/home',

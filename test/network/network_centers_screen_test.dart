@@ -109,6 +109,8 @@ void main() {
         apiClient: ApiClient(dio: _networkDio(fail: false)),
       );
 
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+
       await tester.pumpWidget(
         _wrap(
           authSession: authSession,
@@ -122,6 +124,9 @@ void main() {
       expect(find.text('Слот M1'), findsOneWidget);
       expect(find.text('Center A · Room 1'), findsOneWidget);
       expect(find.text('Онлайн'), findsOneWidget);
+      expect(find.text('Добавить устройство'), findsOneWidget);
+
+      addTearDown(() => tester.binding.setSurfaceSize(null));
     });
 
     testWidgets('shows error and retry when load fails', (tester) async {

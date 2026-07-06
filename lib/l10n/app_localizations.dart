@@ -1668,6 +1668,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Slot {slot}'**
   String networkDeviceSlotValue(String slot);
+
+  /// No description provided for @kioskIdleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson not started'**
+  String get kioskIdleTitle;
+
+  /// No description provided for @kioskIdleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The teacher will start the lesson. Then hold the child\'s QR code up to this device.'**
+  String get kioskIdleSubtitle;
+
+  /// No description provided for @kioskIdleSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get kioskIdleSettings;
+
+  /// No description provided for @kioskScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show your QR code'**
+  String get kioskScanTitle;
+
+  /// No description provided for @kioskScanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold the code up to this device.'**
+  String get kioskScanSubtitle;
+
+  /// No description provided for @kioskScanEnableCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable camera'**
+  String get kioskScanEnableCamera;
+
+  /// No description provided for @kioskScanEnableCameraHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the button and allow camera access when prompted.'**
+  String get kioskScanEnableCameraHint;
+
+  /// No description provided for @kioskScanRetryCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get kioskScanRetryCamera;
+
+  /// No description provided for @kioskScanStartingCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting camera…'**
+  String get kioskScanStartingCamera;
+
+  /// No description provided for @kioskScanProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the code…'**
+  String get kioskScanProcessing;
+
+  /// No description provided for @kioskScanCameraDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera access was denied.'**
+  String get kioskScanCameraDenied;
+
+  /// No description provided for @kioskScanCameraDeniedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow camera access in system settings, or tap Try again.'**
+  String get kioskScanCameraDeniedHint;
+
+  /// No description provided for @kioskScanErrorCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start the camera. Please try again.'**
+  String get kioskScanErrorCamera;
+
+  /// No description provided for @kioskScanErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process the QR code. Please try again.'**
+  String get kioskScanErrorGeneric;
+
+  /// No description provided for @kioskScanErrorForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Scanning is not available on this device.'**
+  String get kioskScanErrorForbidden;
+
+  /// No description provided for @kioskScanErrorInvalidToken.
+  ///
+  /// In en, this message translates to:
+  /// **'The QR code is invalid or expired.'**
+  String get kioskScanErrorInvalidToken;
+
+  /// No description provided for @kioskScanErrorLessonInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'The lesson has not started yet or has already ended.'**
+  String get kioskScanErrorLessonInactive;
+
+  /// No description provided for @kioskScanErrorNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server. Check your internet.'**
+  String get kioskScanErrorNetwork;
+
+  /// No description provided for @kioskScanErrorNotInGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'This child is not enrolled in the lesson group.'**
+  String get kioskScanErrorNotInGroup;
+
+  /// No description provided for @kioskScanErrorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a minute.'**
+  String get kioskScanErrorRateLimited;
+
+  /// No description provided for @kioskScanErrorRevoked.
+  ///
+  /// In en, this message translates to:
+  /// **'The QR code was revoked. Ask the parent to refresh it.'**
+  String get kioskScanErrorRevoked;
+
+  /// No description provided for @kioskScanCameraSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera support is coming in the next update.'**
+  String get kioskScanCameraSoon;
+
+  /// No description provided for @kioskResultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Child checked in'**
+  String get kioskResultTitle;
+
+  /// No description provided for @kioskResultProgramAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Program assigned'**
+  String get kioskResultProgramAssigned;
+
+  /// No description provided for @kioskResultNoProgram.
+  ///
+  /// In en, this message translates to:
+  /// **'No program is available for this child yet.'**
+  String get kioskResultNoProgram;
+
+  /// No description provided for @kioskSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device settings'**
+  String get kioskSettingsTitle;
+
+  /// No description provided for @kioskSettingsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get kioskSettingsBack;
+
+  /// No description provided for @kioskSettingsPlacement.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement'**
+  String get kioskSettingsPlacement;
+
+  /// No description provided for @kioskSettingsDeviceId.
+  ///
+  /// In en, this message translates to:
+  /// **'Device ID'**
+  String get kioskSettingsDeviceId;
+
+  /// No description provided for @kioskSettingsUnbindTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind device'**
+  String get kioskSettingsUnbindTitle;
+
+  /// No description provided for @kioskSettingsUnbindHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The device will disappear from the network list. To use kiosk again, enroll it once more.'**
+  String get kioskSettingsUnbindHint;
+
+  /// No description provided for @kioskSettingsUnbindSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind and leave kiosk'**
+  String get kioskSettingsUnbindSubmit;
+
+  /// No description provided for @kioskSettingsUnbinding.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbinding…'**
+  String get kioskSettingsUnbinding;
+
+  /// No description provided for @kioskSettingsUnbindConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind this device?'**
+  String get kioskSettingsUnbindConfirmTitle;
+
+  /// No description provided for @kioskSettingsUnbindConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Kiosk mode on this phone will be turned off.'**
+  String get kioskSettingsUnbindConfirmMessage;
+
+  /// No description provided for @kioskSettingsUnbindCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get kioskSettingsUnbindCancel;
+
+  /// No description provided for @kioskSettingsUnbindConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Unbind'**
+  String get kioskSettingsUnbindConfirm;
+
+  /// No description provided for @kioskSettingsLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to unbind this device.'**
+  String get kioskSettingsLoginRequired;
+
+  /// No description provided for @networkAddDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add device'**
+  String get networkAddDevice;
+
+  /// No description provided for @kioskEnrollTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device setup'**
+  String get kioskEnrollTitle;
+
+  /// No description provided for @kioskEnrollSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where this device belongs in your network.'**
+  String get kioskEnrollSubtitle;
+
+  /// No description provided for @kioskEnrollCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get kioskEnrollCenter;
+
+  /// No description provided for @kioskEnrollClassroom.
+  ///
+  /// In en, this message translates to:
+  /// **'Classroom'**
+  String get kioskEnrollClassroom;
+
+  /// No description provided for @kioskEnrollClassroomPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a classroom'**
+  String get kioskEnrollClassroomPlaceholder;
+
+  /// No description provided for @kioskEnrollSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'Desk / slot'**
+  String get kioskEnrollSlot;
+
+  /// No description provided for @kioskEnrollSlotPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'For example, 1'**
+  String get kioskEnrollSlotPlaceholder;
+
+  /// No description provided for @kioskEnrollSlotRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a slot label'**
+  String get kioskEnrollSlotRequired;
+
+  /// No description provided for @kioskEnrollKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Device type'**
+  String get kioskEnrollKind;
+
+  /// No description provided for @kioskEnrollSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enroll device'**
+  String get kioskEnrollSubmit;
+
+  /// No description provided for @kioskEnrollSubmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Enrolling…'**
+  String get kioskEnrollSubmitting;
+
+  /// No description provided for @kioskEnrollNoCenters.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a center in the network panel first.'**
+  String get kioskEnrollNoCenters;
+
+  /// No description provided for @kioskEnrollNoClassrooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Add classrooms in the center first.'**
+  String get kioskEnrollNoClassrooms;
+
+  /// No description provided for @kioskEnrollNoClassroomsForCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'This center has no classrooms yet.'**
+  String get kioskEnrollNoClassroomsForCenter;
 }
 
 class _AppLocalizationsDelegate

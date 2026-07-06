@@ -6,6 +6,8 @@ import 'package:larnes_mobile/app/router.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
+import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 
@@ -18,6 +20,7 @@ class LarnesApp extends StatefulWidget {
 
 class _LarnesAppState extends State<LarnesApp> {
   late final AuthSession _authSession;
+  late final KioskRouteState _kioskRouteState;
   late final LocaleController _localeController;
   late final GoRouter _router;
 
@@ -25,10 +28,16 @@ class _LarnesAppState extends State<LarnesApp> {
   void initState() {
     super.initState();
     _authSession = AuthSession();
+    _kioskRouteState = KioskRouteState();
     _localeController = LocaleController()..load();
-    _router = createAppRouter(_authSession);
+    _router = createAppRouter(
+      authSession: _authSession,
+      kioskRouteState: _kioskRouteState,
+    );
     _authSession.addListener(_onStateChanged);
+    _kioskRouteState.addListener(_onStateChanged);
     _localeController.addListener(_onStateChanged);
+    _kioskRouteState.refreshDeviceToken();
   }
 
   void _onStateChanged() {
@@ -40,9 +49,11 @@ class _LarnesAppState extends State<LarnesApp> {
   @override
   void dispose() {
     _authSession.removeListener(_onStateChanged);
+    _kioskRouteState.removeListener(_onStateChanged);
     _localeController.removeListener(_onStateChanged);
     _router.dispose();
     _authSession.dispose();
+    _kioskRouteState.dispose();
     super.dispose();
   }
 
@@ -65,7 +76,10 @@ class _LarnesAppState extends State<LarnesApp> {
           localeController: _localeController,
           child: AuthScope(
             authSession: _authSession,
-            child: child ?? const SizedBox.shrink(),
+            child: KioskScope(
+              kioskRouteState: _kioskRouteState,
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

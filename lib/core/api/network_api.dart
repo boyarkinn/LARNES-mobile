@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
+import 'package:larnes_mobile/features/network/models/enroll_device_result.dart';
 import 'package:larnes_mobile/features/network/models/network_center.dart';
+import 'package:larnes_mobile/features/network/models/network_classroom.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
@@ -24,6 +26,26 @@ String _messageFromBody(dynamic body, AppLocalizations l10n, {String? fallback})
   return fallback ?? l10n.requestError;
 }
 
+String? _codeFromBody(dynamic body) {
+  final map = _asJsonMap(body);
+  final code = map?['code'];
+  if (code is String && code.isNotEmpty) {
+    return code;
+  }
+  return null;
+}
+
+NetworkApiException _apiExceptionFromBody(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) {
+  return NetworkApiException(
+    _messageFromBody(body, l10n, fallback: fallback),
+    code: _codeFromBody(body),
+  );
+}
+
 class NetworkApi {
   NetworkApi(this._client);
 
@@ -35,9 +57,7 @@ class NetworkApi {
       final response = await _client.dio.get('/api/mobile/network/centers');
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw NetworkApiException(
-          _messageFromBody(data, l10n, fallback: l10n.requestFailed),
-        );
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
       }
 
       final centers = data['centers'] as List<dynamic>? ?? const [];
@@ -49,12 +69,10 @@ class NetworkApi {
           )
           .toList(growable: false);
     } on DioException catch (error) {
-      throw NetworkApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _apiExceptionFromBody(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -65,9 +83,7 @@ class NetworkApi {
       final response = await _client.dio.get('/api/mobile/network/devices');
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw NetworkApiException(
-          _messageFromBody(data, l10n, fallback: l10n.requestFailed),
-        );
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
       }
 
       final devices = data['devices'] as List<dynamic>? ?? const [];
@@ -79,12 +95,94 @@ class NetworkApi {
           )
           .toList(growable: false);
     } on DioException catch (error) {
-      throw NetworkApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _apiExceptionFromBody(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<List<NetworkClassroom>> listClassrooms({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get('/api/mobile/network/classrooms');
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
+
+      final classrooms = data['classrooms'] as List<dynamic>? ?? const [];
+      return classrooms
+          .map(
+            (item) => NetworkClassroom.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList(growable: false);
+    } on DioException catch (error) {
+      throw _apiExceptionFromBody(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<EnrollDeviceResult> enrollDevice({
+    required String classroomId,
+    required String slotLabel,
+    required NetworkDeviceKind kind,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/network/devices/enroll',
+        data: {
+          'classroomId': classroomId,
+          'slotLabel': slotLabel,
+          'kind': networkDeviceKindToApiValue(kind),
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
+
+      return EnrollDeviceResult.fromJson(data);
+    } on DioException catch (error) {
+      throw _apiExceptionFromBody(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> unbindDevice({
+    required String deviceId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/network/devices/unbind',
+        data: {
+          'deviceId': deviceId,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
+    } on DioException catch (error) {
+      throw _apiExceptionFromBody(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -99,9 +197,10 @@ class NetworkApi {
 }
 
 class NetworkApiException implements Exception {
-  const NetworkApiException(this.message);
+  const NetworkApiException(this.message, {this.code});
 
   final String message;
+  final String? code;
 
   @override
   String toString() => message;

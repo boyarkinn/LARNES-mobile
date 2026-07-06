@@ -2,16 +2,55 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
+import 'package:larnes_mobile/features/network/models/network_device.dart';
 
-Dio _mockDio(Map<String, dynamic> Function(RequestOptions options) respond) {
+Dio _mockDio(
+  Map<String, dynamic> Function(RequestOptions options) respond, {
+  void Function(RequestOptions options)? onRequest,
+}) {
   final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
+        onRequest?.call(options);
         handler.resolve(
           Response(
             requestOptions: options,
             data: respond(options),
+          ),
+        );
+      },
+    ),
+  );
+  return dio;
+}
+
+Dio _mockDioWithErrors({
+  required Map<String, dynamic> Function(RequestOptions options) respond,
+}) {
+  final dio = Dio(BaseOptions(baseUrl: 'https://example.com'));
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final result = respond(options);
+        if (result.containsKey('__errorStatus')) {
+          handler.reject(
+            DioException(
+              requestOptions: options,
+              type: DioExceptionType.badResponse,
+              response: Response(
+                requestOptions: options,
+                statusCode: result['__errorStatus'] as int,
+                data: result['__errorBody'],
+              ),
+            ),
+          );
+          return;
+        }
+        handler.resolve(
+          Response(
+            requestOptions: options,
+            data: result,
           ),
         );
       },
@@ -83,6 +122,156 @@ void main() {
       expect(devices, hasLength(1));
       expect(devices.first.slotLabel, 'M1');
       expect(devices.first.isOnline, isTrue);
+    });
+  });
+
+  group('NetworkApi.listClassrooms', () {
+    test('parses success payload', () async {
+      final api = NetworkApi(
+        ApiClient(
+          dio: _mockDio(
+            (_) => {
+              'status': 'success',
+              'classrooms': [
+                {
+                  'id': '44444444-4444-4444-8444-444444444444',
+                  'centerId': '11111111-1111-4111-8111-111111111111',
+                  'centerName': 'Center A',
+                  'title': 'Room 1',
+                },
+              ],
+            },
+          ),
+        ),
+      );
+
+      final classrooms = await api.listClassrooms();
+      expect(classrooms, hasLength(1));
+      expect(classrooms.first.title, 'Room 1');
+      expect(classrooms.first.centerName, 'Center A');
+    });
+  });
+
+  group('NetworkApi.enrollDevice', () {
+    test('parses success payload and posts enroll body', () async {
+      RequestOptions? captured;
+
+      final api = NetworkApi(
+        ApiClient(
+          dio: _mockDio(
+            (_) => {
+              'status': 'success',
+              'deviceId': '55555555-5555-4555-8555-555555555555',
+              'deviceToken': 'device-jwt-token',
+            },
+            onRequest: (options) => captured = options,
+          ),
+        ),
+      );
+
+      final result = await api.enrollDevice(
+        classroomId: '44444444-4444-4444-8444-444444444444',
+        slotLabel: 'M1',
+        kind: NetworkDeviceKind.phone,
+      );
+
+      expect(result.deviceId, '55555555-5555-4555-8555-555555555555');
+      expect(result.deviceToken, 'device-jwt-token');
+      expect(captured?.path, '/api/mobile/network/devices/enroll');
+      expect(captured?.method, 'POST');
+      expect(captured?.data, {
+        'classroomId': '44444444-4444-4444-8444-444444444444',
+        'slotLabel': 'M1',
+        'kind': 'phone',
+        'locale': 'ru',
+      });
+    });
+
+    test('throws with server code on slot taken', () async {
+      final api = NetworkApi(
+        ApiClient(
+          dio: _mockDioWithErrors(
+            respond: (_) => {
+              '__errorStatus': 409,
+              '__errorBody': {
+                'status': 'error',
+                'code': 'slot_taken',
+                'message': 'Слот уже занят',
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(
+        () => api.enrollDevice(
+          classroomId: '44444444-4444-4444-8444-444444444444',
+          slotLabel: 'M1',
+          kind: NetworkDeviceKind.tablet,
+        ),
+        throwsA(
+          isA<NetworkApiException>()
+              .having((error) => error.code, 'code', 'slot_taken')
+              .having((error) => error.message, 'message', 'Слот уже занят'),
+        ),
+      );
+    });
+  });
+
+  group('NetworkApi.unbindDevice', () {
+    test('posts deviceId and parses success', () async {
+      RequestOptions? captured;
+
+      final api = NetworkApi(
+        ApiClient(
+          dio: _mockDio(
+            (_) => {
+              'status': 'success',
+              'ok': true,
+            },
+            onRequest: (options) => captured = options,
+          ),
+        ),
+      );
+
+      await api.unbindDevice(
+        deviceId: '55555555-5555-4555-8555-555555555555',
+      );
+
+      expect(captured?.path, '/api/mobile/network/devices/unbind');
+      expect(captured?.method, 'POST');
+      expect(captured?.data, {
+        'deviceId': '55555555-5555-4555-8555-555555555555',
+        'locale': 'ru',
+      });
+    });
+
+    test('throws with server code on device not found', () async {
+      final api = NetworkApi(
+        ApiClient(
+          dio: _mockDioWithErrors(
+            respond: (_) => {
+              '__errorStatus': 404,
+              '__errorBody': {
+                'status': 'error',
+                'code': 'device_not_found',
+                'message': 'Устройство не найдено',
+              },
+            },
+          ),
+        ),
+      );
+
+      expect(
+        () => api.unbindDevice(
+          deviceId: '55555555-5555-4555-8555-555555555555',
+        ),
+        throwsA(
+          isA<NetworkApiException>()
+              .having((error) => error.code, 'code', 'device_not_found')
+              .having((error) => error.message, 'message', 'Устройство не найдено'),
+        ),
+      );
     });
   });
 }

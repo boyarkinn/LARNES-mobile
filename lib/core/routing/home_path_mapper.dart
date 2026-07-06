@@ -30,6 +30,10 @@ bool isNetworkPanelAccount(String? accountType) =>
 
 bool isNetworkRoute(String path) => path == '/network' || path.startsWith('/network/');
 
+bool isKioskEnrollRoute(String path) => path == '/kiosk/enroll';
+
+bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/');
+
 bool isAuthRoute(String path) =>
     path == '/login' || path == '/splash' || path.startsWith('/register');
 
@@ -41,7 +45,28 @@ String? resolveAppRedirect({
   required bool isAuthenticated,
   required String path,
   required String? accountType,
+  bool hasDeviceToken = false,
 }) {
+  if (isKioskEnrollRoute(path)) {
+    if (hasDeviceToken) {
+      return '/kiosk';
+    }
+    if (!isLoading && !isAuthenticated) {
+      return '/login';
+    }
+    if (isAuthenticated && !isNetworkPanelAccount(accountType)) {
+      return '/home';
+    }
+    return null;
+  }
+
+  if (isKioskRoute(path)) {
+    if (!hasDeviceToken) {
+      return '/kiosk/enroll';
+    }
+    return null;
+  }
+
   if (!isLoading && !isAuthenticated && !isAuthRoute(path)) {
     return '/login';
   }
@@ -61,4 +86,19 @@ String? resolveAppRedirect({
   }
 
   return null;
+}
+
+/// Post-bootstrap navigation from `/splash`.
+String resolveSplashDestination({
+  required bool hasDeviceToken,
+  required bool isAuthenticated,
+  required String? accountType,
+}) {
+  if (hasDeviceToken) {
+    return '/kiosk';
+  }
+  if (isAuthenticated) {
+    return defaultMobileHomeForAccountType(accountType);
+  }
+  return '/login';
 }

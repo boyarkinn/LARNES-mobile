@@ -873,4 +873,181 @@ class AppLocalizationsEn extends AppLocalizations {
   String networkDeviceSlotValue(String slot) {
     return 'Slot $slot';
   }
+
+  @override
+  String get kioskIdleTitle => 'Lesson not started';
+
+  @override
+  String get kioskIdleSubtitle =>
+      'The teacher will start the lesson. Then hold the child\'s QR code up to this device.';
+
+  @override
+  String get kioskIdleSettings => 'Settings';
+
+  @override
+  String get kioskScanTitle => 'Show your QR code';
+
+  @override
+  String get kioskScanSubtitle => 'Hold the code up to this device.';
+
+  @override
+  String get kioskScanEnableCamera => 'Enable camera';
+
+  @override
+  String get kioskScanEnableCameraHint =>
+      'Tap the button and allow camera access when prompted.';
+
+  @override
+  String get kioskScanRetryCamera => 'Try again';
+
+  @override
+  String get kioskScanStartingCamera => 'Starting camera…';
+
+  @override
+  String get kioskScanProcessing => 'Checking the code…';
+
+  @override
+  String get kioskScanCameraDenied => 'Camera access was denied.';
+
+  @override
+  String get kioskScanCameraDeniedHint =>
+      'Allow camera access in system settings, or tap Try again.';
+
+  @override
+  String get kioskScanErrorCamera =>
+      'Could not start the camera. Please try again.';
+
+  @override
+  String get kioskScanErrorGeneric =>
+      'Could not process the QR code. Please try again.';
+
+  @override
+  String get kioskScanErrorForbidden =>
+      'Scanning is not available on this device.';
+
+  @override
+  String get kioskScanErrorInvalidToken => 'The QR code is invalid or expired.';
+
+  @override
+  String get kioskScanErrorLessonInactive =>
+      'The lesson has not started yet or has already ended.';
+
+  @override
+  String get kioskScanErrorNetwork =>
+      'No connection to the server. Check your internet.';
+
+  @override
+  String get kioskScanErrorNotInGroup =>
+      'This child is not enrolled in the lesson group.';
+
+  @override
+  String get kioskScanErrorRateLimited => 'Too many attempts. Wait a minute.';
+
+  @override
+  String get kioskScanErrorRevoked =>
+      'The QR code was revoked. Ask the parent to refresh it.';
+
+  @override
+  String get kioskScanCameraSoon =>
+      'Camera support is coming in the next update.';
+
+  @override
+  String get kioskResultTitle => 'Child checked in';
+
+  @override
+  String get kioskResultProgramAssigned => 'Program assigned';
+
+  @override
+  String get kioskResultNoProgram =>
+      'No program is available for this child yet.';
+
+  @override
+  String get kioskSettingsTitle => 'Device settings';
+
+  @override
+  String get kioskSettingsBack => 'Back';
+
+  @override
+  String get kioskSettingsPlacement => 'Placement';
+
+  @override
+  String get kioskSettingsDeviceId => 'Device ID';
+
+  @override
+  String get kioskSettingsUnbindTitle => 'Unbind device';
+
+  @override
+  String get kioskSettingsUnbindHint =>
+      'The device will disappear from the network list. To use kiosk again, enroll it once more.';
+
+  @override
+  String get kioskSettingsUnbindSubmit => 'Unbind and leave kiosk';
+
+  @override
+  String get kioskSettingsUnbinding => 'Unbinding…';
+
+  @override
+  String get kioskSettingsUnbindConfirmTitle => 'Unbind this device?';
+
+  @override
+  String get kioskSettingsUnbindConfirmMessage =>
+      'Kiosk mode on this phone will be turned off.';
+
+  @override
+  String get kioskSettingsUnbindCancel => 'Cancel';
+
+  @override
+  String get kioskSettingsUnbindConfirm => 'Unbind';
+
+  @override
+  String get kioskSettingsLoginRequired =>
+      'Sign in again to unbind this device.';
+
+  @override
+  String get networkAddDevice => 'Add device';
+
+  @override
+  String get kioskEnrollTitle => 'Device setup';
+
+  @override
+  String get kioskEnrollSubtitle =>
+      'Choose where this device belongs in your network.';
+
+  @override
+  String get kioskEnrollCenter => 'Center';
+
+  @override
+  String get kioskEnrollClassroom => 'Classroom';
+
+  @override
+  String get kioskEnrollClassroomPlaceholder => 'Select a classroom';
+
+  @override
+  String get kioskEnrollSlot => 'Desk / slot';
+
+  @override
+  String get kioskEnrollSlotPlaceholder => 'For example, 1';
+
+  @override
+  String get kioskEnrollSlotRequired => 'Enter a slot label';
+
+  @override
+  String get kioskEnrollKind => 'Device type';
+
+  @override
+  String get kioskEnrollSubmit => 'Enroll device';
+
+  @override
+  String get kioskEnrollSubmitting => 'Enrolling…';
+
+  @override
+  String get kioskEnrollNoCenters =>
+      'Create a center in the network panel first.';
+
+  @override
+  String get kioskEnrollNoClassrooms => 'Add classrooms in the center first.';
+
+  @override
+  String get kioskEnrollNoClassroomsForCenter =>
+      'This center has no classrooms yet.';
 }

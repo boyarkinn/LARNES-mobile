@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key, required this.authSession});
+  const SplashScreen({
+    super.key,
+    required this.authSession,
+    required this.kioskRouteState,
+  });
 
   final AuthSession authSession;
+  final KioskRouteState kioskRouteState;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -22,15 +28,21 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _bootstrap() async {
-    await widget.authSession.bootstrap();
+    await Future.wait([
+      widget.authSession.bootstrap(),
+      widget.kioskRouteState.refreshDeviceToken(),
+    ]);
     if (!mounted) {
       return;
     }
-    if (widget.authSession.isAuthenticated) {
-      context.go(defaultMobileHomeForAccountType(widget.authSession.user?.accountType));
-    } else {
-      context.go('/login');
-    }
+
+    context.go(
+      resolveSplashDestination(
+        hasDeviceToken: widget.kioskRouteState.hasDeviceToken,
+        isAuthenticated: widget.authSession.isAuthenticated,
+        accountType: widget.authSession.user?.accountType,
+      ),
+    );
   }
 
   @override

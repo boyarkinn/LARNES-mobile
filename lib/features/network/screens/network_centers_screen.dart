@@ -208,6 +208,14 @@ class _NetworkCentersScreenState extends State<NetworkCentersScreen> {
                 ),
           ),
           const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton(
+              onPressed: () => context.push('/kiosk/enroll'),
+              child: Text(l10n.networkAddDevice),
+            ),
+          ),
+          const SizedBox(height: 12),
           if (_devices.isEmpty)
             _EmptySectionMessage(title: l10n.networkDevicesEmpty)
           else

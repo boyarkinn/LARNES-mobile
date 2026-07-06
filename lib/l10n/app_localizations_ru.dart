@@ -883,4 +883,180 @@ class AppLocalizationsRu extends AppLocalizations {
   String networkDeviceSlotValue(String slot) {
     return 'Слот $slot';
   }
+
+  @override
+  String get kioskIdleTitle => 'Занятие не начато';
+
+  @override
+  String get kioskIdleSubtitle =>
+      'Педагог начнёт занятие. После этого поднесите QR-код к этому устройству.';
+
+  @override
+  String get kioskIdleSettings => 'Настройки';
+
+  @override
+  String get kioskScanTitle => 'Поднесите QR';
+
+  @override
+  String get kioskScanSubtitle => 'Покажите свой код на этом устройстве.';
+
+  @override
+  String get kioskScanEnableCamera => 'Включить камеру';
+
+  @override
+  String get kioskScanEnableCameraHint =>
+      'Нажмите кнопку — приложение запросит доступ к камере.';
+
+  @override
+  String get kioskScanRetryCamera => 'Попробовать снова';
+
+  @override
+  String get kioskScanStartingCamera => 'Включаем камеру…';
+
+  @override
+  String get kioskScanProcessing => 'Проверяем код…';
+
+  @override
+  String get kioskScanCameraDenied => 'Доступ к камере не дан.';
+
+  @override
+  String get kioskScanCameraDeniedHint =>
+      'Разрешите камеру в настройках телефона или нажмите «Попробовать снова».';
+
+  @override
+  String get kioskScanErrorCamera =>
+      'Не удалось включить камеру. Попробуйте ещё раз.';
+
+  @override
+  String get kioskScanErrorGeneric =>
+      'Не удалось обработать QR-код. Попробуйте ещё раз.';
+
+  @override
+  String get kioskScanErrorForbidden =>
+      'Сканирование недоступно на этом устройстве.';
+
+  @override
+  String get kioskScanErrorInvalidToken => 'QR-код не распознан или устарел.';
+
+  @override
+  String get kioskScanErrorLessonInactive =>
+      'Занятие ещё не начато или уже завершено.';
+
+  @override
+  String get kioskScanErrorNetwork =>
+      'Нет связи с сервером. Проверьте интернет.';
+
+  @override
+  String get kioskScanErrorNotInGroup =>
+      'Этот ребёнок не записан в группу занятия.';
+
+  @override
+  String get kioskScanErrorRateLimited =>
+      'Слишком много попыток. Подождите минуту.';
+
+  @override
+  String get kioskScanErrorRevoked =>
+      'QR-код отозван. Попросите родителя обновить код.';
+
+  @override
+  String get kioskScanCameraSoon =>
+      'Камера подключается в следующем обновлении.';
+
+  @override
+  String get kioskResultTitle => 'Ребёнок на занятии';
+
+  @override
+  String get kioskResultProgramAssigned => 'Программа назначена';
+
+  @override
+  String get kioskResultNoProgram => 'Пока нет программы для этого ребёнка.';
+
+  @override
+  String get kioskSettingsTitle => 'Настройки устройства';
+
+  @override
+  String get kioskSettingsBack => 'Назад';
+
+  @override
+  String get kioskSettingsPlacement => 'Размещение';
+
+  @override
+  String get kioskSettingsDeviceId => 'ID устройства';
+
+  @override
+  String get kioskSettingsUnbindTitle => 'Отвязать устройство';
+
+  @override
+  String get kioskSettingsUnbindHint =>
+      'Устройство исчезнет из списка сети. Чтобы снова использовать kiosk, пройдите привязку заново.';
+
+  @override
+  String get kioskSettingsUnbindSubmit => 'Отвязать и выйти из kiosk';
+
+  @override
+  String get kioskSettingsUnbinding => 'Отвязка…';
+
+  @override
+  String get kioskSettingsUnbindConfirmTitle => 'Отвязать устройство?';
+
+  @override
+  String get kioskSettingsUnbindConfirmMessage =>
+      'Kiosk-режим на этом телефоне будет отключён.';
+
+  @override
+  String get kioskSettingsUnbindCancel => 'Отмена';
+
+  @override
+  String get kioskSettingsUnbindConfirm => 'Отвязать';
+
+  @override
+  String get kioskSettingsLoginRequired =>
+      'Войдите снова, чтобы отвязать устройство.';
+
+  @override
+  String get networkAddDevice => 'Добавить устройство';
+
+  @override
+  String get kioskEnrollTitle => 'Настройка устройства';
+
+  @override
+  String get kioskEnrollSubtitle =>
+      'Укажите, где стоит это устройство в вашей сети.';
+
+  @override
+  String get kioskEnrollCenter => 'Центр';
+
+  @override
+  String get kioskEnrollClassroom => 'Класс';
+
+  @override
+  String get kioskEnrollClassroomPlaceholder => 'Выберите класс';
+
+  @override
+  String get kioskEnrollSlot => 'Парта / слот';
+
+  @override
+  String get kioskEnrollSlotPlaceholder => 'Например, 1';
+
+  @override
+  String get kioskEnrollSlotRequired => 'Укажите слот';
+
+  @override
+  String get kioskEnrollKind => 'Тип устройства';
+
+  @override
+  String get kioskEnrollSubmit => 'Привязать устройство';
+
+  @override
+  String get kioskEnrollSubmitting => 'Привязка…';
+
+  @override
+  String get kioskEnrollNoCenters => 'Сначала создайте центр в панели сети.';
+
+  @override
+  String get kioskEnrollNoClassrooms => 'Сначала добавьте классы в центре.';
+
+  @override
+  String get kioskEnrollNoClassroomsForCenter =>
+      'В этом центре пока нет классов.';
 }

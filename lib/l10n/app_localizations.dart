@@ -134,11 +134,101 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
-  /// No description provided for @forgotPasswordComingSoon.
+  /// No description provided for @passwordResetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Password reset — coming soon'**
-  String get forgotPasswordComingSoon;
+  /// **'Password reset'**
+  String get passwordResetTitle;
+
+  /// No description provided for @passwordResetStep1Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 1 of 3 — contact'**
+  String get passwordResetStep1Subtitle;
+
+  /// No description provided for @passwordResetStep2Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 2 of 3 — verification code'**
+  String get passwordResetStep2Subtitle;
+
+  /// No description provided for @passwordResetStep3Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Step 3 of 3 — new password'**
+  String get passwordResetStep3Subtitle;
+
+  /// No description provided for @passwordResetContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the phone or email linked to your account. We will send a verification code.'**
+  String get passwordResetContactHint;
+
+  /// No description provided for @passwordResetContactLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone or email'**
+  String get passwordResetContactLabel;
+
+  /// No description provided for @passwordResetOtpHintSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {contact}. Enter it below.'**
+  String passwordResetOtpHintSms(String contact);
+
+  /// No description provided for @passwordResetOtpHintEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Code sent to {contact}. Check your inbox (and spam folder) and enter it below.'**
+  String passwordResetOtpHintEmail(String contact);
+
+  /// No description provided for @passwordResetOtpResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code was sent.'**
+  String get passwordResetOtpResent;
+
+  /// No description provided for @passwordResetOtpNotReceivedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t get the code? Check that the contact is correct — your account may be linked to a different phone or email.'**
+  String get passwordResetOtpNotReceivedHint;
+
+  /// No description provided for @passwordResetPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password. After saving you will be signed in automatically and other sessions will end.'**
+  String get passwordResetPasswordHint;
+
+  /// No description provided for @passwordResetNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get passwordResetNewPasswordLabel;
+
+  /// No description provided for @passwordResetConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get passwordResetConfirmPasswordLabel;
+
+  /// No description provided for @passwordResetSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and sign in'**
+  String get passwordResetSubmit;
+
+  /// No description provided for @passwordResetBackToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'← Back to sign in'**
+  String get passwordResetBackToLogin;
+
+  /// No description provided for @passwordResetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset password.'**
+  String get passwordResetFailed;
 
   /// No description provided for @signInButton.
   ///

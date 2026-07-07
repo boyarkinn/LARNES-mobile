@@ -4,7 +4,11 @@ import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/features/auth/models/password_reset_flow.dart';
 import 'package:larnes_mobile/features/auth/screens/login_screen.dart';
+import 'package:larnes_mobile/features/auth/screens/password_reset_contact_screen.dart';
+import 'package:larnes_mobile/features/auth/screens/password_reset_otp_screen.dart';
+import 'package:larnes_mobile/features/auth/screens/password_reset_password_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_contact_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_otp_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart';
@@ -66,6 +70,32 @@ GoRouter createAppRouter({
       GoRoute(
         path: '/login',
         builder: (context, state) => LoginScreen(authSession: authSession),
+      ),
+      GoRoute(
+        path: '/password-reset',
+        builder: (context, state) => const PasswordResetContactScreen(),
+        routes: [
+          GoRoute(
+            path: 'otp',
+            builder: (context, state) {
+              final flow = state.extra;
+              if (flow is! PasswordResetFlowData) {
+                return const PasswordResetContactScreen();
+              }
+              return PasswordResetOtpScreen(flow: flow);
+            },
+          ),
+          GoRoute(
+            path: 'password',
+            builder: (context, state) {
+              final flow = state.extra;
+              if (flow is! PasswordResetFlowData) {
+                return const PasswordResetContactScreen();
+              }
+              return PasswordResetPasswordScreen(flow: flow);
+            },
+          ),
+        ],
       ),
       GoRoute(
         path: '/register',

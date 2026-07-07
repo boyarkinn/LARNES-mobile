@@ -6,7 +6,32 @@
   "loginFieldLabel": "Phone, email or username",
   "passwordLabel": "Password",
   "forgotPassword": "Forgot password?",
-  "forgotPasswordComingSoon": "Password reset — coming soon",
+  "passwordResetTitle": "Password reset",
+  "passwordResetStep1Subtitle": "Step 1 of 3 — contact",
+  "passwordResetStep2Subtitle": "Step 2 of 3 — verification code",
+  "passwordResetStep3Subtitle": "Step 3 of 3 — new password",
+  "passwordResetContactHint": "Enter the phone or email linked to your account. We will send a verification code.",
+  "passwordResetContactLabel": "Phone or email",
+  "passwordResetOtpHintSms": "Code sent to {contact}. Enter it below.",
+  "@passwordResetOtpHintSms": {
+    "placeholders": {
+      "contact": {"type": "String"}
+    }
+  },
+  "passwordResetOtpHintEmail": "Code sent to {contact}. Check your inbox (and spam folder) and enter it below.",
+  "@passwordResetOtpHintEmail": {
+    "placeholders": {
+      "contact": {"type": "String"}
+    }
+  },
+  "passwordResetOtpResent": "A new code was sent.",
+  "passwordResetOtpNotReceivedHint": "Didn't get the code? Check that the contact is correct — your account may be linked to a different phone or email.",
+  "passwordResetPasswordHint": "Choose a new password. After saving you will be signed in automatically and other sessions will end.",
+  "passwordResetNewPasswordLabel": "New password",
+  "passwordResetConfirmPasswordLabel": "Confirm password",
+  "passwordResetSubmit": "Save and sign in",
+  "passwordResetBackToLogin": "← Back to sign in",
+  "passwordResetFailed": "Could not reset password.",
   "signInButton": "Sign in",
   "noAccountRegister": "No account? Register",
   "loginFailed": "Sign in failed. Try again later.",

@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 
 class AuthSession extends ChangeNotifier {
@@ -30,6 +31,8 @@ class AuthSession extends ChangeNotifier {
 
   /// Через ApiClient — ленивая инициализация, устойчивее к hot reload.
   RegisterApi get registerApi => _client.registerApi;
+
+  PasswordResetApi get passwordResetApi => _client.passwordResetApi;
 
   ParentApi get parentApi => _client.parentApi;
 

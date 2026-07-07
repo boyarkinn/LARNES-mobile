@@ -6,7 +6,32 @@
   "loginFieldLabel": "Телефон, email или логин",
   "passwordLabel": "Пароль",
   "forgotPassword": "Забыли пароль?",
-  "forgotPasswordComingSoon": "Сброс пароля — в следующем этапе",
+  "passwordResetTitle": "Восстановление пароля",
+  "passwordResetStep1Subtitle": "Шаг 1 из 3 — контакт",
+  "passwordResetStep2Subtitle": "Шаг 2 из 3 — код подтверждения",
+  "passwordResetStep3Subtitle": "Шаг 3 из 3 — новый пароль",
+  "passwordResetContactHint": "Укажите телефон или почту, привязанные к аккаунту. Мы отправим код подтверждения.",
+  "passwordResetContactLabel": "Телефон или email",
+  "passwordResetOtpHintSms": "Код отправлен на {contact}. Введите его ниже.",
+  "@passwordResetOtpHintSms": {
+    "placeholders": {
+      "contact": {"type": "String"}
+    }
+  },
+  "passwordResetOtpHintEmail": "Код отправлен на {contact}. Проверьте почту (и папку «Спам») и введите его ниже.",
+  "@passwordResetOtpHintEmail": {
+    "placeholders": {
+      "contact": {"type": "String"}
+    }
+  },
+  "passwordResetOtpResent": "Новый код отправлен.",
+  "passwordResetOtpNotReceivedHint": "Не пришёл код? Проверьте, верно ли указан контакт — возможно, аккаунт привязан к другому телефону или почте.",
+  "passwordResetPasswordHint": "Придумайте новый пароль. После сохранения вы войдёте автоматически, а старые сессии будут завершены.",
+  "passwordResetNewPasswordLabel": "Новый пароль",
+  "passwordResetConfirmPasswordLabel": "Подтвердите пароль",
+  "passwordResetSubmit": "Сохранить и войти",
+  "passwordResetBackToLogin": "← Ко входу",
+  "passwordResetFailed": "Не удалось сменить пароль.",
   "signInButton": "Войти",
   "noAccountRegister": "Нет аккаунта? Зарегистрироваться",
   "loginFailed": "Не удалось войти. Попробуйте позже.",

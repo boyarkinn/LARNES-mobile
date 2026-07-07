@@ -35,7 +35,11 @@ bool isKioskEnrollRoute(String path) => path == '/kiosk/enroll';
 bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/');
 
 bool isAuthRoute(String path) =>
-    path == '/login' || path == '/splash' || path.startsWith('/register');
+    path == '/login' ||
+    path == '/splash' ||
+    path.startsWith('/register') ||
+    path == '/password-reset' ||
+    path.startsWith('/password-reset/');
 
 bool isParentRoute(String path) => path == '/parent' || path.startsWith('/parent/');
 

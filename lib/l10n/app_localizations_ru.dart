@@ -27,7 +27,59 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forgotPassword => 'Забыли пароль?';
 
   @override
-  String get forgotPasswordComingSoon => 'Сброс пароля — в следующем этапе';
+  String get passwordResetTitle => 'Восстановление пароля';
+
+  @override
+  String get passwordResetStep1Subtitle => 'Шаг 1 из 3 — контакт';
+
+  @override
+  String get passwordResetStep2Subtitle => 'Шаг 2 из 3 — код подтверждения';
+
+  @override
+  String get passwordResetStep3Subtitle => 'Шаг 3 из 3 — новый пароль';
+
+  @override
+  String get passwordResetContactHint =>
+      'Укажите телефон или почту, привязанные к аккаунту. Мы отправим код подтверждения.';
+
+  @override
+  String get passwordResetContactLabel => 'Телефон или email';
+
+  @override
+  String passwordResetOtpHintSms(String contact) {
+    return 'Код отправлен на $contact. Введите его ниже.';
+  }
+
+  @override
+  String passwordResetOtpHintEmail(String contact) {
+    return 'Код отправлен на $contact. Проверьте почту (и папку «Спам») и введите его ниже.';
+  }
+
+  @override
+  String get passwordResetOtpResent => 'Новый код отправлен.';
+
+  @override
+  String get passwordResetOtpNotReceivedHint =>
+      'Не пришёл код? Проверьте, верно ли указан контакт — возможно, аккаунт привязан к другому телефону или почте.';
+
+  @override
+  String get passwordResetPasswordHint =>
+      'Придумайте новый пароль. После сохранения вы войдёте автоматически, а старые сессии будут завершены.';
+
+  @override
+  String get passwordResetNewPasswordLabel => 'Новый пароль';
+
+  @override
+  String get passwordResetConfirmPasswordLabel => 'Подтвердите пароль';
+
+  @override
+  String get passwordResetSubmit => 'Сохранить и войти';
+
+  @override
+  String get passwordResetBackToLogin => '← Ко входу';
+
+  @override
+  String get passwordResetFailed => 'Не удалось сменить пароль.';
 
   @override
   String get signInButton => 'Войти';

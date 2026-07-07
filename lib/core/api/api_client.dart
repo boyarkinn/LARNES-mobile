@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
@@ -34,6 +35,7 @@ class ApiClient {
   final Dio _dio;
   final TokenStorage _tokenStorage;
   RegisterApi? _registerApi;
+  PasswordResetApi? _passwordResetApi;
   ParentApi? _parentApi;
   ParentAccountApi? _parentAccountApi;
   NetworkApi? _networkApi;
@@ -43,6 +45,9 @@ class ApiClient {
   TokenStorage get tokenStorage => _tokenStorage;
 
   RegisterApi get registerApi => _registerApi ??= RegisterApi(this);
+
+  PasswordResetApi get passwordResetApi =>
+      _passwordResetApi ??= PasswordResetApi(this);
 
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
 

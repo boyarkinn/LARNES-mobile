@@ -27,7 +27,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get forgotPasswordComingSoon => 'Password reset — coming soon';
+  String get passwordResetTitle => 'Password reset';
+
+  @override
+  String get passwordResetStep1Subtitle => 'Step 1 of 3 — contact';
+
+  @override
+  String get passwordResetStep2Subtitle => 'Step 2 of 3 — verification code';
+
+  @override
+  String get passwordResetStep3Subtitle => 'Step 3 of 3 — new password';
+
+  @override
+  String get passwordResetContactHint =>
+      'Enter the phone or email linked to your account. We will send a verification code.';
+
+  @override
+  String get passwordResetContactLabel => 'Phone or email';
+
+  @override
+  String passwordResetOtpHintSms(String contact) {
+    return 'Code sent to $contact. Enter it below.';
+  }
+
+  @override
+  String passwordResetOtpHintEmail(String contact) {
+    return 'Code sent to $contact. Check your inbox (and spam folder) and enter it below.';
+  }
+
+  @override
+  String get passwordResetOtpResent => 'A new code was sent.';
+
+  @override
+  String get passwordResetOtpNotReceivedHint =>
+      'Didn\'t get the code? Check that the contact is correct — your account may be linked to a different phone or email.';
+
+  @override
+  String get passwordResetPasswordHint =>
+      'Choose a new password. After saving you will be signed in automatically and other sessions will end.';
+
+  @override
+  String get passwordResetNewPasswordLabel => 'New password';
+
+  @override
+  String get passwordResetConfirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get passwordResetSubmit => 'Save and sign in';
+
+  @override
+  String get passwordResetBackToLogin => '← Back to sign in';
+
+  @override
+  String get passwordResetFailed => 'Could not reset password.';
 
   @override
   String get signInButton => 'Sign in';

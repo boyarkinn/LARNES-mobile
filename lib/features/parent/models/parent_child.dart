@@ -44,6 +44,7 @@ class ParentChildDetail {
     required this.child,
     required this.homeworkCount,
     required this.education,
+    this.hasActiveNetworkEnrollment = false,
   });
 
   factory ParentChildDetail.fromJson(Map<String, dynamic> json) {
@@ -53,12 +54,14 @@ class ParentChildDetail {
       education: ChildEducationContext.fromJson(
         json['education'] as Map<String, dynamic>?,
       ),
+      hasActiveNetworkEnrollment: json['hasActiveNetworkEnrollment'] as bool? ?? false,
     );
   }
 
   final ParentChild child;
   final int homeworkCount;
   final ChildEducationContext education;
+  final bool hasActiveNetworkEnrollment;
 }
 
 class ChildEducationContext {

@@ -25,7 +25,12 @@ import 'package:larnes_mobile/features/parent/screens/account/account_children_s
 import 'package:larnes_mobile/features/parent/screens/account/account_city_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_date_of_birth_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_edit_child_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/family_guardian_invite_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/family_join_request_invite_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_guardians_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/family_join_dedup_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/family_setup_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_login_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_password_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_profile_screen.dart';
@@ -57,6 +62,7 @@ GoRouter createAppRouter({
         path: state.matchedLocation,
         accountType: authSession.user?.accountType,
         hasDeviceToken: kioskRouteState.hasDeviceToken,
+        familySetupComplete: authSession.familySetupComplete,
       );
     },
     routes: [
@@ -69,7 +75,10 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => LoginScreen(authSession: authSession),
+        builder: (context, state) => LoginScreen(
+          authSession: authSession,
+          redirectPath: state.uri.queryParameters['from'],
+        ),
       ),
       GoRoute(
         path: '/password-reset',
@@ -178,6 +187,10 @@ GoRouter createAppRouter({
                   GoRoute(
                     path: 'password',
                     builder: (context, state) => const AccountPasswordScreen(),
+                  ),
+                  GoRoute(
+                    path: 'guardians',
+                    builder: (context, state) => const AccountGuardiansScreen(),
                   ),
                   GoRoute(
                     path: 'children',
@@ -328,6 +341,32 @@ GoRouter createAppRouter({
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/parent/family-setup',
+        builder: (context, state) => const FamilySetupScreen(),
+      ),
+      GoRoute(
+        path: '/parent/family-join-dedup',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          final kind = state.uri.queryParameters['kind'] ?? '';
+          return FamilyJoinDedupScreen(token: token, kind: kind);
+        },
+      ),
+      GoRoute(
+        path: '/invite/family-join-request',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return FamilyJoinRequestInviteScreen(token: token);
+        },
+      ),
+      GoRoute(
+        path: '/invite/family-guardian',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return FamilyGuardianInviteScreen(token: token);
+        },
       ),
       GoRoute(
         path: '/network',

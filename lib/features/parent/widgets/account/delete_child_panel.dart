@@ -13,10 +13,12 @@ class DeleteChildPanel extends StatefulWidget {
     super.key,
     required this.childId,
     required this.tokens,
+    this.hasActiveNetworkEnrollment = false,
   });
 
   final String childId;
   final ChildCardColorTokens tokens;
+  final bool hasActiveNetworkEnrollment;
 
   @override
   State<DeleteChildPanel> createState() => _DeleteChildPanelState();
@@ -32,7 +34,11 @@ class _DeleteChildPanelState extends State<DeleteChildPanel> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.parentAccountDeleteChildTitle),
-        content: Text(l10n.parentAccountDeleteChildMessage),
+        content: Text(
+          widget.hasActiveNetworkEnrollment
+              ? l10n.parentAccountDeleteChildMessageActiveNetwork
+              : l10n.parentAccountDeleteChildMessage,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

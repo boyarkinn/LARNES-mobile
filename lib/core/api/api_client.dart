@@ -1,4 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/family_invites_api.dart';
+import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
+import 'package:larnes_mobile/core/api/family_setup_api.dart';
+import 'package:larnes_mobile/core/api/guardians_api.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -38,6 +42,10 @@ class ApiClient {
   PasswordResetApi? _passwordResetApi;
   ParentApi? _parentApi;
   ParentAccountApi? _parentAccountApi;
+  FamilySetupApi? _familySetupApi;
+  GuardiansApi? _guardiansApi;
+  FamilyInvitesApi? _familyInvitesApi;
+  FamilyJoinDedupApi? _familyJoinDedupApi;
   NetworkApi? _networkApi;
 
   Dio get dio => _dio;
@@ -52,6 +60,15 @@ class ApiClient {
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
 
   ParentAccountApi get parentAccountApi => _parentAccountApi ??= ParentAccountApi(this);
+
+  FamilySetupApi get familySetupApi => _familySetupApi ??= FamilySetupApi(this);
+
+  GuardiansApi get guardiansApi => _guardiansApi ??= GuardiansApi(this);
+
+  FamilyInvitesApi get familyInvitesApi => _familyInvitesApi ??= FamilyInvitesApi(this);
+
+  FamilyJoinDedupApi get familyJoinDedupApi =>
+      _familyJoinDedupApi ??= FamilyJoinDedupApi(this);
 
   NetworkApi get networkApi => _networkApi ??= NetworkApi(this);
 }

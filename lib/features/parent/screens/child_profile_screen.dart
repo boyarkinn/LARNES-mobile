@@ -167,6 +167,7 @@ class _ChildProfileScreenState extends State<ChildProfileScreen> {
         DeleteChildPanel(
           childId: widget.childId,
           tokens: tokens,
+          hasActiveNetworkEnrollment: detail.hasActiveNetworkEnrollment,
         ),
       ],
     );

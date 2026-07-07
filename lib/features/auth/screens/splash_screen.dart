@@ -45,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
         hasDeviceToken: widget.kioskRouteState.hasDeviceToken,
         isAuthenticated: widget.authSession.isAuthenticated,
         accountType: widget.authSession.user?.accountType,
+        familySetupComplete: widget.authSession.familySetupComplete,
       ),
     );
   }

@@ -10,9 +10,14 @@ import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.authSession});
+  const LoginScreen({
+    super.key,
+    required this.authSession,
+    this.redirectPath,
+  });
 
   final AuthSession authSession;
+  final String? redirectPath;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -45,6 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
         locale: locale,
       );
       if (!mounted) {
+        return;
+      }
+      final redirect = widget.redirectPath?.trim();
+      if (redirect != null && redirect.isNotEmpty) {
+        context.go(redirect);
+        return;
+      }
+      if (widget.authSession.familySetupComplete == false) {
+        context.go('/parent/family-setup');
         return;
       }
       context.go(mapHomePathToMobile(homePath));

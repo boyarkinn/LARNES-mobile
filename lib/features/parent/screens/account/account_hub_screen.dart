@@ -297,6 +297,14 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           ),
         ),
         AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionFamily,
+          child: AccountFieldGroup(
+            label: l10n.parentAccountFieldGuardians,
+            value: l10n.parentAccountActionManageGuardians,
+            onTap: () => _openAccountRoute('/parent/account/guardians'),
+          ),
+        ),
+        AccountDeskCard(
           bandTitle: l10n.parentAccountSectionLanguage,
           child: const AccountLanguagePicker(),
         ),

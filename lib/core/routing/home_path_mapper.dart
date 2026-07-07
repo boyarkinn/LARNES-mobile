@@ -1,6 +1,12 @@
 /// Maps web home paths from the API to mobile routes.
 String mapHomePathToMobile(String webPath) {
   final path = webPath.split('?').first;
+  if (path == '/parent/family-setup') {
+    return '/parent/family-setup';
+  }
+  if (path == '/parent/family-join-dedup' || path.startsWith('/parent/family-join-dedup')) {
+    return '/parent/family-join-dedup';
+  }
   if (path == '/parent' || path.startsWith('/parent/')) {
     return '/parent';
   }
@@ -34,6 +40,22 @@ bool isKioskEnrollRoute(String path) => path == '/kiosk/enroll';
 
 bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/');
 
+bool isFamilySetupRoute(String path) =>
+    path == '/parent/family-setup' || path.startsWith('/parent/family-setup');
+
+bool isFamilyJoinDedupRoute(String path) {
+  final base = path.split('?').first;
+  return base == '/parent/family-join-dedup' || base.startsWith('/parent/family-join-dedup');
+}
+
+bool isFamilyInviteRoute(String path) {
+  final base = path.split('?').first;
+  return base == '/invite/family-join-request' ||
+      base == '/invite/family-guardian' ||
+      base.startsWith('/invite/family-join-request') ||
+      base.startsWith('/invite/family-guardian');
+}
+
 bool isAuthRoute(String path) =>
     path == '/login' ||
     path == '/splash' ||
@@ -50,6 +72,7 @@ String? resolveAppRedirect({
   required String path,
   required String? accountType,
   bool hasDeviceToken = false,
+  bool? familySetupComplete,
 }) {
   if (isKioskEnrollRoute(path)) {
     if (hasDeviceToken) {
@@ -71,7 +94,10 @@ String? resolveAppRedirect({
     return null;
   }
 
-  if (!isLoading && !isAuthenticated && !isAuthRoute(path)) {
+  if (!isLoading &&
+      !isAuthenticated &&
+      !isAuthRoute(path) &&
+      !isFamilyInviteRoute(path)) {
     return '/login';
   }
 
@@ -85,11 +111,34 @@ String? resolveAppRedirect({
     return '/home';
   }
 
+  if (isAuthenticated && isParentAccount(accountType)) {
+    if (familySetupComplete == false) {
+      if (isParentRoute(path) && !isFamilySetupRoute(path) && !isFamilyJoinDedupRoute(path)) {
+        return '/parent/family-setup';
+      }
+    } else if (familySetupComplete == true && isFamilySetupRoute(path)) {
+      return '/parent';
+    }
+  }
+
   if (isAuthenticated && (path == '/login' || path == '/splash')) {
-    return defaultMobileHomeForAccountType(accountType);
+    return resolveAuthenticatedHome(
+      accountType: accountType,
+      familySetupComplete: familySetupComplete,
+    );
   }
 
   return null;
+}
+
+String resolveAuthenticatedHome({
+  required String? accountType,
+  bool? familySetupComplete,
+}) {
+  if (isParentAccount(accountType) && familySetupComplete == false) {
+    return '/parent/family-setup';
+  }
+  return defaultMobileHomeForAccountType(accountType);
 }
 
 /// Post-bootstrap navigation from `/splash`.
@@ -97,12 +146,16 @@ String resolveSplashDestination({
   required bool hasDeviceToken,
   required bool isAuthenticated,
   required String? accountType,
+  bool? familySetupComplete,
 }) {
   if (hasDeviceToken) {
     return '/kiosk';
   }
   if (isAuthenticated) {
-    return defaultMobileHomeForAccountType(accountType);
+    return resolveAuthenticatedHome(
+      accountType: accountType,
+      familySetupComplete: familySetupComplete,
+    );
   }
   return '/login';
 }

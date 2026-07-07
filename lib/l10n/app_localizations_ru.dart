@@ -598,6 +598,237 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountSectionLanguage => 'Язык';
 
   @override
+  String get parentAccountSectionFamily => 'Семья';
+
+  @override
+  String get parentAccountFieldGuardians => 'Опекуны';
+
+  @override
+  String get parentAccountActionManageGuardians => 'Управление опекунами';
+
+  @override
+  String get parentFamilySetupGateTitle => 'Семья уже в LARNES?';
+
+  @override
+  String get parentFamilySetupGateLead =>
+      'Если кто-то из вашей семьи уже пользуется платформой, попросите его принять вас. Иначе создайте свою семью и добавьте детей.';
+
+  @override
+  String get parentFamilySetupAnswerNo => 'Нет, создать свою семью';
+
+  @override
+  String get parentFamilySetupAnswerYes => 'Да, семья уже есть';
+
+  @override
+  String get parentFamilySetupWaitingTitle => 'Ждём подтверждения';
+
+  @override
+  String get parentFamilySetupWaitingLead =>
+      'Отправьте ссылку родственнику — любой опекун вашей семьи в LARNES сможет принять запрос.';
+
+  @override
+  String get parentFamilySetupShareLinkLabel => 'Ссылка для родственника';
+
+  @override
+  String get parentFamilySetupCopyLink => 'Скопировать ссылку';
+
+  @override
+  String get parentFamilySetupCopySuccess => 'Ссылка скопирована';
+
+  @override
+  String get parentFamilySetupCopyFailed => 'Не удалось скопировать';
+
+  @override
+  String get parentFamilySetupShare => 'Поделиться';
+
+  @override
+  String get parentFamilySetupCancelJoin => 'Я ошибся — создать свою семью';
+
+  @override
+  String get parentFamilySetupResolveProfiles => 'Уточнить профили детей';
+
+  @override
+  String parentFamilyJoinDedupChoiceTitle(String name) => 'Дети с именем «$name»';
+
+  @override
+  String get parentFamilyJoinDedupChoiceLead =>
+      'Если это один ребёнок — выберите профиль, который оставить. Второй будет удалён из кабинета семьи.';
+
+  @override
+  String get parentFamilyJoinDedupDifferentChildren => 'Разные дети';
+
+  @override
+  String get parentFamilyJoinDedupSameChild => 'Один ребёнок';
+
+  @override
+  String get parentFamilyJoinDedupPickTitle => 'Один ребёнок — выберите профиль';
+
+  @override
+  String get parentFamilyJoinDedupPickLead =>
+      'Какой профиль оставить? Второй будет удалён из кабинета.';
+
+  @override
+  String get parentFamilyJoinDedupRegisteredLabel => 'Зарегистрирован';
+
+  @override
+  String get parentFamilyJoinDedupNetworkLabel => 'Сеть / группа';
+
+  @override
+  String get parentFamilyJoinDedupProgramLabel => 'Программа';
+
+  @override
+  String get parentFamilyJoinDedupKeepProfile => 'Оставить этот профиль';
+
+  @override
+  String get parentFamilyJoinDedupBack => 'Назад';
+
+  @override
+  String get parentFamilyJoinDedupInvalidTitle => 'Уточнение не требуется';
+
+  @override
+  String get parentFamilyJoinDedupInvalidLead =>
+      'Ссылка устарела или профили уже согласованы.';
+
+  @override
+  String get parentGuardiansTitle => 'Опекуны';
+
+  @override
+  String get parentGuardiansSectionTitle => 'Семья';
+
+  @override
+  String get parentGuardiansEmpty => 'Пока только вы.';
+
+  @override
+  String get parentGuardiansYou => 'это вы';
+
+  @override
+  String get parentGuardiansInviteGuardian => 'Пригласить опекуна';
+
+  @override
+  String get parentGuardiansInviteCopied => 'Ссылка скопирована';
+
+  @override
+  String get parentGuardiansInviteCreated => 'Приглашение создано';
+
+  @override
+  String get parentGuardiansPendingInvitesTitle => 'Ожидают принятия';
+
+  @override
+  String get parentGuardiansRevokeInvite => 'Отозвать';
+
+  @override
+  String get parentGuardiansRemove => 'Удалить';
+
+  @override
+  String get parentGuardiansLeaveFamily => 'Покинуть семью';
+
+  @override
+  String get parentGuardiansConfirmRemoveTitle => 'Удалить опекуна?';
+
+  @override
+  String get parentGuardiansConfirmRemoveMessage =>
+      'Опекун потеряет доступ к детям этой семьи и получит отдельный кабинет.';
+
+  @override
+  String get parentGuardiansConfirmLeaveTitle => 'Покинуть семью?';
+
+  @override
+  String get parentGuardiansConfirmLeaveMessage =>
+      'Вы потеряете доступ к детям этой семьи и получите отдельный кабинет.';
+
+  @override
+  String get parentGuardiansRelationshipMother => 'Мама';
+
+  @override
+  String get parentGuardiansRelationshipFather => 'Папа';
+
+  @override
+  String get parentGuardiansRelationshipGrandmother => 'Бабушка';
+
+  @override
+  String get parentGuardiansRelationshipGrandfather => 'Дедушка';
+
+  @override
+  String get inviteInvalid => 'Приглашение не найдено или устарело.';
+
+  @override
+  String get inviteInvalidTitle => 'Недействительное приглашение';
+
+  @override
+  String get inviteFamilyJoinRequestTitle => 'Запрос в семью';
+
+  @override
+  String get inviteFamilyJoinRequestSubtitle =>
+      'Примите опекуна в вашу семью — он увидит общих детей.';
+
+  @override
+  String get inviteFamilyJoinRequestRequesterLabel => 'Кто просит';
+
+  @override
+  String get inviteFamilyJoinRequestAccept => 'Принять';
+
+  @override
+  String get inviteFamilyJoinRequestDecline => 'Отклонить';
+
+  @override
+  String get inviteFamilyJoinRequestLoginTitle => 'Требуется вход';
+
+  @override
+  String get inviteFamilyJoinRequestLoginSubtitle =>
+      'Войдите как опекун, чтобы принять запрос в семью.';
+
+  @override
+  String get inviteFamilyJoinRequestRegister => 'Регистрация опекуна';
+
+  @override
+  String get inviteFamilyJoinRequestWrongAccountTitle =>
+      'Неверный тип аккаунта';
+
+  @override
+  String get inviteFamilyJoinRequestWrongAccountSubtitle =>
+      'Запрос может принять только опекун.';
+
+  @override
+  String get inviteFamilyJoinRequestOwnRequestTitle => 'Это ваш запрос';
+
+  @override
+  String get inviteFamilyJoinRequestOwnRequestSubtitle =>
+      'Откройте ссылку другому опекуну вашей семьи в LARNES.';
+
+  @override
+  String get inviteFamilyGuardianTitle => 'Приглашение в семью';
+
+  @override
+  String get inviteFamilyGuardianSubtitle =>
+      'Примите приглашение — вы получите доступ к детям семьи.';
+
+  @override
+  String get inviteFamilyGuardianInviterLabel => 'Пригласил';
+
+  @override
+  String get inviteFamilyGuardianAccept => 'Принять';
+
+  @override
+  String get inviteFamilyGuardianDecline => 'Отклонить';
+
+  @override
+  String get inviteFamilyGuardianLoginTitle => 'Требуется вход';
+
+  @override
+  String get inviteFamilyGuardianLoginSubtitle =>
+      'Войдите или зарегистрируйтесь как опекун, чтобы принять приглашение.';
+
+  @override
+  String get inviteFamilyGuardianRegister => 'Регистрация опекуна';
+
+  @override
+  String get inviteFamilyGuardianWrongAccountTitle => 'Неверный тип аккаунта';
+
+  @override
+  String get inviteFamilyGuardianWrongAccountSubtitle =>
+      'Приглашение может принять только опекун.';
+
+  @override
   String get parentAccountFieldFullName => 'ФИО';
 
   @override
@@ -803,7 +1034,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentAccountDeleteChildMessage =>
-      'Профиль будет удалён без возможности восстановления.';
+      'Профиль исчезнет из кабинета без возможности восстановления.';
+
+  @override
+  String get parentAccountDeleteChildMessageActiveNetwork =>
+      'Профиль исчезнет из вашего кабинета; обучение в центре будет завершено; история посещений и оплат у центра сохранится.';
 
   @override
   String get parentAccountDeleteChildConfirm => 'Удалить ребёнка';

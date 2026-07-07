@@ -1166,6 +1166,396 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get parentAccountSectionLanguage;
 
+  /// No description provided for @parentAccountSectionFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get parentAccountSectionFamily;
+
+  /// No description provided for @parentAccountFieldGuardians.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardians'**
+  String get parentAccountFieldGuardians;
+
+  /// No description provided for @parentAccountActionManageGuardians.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage guardians'**
+  String get parentAccountActionManageGuardians;
+
+  /// No description provided for @parentFamilySetupGateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Is your family already on LARNES?'**
+  String get parentFamilySetupGateTitle;
+
+  /// No description provided for @parentFamilySetupGateLead.
+  ///
+  /// In en, this message translates to:
+  /// **'If someone in your family already uses the platform, ask them to accept you. Otherwise create your own family and add children.'**
+  String get parentFamilySetupGateLead;
+
+  /// No description provided for @parentFamilySetupAnswerNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No, create my family'**
+  String get parentFamilySetupAnswerNo;
+
+  /// No description provided for @parentFamilySetupAnswerYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, our family is here'**
+  String get parentFamilySetupAnswerYes;
+
+  /// No description provided for @parentFamilySetupWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for confirmation'**
+  String get parentFamilySetupWaitingTitle;
+
+  /// No description provided for @parentFamilySetupWaitingLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the link to a relative — any guardian of your family on LARNES can accept the request.'**
+  String get parentFamilySetupWaitingLead;
+
+  /// No description provided for @parentFamilySetupShareLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link for your relative'**
+  String get parentFamilySetupShareLinkLabel;
+
+  /// No description provided for @parentFamilySetupCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get parentFamilySetupCopyLink;
+
+  /// No description provided for @parentFamilySetupCopySuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get parentFamilySetupCopySuccess;
+
+  /// No description provided for @parentFamilySetupCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy'**
+  String get parentFamilySetupCopyFailed;
+
+  /// No description provided for @parentFamilySetupShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get parentFamilySetupShare;
+
+  /// No description provided for @parentFamilySetupCancelJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'I made a mistake — create my family'**
+  String get parentFamilySetupCancelJoin;
+
+  /// No description provided for @parentFamilySetupResolveProfiles.
+  String get parentFamilySetupResolveProfiles;
+
+  /// No description provided for @parentFamilyJoinDedupChoiceTitle.
+  String parentFamilyJoinDedupChoiceTitle(String name);
+
+  /// No description provided for @parentFamilyJoinDedupChoiceLead.
+  String get parentFamilyJoinDedupChoiceLead;
+
+  /// No description provided for @parentFamilyJoinDedupDifferentChildren.
+  String get parentFamilyJoinDedupDifferentChildren;
+
+  /// No description provided for @parentFamilyJoinDedupSameChild.
+  String get parentFamilyJoinDedupSameChild;
+
+  /// No description provided for @parentFamilyJoinDedupPickTitle.
+  String get parentFamilyJoinDedupPickTitle;
+
+  /// No description provided for @parentFamilyJoinDedupPickLead.
+  String get parentFamilyJoinDedupPickLead;
+
+  /// No description provided for @parentFamilyJoinDedupRegisteredLabel.
+  String get parentFamilyJoinDedupRegisteredLabel;
+
+  /// No description provided for @parentFamilyJoinDedupNetworkLabel.
+  String get parentFamilyJoinDedupNetworkLabel;
+
+  /// No description provided for @parentFamilyJoinDedupProgramLabel.
+  String get parentFamilyJoinDedupProgramLabel;
+
+  /// No description provided for @parentFamilyJoinDedupKeepProfile.
+  String get parentFamilyJoinDedupKeepProfile;
+
+  /// No description provided for @parentFamilyJoinDedupBack.
+  String get parentFamilyJoinDedupBack;
+
+  /// No description provided for @parentFamilyJoinDedupInvalidTitle.
+  String get parentFamilyJoinDedupInvalidTitle;
+
+  /// No description provided for @parentFamilyJoinDedupInvalidLead.
+  String get parentFamilyJoinDedupInvalidLead;
+
+  /// No description provided for @parentGuardiansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardians'**
+  String get parentGuardiansTitle;
+
+  /// No description provided for @parentGuardiansSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get parentGuardiansSectionTitle;
+
+  /// No description provided for @parentGuardiansEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Just you for now.'**
+  String get parentGuardiansEmpty;
+
+  /// No description provided for @parentGuardiansYou.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get parentGuardiansYou;
+
+  /// No description provided for @parentGuardiansInviteGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite guardian'**
+  String get parentGuardiansInviteGuardian;
+
+  /// No description provided for @parentGuardiansInviteCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get parentGuardiansInviteCopied;
+
+  /// No description provided for @parentGuardiansInviteCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation created'**
+  String get parentGuardiansInviteCreated;
+
+  /// No description provided for @parentGuardiansPendingInvitesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending invitations'**
+  String get parentGuardiansPendingInvitesTitle;
+
+  /// No description provided for @parentGuardiansRevokeInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke'**
+  String get parentGuardiansRevokeInvite;
+
+  /// No description provided for @parentGuardiansRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get parentGuardiansRemove;
+
+  /// No description provided for @parentGuardiansLeaveFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave family'**
+  String get parentGuardiansLeaveFamily;
+
+  /// No description provided for @parentGuardiansConfirmRemoveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove guardian?'**
+  String get parentGuardiansConfirmRemoveTitle;
+
+  /// No description provided for @parentGuardiansConfirmRemoveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'They will lose access to this family\'s children and get a separate account.'**
+  String get parentGuardiansConfirmRemoveMessage;
+
+  /// No description provided for @parentGuardiansConfirmLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave family?'**
+  String get parentGuardiansConfirmLeaveTitle;
+
+  /// No description provided for @parentGuardiansConfirmLeaveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You will lose access to this family\'s children and get a separate account.'**
+  String get parentGuardiansConfirmLeaveMessage;
+
+  /// No description provided for @parentGuardiansRelationshipMother.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother'**
+  String get parentGuardiansRelationshipMother;
+
+  /// No description provided for @parentGuardiansRelationshipFather.
+  ///
+  /// In en, this message translates to:
+  /// **'Father'**
+  String get parentGuardiansRelationshipFather;
+
+  /// No description provided for @parentGuardiansRelationshipGrandmother.
+  ///
+  /// In en, this message translates to:
+  /// **'Grandmother'**
+  String get parentGuardiansRelationshipGrandmother;
+
+  /// No description provided for @parentGuardiansRelationshipGrandfather.
+  ///
+  /// In en, this message translates to:
+  /// **'Grandfather'**
+  String get parentGuardiansRelationshipGrandfather;
+
+  /// No description provided for @inviteInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation not found or expired.'**
+  String get inviteInvalid;
+
+  /// No description provided for @inviteInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid invitation'**
+  String get inviteInvalidTitle;
+
+  /// No description provided for @inviteFamilyJoinRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family join request'**
+  String get inviteFamilyJoinRequestTitle;
+
+  /// No description provided for @inviteFamilyJoinRequestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept this guardian into your family — they will see shared children.'**
+  String get inviteFamilyJoinRequestSubtitle;
+
+  /// No description provided for @inviteFamilyJoinRequestRequesterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested by'**
+  String get inviteFamilyJoinRequestRequesterLabel;
+
+  /// No description provided for @inviteFamilyJoinRequestAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get inviteFamilyJoinRequestAccept;
+
+  /// No description provided for @inviteFamilyJoinRequestDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get inviteFamilyJoinRequestDecline;
+
+  /// No description provided for @inviteFamilyJoinRequestLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in required'**
+  String get inviteFamilyJoinRequestLoginTitle;
+
+  /// No description provided for @inviteFamilyJoinRequestLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as a guardian to accept the family join request.'**
+  String get inviteFamilyJoinRequestLoginSubtitle;
+
+  /// No description provided for @inviteFamilyJoinRequestRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian registration'**
+  String get inviteFamilyJoinRequestRegister;
+
+  /// No description provided for @inviteFamilyJoinRequestWrongAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong account type'**
+  String get inviteFamilyJoinRequestWrongAccountTitle;
+
+  /// No description provided for @inviteFamilyJoinRequestWrongAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a guardian can accept this request.'**
+  String get inviteFamilyJoinRequestWrongAccountSubtitle;
+
+  /// No description provided for @inviteFamilyJoinRequestOwnRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your request'**
+  String get inviteFamilyJoinRequestOwnRequestTitle;
+
+  /// No description provided for @inviteFamilyJoinRequestOwnRequestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share this link with another guardian in your family on LARNES.'**
+  String get inviteFamilyJoinRequestOwnRequestSubtitle;
+
+  /// No description provided for @inviteFamilyGuardianTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family invitation'**
+  String get inviteFamilyGuardianTitle;
+
+  /// No description provided for @inviteFamilyGuardianSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the invitation to access the family\'s children.'**
+  String get inviteFamilyGuardianSubtitle;
+
+  /// No description provided for @inviteFamilyGuardianInviterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited by'**
+  String get inviteFamilyGuardianInviterLabel;
+
+  /// No description provided for @inviteFamilyGuardianAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get inviteFamilyGuardianAccept;
+
+  /// No description provided for @inviteFamilyGuardianDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get inviteFamilyGuardianDecline;
+
+  /// No description provided for @inviteFamilyGuardianLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in required'**
+  String get inviteFamilyGuardianLoginTitle;
+
+  /// No description provided for @inviteFamilyGuardianLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in or register as a guardian to accept the invitation.'**
+  String get inviteFamilyGuardianLoginSubtitle;
+
+  /// No description provided for @inviteFamilyGuardianRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian registration'**
+  String get inviteFamilyGuardianRegister;
+
+  /// No description provided for @inviteFamilyGuardianWrongAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong account type'**
+  String get inviteFamilyGuardianWrongAccountTitle;
+
+  /// No description provided for @inviteFamilyGuardianWrongAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a guardian can accept this invitation.'**
+  String get inviteFamilyGuardianWrongAccountSubtitle;
+
   /// No description provided for @parentAccountFieldFullName.
   ///
   /// In en, this message translates to:
@@ -1541,8 +1931,14 @@ abstract class AppLocalizations {
   /// No description provided for @parentAccountDeleteChildMessage.
   ///
   /// In en, this message translates to:
-  /// **'This profile will be permanently deleted.'**
+  /// **'The profile will disappear from your cabinet and cannot be restored.'**
   String get parentAccountDeleteChildMessage;
+
+  /// No description provided for @parentAccountDeleteChildMessageActiveNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'The profile will disappear from your cabinet; center enrollment will end; visit and payment history at the center will be kept.'**
+  String get parentAccountDeleteChildMessageActiveNetwork;
 
   /// No description provided for @parentAccountDeleteChildConfirm.
   ///

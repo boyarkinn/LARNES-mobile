@@ -149,6 +149,10 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       if (!mounted) {
         return;
       }
+      if (AuthScope.of(context).familySetupComplete == false) {
+        context.go('/parent/family-setup');
+        return;
+      }
       context.go(mapHomePathToMobile(homePath));
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);

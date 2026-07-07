@@ -592,6 +592,237 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountSectionLanguage => 'Language';
 
   @override
+  String get parentAccountSectionFamily => 'Family';
+
+  @override
+  String get parentAccountFieldGuardians => 'Guardians';
+
+  @override
+  String get parentAccountActionManageGuardians => 'Manage guardians';
+
+  @override
+  String get parentFamilySetupGateTitle => 'Is your family already on LARNES?';
+
+  @override
+  String get parentFamilySetupGateLead =>
+      'If someone in your family already uses the platform, ask them to accept you. Otherwise create your own family and add children.';
+
+  @override
+  String get parentFamilySetupAnswerNo => 'No, create my family';
+
+  @override
+  String get parentFamilySetupAnswerYes => 'Yes, our family is here';
+
+  @override
+  String get parentFamilySetupWaitingTitle => 'Waiting for confirmation';
+
+  @override
+  String get parentFamilySetupWaitingLead =>
+      'Send the link to a relative — any guardian of your family on LARNES can accept the request.';
+
+  @override
+  String get parentFamilySetupShareLinkLabel => 'Link for your relative';
+
+  @override
+  String get parentFamilySetupCopyLink => 'Copy link';
+
+  @override
+  String get parentFamilySetupCopySuccess => 'Link copied';
+
+  @override
+  String get parentFamilySetupCopyFailed => 'Could not copy';
+
+  @override
+  String get parentFamilySetupShare => 'Share';
+
+  @override
+  String get parentFamilySetupCancelJoin =>
+      'I made a mistake — create my family';
+
+  @override
+  String get parentFamilySetupResolveProfiles => 'Resolve child profiles';
+
+  @override
+  String parentFamilyJoinDedupChoiceTitle(String name) => 'Children named “$name”';
+
+  @override
+  String get parentFamilyJoinDedupChoiceLead =>
+      'If this is one child, pick the profile to keep. The other will be removed from the family account.';
+
+  @override
+  String get parentFamilyJoinDedupDifferentChildren => 'Different children';
+
+  @override
+  String get parentFamilyJoinDedupSameChild => 'Same child';
+
+  @override
+  String get parentFamilyJoinDedupPickTitle => 'Same child — pick a profile';
+
+  @override
+  String get parentFamilyJoinDedupPickLead =>
+      'Which profile should we keep? The other will be removed from the family account.';
+
+  @override
+  String get parentFamilyJoinDedupRegisteredLabel => 'Registered';
+
+  @override
+  String get parentFamilyJoinDedupNetworkLabel => 'Network / group';
+
+  @override
+  String get parentFamilyJoinDedupProgramLabel => 'Program';
+
+  @override
+  String get parentFamilyJoinDedupKeepProfile => 'Keep this profile';
+
+  @override
+  String get parentFamilyJoinDedupBack => 'Back';
+
+  @override
+  String get parentFamilyJoinDedupInvalidTitle => 'Nothing to resolve';
+
+  @override
+  String get parentFamilyJoinDedupInvalidLead =>
+      'This link is outdated or profiles are already aligned.';
+
+  @override
+  String get parentGuardiansTitle => 'Guardians';
+
+  @override
+  String get parentGuardiansSectionTitle => 'Family';
+
+  @override
+  String get parentGuardiansEmpty => 'Just you for now.';
+
+  @override
+  String get parentGuardiansYou => 'you';
+
+  @override
+  String get parentGuardiansInviteGuardian => 'Invite guardian';
+
+  @override
+  String get parentGuardiansInviteCopied => 'Link copied';
+
+  @override
+  String get parentGuardiansInviteCreated => 'Invitation created';
+
+  @override
+  String get parentGuardiansPendingInvitesTitle => 'Pending invitations';
+
+  @override
+  String get parentGuardiansRevokeInvite => 'Revoke';
+
+  @override
+  String get parentGuardiansRemove => 'Remove';
+
+  @override
+  String get parentGuardiansLeaveFamily => 'Leave family';
+
+  @override
+  String get parentGuardiansConfirmRemoveTitle => 'Remove guardian?';
+
+  @override
+  String get parentGuardiansConfirmRemoveMessage =>
+      'They will lose access to this family\'s children and get a separate account.';
+
+  @override
+  String get parentGuardiansConfirmLeaveTitle => 'Leave family?';
+
+  @override
+  String get parentGuardiansConfirmLeaveMessage =>
+      'You will lose access to this family\'s children and get a separate account.';
+
+  @override
+  String get parentGuardiansRelationshipMother => 'Mother';
+
+  @override
+  String get parentGuardiansRelationshipFather => 'Father';
+
+  @override
+  String get parentGuardiansRelationshipGrandmother => 'Grandmother';
+
+  @override
+  String get parentGuardiansRelationshipGrandfather => 'Grandfather';
+
+  @override
+  String get inviteInvalid => 'Invitation not found or expired.';
+
+  @override
+  String get inviteInvalidTitle => 'Invalid invitation';
+
+  @override
+  String get inviteFamilyJoinRequestTitle => 'Family join request';
+
+  @override
+  String get inviteFamilyJoinRequestSubtitle =>
+      'Accept this guardian into your family — they will see shared children.';
+
+  @override
+  String get inviteFamilyJoinRequestRequesterLabel => 'Requested by';
+
+  @override
+  String get inviteFamilyJoinRequestAccept => 'Accept';
+
+  @override
+  String get inviteFamilyJoinRequestDecline => 'Decline';
+
+  @override
+  String get inviteFamilyJoinRequestLoginTitle => 'Sign in required';
+
+  @override
+  String get inviteFamilyJoinRequestLoginSubtitle =>
+      'Sign in as a guardian to accept the family join request.';
+
+  @override
+  String get inviteFamilyJoinRequestRegister => 'Guardian registration';
+
+  @override
+  String get inviteFamilyJoinRequestWrongAccountTitle => 'Wrong account type';
+
+  @override
+  String get inviteFamilyJoinRequestWrongAccountSubtitle =>
+      'Only a guardian can accept this request.';
+
+  @override
+  String get inviteFamilyJoinRequestOwnRequestTitle => 'This is your request';
+
+  @override
+  String get inviteFamilyJoinRequestOwnRequestSubtitle =>
+      'Share this link with another guardian in your family on LARNES.';
+
+  @override
+  String get inviteFamilyGuardianTitle => 'Family invitation';
+
+  @override
+  String get inviteFamilyGuardianSubtitle =>
+      'Accept the invitation to access the family\'s children.';
+
+  @override
+  String get inviteFamilyGuardianInviterLabel => 'Invited by';
+
+  @override
+  String get inviteFamilyGuardianAccept => 'Accept';
+
+  @override
+  String get inviteFamilyGuardianDecline => 'Decline';
+
+  @override
+  String get inviteFamilyGuardianLoginTitle => 'Sign in required';
+
+  @override
+  String get inviteFamilyGuardianLoginSubtitle =>
+      'Sign in or register as a guardian to accept the invitation.';
+
+  @override
+  String get inviteFamilyGuardianRegister => 'Guardian registration';
+
+  @override
+  String get inviteFamilyGuardianWrongAccountTitle => 'Wrong account type';
+
+  @override
+  String get inviteFamilyGuardianWrongAccountSubtitle =>
+      'Only a guardian can accept this invitation.';
+
+  @override
   String get parentAccountFieldFullName => 'Full name';
 
   @override
@@ -795,7 +1026,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentAccountDeleteChildMessage =>
-      'This profile will be permanently deleted.';
+      'The profile will disappear from your cabinet and cannot be restored.';
+
+  @override
+  String get parentAccountDeleteChildMessageActiveNetwork =>
+      'The profile will disappear from your cabinet; center enrollment will end; visit and payment history at the center will be kept.';
 
   @override
   String get parentAccountDeleteChildConfirm => 'Delete child';

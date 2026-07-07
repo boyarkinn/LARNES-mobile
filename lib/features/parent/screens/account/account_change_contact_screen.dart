@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
@@ -245,14 +246,14 @@ class _AccountChangeContactScreenState extends State<AccountChangeContactScreen>
                 ),
               ),
             if (!_otpStep) ...[
-              AuthTextField(
+              DeskTextField(
                 controller: _currentPasswordController,
                 label: l10n.parentAccountCurrentPassword,
                 obscureText: true,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
-              AuthTextField(
+              DeskTextField(
                 controller: _contactController,
                 label: _isPhone ? l10n.parentAccountNewPhone : l10n.parentAccountNewEmail,
                 keyboardType:

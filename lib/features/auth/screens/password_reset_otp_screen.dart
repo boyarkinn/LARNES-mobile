@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/password_reset_flow.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
@@ -154,60 +155,34 @@ class _PasswordResetOtpScreenState extends State<PasswordResetOtpScreen> {
         : l10n.passwordResetOtpHintSms(maskedContact);
 
     return AuthScaffold(
+      title: l10n.otpTitle,
       showBackButton: true,
       onBack: () => context.pop(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(
-            title: l10n.otpTitle,
-            subtitle: l10n.passwordResetStep2Subtitle,
-          ),
-          Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 16),
+          AuthBodyHint(text: subtitle),
           if (_error != null) AuthErrorBanner(message: _error!),
-          if (_successMessage != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                _successMessage!,
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
-              ),
-            ),
+          if (_successMessage != null) AuthSuccessBanner(message: _successMessage!),
           OtpInput(controller: _otpController),
           const SizedBox(height: 12),
           if (canResend)
-            TextButton(
+            AuthTextLink(
+              label: l10n.resendCode,
               onPressed: _resend,
-              child: Text(l10n.resendCode),
             )
           else
-            Text(
-              l10n.resendCooldown(_secondsLeft),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.passwordResetOtpNotReceivedHint,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          FilledButton(
+            AuthMutedText(text: l10n.resendCooldown(_secondsLeft)),
+          const SizedBox(height: 16),
+          AuthPrimaryButton(
+            label: l10n.continueButton,
+            isLoading: _isSubmitting,
             onPressed: _isSubmitting ? null : _continue,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.continueButton),
           ),
           const SizedBox(height: 8),
-          TextButton(
+          AuthTextLink(
+            label: l10n.passwordResetBackToLogin,
             onPressed: () => context.go('/login'),
-            child: Text(l10n.passwordResetBackToLogin),
           ),
         ],
       ),

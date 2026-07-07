@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -65,43 +66,31 @@ class _PasswordResetContactScreenState extends State<PasswordResetContactScreen>
     final l10n = context.l10n;
 
     return AuthScaffold(
+      title: l10n.passwordResetTitle,
       showBackButton: true,
       onBack: () => context.pop(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(
-            title: l10n.passwordResetTitle,
-            subtitle: l10n.passwordResetStep1Subtitle,
-          ),
-          Text(
-            l10n.passwordResetContactHint,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
           if (_error != null) AuthErrorBanner(message: _error!),
           AuthTextField(
             controller: _contactController,
             label: l10n.passwordResetContactLabel,
+            labelAsPlaceholder: true,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.username],
           ),
           const SizedBox(height: 20),
-          FilledButton(
+          AuthPrimaryButton(
+            label: l10n.getCodeButton,
+            isLoading: _isSubmitting,
             onPressed: _isSubmitting ? null : _continue,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.getCodeButton),
           ),
-          const SizedBox(height: 12),
-          TextButton(
+          const SizedBox(height: 8),
+          AuthTextLink(
+            label: l10n.passwordResetBackToLogin,
             onPressed: () => context.go('/login'),
-            child: Text(l10n.passwordResetBackToLogin),
           ),
         ],
       ),

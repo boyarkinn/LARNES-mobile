@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
@@ -165,34 +166,27 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     final l10n = context.l10n;
 
     return AuthScaffold(
+      title: l10n.profileTitle,
       showBackButton: true,
       onBack: () => context.pop(),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AuthHeader(
-              title: l10n.profileTitle,
-              subtitle: l10n.registerStep3Subtitle(
-                widget.flow.accountType.label(context),
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AuthHeader(
+            subtitle: l10n.registerStep3Subtitle(
+              widget.flow.accountType.label(context),
             ),
+          ),
             if (_error != null) AuthErrorBanner(message: _error!),
             ..._buildFields(l10n),
             const SizedBox(height: 20),
-            FilledButton(
+            AuthPrimaryButton(
+              label: l10n.createAccountButton,
+              isLoading: _isSubmitting,
               onPressed: _isSubmitting || _isLoadingConfig ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.createAccountButton),
             ),
           ],
         ),
-      ),
     );
   }
 

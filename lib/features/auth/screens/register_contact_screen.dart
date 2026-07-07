@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -80,31 +81,23 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
     final isPhone = _channel == RegisterContactChannel.sms;
 
     return AuthScaffold(
+      title: widget.accountType.label(context),
       showBackButton: true,
       onBack: () => context.pop(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(
-            title: widget.accountType.label(context),
-            subtitle: l10n.registerStep1Subtitle,
-          ),
+          AuthHeader(subtitle: l10n.registerStep1Subtitle),
           if (_error != null) AuthErrorBanner(message: _error!),
-          SegmentedButton<RegisterContactChannel>(
-            segments: [
-              ButtonSegment(
-                value: RegisterContactChannel.sms,
-                label: Text(l10n.phoneChannel),
-              ),
-              ButtonSegment(
-                value: RegisterContactChannel.email,
-                label: Text(l10n.emailChannel),
-              ),
+          AuthSegmentToggle<RegisterContactChannel>(
+            value: _channel,
+            options: [
+              AuthSegmentOption(value: RegisterContactChannel.sms, label: l10n.phoneChannel),
+              AuthSegmentOption(value: RegisterContactChannel.email, label: l10n.emailChannel),
             ],
-            selected: {_channel},
-            onSelectionChanged: (value) {
+            onChanged: (value) {
               setState(() {
-                _channel = value.first;
+                _channel = value;
                 _error = null;
               });
             },
@@ -117,15 +110,10 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
                 isPhone ? TextInputType.phone : TextInputType.emailAddress,
           ),
           const SizedBox(height: 20),
-          FilledButton(
+          AuthPrimaryButton(
+            label: l10n.getCodeButton,
+            isLoading: _isSubmitting,
             onPressed: _isSubmitting ? null : _continue,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.getCodeButton),
           ),
         ],
       ),

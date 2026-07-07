@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -84,19 +85,19 @@ class _AccountProfileScreenState extends State<AccountProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_error != null) AuthErrorBanner(message: _error!),
-            AuthTextField(
+            DeskTextField(
               controller: _lastNameController,
               label: l10n.lastNameLabel,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            DeskTextField(
               controller: _firstNameController,
               label: l10n.firstNameLabel,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            DeskTextField(
               controller: _patronymicController,
               label: l10n.patronymicLabel,
               textInputAction: TextInputAction.done,

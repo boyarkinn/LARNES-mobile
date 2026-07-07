@@ -5,6 +5,7 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
@@ -100,19 +101,19 @@ class _AddChildScreenState extends State<AddChildScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_error != null) AuthErrorBanner(message: _error!),
-            AuthTextField(
+            DeskTextField(
               controller: _lastNameController,
               label: l10n.parentChildFormLastName,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            DeskTextField(
               controller: _firstNameController,
               label: l10n.parentChildFormFirstName,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            DeskTextField(
               controller: _patronymicController,
               label: l10n.parentChildFormPatronymic,
               textInputAction: TextInputAction.next,

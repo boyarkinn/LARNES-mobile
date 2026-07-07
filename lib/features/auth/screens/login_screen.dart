@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -63,17 +64,16 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = context.l10n;
 
     return AuthScaffold(
+      title: l10n.loginTitle,
+      centerContent: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(
-            title: l10n.loginTitle,
-            subtitle: l10n.loginSubtitle,
-          ),
           if (_error != null) AuthErrorBanner(message: _error!),
           AuthTextField(
             controller: _loginController,
             label: l10n.loginFieldLabel,
+            labelAsPlaceholder: true,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username],
@@ -82,33 +82,28 @@ class _LoginScreenState extends State<LoginScreen> {
           AuthTextField(
             controller: _passwordController,
             label: l10n.passwordLabel,
+            labelAsPlaceholder: true,
             obscureText: true,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () => context.push('/password-reset'),
-              child: Text(l10n.forgotPassword),
-            ),
+          const SizedBox(height: 12),
+          AuthTextLink(
+            label: l10n.forgotPassword,
+            align: Alignment.centerRight,
+            onPressed: () => context.push('/password-reset'),
           ),
-          const SizedBox(height: 8),
-          FilledButton(
+          const SizedBox(height: 20),
+          AuthPrimaryButton(
+            label: l10n.signInButton,
+            isLoading: _isSubmitting,
             onPressed: _isSubmitting ? null : _submit,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(l10n.signInButton),
           ),
-          const SizedBox(height: 16),
-          TextButton(
+          const SizedBox(height: 28),
+          AuthTextLink(
+            label: l10n.noAccountRegister,
+            align: Alignment.center,
             onPressed: () => context.push('/register'),
-            child: Text(l10n.noAccountRegister),
           ),
         ],
       ),

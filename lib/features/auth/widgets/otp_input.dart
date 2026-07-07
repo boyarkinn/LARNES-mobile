@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 
 class OtpInput extends StatefulWidget {
   const OtpInput({
@@ -20,13 +21,8 @@ class _OtpInputState extends State<OtpInput> {
   late final List<FocusNode> _nodes;
   late final List<TextEditingController> _cells;
 
-  static const _cellHeight = 60.0;
-  static const _digitStyle = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    height: 1,
-    color: LarnesColors.textPrimary,
-  );
+  static const _cellHeight = 56.0;
+  static const _cellRadius = 10.0;
 
   @override
   void initState() {
@@ -90,14 +86,45 @@ class _OtpInputState extends State<OtpInput> {
     _emit();
   }
 
+  void _backspaceFrom(int index) {
+    if (index <= 0) {
+      return;
+    }
+    _cells[index - 1].text = '';
+    _nodes[index - 1].requestFocus();
+    _emit();
+  }
+
+  KeyEventResult _onCellKeyEvent(int index, KeyEvent event) {
+    if (event is! KeyDownEvent || event.logicalKey != LogicalKeyboardKey.backspace) {
+      return KeyEventResult.ignored;
+    }
+
+    if (_cells[index].text.isEmpty && index > 0) {
+      _backspaceFrom(index);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
   BoxDecoration _cellBoxDecoration(bool isFocused) {
     return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
+      color: ParentColors.surface,
+      borderRadius: BorderRadius.circular(_cellRadius),
       border: Border.all(
-        color: isFocused ? LarnesColors.indigo : LarnesColors.border,
+        color: isFocused ? ParentColors.shell : ParentColors.line,
         width: isFocused ? 1.5 : 1,
       ),
+      boxShadow: isFocused
+          ? const [
+              BoxShadow(
+                color: ParentColors.focusRing,
+                blurRadius: 0,
+                spreadRadius: 3,
+              ),
+            ]
+          : null,
     );
   }
 
@@ -113,6 +140,13 @@ class _OtpInputState extends State<OtpInput> {
     contentPadding: EdgeInsets.zero,
   );
 
+  TextStyle get _digitStyle => GoogleFonts.onest(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        height: 1,
+        color: ParentColors.ink,
+      );
+
   Widget _buildCell(int index) {
     final isFocused = _nodes[index].hasFocus;
 
@@ -122,7 +156,9 @@ class _OtpInputState extends State<OtpInput> {
         child: DecoratedBox(
           decoration: _cellBoxDecoration(isFocused),
           child: Center(
-            child: TextField(
+            child: Focus(
+              onKeyEvent: (node, event) => _onCellKeyEvent(index, event),
+              child: TextField(
               controller: _cells[index],
               focusNode: _nodes[index],
               textAlign: TextAlign.center,
@@ -131,8 +167,12 @@ class _OtpInputState extends State<OtpInput> {
               keyboardType: TextInputType.number,
               maxLength: 1,
               decoration: _hiddenFieldDecoration,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              onChanged: (value) => _onChanged(index, value),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                _OtpCellFormatter(onBackspaceWhenEmpty: () => _backspaceFrom(index)),
+              ],
+                onChanged: (value) => _onChanged(index, value),
+              ),
             ),
           ),
         ),
@@ -149,6 +189,32 @@ class _OtpInputState extends State<OtpInput> {
           _buildCell(index),
         ],
       ],
+    );
+  }
+}
+
+class _OtpCellFormatter extends TextInputFormatter {
+  const _OtpCellFormatter({required this.onBackspaceWhenEmpty});
+
+  final VoidCallback onBackspaceWhenEmpty;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (oldValue.text.isEmpty && newValue.text.isEmpty) {
+      onBackspaceWhenEmpty();
+    }
+
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(text: '');
+    }
+
+    return TextEditingValue(
+      text: digits[digits.length - 1],
+      selection: const TextSelection.collapsed(offset: 1),
     );
   }
 }

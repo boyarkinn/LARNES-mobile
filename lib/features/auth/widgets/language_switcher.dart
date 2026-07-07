@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -35,22 +35,22 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
       box.size.bottomRight(Offset.zero),
       ancestor: overlay,
     );
-    const menuWidth = 196.0;
+    const menuWidth = 188.0;
 
     final selected = await showMenu<String>(
       context: context,
-      elevation: 10,
-      shadowColor: Colors.black.withValues(alpha: 0.12),
-      color: Colors.white,
+      elevation: 0,
+      color: ParentColors.surface,
       surfaceTintColor: Colors.transparent,
+      shadowColor: ParentColors.shadow,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: LarnesColors.border),
+        borderRadius: BorderRadius.circular(ParentRadii.card),
+        side: const BorderSide(color: ParentColors.line),
       ),
       position: RelativeRect.fromRect(
         Rect.fromLTWH(
           bottomRight.dx - menuWidth,
-          bottomRight.dy + 8,
+          bottomRight.dy + 6,
           menuWidth,
           0,
         ),
@@ -59,13 +59,11 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
       items: [
         _menuItem(
           value: 'ru',
-          code: 'RU',
           label: l10n.languageRu,
           selected: current == 'ru',
         ),
         _menuItem(
           value: 'en',
-          code: 'EN',
           label: l10n.languageEn,
           selected: current == 'en',
         ),
@@ -79,16 +77,14 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
 
   PopupMenuItem<String> _menuItem({
     required String value,
-    required String code,
     required String label,
     required bool selected,
   }) {
     return PopupMenuItem<String>(
       value: value,
-      height: 52,
+      height: 46,
       padding: EdgeInsets.zero,
-      child: _LanguageMenuTile(
-        code: code,
+      child: _DeskLanguageMenuTile(
         label: label,
         selected: selected,
       ),
@@ -97,78 +93,12 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.variant == LanguageSwitcherVariant.parent) {
-      return _ParentLanguageSwitcherButton(onTap: _openMenu, anchorKey: _anchorKey);
-    }
-
-    final current = LocaleScope.of(context).locale.languageCode.toUpperCase();
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Material(
-        key: _anchorKey,
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _openMenu,
-          borderRadius: BorderRadius.circular(12),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: LarnesColors.border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: LarnesColors.coral.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.language_rounded,
-                    size: 16,
-                    color: LarnesColors.coral,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  current,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: LarnesColors.textPrimary,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: LarnesColors.textSecondary.withValues(alpha: 0.85),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    return _DeskLanguageSwitcherButton(onTap: _openMenu, anchorKey: _anchorKey);
   }
 }
 
-class _ParentLanguageSwitcherButton extends StatefulWidget {
-  const _ParentLanguageSwitcherButton({
+class _DeskLanguageSwitcherButton extends StatefulWidget {
+  const _DeskLanguageSwitcherButton({
     required this.onTap,
     required this.anchorKey,
   });
@@ -177,11 +107,10 @@ class _ParentLanguageSwitcherButton extends StatefulWidget {
   final GlobalKey anchorKey;
 
   @override
-  State<_ParentLanguageSwitcherButton> createState() =>
-      _ParentLanguageSwitcherButtonState();
+  State<_DeskLanguageSwitcherButton> createState() => _DeskLanguageSwitcherButtonState();
 }
 
-class _ParentLanguageSwitcherButtonState extends State<_ParentLanguageSwitcherButton> {
+class _DeskLanguageSwitcherButtonState extends State<_DeskLanguageSwitcherButton> {
   bool _pressed = false;
 
   @override
@@ -200,28 +129,38 @@ class _ParentLanguageSwitcherButtonState extends State<_ParentLanguageSwitcherBu
         curve: ParentMotion.curve,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: _pressed ? ParentColors.shellDeep : ParentColors.shell,
-            borderRadius: BorderRadius.circular(8),
+            color: ParentColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: _pressed ? ParentColors.shell : ParentColors.line,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: ParentColors.shadow,
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   current,
-                  style: const TextStyle(
-                    color: ParentColors.surface,
+                  style: GoogleFonts.onest(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
+                    color: ParentColors.shellDeep,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 const SizedBox(width: 2),
-                const Icon(
+                Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 16,
-                  color: ParentColors.surface,
+                  color: ParentColors.shellDeep.withValues(alpha: 0.85),
                 ),
               ],
             ),
@@ -232,73 +171,52 @@ class _ParentLanguageSwitcherButtonState extends State<_ParentLanguageSwitcherBu
   }
 }
 
-class _LanguageMenuTile extends StatelessWidget {
-  const _LanguageMenuTile({
-    required this.code,
+class _DeskLanguageMenuTile extends StatelessWidget {
+  const _DeskLanguageMenuTile({
     required this.label,
     required this.selected,
   });
 
-  final String code;
   final String label;
   final bool selected;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: selected
-              ? LarnesColors.coral.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? LarnesColors.coral.withValues(alpha: 0.16)
-                      : LarnesColors.border.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  code,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: selected ? LarnesColors.coral : LarnesColors.textSecondary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    color: selected
-                        ? LarnesColors.textPrimary
-                        : LarnesColors.textSecondary,
-                  ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: selected ? ParentColors.shellSoft : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 18,
+              child: selected
+                  ? Text(
+                      '✓',
+                      style: GoogleFonts.onest(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: ParentColors.shell,
+                        height: 1,
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.onest(
+                  fontSize: 14,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: selected ? ParentColors.shellDeep : ParentColors.ink,
                 ),
               ),
-              if (selected)
-                const Icon(
-                  Icons.check_circle_rounded,
-                  size: 20,
-                  color: LarnesColors.teal,
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

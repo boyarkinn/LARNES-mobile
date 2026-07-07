@@ -106,6 +106,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountTypeNetworkOwner => 'Network owner';
 
   @override
+  String get registerTypeParentHint => 'For your child\'s home learning';
+
+  @override
+  String get registerTypeTeacherHint => 'For tutors and instructors';
+
+  @override
+  String get registerTypeNetworkOwnerHint => 'For schools and learning centers';
+
+  @override
   String get alreadyHaveAccount => 'Already have an account? Sign in';
 
   @override

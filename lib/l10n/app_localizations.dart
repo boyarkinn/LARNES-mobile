@@ -278,6 +278,24 @@ abstract class AppLocalizations {
   /// **'Network owner'**
   String get accountTypeNetworkOwner;
 
+  /// No description provided for @registerTypeParentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For your child\'s home learning'**
+  String get registerTypeParentHint;
+
+  /// No description provided for @registerTypeTeacherHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For tutors and instructors'**
+  String get registerTypeTeacherHint;
+
+  /// No description provided for @registerTypeNetworkOwnerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For schools and learning centers'**
+  String get registerTypeNetworkOwnerHint;
+
   /// No description provided for @alreadyHaveAccount.
   ///
   /// In en, this message translates to:

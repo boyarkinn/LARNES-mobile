@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class DateOfBirthTextField extends StatelessWidget {
@@ -19,7 +19,7 @@ class DateOfBirthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AuthTextField(
+    return DeskTextField(
       controller: controller,
       label: label,
       keyboardType: TextInputType.number,

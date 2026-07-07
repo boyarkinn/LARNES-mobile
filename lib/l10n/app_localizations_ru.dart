@@ -106,6 +106,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get accountTypeNetworkOwner => 'Владелец сети';
 
   @override
+  String get registerTypeParentHint => 'Для домашних занятий с ребёнком';
+
+  @override
+  String get registerTypeTeacherHint => 'Для репетиторов и преподавателей';
+
+  @override
+  String get registerTypeNetworkOwnerHint =>
+      'Для школ и образовательных центров';
+
+  @override
   String get alreadyHaveAccount => 'Уже есть аккаунт? Войти';
 
   @override

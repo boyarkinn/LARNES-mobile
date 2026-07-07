@@ -1,56 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 
-class AuthTextField extends StatelessWidget {
-  const AuthTextField({
-    super.key,
-    required this.controller,
-    required this.label,
-    this.obscureText = false,
-    this.keyboardType,
-    this.textInputAction,
-    this.autofillHints,
-    this.readOnly = false,
-    this.onTap,
-    this.hintText,
-    this.inputFormatters,
-    this.onChanged,
-  });
+typedef AuthTextField = DeskTextField;
 
-  final TextEditingController controller;
-  final String label;
-  final bool obscureText;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final Iterable<String>? autofillHints;
-  final bool readOnly;
-  final VoidCallback? onTap;
-  final String? hintText;
-  final List<TextInputFormatter>? inputFormatters;
-  final ValueChanged<String>? onChanged;
+class AuthErrorBanner extends StatelessWidget {
+  const AuthErrorBanner({super.key, required this.message});
+
+  final String message;
+
+  static const _red = Color(0xFFDC2626);
+  static const _redBg = Color(0xFFFEF2F2);
+  static const _redBorder = Color.fromRGBO(220, 38, 38, 0.25);
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      autofillHints: autofillHints,
-      readOnly: readOnly,
-      onTap: onTap,
-      inputFormatters: inputFormatters,
-      onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: _redBg,
+        borderRadius: BorderRadius.circular(ParentRadii.card),
+        border: Border.all(color: _redBorder),
+      ),
+      child: Text(
+        message,
+        style: GoogleFonts.onest(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: _red,
+          height: 1.35,
+        ),
       ),
     );
   }
 }
 
-class AuthErrorBanner extends StatelessWidget {
-  const AuthErrorBanner({super.key, required this.message});
+class AuthSuccessBanner extends StatelessWidget {
+  const AuthSuccessBanner({super.key, required this.message});
 
   final String message;
 
@@ -58,15 +47,21 @@ class AuthErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+        color: ParentColors.shellSoft,
+        borderRadius: BorderRadius.circular(ParentRadii.card),
+        border: Border.all(color: ParentColors.shell.withValues(alpha: 0.25)),
       ),
       child: Text(
         message,
-        style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer),
+        style: GoogleFonts.onest(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: ParentColors.shellDeep,
+          height: 1.35,
+        ),
       ),
     );
   }

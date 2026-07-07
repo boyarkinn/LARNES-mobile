@@ -6,7 +6,9 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
@@ -78,7 +80,7 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
     _firstNameController.text = child.firstName;
     _lastNameController.text = child.lastName ?? '';
     _patronymicController.text = child.patronymic ?? '';
-    _dateOfBirthController.text = child.dateOfBirth ?? '';
+    _dateOfBirthController.text = isoDateToDisplay(child.dateOfBirth);
     _gender = child.gender;
     _cardColor = child.cardColor;
     _avatarSlug = child.avatarSlug;
@@ -104,7 +106,7 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
     final gender = _gender;
     return _lastNameController.text.trim().isNotEmpty &&
         _firstNameController.text.trim().isNotEmpty &&
-        _dateOfBirthController.text.trim().isNotEmpty &&
+        isCompleteDisplayDateOfBirth(_dateOfBirthController.text.trim()) &&
         (gender == 'male' || gender == 'female');
   }
 
@@ -118,13 +120,17 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
 
     try {
       final locale = LocaleScope.of(context).localeCode;
+      final dateOfBirth = displayDateToIso(_dateOfBirthController.text.trim());
+      if (dateOfBirth == null) {
+        return;
+      }
       final updated = await AuthScope.of(context).parentApi.updateChild(
         childId: widget.childId,
         payload: CreateChildPayload(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           patronymic: _patronymicController.text.trim(),
-          dateOfBirth: _dateOfBirthController.text.trim(),
+          dateOfBirth: dateOfBirth,
           gender: _gender!,
           cardColor: _cardColor,
           avatarSlug: _avatarSlug,
@@ -168,32 +174,6 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
       if (mounted) {
         setState(() => _isSaving = false);
       }
-    }
-  }
-
-  Future<void> _pickDateOfBirth() async {
-    final now = DateTime.now();
-    final current = _dateOfBirthController.text.trim();
-    DateTime initialDate = DateTime(now.year - 7);
-    if (current.isNotEmpty) {
-      final parsed = DateTime.tryParse(current.contains('T') ? current : '${current}T00:00:00');
-      if (parsed != null) {
-        initialDate = parsed;
-      }
-    }
-
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(1940),
-      lastDate: now,
-      locale: Localizations.localeOf(context),
-    );
-    if (picked != null) {
-      final month = picked.month.toString().padLeft(2, '0');
-      final day = picked.day.toString().padLeft(2, '0');
-      _dateOfBirthController.text = '${picked.year}-$month-$day';
-      _notifyFieldChanged();
     }
   }
 
@@ -285,11 +265,10 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 12),
-                  AuthTextField(
+                  DateOfBirthTextField(
                     controller: _dateOfBirthController,
                     label: l10n.parentChildFormDateOfBirth,
-                    readOnly: true,
-                    onTap: _pickDateOfBirth,
+                    textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
                   Text(l10n.parentChildFormGender, style: Theme.of(context).textTheme.bodyMedium),
@@ -329,10 +308,7 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
 }
 
 int? ageYearsFromIsoDate(String? iso) {
-  if (iso == null || iso.isEmpty) {
-    return null;
-  }
-  final dob = DateTime.tryParse(iso.contains('T') ? iso : '${iso}T00:00:00');
+  final dob = parseDateOfBirthInput(iso);
   if (dob == null) {
     return null;
   }

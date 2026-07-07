@@ -100,6 +100,13 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
     }
   }
 
+  Future<void> _openChildProfile(String childId) async {
+    await context.push('/parent/$childId/profile?from=account');
+    if (mounted) {
+      await _load(silent: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -154,7 +161,7 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
                     meta: _children[i].ageYears != null
                         ? formatChildAgeYears(_children[i].ageYears!, localeCode)
                         : null,
-                    onTap: () => context.push('/parent/${_children[i].id}/profile?from=account'),
+                    onTap: () => _openChildProfile(_children[i].id),
                   ),
                 ],
             ],

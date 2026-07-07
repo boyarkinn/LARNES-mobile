@@ -48,4 +48,53 @@ void main() {
 
     expect(find.textContaining('QR-код отозван'), findsOneWidget);
   });
+
+  testWidgets('preview for test shows flip camera button', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('ru'),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 320,
+              child: KioskQrScanner(
+                previewForTest: true,
+                onScan: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byTooltip('Сменить камеру'), findsOneWidget);
+  });
+
+  testWidgets('flip camera tap is safe in preview for test', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('ru'),
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 320,
+              child: KioskQrScanner(
+                previewForTest: true,
+                onScan: (_) async {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.cameraswitch));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Сменить камеру'), findsOneWidget);
+  });
 }

@@ -142,6 +142,21 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     }
   }
 
+  /// После редактирования sub-page: go_router не всегда вызывает activate на hub.
+  Future<void> _openAccountRoute(String path) async {
+    await context.push(path);
+    if (mounted) {
+      await _load(silent: true);
+    }
+  }
+
+  Future<void> _openChildProfile(String childId) async {
+    await context.push('/parent/$childId/profile?from=account');
+    if (mounted) {
+      await _load(silent: true);
+    }
+  }
+
   String _childTitle(ParentChild child) {
     final lines = childDisplayNameLines(child);
     return '${lines.lastName} ${lines.givenName}'.trim();
@@ -198,14 +213,60 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 label: l10n.parentAccountFieldFullName,
                 value: user.fullName.isNotEmpty ? user.fullName : l10n.parentAccountNotSet,
                 valueMuted: user.fullName.isEmpty,
-                onTap: () => context.push('/parent/account/profile'),
+                onTap: () => _openAccountRoute('/parent/account/profile'),
               ),
               const AccountDivider(),
               AccountFieldGroup(
                 label: l10n.parentAccountFieldDateOfBirth,
                 value: formattedDob.isNotEmpty ? formattedDob : l10n.parentAccountDateOfBirthNotSet,
                 valueMuted: formattedDob.isEmpty,
-                onTap: () => context.push('/parent/account/date-of-birth'),
+                onTap: () => _openAccountRoute('/parent/account/date-of-birth'),
+              ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldCity,
+                value: user.city ?? l10n.parentAccountCityNotSet,
+                valueMuted: user.city == null || user.city!.isEmpty,
+                onTap: () => _openAccountRoute('/parent/account/city'),
+              ),
+            ],
+          ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.parentAccountSectionContacts,
+          child: Column(
+            children: [
+              AccountFieldGroup(
+                label: l10n.phoneLabel,
+                value: user.phone ?? l10n.parentAccountNotSet,
+                valueMuted: user.phone == null,
+                badgeLabel: user.phone != null
+                    ? (user.phoneVerified
+                        ? l10n.parentAccountContactVerified
+                        : l10n.parentAccountContactNotVerified)
+                    : null,
+                badgeVerified: user.phoneVerified,
+                onTap: () => _openAccountRoute('/parent/account/phone'),
+              ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.emailLabel,
+                value: user.email ?? l10n.parentAccountNotSet,
+                valueMuted: user.email == null,
+                badgeLabel: user.email != null
+                    ? (user.emailVerified
+                        ? l10n.parentAccountContactVerified
+                        : l10n.parentAccountContactNotVerified)
+                    : null,
+                badgeVerified: user.emailVerified,
+                onTap: () => _openAccountRoute('/parent/account/email'),
+              ),
+              const AccountDivider(),
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldLogin,
+                value: user.login ?? l10n.parentAccountNotSet,
+                valueMuted: user.login == null,
+                onTap: () => _openAccountRoute('/parent/account/login'),
               ),
             ],
           ),
@@ -224,61 +285,13 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                     meta: _children[i].ageYears != null
                         ? formatChildAgeYears(_children[i].ageYears!, localeCode)
                         : null,
-                    onTap: () => context.push('/parent/${_children[i].id}/profile?from=account'),
+                    onTap: () => _openChildProfile(_children[i].id),
                   ),
                 ],
               if (_children.isNotEmpty) const AccountDivider(),
               AccountLinkRow(
                 label: l10n.parentAddChild,
                 onTap: _openAddChild,
-              ),
-            ],
-          ),
-        ),
-        AccountDeskCard(
-          bandTitle: l10n.parentAccountSectionCity,
-          child: AccountFieldGroup(
-            label: l10n.parentAccountFieldCity,
-            value: user.city ?? l10n.parentAccountCityNotSet,
-            valueMuted: user.city == null || user.city!.isEmpty,
-            onTap: () => context.push('/parent/account/city'),
-          ),
-        ),
-        AccountDeskCard(
-          bandTitle: l10n.parentAccountSectionContacts,
-          child: Column(
-            children: [
-              AccountFieldGroup(
-                label: l10n.phoneLabel,
-                value: user.phone ?? l10n.parentAccountNotSet,
-                valueMuted: user.phone == null,
-                badgeLabel: user.phone != null
-                    ? (user.phoneVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
-                    : null,
-                badgeVerified: user.phoneVerified,
-                onTap: () => context.push('/parent/account/phone'),
-              ),
-              const AccountDivider(),
-              AccountFieldGroup(
-                label: l10n.emailLabel,
-                value: user.email ?? l10n.parentAccountNotSet,
-                valueMuted: user.email == null,
-                badgeLabel: user.email != null
-                    ? (user.emailVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
-                    : null,
-                badgeVerified: user.emailVerified,
-                onTap: () => context.push('/parent/account/email'),
-              ),
-              const AccountDivider(),
-              AccountFieldGroup(
-                label: l10n.parentAccountFieldLogin,
-                value: user.login ?? l10n.parentAccountNotSet,
-                valueMuted: user.login == null,
-                onTap: () => context.push('/parent/account/login'),
               ),
             ],
           ),
@@ -294,7 +307,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
               AccountFieldGroup(
                 label: l10n.passwordLabel,
                 value: passwordMask,
-                onTap: () => context.push('/parent/account/password'),
+                onTap: () => _openAccountRoute('/parent/account/password'),
               ),
               const AccountDivider(),
               AccountDestructiveButton(

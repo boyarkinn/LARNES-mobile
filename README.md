@@ -1,4 +1,4 @@
-﻿# LARNES Mobile
+# LARNES Mobile
 
 Flutter-приложение LARNES.
 
@@ -18,6 +18,16 @@ flutter run
 По умолчанию **debug** ходит в prod API: `https://larnes.online` (та же БД, что web на VPS). Отдельный флаг не нужен.
 
 Release-сборки — тоже `https://larnes.online`.
+
+```powershell
+flutter clean
+flutter pub get
+flutter build apk --release
+```
+
+APK: `build/app/outputs/flutter-apk/app-release.apk`
+
+Перед установкой на планшет: удалить старую версию app (Settings → Apps) или `adb uninstall com.larnes.larnes_mobile`.
 
 ## API: когда какой backend
 

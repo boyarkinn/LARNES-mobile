@@ -169,7 +169,7 @@ class AccountDivider extends StatelessWidget {
   }
 }
 
-/// Поле аккаунта — label + value (+ badge) + chevron, одна строка tap → edit.
+/// Поле аккаунта — 2 строки: label (+ badge) сверху, value слева снизу.
 class AccountFieldGroup extends StatelessWidget {
   const AccountFieldGroup({
     super.key,
@@ -196,39 +196,46 @@ class AccountFieldGroup extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: GoogleFonts.onest(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: ParentColors.ink,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (badgeLabel != null) ...[
-                  AccountContactBadge(
-                    label: badgeLabel!,
-                    verified: badgeVerified ?? false,
-                  ),
-                  const SizedBox(height: 4),
-                ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: GoogleFonts.onest(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: ParentColors.ink,
+                        ),
+                      ),
+                    ),
+                    if (badgeLabel != null) ...[
+                      const SizedBox(width: 8),
+                      AccountContactBadge(
+                        label: badgeLabel!,
+                        verified: badgeVerified ?? false,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
                 Text(
                   value,
-                  textAlign: TextAlign.right,
                   style: GoogleFonts.onest(
                     fontSize: 14,
                     color: valueMuted ? ParentColors.inkMuted : ParentColors.ink,
                   ),
                 ),
-                const SizedBox(height: 2),
-                const _Chevron(),
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          const Padding(
+            padding: EdgeInsets.only(top: 1),
+            child: _Chevron(),
           ),
         ],
       ),

@@ -53,6 +53,27 @@ class ParentChildCardMetrics {
   static const pickerMaxWidth = 512.0; // 32rem
   static const addCardIconSize = 46.0; // 2.875rem
   static const addCardGap = 11.0; // 0.6875rem
+
+  /// Fredoka 19 / height 1.1 in [ChildProfileCard].
+  static const nameLineHeight = 19.0 * 1.1;
+
+  /// Age pill: padding 5+5, 12pt label, box-shadow offset 2 (+ font rounding).
+  static const agePillHeight = 29.0;
+
+  /// Subpixel headroom (Google Fonts metrics vs formula).
+  static const pickerListLayoutSlack = 4.0;
+
+  /// Picker list: child + add + study hub cards (band + 2 name lines + age).
+  static double get pickerListCardHeight {
+    final metaHeight = metaTopPadding + nameLineHeight * 2 + nameLineGap;
+    final rowHeight = metaHeight > avatarRingSize ? metaHeight : avatarRingSize;
+    return bandHeight +
+        innerBottomPadding +
+        rowHeight +
+        footerTopPadding +
+        agePillHeight +
+        pickerListLayoutSlack;
+  }
 }
 
 /// Размеры hub-карточки (web `.parent-study-hub-card`, mobile column).

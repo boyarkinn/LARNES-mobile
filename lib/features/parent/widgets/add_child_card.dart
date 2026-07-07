@@ -32,7 +32,7 @@ class AddChildCard extends StatelessWidget {
         ),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: ParentChildCardMetrics.minHeight),
+          height: ParentChildCardMetrics.pickerListCardHeight,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: ParentColors.surface.withValues(alpha: 0.65),
@@ -40,7 +40,7 @@ class AddChildCard extends StatelessWidget {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: MainAxisSize.max,
             children: [
               _AddCardIcon(),
               const SizedBox(height: ParentChildCardMetrics.addCardGap),

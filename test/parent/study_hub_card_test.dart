@@ -3,6 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/parent/models/parent_child.dart';
+import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/study_hub_card_icon.dart';
@@ -99,6 +103,41 @@ void main() {
         ).first,
       );
       expect(band.height, ParentStudyHubCardMetrics.bandHeight);
+    });
+
+    testWidgets('matches child picker list card height', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          Column(
+            children: [
+              ChildProfileCard(
+                child: ParentChild(
+                  id: 'c1',
+                  firstName: 'Анна',
+                  lastName: 'Иванова',
+                  patronymic: 'Петровна',
+                  cardColor: ChildCardColor.violet,
+                  avatarSlug: ChildAvatarSlug.owl,
+                  ageYears: 7,
+                ),
+                onTap: () {},
+              ),
+              StudyHubCard(
+                title: 'Домашние задания',
+                tokens: homeworkHubCardTokens(),
+                icon: HubCardIconKind.homework,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final childHeight = tester.getSize(find.byType(ChildProfileCard)).height;
+      final hubHeight = tester.getSize(find.byType(StudyHubCard)).height;
+      expect(hubHeight, ParentChildCardMetrics.pickerListCardHeight);
+      expect(hubHeight, childHeight);
     });
   });
 }

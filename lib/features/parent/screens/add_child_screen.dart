@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
@@ -38,27 +40,17 @@ class _AddChildScreenState extends State<AddChildScreen> {
     super.dispose();
   }
 
-  Future<void> _pickDateOfBirth() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(now.year - 7),
-      firstDate: DateTime(1940),
-      lastDate: now,
-      locale: Localizations.localeOf(context),
-    );
-    if (picked != null) {
-      final month = picked.month.toString().padLeft(2, '0');
-      final day = picked.day.toString().padLeft(2, '0');
-      _dateOfBirthController.text = '${picked.year}-$month-$day';
-    }
-  }
-
   Future<void> _submit() async {
     final l10n = context.l10n;
     final gender = _gender;
     if (gender == null) {
       setState(() => _error = l10n.parentChildFormGenderRequired);
+      return;
+    }
+
+    final dateOfBirth = displayDateToIso(_dateOfBirthController.text.trim());
+    if (dateOfBirth == null) {
+      setState(() => _error = l10n.invalidDateOfBirth);
       return;
     }
 
@@ -74,7 +66,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           patronymic: _patronymicController.text.trim(),
-          dateOfBirth: _dateOfBirthController.text.trim(),
+          dateOfBirth: dateOfBirth,
           gender: gender,
           cardColor: _cardColor,
           avatarSlug: _avatarSlug,
@@ -126,11 +118,10 @@ class _AddChildScreenState extends State<AddChildScreen> {
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            DateOfBirthTextField(
               controller: _dateOfBirthController,
               label: l10n.parentChildFormDateOfBirth,
-              readOnly: true,
-              onTap: _pickDateOfBirth,
+              textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 16),
             Text(

@@ -47,6 +47,33 @@ void main() {
       expect(tapped, isTrue);
       expect(find.text('›'), findsOneWidget);
     });
+
+    testWidgets('renders label on first line and value left-aligned below', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AccountDeskCard(
+              child: AccountFieldGroup(
+                label: 'Email',
+                value: 'alekseyretouch@gmail.com',
+                badgeLabel: 'Verified',
+                badgeVerified: true,
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Email'), findsOneWidget);
+      expect(find.text('alekseyretouch@gmail.com'), findsOneWidget);
+      expect(find.text('Verified'), findsOneWidget);
+
+      final valueFinder = find.text('alekseyretouch@gmail.com');
+      final labelFinder = find.text('Email');
+      expect(tester.getTopLeft(valueFinder).dy, greaterThan(tester.getTopLeft(labelFinder).dy));
+    });
   });
 
   group('AccountContactBadge', () {

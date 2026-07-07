@@ -40,64 +40,71 @@ class ChildProfileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(ParentRadii.card),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: ParentChildCardMetrics.minHeight),
+          height: ParentChildCardMetrics.pickerListCardHeight,
           decoration: parentCardDecoration(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _ColorBand(color: tokens.tag),
-              Transform.translate(
-                offset: const Offset(0, -ParentChildCardMetrics.innerOverlap),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    ParentChildCardMetrics.innerHorizontalPadding,
-                    0,
-                    ParentChildCardMetrics.innerHorizontalPadding,
-                    ParentChildCardMetrics.innerBottomPadding,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _AvatarRing(
-                            tokens: tokens,
-                            avatarSlug: child.avatarSlug,
-                          ),
-                          const SizedBox(width: ParentChildCardMetrics.rowGap),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: ParentChildCardMetrics.metaTopPadding,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (names.lastName.isNotEmpty)
-                                    Text(names.lastName, style: nameStyle),
-                                  if (names.givenName.isNotEmpty) ...[
+              Expanded(
+                child: Transform.translate(
+                  offset: const Offset(0, -ParentChildCardMetrics.innerOverlap),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      ParentChildCardMetrics.innerHorizontalPadding,
+                      0,
+                      ParentChildCardMetrics.innerHorizontalPadding,
+                      ParentChildCardMetrics.innerBottomPadding,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _AvatarRing(
+                              tokens: tokens,
+                              avatarSlug: child.avatarSlug,
+                            ),
+                            const SizedBox(width: ParentChildCardMetrics.rowGap),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  top: ParentChildCardMetrics.metaTopPadding,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     if (names.lastName.isNotEmpty)
-                                      const SizedBox(height: ParentChildCardMetrics.nameLineGap),
-                                    Text(names.givenName, style: nameStyle),
+                                      Text(names.lastName, style: nameStyle),
+                                    if (names.givenName.isNotEmpty) ...[
+                                      if (names.lastName.isNotEmpty)
+                                        const SizedBox(height: ParentChildCardMetrics.nameLineGap),
+                                      Text(names.givenName, style: nameStyle),
+                                    ],
                                   ],
-                                ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (age != null) ...[
+                          const Spacer(),
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: ParentChildCardMetrics.footerTopPadding,
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: _AgePill(
+                                label: formatChildAgeYears(age, locale).toUpperCase(),
+                                tokens: tokens,
                               ),
                             ),
                           ),
                         ],
-                      ),
-                      if (age != null) ...[
-                        const SizedBox(height: ParentChildCardMetrics.footerTopPadding),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: _AgePill(
-                            label: formatChildAgeYears(age, locale).toUpperCase(),
-                            tokens: tokens,
-                          ),
-                        ),
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),

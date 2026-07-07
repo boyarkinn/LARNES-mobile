@@ -7,7 +7,9 @@ import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
+import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterProfileScreen extends StatefulWidget {
@@ -76,22 +78,6 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     }
   }
 
-  Future<void> _pickDateOfBirth() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime(now.year - 25),
-      firstDate: DateTime(1940),
-      lastDate: now,
-      locale: Localizations.localeOf(context),
-    );
-    if (picked != null) {
-      final month = picked.month.toString().padLeft(2, '0');
-      final day = picked.day.toString().padLeft(2, '0');
-      _dateOfBirthController.text = '${picked.year}-$month-$day';
-    }
-  }
-
   Map<String, String> _buildProfilePayload() {
     final payload = <String, String>{
       'firstName': _firstNameController.text.trim(),
@@ -105,7 +91,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       case RegisterAccountType.teacher:
         payload['lastName'] = _lastNameController.text.trim();
         payload['patronymic'] = _patronymicController.text.trim();
-        payload['dateOfBirth'] = _dateOfBirthController.text.trim();
+        payload['dateOfBirth'] = displayDateToIso(_dateOfBirthController.text.trim())!;
         payload['city'] = _selectedCity ?? _cities.first;
         break;
       case RegisterAccountType.networkOwner:
@@ -132,6 +118,14 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     if (_passwordController.text != _passwordRepeatController.text) {
       setState(() => _error = l10n.passwordsDoNotMatch);
       return;
+    }
+
+    if (widget.flow.accountType == RegisterAccountType.teacher) {
+      final dateOfBirth = displayDateToIso(_dateOfBirthController.text.trim());
+      if (dateOfBirth == null) {
+        setState(() => _error = l10n.invalidDateOfBirth);
+        return;
+      }
     }
 
     setState(() {
@@ -234,11 +228,10 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          DateOfBirthTextField(
             controller: _dateOfBirthController,
             label: l10n.dateOfBirthLabel,
-            readOnly: true,
-            onTap: _pickDateOfBirth,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           DropdownMenu<String>(

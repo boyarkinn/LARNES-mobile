@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AuthTextField extends StatelessWidget {
   const AuthTextField({
@@ -11,6 +12,9 @@ class AuthTextField extends StatelessWidget {
     this.autofillHints,
     this.readOnly = false,
     this.onTap,
+    this.hintText,
+    this.inputFormatters,
+    this.onChanged,
   });
 
   final TextEditingController controller;
@@ -21,6 +25,9 @@ class AuthTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final bool readOnly;
   final VoidCallback? onTap;
+  final String? hintText;
+  final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +39,12 @@ class AuthTextField extends StatelessWidget {
       autofillHints: autofillHints,
       readOnly: readOnly,
       onTap: onTap,
-      decoration: InputDecoration(labelText: label),
+      inputFormatters: inputFormatters,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hintText,
+      ),
     );
   }
 }

@@ -141,6 +141,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dateOfBirthLabel => 'Date of birth';
 
   @override
+  String get dateOfBirthPlaceholder => 'DD.MM.YYYY';
+
+  @override
+  String get invalidDateOfBirth => 'Enter a valid date of birth';
+
+  @override
   String get cityLabel => 'City';
 
   @override
@@ -507,10 +513,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountCancel => 'Cancel';
 
   @override
-  String get parentAccountSectionProfile => 'Profile';
+  String get parentAccountSectionProfile => 'Parent profile';
 
   @override
-  String get parentAccountSectionChildren => 'Children';
+  String get parentAccountSectionChildren => 'Your children';
 
   @override
   String get parentAccountSectionCity => 'City';
@@ -899,6 +905,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kioskScanRetryCamera => 'Try again';
+
+  @override
+  String get kioskScanSwitchCamera => 'Switch camera';
 
   @override
   String get kioskScanStartingCamera => 'Starting camera…';

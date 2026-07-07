@@ -39,42 +39,44 @@ class StudyHubCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(ParentRadii.card),
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: ParentStudyHubCardMetrics.minHeight),
+        height: ParentChildCardMetrics.pickerListCardHeight,
         decoration: parentCardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _ColorBand(color: tokens.tag),
-            Padding(
-              padding: ParentStudyHubCardMetrics.innerPadding,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _IconRing(tokens: tokens, icon: icon),
-                  const SizedBox(height: ParentStudyHubCardMetrics.contentGap),
-                  Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: titleStyle,
-                  ),
-                  if (subtitle != null && subtitle!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+            Expanded(
+              child: Padding(
+                padding: ParentStudyHubCardMetrics.innerPadding,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _IconRing(tokens: tokens, icon: icon),
+                    const SizedBox(height: ParentStudyHubCardMetrics.contentGap),
                     Text(
-                      subtitle!,
+                      title,
                       textAlign: TextAlign.center,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        height: 1.35,
-                        color: ParentColors.inkMuted,
-                      ),
+                      style: titleStyle,
                     ),
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle!,
+                        textAlign: TextAlign.center,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          height: 1.35,
+                          color: ParentColors.inkMuted,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ],

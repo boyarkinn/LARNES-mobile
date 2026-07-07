@@ -350,6 +350,18 @@ abstract class AppLocalizations {
   /// **'Date of birth'**
   String get dateOfBirthLabel;
 
+  /// No description provided for @dateOfBirthPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'DD.MM.YYYY'**
+  String get dateOfBirthPlaceholder;
+
+  /// No description provided for @invalidDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid date of birth'**
+  String get invalidDateOfBirth;
+
   /// No description provided for @cityLabel.
   ///
   /// In en, this message translates to:
@@ -1013,13 +1025,13 @@ abstract class AppLocalizations {
   /// No description provided for @parentAccountSectionProfile.
   ///
   /// In en, this message translates to:
-  /// **'Profile'**
+  /// **'Parent profile'**
   String get parentAccountSectionProfile;
 
   /// No description provided for @parentAccountSectionChildren.
   ///
   /// In en, this message translates to:
-  /// **'Children'**
+  /// **'Your children'**
   String get parentAccountSectionChildren;
 
   /// No description provided for @parentAccountSectionCity.
@@ -1716,6 +1728,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get kioskScanRetryCamera;
+
+  /// No description provided for @kioskScanSwitchCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch camera'**
+  String get kioskScanSwitchCamera;
 
   /// No description provided for @kioskScanStartingCamera.
   ///

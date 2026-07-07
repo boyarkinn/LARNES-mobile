@@ -98,6 +98,31 @@ void main() {
       expect(find.text('Добавить ребёнка'), findsOneWidget);
     });
 
+    testWidgets('matches child card list height', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          Column(
+            children: [
+              ChildProfileCard(
+                child: _sampleChild(),
+                onTap: () {},
+              ),
+              AddChildCard(
+                label: 'Добавить ребёнка',
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final childHeight = tester.getSize(find.byType(ChildProfileCard)).height;
+      final addHeight = tester.getSize(find.byType(AddChildCard)).height;
+      expect(childHeight, ParentChildCardMetrics.pickerListCardHeight);
+      expect(addHeight, childHeight);
+    });
+
     testWidgets('empty variant constrains width', (tester) async {
       await tester.pumpWidget(
         wrap(

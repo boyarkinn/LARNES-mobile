@@ -857,6 +857,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountFieldDateOfBirth => 'Дата рождения';
 
   @override
+  String get parentAccountFieldRelationship => 'Роль';
+
+  @override
   String get parentAccountFieldChildren => 'Профили';
 
   @override
@@ -929,6 +932,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentAccountCityTitle => 'Сменить город';
+
+  @override
+  String get parentAccountRelationshipTitle => 'Сменить роль';
+
+  @override
+  String get parentAccountSaveRelationship => 'Сохранить';
 
   @override
   String get parentAccountLoginTitle => 'Сменить логин';

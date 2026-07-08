@@ -850,6 +850,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountFieldDateOfBirth => 'Date of birth';
 
   @override
+  String get parentAccountFieldRelationship => 'Role';
+
+  @override
   String get parentAccountFieldChildren => 'Profiles';
 
   @override
@@ -920,6 +923,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentAccountCityTitle => 'Change city';
+
+  @override
+  String get parentAccountRelationshipTitle => 'Change role';
+
+  @override
+  String get parentAccountSaveRelationship => 'Save';
 
   @override
   String get parentAccountLoginTitle => 'Change login';

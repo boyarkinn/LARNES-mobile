@@ -21,7 +21,7 @@ class ChildPickerScreen extends StatefulWidget {
 
 class _ChildPickerScreenState extends State<ChildPickerScreen> {
   AuthSession? _authSession;
-  int _lastChildrenRevision = 0;
+  int _lastParentDataRevision = 0;
   bool _isLoading = true;
   bool _isRefreshing = false;
   String? _error;
@@ -53,7 +53,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
 
     _authSession?.removeListener(_handleAuthSessionChanged);
     _authSession = auth;
-    _lastChildrenRevision = auth.childrenListRevision;
+    _lastParentDataRevision = auth.parentDataRevision;
     auth.addListener(_handleAuthSessionChanged);
   }
 
@@ -63,11 +63,11 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       return;
     }
 
-    if (auth.childrenListRevision == _lastChildrenRevision) {
+    if (auth.parentDataRevision == _lastParentDataRevision) {
       return;
     }
 
-    _lastChildrenRevision = auth.childrenListRevision;
+    _lastParentDataRevision = auth.parentDataRevision;
     _load(refreshing: _children.isNotEmpty);
   }
 

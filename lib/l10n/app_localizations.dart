@@ -1646,6 +1646,12 @@ abstract class AppLocalizations {
   /// **'Date of birth'**
   String get parentAccountFieldDateOfBirth;
 
+  /// No description provided for @parentAccountFieldRelationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get parentAccountFieldRelationship;
+
   /// No description provided for @parentAccountFieldChildren.
   ///
   /// In en, this message translates to:
@@ -1771,6 +1777,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change city'**
   String get parentAccountCityTitle;
+
+  /// No description provided for @parentAccountRelationshipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change role'**
+  String get parentAccountRelationshipTitle;
+
+  /// No description provided for @parentAccountSaveRelationship.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get parentAccountSaveRelationship;
 
   /// No description provided for @parentAccountLoginTitle.
   ///

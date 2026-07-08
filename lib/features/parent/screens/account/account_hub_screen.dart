@@ -3,11 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/guardians_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
+import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/utils/account_display.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
+import 'package:larnes_mobile/features/parent/utils/guardian_relationship_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_family_section.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_language_picker.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
@@ -22,6 +24,8 @@ class AccountHubScreen extends StatefulWidget {
 }
 
 class _AccountHubScreenState extends State<AccountHubScreen> {
+  AuthSession? _authSession;
+  int _lastParentDataRevision = 0;
   bool _isLoading = true;
   String? _error;
   ParentAccountSnapshot? _snapshot;
@@ -34,9 +38,48 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _bindAuthSession();
         _load();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bindAuthSession();
+  }
+
+  void _bindAuthSession() {
+    final auth = AuthScope.of(context);
+    if (identical(_authSession, auth)) {
+      return;
+    }
+
+    _authSession?.removeListener(_handleAuthSessionChanged);
+    _authSession = auth;
+    _lastParentDataRevision = auth.parentDataRevision;
+    auth.addListener(_handleAuthSessionChanged);
+  }
+
+  void _handleAuthSessionChanged() {
+    final auth = _authSession;
+    if (auth == null || !mounted) {
+      return;
+    }
+
+    if (auth.parentDataRevision == _lastParentDataRevision) {
+      return;
+    }
+
+    _lastParentDataRevision = auth.parentDataRevision;
+    _load(silent: _snapshot != null);
+  }
+
+  @override
+  void dispose() {
+    _authSession?.removeListener(_handleAuthSessionChanged);
+    super.dispose();
   }
 
   @override
@@ -210,6 +253,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     final user = _snapshot!.user;
     final localeCode = LocaleScope.of(context).localeCode;
     final formattedDob = formatAccountDateOfBirth(user.dateOfBirth, localeCode);
+    final selfRelationship = selfGuardianRelationship(_guardians);
     const passwordMask = '••••••••';
 
     return AccountDeskShell(
@@ -232,6 +276,16 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 valueMuted: formattedDob.isEmpty,
                 onTap: () => _openAccountRoute('/parent/account/date-of-birth'),
               ),
+              if (selfRelationship != null) ...[
+                const AccountDivider(),
+                AccountFieldGroup(
+                  label: l10n.parentAccountFieldRelationship,
+                  value: guardianRelationshipLabel(l10n, selfRelationship),
+                  onTap: () => _openAccountRoute(
+                    '/parent/account/relationship?relationship=${Uri.encodeComponent(selfRelationship)}',
+                  ),
+                ),
+              ],
               const AccountDivider(),
               AccountFieldGroup(
                 label: l10n.parentAccountFieldCity,

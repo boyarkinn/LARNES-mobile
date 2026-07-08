@@ -62,12 +62,13 @@ class AuthSession extends ChangeNotifier {
 
   NetworkApi get networkApi => _client.networkApi;
 
-  int _childrenListRevision = 0;
+  int _parentDataRevision = 0;
 
-  int get childrenListRevision => _childrenListRevision;
+  int get parentDataRevision => _parentDataRevision;
 
-  void notifyChildrenChanged() {
-    _childrenListRevision += 1;
+  /// Список детей или семьи мог измениться (другая вкладка, join, удаление).
+  void notifyParentDataChanged() {
+    _parentDataRevision += 1;
     _notifySafely();
   }
 

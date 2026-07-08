@@ -107,6 +107,35 @@ class ParentAccountApi {
     );
   }
 
+  Future<String> updateRelationship({
+    required String relationship,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.patch(
+        '/api/mobile/parent/account/relationship',
+        data: {
+          'relationship': relationship,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentAccountApiException(_messageFromBody(data, l10n));
+      }
+      return data['relationship'] as String? ?? relationship;
+    } on DioException catch (error) {
+      throw ParentAccountApiException(
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: _networkMessage(error, l10n),
+        ),
+      );
+    }
+  }
+
   Future<AuthUser> updateLogin({
     required String currentPassword,
     required String newLogin,

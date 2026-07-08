@@ -67,7 +67,7 @@ class _DeleteChildPanelState extends State<DeleteChildPanel> {
       if (!mounted) {
         return;
       }
-      AuthScope.of(context).notifyChildrenChanged();
+      AuthScope.of(context).notifyParentDataChanged();
       context.go('/parent');
     } on ParentApiException catch (error) {
       if (mounted) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_navigation.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_bottom_nav.dart';
 
@@ -17,16 +18,17 @@ class ParentShellScaffold extends StatelessWidget {
     if (index == ParentNavigation.childrenTabIndex) {
       if (navigationShell.currentIndex == index) {
         context.go('/parent');
+        AuthScope.of(context).notifyParentDataChanged();
         return;
       }
       navigationShell.goBranch(index, initialLocation: true);
-      return;
+    } else {
+      navigationShell.goBranch(
+        ParentNavigation.accountTabIndex,
+        initialLocation: true,
+      );
     }
-
-    navigationShell.goBranch(
-      ParentNavigation.accountTabIndex,
-      initialLocation: true,
-    );
+    AuthScope.of(context).notifyParentDataChanged();
   }
 
   @override

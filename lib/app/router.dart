@@ -22,6 +22,7 @@ import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_change_contact_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_child_detail_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_children_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_relationship_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_city_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_date_of_birth_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_edit_child_screen.dart';
@@ -162,6 +163,13 @@ GoRouter createAppRouter({
                   GoRoute(
                     path: 'date-of-birth',
                     builder: (context, state) => const AccountDateOfBirthScreen(),
+                  ),
+                  GoRoute(
+                    path: 'relationship',
+                    builder: (context, state) {
+                      final relationship = state.uri.queryParameters['relationship'];
+                      return AccountRelationshipScreen(initialRelationship: relationship);
+                    },
                   ),
                   GoRoute(
                     path: 'city',

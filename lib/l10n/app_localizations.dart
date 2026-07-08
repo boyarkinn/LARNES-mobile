@@ -440,6 +440,12 @@ abstract class AppLocalizations {
   /// **'First name'**
   String get firstNameLabel;
 
+  /// No description provided for @registerParentRelationshipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your role in the family'**
+  String get registerParentRelationshipLabel;
+
   /// No description provided for @lastNameLabel.
   ///
   /// In en, this message translates to:
@@ -1257,45 +1263,87 @@ abstract class AppLocalizations {
   String get parentFamilySetupCancelJoin;
 
   /// No description provided for @parentFamilySetupResolveProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Resolve child profiles'**
   String get parentFamilySetupResolveProfiles;
 
   /// No description provided for @parentFamilyJoinDedupChoiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Children named “{name}”'**
   String parentFamilyJoinDedupChoiceTitle(String name);
 
   /// No description provided for @parentFamilyJoinDedupChoiceLead.
+  ///
+  /// In en, this message translates to:
+  /// **'If this is one child, pick the profile to keep. The other will be removed from the family account.'**
   String get parentFamilyJoinDedupChoiceLead;
 
   /// No description provided for @parentFamilyJoinDedupDifferentChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Different children'**
   String get parentFamilyJoinDedupDifferentChildren;
 
   /// No description provided for @parentFamilyJoinDedupSameChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Same child'**
   String get parentFamilyJoinDedupSameChild;
 
   /// No description provided for @parentFamilyJoinDedupPickTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Same child — pick a profile'**
   String get parentFamilyJoinDedupPickTitle;
 
   /// No description provided for @parentFamilyJoinDedupPickLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Which profile should we keep? The other will be removed from the family account.'**
   String get parentFamilyJoinDedupPickLead;
 
   /// No description provided for @parentFamilyJoinDedupRegisteredLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Registered'**
   String get parentFamilyJoinDedupRegisteredLabel;
 
   /// No description provided for @parentFamilyJoinDedupNetworkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Network / group'**
   String get parentFamilyJoinDedupNetworkLabel;
 
   /// No description provided for @parentFamilyJoinDedupProgramLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Program'**
   String get parentFamilyJoinDedupProgramLabel;
 
   /// No description provided for @parentFamilyJoinDedupKeepProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this profile'**
   String get parentFamilyJoinDedupKeepProfile;
 
   /// No description provided for @parentFamilyJoinDedupBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
   String get parentFamilyJoinDedupBack;
 
   /// No description provided for @parentFamilyJoinDedupInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to resolve'**
   String get parentFamilyJoinDedupInvalidTitle;
 
   /// No description provided for @parentFamilyJoinDedupInvalidLead.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is outdated or profiles are already aligned.'**
   String get parentFamilyJoinDedupInvalidLead;
 
   /// No description provided for @parentGuardiansTitle.
@@ -1328,6 +1376,12 @@ abstract class AppLocalizations {
   /// **'Invite guardian'**
   String get parentGuardiansInviteGuardian;
 
+  /// No description provided for @parentGuardiansInviteFamilyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite a family member'**
+  String get parentGuardiansInviteFamilyMember;
+
   /// No description provided for @parentGuardiansInviteCopied.
   ///
   /// In en, this message translates to:
@@ -1345,6 +1399,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pending invitations'**
   String get parentGuardiansPendingInvitesTitle;
+
+  /// No description provided for @parentGuardiansPendingInviteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation'**
+  String get parentGuardiansPendingInviteLabel;
+
+  /// No description provided for @parentGuardiansPendingInviteStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting acceptance'**
+  String get parentGuardiansPendingInviteStatus;
+
+  /// No description provided for @parentGuardiansConfirmRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke invitation?'**
+  String get parentGuardiansConfirmRevokeTitle;
+
+  /// No description provided for @parentGuardiansConfirmRevokeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The link will stop working.'**
+  String get parentGuardiansConfirmRevokeMessage;
 
   /// No description provided for @parentGuardiansRevokeInvite.
   ///

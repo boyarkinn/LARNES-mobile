@@ -32,6 +32,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   final _passwordRepeatController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
 
+  String? _selectedRelationship = 'mother';
   String? _selectedCity;
   List<String> _cities = const ['Москва'];
   bool _isLoadingConfig = true;
@@ -88,6 +89,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
 
     switch (widget.flow.accountType) {
       case RegisterAccountType.parent:
+        payload['relationship'] = _selectedRelationship ?? 'mother';
         break;
       case RegisterAccountType.teacher:
         payload['lastName'] = _lastNameController.text.trim();
@@ -202,6 +204,30 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
             controller: _firstNameController,
             label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 12),
+          DropdownMenu<String>(
+            initialSelection: _selectedRelationship,
+            label: Text(l10n.registerParentRelationshipLabel),
+            dropdownMenuEntries: [
+              DropdownMenuEntry(
+                value: 'mother',
+                label: l10n.parentGuardiansRelationshipMother,
+              ),
+              DropdownMenuEntry(
+                value: 'father',
+                label: l10n.parentGuardiansRelationshipFather,
+              ),
+              DropdownMenuEntry(
+                value: 'grandmother',
+                label: l10n.parentGuardiansRelationshipGrandmother,
+              ),
+              DropdownMenuEntry(
+                value: 'grandfather',
+                label: l10n.parentGuardiansRelationshipGrandfather,
+              ),
+            ],
+            onSelected: (value) => setState(() => _selectedRelationship = value),
           ),
           const SizedBox(height: 12),
           _passwordFields(l10n),

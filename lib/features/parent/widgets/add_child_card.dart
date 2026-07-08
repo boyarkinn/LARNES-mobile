@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 
-enum AddChildCardVariant {
-  list,
-  empty,
-}
-
 /// Карточка «Добавить ребёнка» на picker.
 /// Эталон: platform/src/components/parent/add-child-card.tsx
 class AddChildCard extends StatelessWidget {
@@ -14,16 +9,14 @@ class AddChildCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.onTap,
-    this.variant = AddChildCardVariant.list,
   });
 
   final String label;
   final VoidCallback onTap;
-  final AddChildCardVariant variant;
 
   @override
   Widget build(BuildContext context) {
-    final card = ParentScaleTap(
+    return ParentScaleTap(
       onTap: onTap,
       child: CustomPaint(
         painter: _DashedBorderPainter(
@@ -58,15 +51,6 @@ class AddChildCard extends StatelessWidget {
         ),
       ),
     );
-
-    if (variant == AddChildCardVariant.empty) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
-        child: card,
-      );
-    }
-
-    return card;
   }
 }
 

@@ -27,7 +27,6 @@ import 'package:larnes_mobile/features/parent/screens/account/account_date_of_bi
 import 'package:larnes_mobile/features/parent/screens/account/account_edit_child_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_guardian_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_join_request_invite_screen.dart';
-import 'package:larnes_mobile/features/parent/screens/account/account_guardians_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/family_join_dedup_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/family_setup_screen.dart';
@@ -190,7 +189,7 @@ GoRouter createAppRouter({
                   ),
                   GoRoute(
                     path: 'guardians',
-                    builder: (context, state) => const AccountGuardiansScreen(),
+                    redirect: (context, state) => '/parent/account',
                   ),
                   GoRoute(
                     path: 'children',

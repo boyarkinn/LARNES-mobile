@@ -194,6 +194,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get firstNameLabel => 'Имя';
 
   @override
+  String get registerParentRelationshipLabel => 'Кто вы для ребёнка?';
+
+  @override
   String get lastNameLabel => 'Фамилия';
 
   @override
@@ -648,7 +651,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentFamilySetupResolveProfiles => 'Уточнить профили детей';
 
   @override
-  String parentFamilyJoinDedupChoiceTitle(String name) => 'Дети с именем «$name»';
+  String parentFamilyJoinDedupChoiceTitle(String name) {
+    return 'Дети с именем «$name»';
+  }
 
   @override
   String get parentFamilyJoinDedupChoiceLead =>
@@ -661,7 +666,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentFamilyJoinDedupSameChild => 'Один ребёнок';
 
   @override
-  String get parentFamilyJoinDedupPickTitle => 'Один ребёнок — выберите профиль';
+  String get parentFamilyJoinDedupPickTitle =>
+      'Один ребёнок — выберите профиль';
 
   @override
   String get parentFamilyJoinDedupPickLead =>
@@ -705,6 +711,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentGuardiansInviteGuardian => 'Пригласить опекуна';
 
   @override
+  String get parentGuardiansInviteFamilyMember => 'Пригласить члена семьи';
+
+  @override
   String get parentGuardiansInviteCopied => 'Ссылка скопирована';
 
   @override
@@ -712,6 +721,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentGuardiansPendingInvitesTitle => 'Ожидают принятия';
+
+  @override
+  String get parentGuardiansPendingInviteLabel => 'Приглашение';
+
+  @override
+  String get parentGuardiansPendingInviteStatus => 'Ожидает принятия';
+
+  @override
+  String get parentGuardiansConfirmRevokeTitle => 'Отозвать приглашение?';
+
+  @override
+  String get parentGuardiansConfirmRevokeMessage =>
+      'Ссылка перестанет работать.';
 
   @override
   String get parentGuardiansRevokeInvite => 'Отозвать';

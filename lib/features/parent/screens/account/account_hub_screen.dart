@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/api/guardians_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/utils/account_display.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_family_section.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_language_picker.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
@@ -24,6 +26,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
   String? _error;
   ParentAccountSnapshot? _snapshot;
   List<ParentChild> _children = const [];
+  GuardiansSnapshot? _guardians;
   bool _wasInactive = false;
 
   @override
@@ -70,6 +73,12 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
         auth.parentAccountApi.fetchAccount(locale: locale),
         auth.parentApi.listChildren(locale: locale),
       ]);
+      GuardiansSnapshot? guardians;
+      try {
+        guardians = await auth.guardiansApi.fetchGuardians(locale: locale);
+      } catch (_) {
+        guardians = null;
+      }
       if (!mounted) {
         return;
       }
@@ -77,6 +86,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
       setState(() {
         _snapshot = results[0] as ParentAccountSnapshot;
         _children = results[1] as List<ParentChild>;
+        _guardians = guardians;
         _isLoading = false;
         _error = null;
       });
@@ -298,10 +308,9 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
         ),
         AccountDeskCard(
           bandTitle: l10n.parentAccountSectionFamily,
-          child: AccountFieldGroup(
-            label: l10n.parentAccountFieldGuardians,
-            value: l10n.parentAccountActionManageGuardians,
-            onTap: () => _openAccountRoute('/parent/account/guardians'),
+          child: AccountFamilySection(
+            snapshot: _guardians,
+            onChanged: () => _load(silent: true),
           ),
         ),
         AccountDeskCard(

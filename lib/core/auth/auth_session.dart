@@ -62,6 +62,15 @@ class AuthSession extends ChangeNotifier {
 
   NetworkApi get networkApi => _client.networkApi;
 
+  int _childrenListRevision = 0;
+
+  int get childrenListRevision => _childrenListRevision;
+
+  void notifyChildrenChanged() {
+    _childrenListRevision += 1;
+    _notifySafely();
+  }
+
   void applyUser(AuthUser user) {
     _user = user;
     _notifySafely();

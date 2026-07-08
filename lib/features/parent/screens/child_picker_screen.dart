@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
@@ -19,6 +20,8 @@ class ChildPickerScreen extends StatefulWidget {
 }
 
 class _ChildPickerScreenState extends State<ChildPickerScreen> {
+  AuthSession? _authSession;
+  int _lastChildrenRevision = 0;
   bool _isLoading = true;
   bool _isRefreshing = false;
   String? _error;
@@ -30,9 +33,42 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _bindAuthSession();
         _load();
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bindAuthSession();
+  }
+
+  void _bindAuthSession() {
+    final auth = AuthScope.of(context);
+    if (identical(_authSession, auth)) {
+      return;
+    }
+
+    _authSession?.removeListener(_handleAuthSessionChanged);
+    _authSession = auth;
+    _lastChildrenRevision = auth.childrenListRevision;
+    auth.addListener(_handleAuthSessionChanged);
+  }
+
+  void _handleAuthSessionChanged() {
+    final auth = _authSession;
+    if (auth == null || !mounted) {
+      return;
+    }
+
+    if (auth.childrenListRevision == _lastChildrenRevision) {
+      return;
+    }
+
+    _lastChildrenRevision = auth.childrenListRevision;
+    _load(refreshing: _children.isNotEmpty);
   }
 
   @override
@@ -52,6 +88,12 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   void deactivate() {
     _wasInactive = true;
     super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _authSession?.removeListener(_handleAuthSessionChanged);
+    super.dispose();
   }
 
   Future<void> _load({bool refreshing = false}) async {
@@ -149,30 +191,6 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    if (_children.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: () => _load(refreshing: true),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: AddChildCard(
-                    variant: AddChildCardVariant.empty,
-                    label: l10n.parentAddChild,
-                    onTap: _openAddChild,
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       );
     }

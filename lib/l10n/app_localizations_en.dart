@@ -193,6 +193,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get firstNameLabel => 'First name';
 
   @override
+  String get registerParentRelationshipLabel => 'Your role in the family';
+
+  @override
   String get lastNameLabel => 'Last name';
 
   @override
@@ -643,7 +646,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentFamilySetupResolveProfiles => 'Resolve child profiles';
 
   @override
-  String parentFamilyJoinDedupChoiceTitle(String name) => 'Children named “$name”';
+  String parentFamilyJoinDedupChoiceTitle(String name) {
+    return 'Children named “$name”';
+  }
 
   @override
   String get parentFamilyJoinDedupChoiceLead =>
@@ -700,6 +705,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentGuardiansInviteGuardian => 'Invite guardian';
 
   @override
+  String get parentGuardiansInviteFamilyMember => 'Invite a family member';
+
+  @override
   String get parentGuardiansInviteCopied => 'Link copied';
 
   @override
@@ -707,6 +715,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentGuardiansPendingInvitesTitle => 'Pending invitations';
+
+  @override
+  String get parentGuardiansPendingInviteLabel => 'Invitation';
+
+  @override
+  String get parentGuardiansPendingInviteStatus => 'Awaiting acceptance';
+
+  @override
+  String get parentGuardiansConfirmRevokeTitle => 'Revoke invitation?';
+
+  @override
+  String get parentGuardiansConfirmRevokeMessage =>
+      'The link will stop working.';
 
   @override
   String get parentGuardiansRevokeInvite => 'Revoke';

@@ -122,29 +122,5 @@ void main() {
       expect(childHeight, ParentChildCardMetrics.pickerListCardHeight);
       expect(addHeight, childHeight);
     });
-
-    testWidgets('empty variant constrains width', (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          AddChildCard(
-            variant: AddChildCardVariant.empty,
-            label: 'Добавить ребёнка',
-            onTap: () {},
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final constrained = tester.widget<ConstrainedBox>(
-        find.descendant(
-          of: find.byType(AddChildCard),
-          matching: find.byType(ConstrainedBox),
-        ).first,
-      );
-      expect(
-        constrained.constraints.maxWidth,
-        ParentChildCardMetrics.pickerMaxWidth,
-      );
-    });
   });
 }

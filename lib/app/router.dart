@@ -3,6 +3,16 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/admin/screens/account/account_change_contact_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/account/account_hub_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/account/account_login_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/account/account_password_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/account/account_profile_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/trainer_detail_screen.dart';
+import 'package:larnes_mobile/features/admin/screens/admin_trainer_play_screen.dart';
+import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
+import 'package:larnes_mobile/features/admin/screens/trainers_catalog_screen.dart';
+import 'package:larnes_mobile/features/admin/widgets/admin_shell_scaffold.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/models/password_reset_flow.dart';
 import 'package:larnes_mobile/features/auth/screens/login_screen.dart';
@@ -47,6 +57,8 @@ import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
 final _parentChildrenNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentChildren');
 final _parentAccountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentAccount');
+final _adminAccountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'adminAccount');
+final _adminTrainersNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'adminTrainers');
 
 GoRouter createAppRouter({
   required AuthSession authSession,
@@ -243,7 +255,32 @@ GoRouter createAppRouter({
                     builder: (context, state) => const AddChildScreen(),
                   ),
                   GoRoute(
+                    path: 'family-setup',
+                    builder: (context, state) => const FamilySetupScreen(),
+                  ),
+                  GoRoute(
+                    path: 'family-join-dedup',
+                    builder: (context, state) {
+                      final token = state.uri.queryParameters['token'] ?? '';
+                      final kind = state.uri.queryParameters['kind'] ?? '';
+                      return FamilyJoinDedupScreen(token: token, kind: kind);
+                    },
+                  ),
+                  GoRoute(
                     path: ':childId',
+                    redirect: (context, state) {
+                      final childId = state.pathParameters['childId'];
+                      if (childId == 'family-setup') {
+                        return '/parent/family-setup';
+                      }
+                      if (childId == 'family-join-dedup') {
+                        final query = state.uri.query;
+                        return query.isEmpty
+                            ? '/parent/family-join-dedup'
+                            : '/parent/family-join-dedup?$query';
+                      }
+                      return null;
+                    },
                     builder: (context, state) {
                       final childId = state.pathParameters['childId'];
                       if (childId == null || childId.isEmpty) {
@@ -349,17 +386,84 @@ GoRouter createAppRouter({
           ),
         ],
       ),
-      GoRoute(
-        path: '/parent/family-setup',
-        builder: (context, state) => const FamilySetupScreen(),
-      ),
-      GoRoute(
-        path: '/parent/family-join-dedup',
-        builder: (context, state) {
-          final token = state.uri.queryParameters['token'] ?? '';
-          final kind = state.uri.queryParameters['kind'] ?? '';
-          return FamilyJoinDedupScreen(token: token, kind: kind);
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return AdminShellScaffold(navigationShell: navigationShell);
         },
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: _adminAccountNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/admin/account',
+                builder: (context, state) => const AdminAccountHubScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'profile',
+                    builder: (context, state) => const AdminAccountProfileScreen(),
+                  ),
+                  GoRoute(
+                    path: 'login',
+                    builder: (context, state) => const AdminAccountLoginScreen(),
+                  ),
+                  GoRoute(
+                    path: 'phone',
+                    builder: (context, state) => const AdminAccountChangeContactScreen(
+                      channel: AdminAccountContactChangeChannel.phone,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'email',
+                    builder: (context, state) => const AdminAccountChangeContactScreen(
+                      channel: AdminAccountContactChangeChannel.email,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'password',
+                    builder: (context, state) => const AdminAccountPasswordScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _adminTrainersNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/admin',
+                builder: (context, state) => const TrainersCatalogScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'trainers/:trainerKey',
+                    builder: (context, state) {
+                      final trainerKey = state.pathParameters['trainerKey'];
+                      if (trainerKey == null || trainerKey.isEmpty) {
+                        return const TrainersCatalogScreen();
+                      }
+                      return TrainerDetailScreen(trainerKey: trainerKey);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'play',
+                        builder: (context, state) {
+                          final trainerKey = state.pathParameters['trainerKey'];
+                          final launch = state.extra;
+                          if (trainerKey == null ||
+                              trainerKey.isEmpty ||
+                              launch is! AdminTrainerPlayLaunch ||
+                              launch.trainerKey != trainerKey) {
+                            return TrainerDetailScreen(trainerKey: trainerKey ?? '');
+                          }
+                          return AdminTrainerPlayScreen(launch: launch);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/invite/family-join-request',

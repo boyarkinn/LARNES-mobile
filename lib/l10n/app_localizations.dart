@@ -1076,6 +1076,690 @@ abstract class AppLocalizations {
   /// **'Account'**
   String get parentAccountTitle;
 
+  /// No description provided for @adminNavTrainers.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainers'**
+  String get adminNavTrainers;
+
+  /// No description provided for @adminNavAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get adminNavAccount;
+
+  /// No description provided for @adminTrainersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainers'**
+  String get adminTrainersTitle;
+
+  /// No description provided for @adminTrainersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog for manual trainer checks before programs and homework.'**
+  String get adminTrainersHint;
+
+  /// No description provided for @adminTrainersLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load catalog.'**
+  String get adminTrainersLoadFailed;
+
+  /// No description provided for @adminTrainersOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get adminTrainersOpen;
+
+  /// No description provided for @adminTrainersDirectionMental.
+  ///
+  /// In en, this message translates to:
+  /// **'Mental arithmetic'**
+  String get adminTrainersDirectionMental;
+
+  /// No description provided for @adminTrainersDirectionMath.
+  ///
+  /// In en, this message translates to:
+  /// **'Math'**
+  String get adminTrainersDirectionMath;
+
+  /// No description provided for @adminTrainersDirectionReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get adminTrainersDirectionReading;
+
+  /// No description provided for @adminTrainersPlatformWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Web'**
+  String get adminTrainersPlatformWeb;
+
+  /// No description provided for @adminTrainersPlatformMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile'**
+  String get adminTrainersPlatformMobile;
+
+  /// No description provided for @adminTrainersStatusInDevelopment.
+  ///
+  /// In en, this message translates to:
+  /// **'In development'**
+  String get adminTrainersStatusInDevelopment;
+
+  /// No description provided for @adminTrainersStatusReadyForRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for release'**
+  String get adminTrainersStatusReadyForRelease;
+
+  /// No description provided for @adminTrainersGroupCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{# trainer} other{# trainers}}'**
+  String adminTrainersGroupCount(int count);
+
+  /// No description provided for @adminTrainersCatalogInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{# in progress} other{# in progress}}'**
+  String adminTrainersCatalogInProgress(int count);
+
+  /// No description provided for @adminTrainersDetailPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer screen (Play and Workflow) will appear in the next phases.'**
+  String get adminTrainersDetailPlaceholder;
+
+  /// No description provided for @adminTrainerWorkflowTabWorkflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Workflow'**
+  String get adminTrainerWorkflowTabWorkflow;
+
+  /// No description provided for @adminTrainerWorkflowTabPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get adminTrainerWorkflowTabPlay;
+
+  /// No description provided for @adminTrainerWorkflowPlayPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer play mode will appear in the next phase.'**
+  String get adminTrainerWorkflowPlayPlaceholder;
+
+  /// No description provided for @adminTrainerWorkflowLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load trainer.'**
+  String get adminTrainerWorkflowLoadFailed;
+
+  /// No description provided for @adminTrainerWorkflowSectionFunnel.
+  ///
+  /// In en, this message translates to:
+  /// **'Funnel'**
+  String get adminTrainerWorkflowSectionFunnel;
+
+  /// No description provided for @adminTrainerWorkflowSectionTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get adminTrainerWorkflowSectionTeam;
+
+  /// No description provided for @adminTrainerWorkflowSectionFeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Feed'**
+  String get adminTrainerWorkflowSectionFeed;
+
+  /// No description provided for @adminTrainerWorkflowInProgressCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{# comment in progress} other{# comments in progress}}'**
+  String adminTrainerWorkflowInProgressCount(int count);
+
+  /// No description provided for @adminTrainerWorkflowFeedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet.'**
+  String get adminTrainerWorkflowFeedEmpty;
+
+  /// No description provided for @adminTrainerWorkflowCommentAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add comment'**
+  String get adminTrainerWorkflowCommentAddTitle;
+
+  /// No description provided for @adminTrainerWorkflowCommentBodyPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe an issue or task'**
+  String get adminTrainerWorkflowCommentBodyPlaceholder;
+
+  /// No description provided for @adminTrainerWorkflowCommentAddSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get adminTrainerWorkflowCommentAddSubmit;
+
+  /// No description provided for @adminTrainerWorkflowCommentStatusInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get adminTrainerWorkflowCommentStatusInProgress;
+
+  /// No description provided for @adminTrainerWorkflowCommentStatusImplemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get adminTrainerWorkflowCommentStatusImplemented;
+
+  /// No description provided for @adminTrainerWorkflowCommentStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get adminTrainerWorkflowCommentStatusRejected;
+
+  /// No description provided for @adminTrainerWorkflowCommentActionInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get adminTrainerWorkflowCommentActionInProgress;
+
+  /// No description provided for @adminTrainerWorkflowCommentActionImplemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get adminTrainerWorkflowCommentActionImplemented;
+
+  /// No description provided for @adminTrainerWorkflowCommentActionRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get adminTrainerWorkflowCommentActionRejected;
+
+  /// No description provided for @adminTrainerWorkflowSignoffStatusUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get adminTrainerWorkflowSignoffStatusUnset;
+
+  /// No description provided for @adminTrainerWorkflowSignoffStatusNeedsFixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs fixes'**
+  String get adminTrainerWorkflowSignoffStatusNeedsFixes;
+
+  /// No description provided for @adminTrainerWorkflowSignoffStatusReadyForRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready for release'**
+  String get adminTrainerWorkflowSignoffStatusReadyForRelease;
+
+  /// No description provided for @adminTrainerWorkflowSignoffActionNeedsFixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs fixes'**
+  String get adminTrainerWorkflowSignoffActionNeedsFixes;
+
+  /// No description provided for @adminTrainerWorkflowSignoffActionReadyForRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get adminTrainerWorkflowSignoffActionReadyForRelease;
+
+  /// No description provided for @adminTrainerPlayLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load parameters.'**
+  String get adminTrainerPlayLoadFailed;
+
+  /// No description provided for @adminTrainerPlayLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'LAUNCH'**
+  String get adminTrainerPlayLaunch;
+
+  /// No description provided for @adminTrainerPlayInteractiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Interactive trainers finish when the child completes the task.'**
+  String get adminTrainerPlayInteractiveHint;
+
+  /// No description provided for @adminTrainerPlayLetterCaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter case'**
+  String get adminTrainerPlayLetterCaseLabel;
+
+  /// No description provided for @adminTrainerPlayWordCaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word case'**
+  String get adminTrainerPlayWordCaseLabel;
+
+  /// No description provided for @adminTrainerPlayLetterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter'**
+  String get adminTrainerPlayLetterLabel;
+
+  /// No description provided for @adminTrainerPlayPracticeLettersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice letters'**
+  String get adminTrainerPlayPracticeLettersLabel;
+
+  /// No description provided for @adminTrainerPlayShopItemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get adminTrainerPlayShopItemLabel;
+
+  /// No description provided for @adminTrainerPlayPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get adminTrainerPlayPriceLabel;
+
+  /// No description provided for @adminTrainerPlayCoinCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Coins in register'**
+  String get adminTrainerPlayCoinCountLabel;
+
+  /// No description provided for @adminTrainerPlayWholeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole'**
+  String get adminTrainerPlayWholeLabel;
+
+  /// No description provided for @adminTrainerPlayKnownPartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Known part'**
+  String get adminTrainerPlayKnownPartLabel;
+
+  /// No description provided for @adminTrainerPlayAnswerRangeStartLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer range start'**
+  String get adminTrainerPlayAnswerRangeStartLabel;
+
+  /// No description provided for @adminTrainerPlayTargetFruitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target fruit'**
+  String get adminTrainerPlayTargetFruitLabel;
+
+  /// No description provided for @adminTrainerPlayFruitTargetCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Target count'**
+  String get adminTrainerPlayFruitTargetCountLabel;
+
+  /// No description provided for @adminTrainerPlayFruitTypeCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fruit types'**
+  String get adminTrainerPlayFruitTypeCountLabel;
+
+  /// No description provided for @adminTrainerPlayTotalFruitsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total fruits'**
+  String get adminTrainerPlayTotalFruitsLabel;
+
+  /// No description provided for @adminTrainerPlayDigitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Digit'**
+  String get adminTrainerPlayDigitLabel;
+
+  /// No description provided for @adminTrainerPlayTargetCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'How many to find'**
+  String get adminTrainerPlayTargetCountLabel;
+
+  /// No description provided for @adminTrainerPlayDistractorCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Distractors'**
+  String get adminTrainerPlayDistractorCountLabel;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing segment'**
+  String get adminTrainerPlayMissingSegmentLabel;
+
+  /// No description provided for @adminTrainerPlayLetterCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter count'**
+  String get adminTrainerPlayLetterCountLabel;
+
+  /// No description provided for @adminTrainerPlayOddLetterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Odd letter (random or letter)'**
+  String get adminTrainerPlayOddLetterLabel;
+
+  /// No description provided for @adminTrainerPlayOptionCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Option count'**
+  String get adminTrainerPlayOptionCountLabel;
+
+  /// No description provided for @adminTrainerPlayDotModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot mode'**
+  String get adminTrainerPlayDotModeLabel;
+
+  /// No description provided for @adminTrainerPlayRoundsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounds'**
+  String get adminTrainerPlayRoundsLabel;
+
+  /// No description provided for @adminTrainerPlayDisplaySecondsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Display seconds'**
+  String get adminTrainerPlayDisplaySecondsLabel;
+
+  /// No description provided for @adminTrainerPlayGridSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid size'**
+  String get adminTrainerPlayGridSizeLabel;
+
+  /// No description provided for @adminTrainerPlayFilledCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled cells'**
+  String get adminTrainerPlayFilledCountLabel;
+
+  /// No description provided for @adminTrainerPlayWordSlugLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word'**
+  String get adminTrainerPlayWordSlugLabel;
+
+  /// No description provided for @adminTrainerPlayEntityCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word count'**
+  String get adminTrainerPlayEntityCountLabel;
+
+  /// No description provided for @adminTrainerPlayPairCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pairs'**
+  String get adminTrainerPlayPairCountLabel;
+
+  /// No description provided for @adminTrainerPlayCatchCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Catch count'**
+  String get adminTrainerPlayCatchCountLabel;
+
+  /// No description provided for @adminTrainerPlaySpeedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed'**
+  String get adminTrainerPlaySpeedLabel;
+
+  /// No description provided for @adminTrainerPlayWordItemCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Words in task'**
+  String get adminTrainerPlayWordItemCountLabel;
+
+  /// No description provided for @adminTrainerPlayTotalRodsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rods'**
+  String get adminTrainerPlayTotalRodsLabel;
+
+  /// No description provided for @adminTrainerPlayValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get adminTrainerPlayValueLabel;
+
+  /// No description provided for @adminTrainerPlayMatchValue1Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Value 1'**
+  String get adminTrainerPlayMatchValue1Label;
+
+  /// No description provided for @adminTrainerPlayMatchValue2Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Value 2'**
+  String get adminTrainerPlayMatchValue2Label;
+
+  /// No description provided for @adminTrainerPlayMatchValue3Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Value 3'**
+  String get adminTrainerPlayMatchValue3Label;
+
+  /// No description provided for @adminTrainerPlayMatchValue4Label.
+  ///
+  /// In en, this message translates to:
+  /// **'Value 4'**
+  String get adminTrainerPlayMatchValue4Label;
+
+  /// No description provided for @adminTrainerPlayLetterCaseUpper.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase'**
+  String get adminTrainerPlayLetterCaseUpper;
+
+  /// No description provided for @adminTrainerPlayLetterCaseLower.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase'**
+  String get adminTrainerPlayLetterCaseLower;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get adminTrainerPlayMissingSegmentRandom;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentIndex1.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment 1'**
+  String get adminTrainerPlayMissingSegmentIndex1;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentIndex2.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment 2'**
+  String get adminTrainerPlayMissingSegmentIndex2;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentIndex3.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment 3'**
+  String get adminTrainerPlayMissingSegmentIndex3;
+
+  /// No description provided for @adminTrainerPlayMissingSegmentIndex4.
+  ///
+  /// In en, this message translates to:
+  /// **'Segment 4'**
+  String get adminTrainerPlayMissingSegmentIndex4;
+
+  /// No description provided for @adminTrainerPlayDotModeNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered'**
+  String get adminTrainerPlayDotModeNumbered;
+
+  /// No description provided for @adminTrainerPlayDotModeFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get adminTrainerPlayDotModeFree;
+
+  /// No description provided for @adminTrainerPlaySpeedSlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow'**
+  String get adminTrainerPlaySpeedSlow;
+
+  /// No description provided for @adminTrainerPlaySpeedMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get adminTrainerPlaySpeedMedium;
+
+  /// No description provided for @adminTrainerPlaySpeedFast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get adminTrainerPlaySpeedFast;
+
+  /// No description provided for @adminTrainerPlayMobileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs in the mobile runtime (Flutter). Check the web version on desktop.'**
+  String get adminTrainerPlayMobileHint;
+
+  /// No description provided for @adminTrainerPlayWebOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No mobile implementation'**
+  String get adminTrainerPlayWebOnlyTitle;
+
+  /// No description provided for @adminTrainerPlayWebOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This trainer is web-only for now. Run and test play at larnes.online under Trainers.'**
+  String get adminTrainerPlayWebOnlyMessage;
+
+  /// No description provided for @adminTrainerPlayExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get adminTrainerPlayExit;
+
+  /// No description provided for @adminTrainerPlayContinueCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue check'**
+  String get adminTrainerPlayContinueCheck;
+
+  /// No description provided for @adminAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get adminAccountTitle;
+
+  /// No description provided for @adminAccountLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load account.'**
+  String get adminAccountLoadFailed;
+
+  /// No description provided for @adminAccountSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save changes.'**
+  String get adminAccountSaveFailed;
+
+  /// No description provided for @adminAccountNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get adminAccountNotSet;
+
+  /// No description provided for @adminAccountSectionProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get adminAccountSectionProfile;
+
+  /// No description provided for @adminAccountSectionContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts'**
+  String get adminAccountSectionContacts;
+
+  /// No description provided for @adminAccountSectionSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get adminAccountSectionSecurity;
+
+  /// No description provided for @adminAccountSectionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get adminAccountSectionLanguage;
+
+  /// No description provided for @adminAccountProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change name'**
+  String get adminAccountProfileTitle;
+
+  /// No description provided for @adminAccountLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change login'**
+  String get adminAccountLoginTitle;
+
+  /// No description provided for @adminAccountPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get adminAccountPasswordTitle;
+
+  /// No description provided for @adminAccountPhoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone'**
+  String get adminAccountPhoneTitle;
+
+  /// No description provided for @adminAccountEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get adminAccountEmailTitle;
+
+  /// No description provided for @adminAccountSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get adminAccountSave;
+
+  /// No description provided for @adminAccountSaveLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Save login'**
+  String get adminAccountSaveLogin;
+
+  /// No description provided for @adminAccountSavePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get adminAccountSavePassword;
+
+  /// No description provided for @adminAccountActionLogoutAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out on all devices'**
+  String get adminAccountActionLogoutAll;
+
   /// No description provided for @parentAccountBackToPicker.
   ///
   /// In en, this message translates to:
@@ -1195,6 +1879,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Is your family already on LARNES?'**
   String get parentFamilySetupGateTitle;
+
+  /// No description provided for @parentFamilySetupContinueAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up family'**
+  String get parentFamilySetupContinueAction;
 
   /// No description provided for @parentFamilySetupGateLead.
   ///

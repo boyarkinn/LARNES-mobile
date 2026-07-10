@@ -4,11 +4,14 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/widgets/add_child_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
+import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
+import 'package:larnes_mobile/features/parent/widgets/parent_panel_error_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -25,6 +28,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   bool _isLoading = true;
   bool _isRefreshing = false;
   String? _error;
+  String? _errorCode;
   List<ParentChild> _children = const [];
   bool _wasInactive = false;
 
@@ -32,11 +36,24 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _bindAuthSession();
-        _load();
+      if (!mounted) {
+        return;
       }
+      _bindAuthSession();
+      if (_redirectIfFamilySetupRequired()) {
+        return;
+      }
+      _load();
     });
+  }
+
+  bool _redirectIfFamilySetupRequired() {
+    final auth = AuthScope.of(context);
+    if (auth.familySetupComplete == true) {
+      return false;
+    }
+    redirectToFamilySetupIfRequired(context, code: kFamilySetupRequiredCode);
+    return true;
   }
 
   @override
@@ -68,6 +85,9 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
 
     _lastParentDataRevision = auth.parentDataRevision;
+    if (_redirectIfFamilySetupRequired()) {
+      return;
+    }
     _load(refreshing: _children.isNotEmpty);
   }
 
@@ -103,6 +123,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       setState(() {
         _isLoading = true;
         _error = null;
+        _errorCode = null;
       });
     }
 
@@ -117,11 +138,16 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
         _isLoading = false;
         _isRefreshing = false;
         _error = null;
+        _errorCode = null;
       });
     } on ParentApiException catch (error) {
+      if (mounted && redirectToFamilySetupIfRequired(context, code: error.code)) {
+        return;
+      }
       if (mounted) {
         setState(() {
           _error = error.message;
+          _errorCode = error.code;
           _isLoading = false;
           _isRefreshing = false;
         });
@@ -172,26 +198,14 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
 
     if (_error != null && _children.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: ParentColors.inkMuted),
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
-                onPressed: _load,
-                child: Text(l10n.continueButton),
-              ),
-            ],
-          ),
+      return ParentPanelErrorPanel(
+        message: _error!,
+        showFamilySetupAction: isFamilySetupRequiredCode(_errorCode),
+        onFamilySetup: () => redirectToFamilySetupIfRequired(
+          context,
+          code: _errorCode,
         ),
+        onRetry: _load,
       );
     }
 

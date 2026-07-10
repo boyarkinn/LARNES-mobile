@@ -547,6 +547,380 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountTitle => 'Account';
 
   @override
+  String get adminNavTrainers => 'Trainers';
+
+  @override
+  String get adminNavAccount => 'Account';
+
+  @override
+  String get adminTrainersTitle => 'Trainers';
+
+  @override
+  String get adminTrainersHint =>
+      'Catalog for manual trainer checks before programs and homework.';
+
+  @override
+  String get adminTrainersLoadFailed => 'Could not load catalog.';
+
+  @override
+  String get adminTrainersOpen => 'Open';
+
+  @override
+  String get adminTrainersDirectionMental => 'Mental arithmetic';
+
+  @override
+  String get adminTrainersDirectionMath => 'Math';
+
+  @override
+  String get adminTrainersDirectionReading => 'Reading';
+
+  @override
+  String get adminTrainersPlatformWeb => 'Web';
+
+  @override
+  String get adminTrainersPlatformMobile => 'Mobile';
+
+  @override
+  String get adminTrainersStatusInDevelopment => 'In development';
+
+  @override
+  String get adminTrainersStatusReadyForRelease => 'Ready for release';
+
+  @override
+  String adminTrainersGroupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# trainers',
+      one: '# trainer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminTrainersCatalogInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# in progress',
+      one: '# in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminTrainersDetailPlaceholder =>
+      'Trainer screen (Play and Workflow) will appear in the next phases.';
+
+  @override
+  String get adminTrainerWorkflowTabWorkflow => 'Workflow';
+
+  @override
+  String get adminTrainerWorkflowTabPlay => 'Play';
+
+  @override
+  String get adminTrainerWorkflowPlayPlaceholder =>
+      'Trainer play mode will appear in the next phase.';
+
+  @override
+  String get adminTrainerWorkflowLoadFailed => 'Could not load trainer.';
+
+  @override
+  String get adminTrainerWorkflowSectionFunnel => 'Funnel';
+
+  @override
+  String get adminTrainerWorkflowSectionTeam => 'Team';
+
+  @override
+  String get adminTrainerWorkflowSectionFeed => 'Feed';
+
+  @override
+  String adminTrainerWorkflowInProgressCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# comments in progress',
+      one: '# comment in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminTrainerWorkflowFeedEmpty => 'No comments yet.';
+
+  @override
+  String get adminTrainerWorkflowCommentAddTitle => 'Add comment';
+
+  @override
+  String get adminTrainerWorkflowCommentBodyPlaceholder =>
+      'Describe an issue or task';
+
+  @override
+  String get adminTrainerWorkflowCommentAddSubmit => 'Add';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusInProgress => 'In progress';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusImplemented => 'Done';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusRejected => 'Rejected';
+
+  @override
+  String get adminTrainerWorkflowCommentActionInProgress => 'In progress';
+
+  @override
+  String get adminTrainerWorkflowCommentActionImplemented => 'Done';
+
+  @override
+  String get adminTrainerWorkflowCommentActionRejected => 'Reject';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusUnset => 'Not set';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusNeedsFixes => 'Needs fixes';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusReadyForRelease =>
+      'Ready for release';
+
+  @override
+  String get adminTrainerWorkflowSignoffActionNeedsFixes => 'Needs fixes';
+
+  @override
+  String get adminTrainerWorkflowSignoffActionReadyForRelease => 'Ready';
+
+  @override
+  String get adminTrainerPlayLoadFailed => 'Could not load parameters.';
+
+  @override
+  String get adminTrainerPlayLaunch => 'LAUNCH';
+
+  @override
+  String get adminTrainerPlayInteractiveHint =>
+      'Interactive trainers finish when the child completes the task.';
+
+  @override
+  String get adminTrainerPlayLetterCaseLabel => 'Letter case';
+
+  @override
+  String get adminTrainerPlayWordCaseLabel => 'Word case';
+
+  @override
+  String get adminTrainerPlayLetterLabel => 'Letter';
+
+  @override
+  String get adminTrainerPlayPracticeLettersLabel => 'Practice letters';
+
+  @override
+  String get adminTrainerPlayShopItemLabel => 'Item';
+
+  @override
+  String get adminTrainerPlayPriceLabel => 'Price';
+
+  @override
+  String get adminTrainerPlayCoinCountLabel => 'Coins in register';
+
+  @override
+  String get adminTrainerPlayWholeLabel => 'Whole';
+
+  @override
+  String get adminTrainerPlayKnownPartLabel => 'Known part';
+
+  @override
+  String get adminTrainerPlayAnswerRangeStartLabel => 'Answer range start';
+
+  @override
+  String get adminTrainerPlayTargetFruitLabel => 'Target fruit';
+
+  @override
+  String get adminTrainerPlayFruitTargetCountLabel => 'Target count';
+
+  @override
+  String get adminTrainerPlayFruitTypeCountLabel => 'Fruit types';
+
+  @override
+  String get adminTrainerPlayTotalFruitsLabel => 'Total fruits';
+
+  @override
+  String get adminTrainerPlayDigitLabel => 'Digit';
+
+  @override
+  String get adminTrainerPlayTargetCountLabel => 'How many to find';
+
+  @override
+  String get adminTrainerPlayDistractorCountLabel => 'Distractors';
+
+  @override
+  String get adminTrainerPlayMissingSegmentLabel => 'Missing segment';
+
+  @override
+  String get adminTrainerPlayLetterCountLabel => 'Letter count';
+
+  @override
+  String get adminTrainerPlayOddLetterLabel => 'Odd letter (random or letter)';
+
+  @override
+  String get adminTrainerPlayOptionCountLabel => 'Option count';
+
+  @override
+  String get adminTrainerPlayDotModeLabel => 'Dot mode';
+
+  @override
+  String get adminTrainerPlayRoundsLabel => 'Rounds';
+
+  @override
+  String get adminTrainerPlayDisplaySecondsLabel => 'Display seconds';
+
+  @override
+  String get adminTrainerPlayGridSizeLabel => 'Grid size';
+
+  @override
+  String get adminTrainerPlayFilledCountLabel => 'Filled cells';
+
+  @override
+  String get adminTrainerPlayWordSlugLabel => 'Word';
+
+  @override
+  String get adminTrainerPlayEntityCountLabel => 'Word count';
+
+  @override
+  String get adminTrainerPlayPairCountLabel => 'Pairs';
+
+  @override
+  String get adminTrainerPlayCatchCountLabel => 'Catch count';
+
+  @override
+  String get adminTrainerPlaySpeedLabel => 'Speed';
+
+  @override
+  String get adminTrainerPlayWordItemCountLabel => 'Words in task';
+
+  @override
+  String get adminTrainerPlayTotalRodsLabel => 'Rods';
+
+  @override
+  String get adminTrainerPlayValueLabel => 'Value';
+
+  @override
+  String get adminTrainerPlayMatchValue1Label => 'Value 1';
+
+  @override
+  String get adminTrainerPlayMatchValue2Label => 'Value 2';
+
+  @override
+  String get adminTrainerPlayMatchValue3Label => 'Value 3';
+
+  @override
+  String get adminTrainerPlayMatchValue4Label => 'Value 4';
+
+  @override
+  String get adminTrainerPlayLetterCaseUpper => 'Uppercase';
+
+  @override
+  String get adminTrainerPlayLetterCaseLower => 'Lowercase';
+
+  @override
+  String get adminTrainerPlayMissingSegmentRandom => 'Random';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex1 => 'Segment 1';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex2 => 'Segment 2';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex3 => 'Segment 3';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex4 => 'Segment 4';
+
+  @override
+  String get adminTrainerPlayDotModeNumbered => 'Numbered';
+
+  @override
+  String get adminTrainerPlayDotModeFree => 'Free';
+
+  @override
+  String get adminTrainerPlaySpeedSlow => 'Slow';
+
+  @override
+  String get adminTrainerPlaySpeedMedium => 'Medium';
+
+  @override
+  String get adminTrainerPlaySpeedFast => 'Fast';
+
+  @override
+  String get adminTrainerPlayMobileHint =>
+      'Runs in the mobile runtime (Flutter). Check the web version on desktop.';
+
+  @override
+  String get adminTrainerPlayWebOnlyTitle => 'No mobile implementation';
+
+  @override
+  String get adminTrainerPlayWebOnlyMessage =>
+      'This trainer is web-only for now. Run and test play at larnes.online under Trainers.';
+
+  @override
+  String get adminTrainerPlayExit => 'Back';
+
+  @override
+  String get adminTrainerPlayContinueCheck => 'Continue check';
+
+  @override
+  String get adminAccountTitle => 'Account';
+
+  @override
+  String get adminAccountLoadFailed => 'Could not load account.';
+
+  @override
+  String get adminAccountSaveFailed => 'Could not save changes.';
+
+  @override
+  String get adminAccountNotSet => 'Not set';
+
+  @override
+  String get adminAccountSectionProfile => 'Profile';
+
+  @override
+  String get adminAccountSectionContacts => 'Contacts';
+
+  @override
+  String get adminAccountSectionSecurity => 'Security';
+
+  @override
+  String get adminAccountSectionLanguage => 'Language';
+
+  @override
+  String get adminAccountProfileTitle => 'Change name';
+
+  @override
+  String get adminAccountLoginTitle => 'Change login';
+
+  @override
+  String get adminAccountPasswordTitle => 'Change password';
+
+  @override
+  String get adminAccountPhoneTitle => 'Change phone';
+
+  @override
+  String get adminAccountEmailTitle => 'Change email';
+
+  @override
+  String get adminAccountSave => 'Save';
+
+  @override
+  String get adminAccountSaveLogin => 'Save login';
+
+  @override
+  String get adminAccountSavePassword => 'Save password';
+
+  @override
+  String get adminAccountActionLogoutAll => 'Sign out on all devices';
+
+  @override
   String get parentAccountBackToPicker => 'Back';
 
   @override
@@ -605,6 +979,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentFamilySetupGateTitle => 'Is your family already on LARNES?';
+
+  @override
+  String get parentFamilySetupContinueAction => 'Set up family';
 
   @override
   String get parentFamilySetupGateLead =>

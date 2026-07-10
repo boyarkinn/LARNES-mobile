@@ -2,26 +2,27 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
-Map<String, dynamic>? _asJsonMap(dynamic body) {
-  if (body is Map<String, dynamic>) {
-    return body;
-  }
-  if (body is Map) {
-    return Map<String, dynamic>.from(body);
-  }
-  return null;
-}
+Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
 
-String _messageFromBody(dynamic body, AppLocalizations l10n, {String? fallback}) {
-  final map = _asJsonMap(body);
-  final message = map?['message'];
-  if (message is String && message.isNotEmpty) {
-    return message;
-  }
-  return fallback ?? l10n.requestError;
-}
+String _messageFromBody(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) =>
+    parentPanelErrorMessage(body, l10n, fallback: fallback);
+
+ParentAccountApiException _parentAccountApiException(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) =>
+    ParentAccountApiException(
+      _messageFromBody(body, l10n, fallback: fallback),
+      code: parentPanelErrorCode(body),
+    );
 
 class ParentAccountSnapshot {
   const ParentAccountSnapshot({
@@ -57,12 +58,10 @@ class ParentAccountApi {
       }
       return ParentAccountSnapshot.fromJson(data);
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -126,12 +125,10 @@ class ParentAccountApi {
       }
       return data['relationship'] as String? ?? relationship;
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -179,12 +176,10 @@ class ParentAccountApi {
       final token = data['token'] as String?;
       return (user: user, token: token);
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -217,12 +212,10 @@ class ParentAccountApi {
         pendingToken: data['pendingToken'] as String? ?? '',
       );
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -268,12 +261,10 @@ class ParentAccountApi {
         );
       }
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -287,12 +278,10 @@ class ParentAccountApi {
         throw ParentAccountApiException(_messageFromBody(data, l10n));
       }
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -312,12 +301,10 @@ class ParentAccountApi {
       }
       return AuthUser.fromJson(Map<String, dynamic>.from(data['user'] as Map));
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -336,12 +323,10 @@ class ParentAccountApi {
       }
       return AuthUser.fromJson(Map<String, dynamic>.from(data['user'] as Map));
     } on DioException catch (error) {
-      throw ParentAccountApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -356,8 +341,12 @@ class ParentAccountApi {
 }
 
 class ParentAccountApiException implements Exception {
-  const ParentAccountApiException(this.message);
+  const ParentAccountApiException(this.message, {this.code});
+
   final String message;
+  final String? code;
+
+  bool get isFamilySetupRequired => isFamilySetupRequiredCode(code);
 
   @override
   String toString() => message;

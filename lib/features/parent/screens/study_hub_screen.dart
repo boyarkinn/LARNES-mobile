@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
+import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
+import 'package:larnes_mobile/features/parent/widgets/parent_panel_error_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -22,6 +26,7 @@ class StudyHubScreen extends StatefulWidget {
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   String? _error;
+  String? _errorCode;
   List<ParentDirectionCard> _directions = const [];
   bool _wasInactive = false;
 
@@ -29,9 +34,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _load();
+      if (!mounted) {
+        return;
       }
+      if (isReservedParentChildRouteId(widget.childId)) {
+        context.go('/parent/family-setup');
+        return;
+      }
+      _load();
     });
   }
 
@@ -59,6 +69,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       setState(() {
         _isLoading = true;
         _error = null;
+        _errorCode = null;
       });
     }
 
@@ -75,11 +86,16 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
         _directions = directions;
         _isLoading = false;
         _error = null;
+        _errorCode = null;
       });
     } on ParentApiException catch (error) {
+      if (mounted && redirectToFamilySetupIfRequired(context, code: error.code)) {
+        return;
+      }
       if (mounted) {
         setState(() {
           _error = error.message;
+          _errorCode = error.code;
           _isLoading = false;
         });
       }
@@ -140,16 +156,16 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: ParentChildCardMetrics.pickerListGap),
-                  Text(
-                    _error!,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: ParentColors.inkMuted),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
-                    onPressed: _load,
-                    child: Text(l10n.continueButton),
+                  ParentPanelErrorPanel(
+                    message: _error!,
+                    showFamilySetupAction: isFamilySetupRequiredCode(
+                      _errorCode,
+                    ),
+                    onFamilySetup: () => redirectToFamilySetupIfRequired(
+                      context,
+                      code: _errorCode,
+                    ),
+                    onRetry: _load,
                   ),
                 ],
                 for (final direction in _directions) ...[

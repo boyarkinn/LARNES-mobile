@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:larnes_mobile/core/auth/secure_storage_utils.dart';
 
 class DeviceTokenStorage {
   DeviceTokenStorage({FlutterSecureStorage? storage})
@@ -8,7 +9,7 @@ class DeviceTokenStorage {
 
   final FlutterSecureStorage _storage;
 
-  Future<String?> readToken() => _storage.read(key: _tokenKey);
+  Future<String?> readToken() => readSecureStorageValue(_storage, _tokenKey);
 
   Future<bool> hasToken() async {
     final token = await readToken();
@@ -18,5 +19,5 @@ class DeviceTokenStorage {
   Future<void> writeToken(String token) =>
       _storage.write(key: _tokenKey, value: token);
 
-  Future<void> clearToken() => _storage.delete(key: _tokenKey);
+  Future<void> clearToken() => deleteSecureStorageValue(_storage, _tokenKey);
 }

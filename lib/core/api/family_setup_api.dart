@@ -47,6 +47,12 @@ class FamilySetupSnapshot {
   bool get isPendingJoin => status == 'pending_join';
 }
 
+/// Gate не пройден — как `family_setup_status = unset` на сервере.
+const unsetFamilySetupSnapshot = FamilySetupSnapshot(
+  isComplete: false,
+  status: 'unset',
+);
+
 class FamilySetupApi {
   FamilySetupApi(this._client);
 

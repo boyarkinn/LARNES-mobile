@@ -1,33 +1,21 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/api_error_body.dart';
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
+import 'package:larnes_mobile/core/api/api_error_body.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 
-Map<String, dynamic>? _asJsonMap(dynamic body) {
-  if (body is Map<String, dynamic>) {
-    return body;
-  }
-  if (body is Map) {
-    return Map<String, dynamic>.from(body);
-  }
-  return null;
-}
+Map<String, dynamic>? _asJsonMap(dynamic body) => parseApiJsonBody(body);
 
 String _messageFromBody(
   dynamic body,
   AppLocalizations l10n, {
   String? fallback,
-}) {
-  final map = _asJsonMap(body);
-  final message = map?['message'];
-  if (message is String && message.isNotEmpty) {
-    return message;
-  }
-  return fallback ?? l10n.requestError;
-}
+}) =>
+    apiMessageFromBody(body, l10n, fallback: fallback);
 
 class RegisterApi {
   RegisterApi(this._client);
@@ -80,7 +68,11 @@ class RegisterApi {
       return normalized;
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: apiNetworkMessage(error, l10n),
+        ),
       );
     }
   }
@@ -113,7 +105,11 @@ class RegisterApi {
       return token;
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: apiNetworkMessage(error, l10n),
+        ),
       );
     }
   }
@@ -139,7 +135,11 @@ class RegisterApi {
       }
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: apiNetworkMessage(error, l10n),
+        ),
       );
     }
   }
@@ -180,7 +180,11 @@ class RegisterApi {
       );
     } on DioException catch (error) {
       throw RegisterApiException(
-        _messageFromBody(error.response?.data, l10n, fallback: _networkMessage(error, l10n)),
+        _messageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: apiNetworkMessage(error, l10n),
+        ),
       );
     }
   }
@@ -198,14 +202,6 @@ class RegisterApi {
       case RegisterAccountType.networkOwner:
         return 'network_owner';
     }
-  }
-
-  static String _networkMessage(DioException error, AppLocalizations l10n) {
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout) {
-      return l10n.noConnection;
-    }
-    return l10n.requestFailed;
   }
 }
 

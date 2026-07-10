@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_navigation.dart';
+import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_bottom_nav.dart';
 
 class ParentShellScaffold extends StatelessWidget {
@@ -15,10 +17,15 @@ class ParentShellScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _onTabSelected(BuildContext context, int index) {
+    final auth = AuthScope.of(context);
     if (index == ParentNavigation.childrenTabIndex) {
+      if (auth.familySetupComplete != true) {
+        redirectToFamilySetupIfRequired(context, code: kFamilySetupRequiredCode);
+        return;
+      }
       if (navigationShell.currentIndex == index) {
         context.go('/parent');
-        AuthScope.of(context).notifyParentDataChanged();
+        auth.notifyParentDataChanged();
         return;
       }
       navigationShell.goBranch(index, initialLocation: true);
@@ -28,7 +35,7 @@ class ParentShellScaffold extends StatelessWidget {
         initialLocation: true,
       );
     }
-    AuthScope.of(context).notifyParentDataChanged();
+    auth.notifyParentDataChanged();
   }
 
   @override

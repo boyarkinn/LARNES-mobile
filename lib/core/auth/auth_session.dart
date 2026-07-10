@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:larnes_mobile/core/api/admin_trainers_api.dart';
+import 'package:larnes_mobile/core/api/admin_account_api.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/api/family_invites_api.dart';
@@ -34,12 +36,12 @@ class AuthSession extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
 
-  /// `null` — не parent или статус ещё не загружен.
+  /// Для parent: `false` пока gate не пройден (включая незагруженный snapshot).
   bool? get familySetupComplete {
     if (!isParentAccount(_user?.accountType)) {
       return null;
     }
-    return _familySetup?.isComplete;
+    return _familySetup?.isComplete ?? false;
   }
 
   AuthApi get authApi => _authApi;
@@ -51,6 +53,10 @@ class AuthSession extends ChangeNotifier {
   ParentApi get parentApi => _client.parentApi;
 
   ParentAccountApi get parentAccountApi => _client.parentAccountApi;
+
+  AdminAccountApi get adminAccountApi => _client.adminAccountApi;
+
+  AdminTrainersApi get adminTrainersApi => _client.adminTrainersApi;
 
   FamilySetupApi get familySetupApi => _client.familySetupApi;
 
@@ -93,7 +99,10 @@ class AuthSession extends ChangeNotifier {
       _familySetup = await _client.familySetupApi.fetchStatus(locale: locale);
       _notifySafely();
     } catch (_) {
-      // keep previous snapshot on transient errors
+      if (_familySetup == null) {
+        _familySetup = unsetFamilySetupSnapshot;
+        _notifySafely();
+      }
     }
   }
 
@@ -135,7 +144,7 @@ class AuthSession extends ChangeNotifier {
         try {
           _familySetup = await _client.familySetupApi.fetchStatus();
         } catch (_) {
-          _familySetup = null;
+          _familySetup = unsetFamilySetupSnapshot;
         }
       } else {
         _familySetup = null;

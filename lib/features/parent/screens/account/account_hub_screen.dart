@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/guardians_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
+import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -12,6 +14,7 @@ import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/utils/guardian_relationship_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_family_section.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_language_picker.dart';
+import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -28,6 +31,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
   int _lastParentDataRevision = 0;
   bool _isLoading = true;
   String? _error;
+  String? _errorCode;
   ParentAccountSnapshot? _snapshot;
   List<ParentChild> _children = const [];
   GuardiansSnapshot? _guardians;
@@ -106,16 +110,20 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
       setState(() {
         _isLoading = true;
         _error = null;
+        _errorCode = null;
       });
     }
 
     try {
       final locale = LocaleScope.read(context).localeCode;
       final auth = AuthScope.of(context);
-      final results = await Future.wait([
-        auth.parentAccountApi.fetchAccount(locale: locale),
-        auth.parentApi.listChildren(locale: locale),
-      ]);
+      final account = await auth.parentAccountApi.fetchAccount(locale: locale);
+      List<ParentChild> children = const [];
+      try {
+        children = await auth.parentApi.listChildren(locale: locale);
+      } on ParentApiException {
+        children = const [];
+      }
       GuardiansSnapshot? guardians;
       try {
         guardians = await auth.guardiansApi.fetchGuardians(locale: locale);
@@ -125,18 +133,20 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
       if (!mounted) {
         return;
       }
-      auth.applyUser((results[0] as ParentAccountSnapshot).user);
+      auth.applyUser(account.user);
       setState(() {
-        _snapshot = results[0] as ParentAccountSnapshot;
-        _children = results[1] as List<ParentChild>;
+        _snapshot = account;
+        _children = children;
         _guardians = guardians;
         _isLoading = false;
         _error = null;
+        _errorCode = null;
       });
     } on ParentAccountApiException catch (error) {
       if (mounted) {
         setState(() {
           _error = error.message;
+          _errorCode = error.code;
           _isLoading = false;
         });
       }
@@ -244,6 +254,8 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 onPressed: _load,
                 child: Text(l10n.continueButton),
               ),
+              const SizedBox(height: 12),
+              TextButton(onPressed: _logout, child: Text(l10n.logoutButton)),
             ],
           ),
         ),

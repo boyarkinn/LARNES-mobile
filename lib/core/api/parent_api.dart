@@ -1,30 +1,31 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/features/parent/models/child_classroom_qr.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
-Map<String, dynamic>? _asJsonMap(dynamic body) {
-  if (body is Map<String, dynamic>) {
-    return body;
-  }
-  if (body is Map) {
-    return Map<String, dynamic>.from(body);
-  }
-  return null;
-}
+Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
 
-String _messageFromBody(dynamic body, AppLocalizations l10n, {String? fallback}) {
-  final map = _asJsonMap(body);
-  final message = map?['message'];
-  if (message is String && message.isNotEmpty) {
-    return message;
-  }
-  return fallback ?? l10n.requestError;
-}
+String _messageFromBody(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) =>
+    parentPanelErrorMessage(body, l10n, fallback: fallback);
+
+ParentApiException _parentApiException(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) =>
+    ParentApiException(
+      _messageFromBody(body, l10n, fallback: fallback),
+      code: parentPanelErrorCode(body),
+    );
 
 class ParentApi {
   ParentApi(this._client);
@@ -48,12 +49,10 @@ class ParentApi {
           )
           .toList();
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -68,12 +67,10 @@ class ParentApi {
       }
       return ParentChildDetail.fromJson(data);
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -98,12 +95,10 @@ class ParentApi {
       }
       return ParentChild.fromJson(child);
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -129,12 +124,10 @@ class ParentApi {
       }
       return ParentChild.fromJson(Map<String, dynamic>.from(child));
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -161,12 +154,10 @@ class ParentApi {
       }
       return ParentHomeworkListPage.fromJson(data);
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -196,12 +187,10 @@ class ParentApi {
         Map<String, dynamic>.from(snapshot),
       );
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -231,12 +220,10 @@ class ParentApi {
           )
           .toList();
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -264,12 +251,10 @@ class ParentApi {
       }
       return DirectionTrack.fromJson(Map<String, dynamic>.from(track));
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -299,12 +284,10 @@ class ParentApi {
         Map<String, dynamic>.from(snapshot),
       );
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -336,12 +319,10 @@ class ParentApi {
         progressStatus: data['progressStatus'] as String? ?? 'in_progress',
       );
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -370,12 +351,10 @@ class ParentApi {
         );
       }
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -399,12 +378,10 @@ class ParentApi {
       }
       return ChildClassroomQrState.fromJson(Map<String, dynamic>.from(qr));
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -433,12 +410,10 @@ class ParentApi {
       }
       return ChildClassroomQrState.fromJson(Map<String, dynamic>.from(qr));
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -455,12 +430,10 @@ class ParentApi {
         throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentDeleteChildFailed));
       }
     } on DioException catch (error) {
-      throw ParentApiException(
-        _messageFromBody(
-          error.response?.data,
-          l10n,
-          fallback: _networkMessage(error, l10n),
-        ),
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
       );
     }
   }
@@ -475,8 +448,12 @@ class ParentApi {
 }
 
 class ParentApiException implements Exception {
-  const ParentApiException(this.message);
+  const ParentApiException(this.message, {this.code});
+
   final String message;
+  final String? code;
+
+  bool get isFamilySetupRequired => isFamilySetupRequiredCode(code);
 
   @override
   String toString() => message;

@@ -66,8 +66,8 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
       );
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
-    } catch (error) {
-      setState(() => _error = error.toString());
+    } catch (_) {
+      setState(() => _error = l10n.requestFailed);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);

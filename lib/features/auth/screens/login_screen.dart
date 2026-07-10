@@ -53,15 +53,14 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       final redirect = widget.redirectPath?.trim();
-      if (redirect != null && redirect.isNotEmpty) {
-        context.go(redirect);
-        return;
-      }
-      if (widget.authSession.familySetupComplete == false) {
-        context.go('/parent/family-setup');
-        return;
-      }
-      context.go(mapHomePathToMobile(homePath));
+      context.go(
+        resolvePostAuthDestination(
+          accountType: widget.authSession.user?.accountType,
+          homePath: homePath,
+          familySetupComplete: widget.authSession.familySetupComplete,
+          redirectPath: redirect,
+        ),
+      );
     } on AuthApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {

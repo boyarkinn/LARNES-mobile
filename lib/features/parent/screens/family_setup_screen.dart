@@ -7,6 +7,7 @@ import 'package:larnes_mobile/core/api/family_setup_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
+import 'package:larnes_mobile/features/parent/widgets/parent_panel_error_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:share_plus/share_plus.dart';
@@ -179,6 +180,13 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     await SharePlus.instance.share(ShareParams(text: url));
   }
 
+  Future<void> _logout() async {
+    await AuthScope.of(context).logout();
+    if (mounted) {
+      context.go('/login');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -195,22 +203,9 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     }
 
     if (_error != null && _snapshot == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: ParentColors.inkMuted)),
-              const SizedBox(height: 16),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
-                onPressed: _load,
-                child: Text(l10n.continueButton),
-              ),
-            ],
-          ),
-        ),
+      return ParentPanelErrorPanel(
+        message: _error!,
+        onRetry: _load,
       );
     }
 
@@ -299,6 +294,15 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
                   ),
                 ],
               ],
+            ),
+          ),
+        ),
+        AccountDeskCard(
+          child: Padding(
+            padding: AccountDeskMetrics.formPadding,
+            child: TextButton(
+              onPressed: _isPending ? null : _logout,
+              child: Text(l10n.logoutButton),
             ),
           ),
         ),

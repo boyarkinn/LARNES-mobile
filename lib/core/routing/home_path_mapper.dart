@@ -13,6 +13,9 @@ String mapHomePathToMobile(String webPath) {
   if (path == '/network' || path.startsWith('/network/')) {
     return '/network';
   }
+  if (path == '/admin' || path.startsWith('/admin/')) {
+    return '/admin';
+  }
   return '/home';
 }
 
@@ -24,10 +27,16 @@ String defaultMobileHomeForAccountType(String? accountType) {
     case 'network_owner':
     case 'staff':
       return '/network';
+    case 'admin':
+      return '/admin';
     default:
       return '/home';
   }
 }
+
+bool isAdminAccount(String? accountType) => accountType == 'admin';
+
+bool isAdminRoute(String path) => path == '/admin' || path.startsWith('/admin/');
 
 bool isParentAccount(String? accountType) => accountType == 'parent';
 
@@ -64,6 +73,27 @@ bool isAuthRoute(String path) =>
     path.startsWith('/password-reset/');
 
 bool isParentRoute(String path) => path == '/parent' || path.startsWith('/parent/');
+
+bool isParentAccountRoute(String path) {
+  final base = path.split('?').first;
+  return base == '/parent/account' || base.startsWith('/parent/account/');
+}
+
+/// Дети, профили, ДЗ — gate до ответа «семья уже в LARNES?».
+bool isParentChildrenRoute(String path) {
+  if (!isParentRoute(path)) {
+    return false;
+  }
+  if (isParentAccountRoute(path) ||
+      isFamilySetupRoute(path) ||
+      isFamilyJoinDedupRoute(path)) {
+    return false;
+  }
+  return true;
+}
+
+bool parentNeedsFamilySetup(String? accountType, bool? familySetupComplete) =>
+    isParentAccount(accountType) && familySetupComplete != true;
 
 /// Redirect target for [GoRouter], or `null` when navigation may proceed.
 String? resolveAppRedirect({
@@ -105,18 +135,26 @@ String? resolveAppRedirect({
     return defaultMobileHomeForAccountType(accountType);
   }
 
+  if (isAuthenticated && isAdminRoute(path) && !isAdminAccount(accountType)) {
+    return defaultMobileHomeForAccountType(accountType);
+  }
+
   if (isAuthenticated &&
       isNetworkRoute(path) &&
       !isNetworkPanelAccount(accountType)) {
-    return '/home';
+    return defaultMobileHomeForAccountType(accountType);
+  }
+
+  if (isAuthenticated && isAdminAccount(accountType) && path == '/home') {
+    return '/admin';
   }
 
   if (isAuthenticated && isParentAccount(accountType)) {
-    if (familySetupComplete == false) {
-      if (isParentRoute(path) && !isFamilySetupRoute(path) && !isFamilyJoinDedupRoute(path)) {
+    if (parentNeedsFamilySetup(accountType, familySetupComplete)) {
+      if (isParentChildrenRoute(path)) {
         return '/parent/family-setup';
       }
-    } else if (familySetupComplete == true && isFamilySetupRoute(path)) {
+    } else if (isFamilySetupRoute(path)) {
       return '/parent';
     }
   }
@@ -135,10 +173,37 @@ String resolveAuthenticatedHome({
   required String? accountType,
   bool? familySetupComplete,
 }) {
-  if (isParentAccount(accountType) && familySetupComplete == false) {
+  if (isParentAccount(accountType) && familySetupComplete != true) {
     return '/parent/family-setup';
   }
   return defaultMobileHomeForAccountType(accountType);
+}
+
+/// Явный переход на gate из children-зоны.
+String resolveParentChildrenDestination({required bool? familySetupComplete}) {
+  if (familySetupComplete != true) {
+    return '/parent/family-setup';
+  }
+  return '/parent';
+}
+
+/// После login / register / password-reset: gate для parent, иначе homePath или redirect.
+String resolvePostAuthDestination({
+  required String? accountType,
+  required String homePath,
+  bool? familySetupComplete,
+  String? redirectPath,
+}) {
+  if (isParentAccount(accountType) && familySetupComplete != true) {
+    return '/parent/family-setup';
+  }
+
+  final redirect = redirectPath?.trim();
+  if (redirect != null && redirect.isNotEmpty) {
+    return redirect;
+  }
+
+  return mapHomePathToMobile(homePath);
 }
 
 /// Post-bootstrap navigation from `/splash`.

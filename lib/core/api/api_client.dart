@@ -1,4 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:larnes_mobile/core/api/api_error_body.dart';
+import 'package:larnes_mobile/core/api/admin_trainers_api.dart';
+import 'package:larnes_mobile/core/api/admin_account_api.dart';
 import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
 import 'package:larnes_mobile/core/api/family_setup_api.dart';
@@ -21,6 +25,7 @@ class ApiClient {
                 connectTimeout: const Duration(seconds: 20),
                 receiveTimeout: const Duration(seconds: 20),
                 headers: {'Content-Type': 'application/json'},
+                validateStatus: apiStatusAcceptable,
               ),
             ) {
     _dio.interceptors.add(
@@ -34,6 +39,15 @@ class ApiClient {
         },
       ),
     );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          logPrint: (object) => debugPrint('[API] $object'),
+        ),
+      );
+    }
   }
 
   final Dio _dio;
@@ -42,6 +56,8 @@ class ApiClient {
   PasswordResetApi? _passwordResetApi;
   ParentApi? _parentApi;
   ParentAccountApi? _parentAccountApi;
+  AdminAccountApi? _adminAccountApi;
+  AdminTrainersApi? _adminTrainersApi;
   FamilySetupApi? _familySetupApi;
   GuardiansApi? _guardiansApi;
   FamilyInvitesApi? _familyInvitesApi;
@@ -60,6 +76,10 @@ class ApiClient {
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
 
   ParentAccountApi get parentAccountApi => _parentAccountApi ??= ParentAccountApi(this);
+
+  AdminAccountApi get adminAccountApi => _adminAccountApi ??= AdminAccountApi(this);
+
+  AdminTrainersApi get adminTrainersApi => _adminTrainersApi ??= AdminTrainersApi(this);
 
   FamilySetupApi get familySetupApi => _familySetupApi ??= FamilySetupApi(this);
 

@@ -50,7 +50,7 @@ void main() {
   });
 
   group('family setup redirect', () {
-    test('blocks parent shell until setup complete', () {
+    test('blocks children routes until setup complete', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -69,7 +69,7 @@ void main() {
           accountType: 'parent',
           familySetupComplete: false,
         ),
-        '/parent/family-setup',
+        isNull,
       );
       expect(
         resolveAppRedirect(
@@ -112,6 +112,81 @@ void main() {
           isAuthenticated: true,
           accountType: 'parent',
           familySetupComplete: false,
+        ),
+        '/parent/family-setup',
+      );
+      expect(
+        resolveSplashDestination(
+          hasDeviceToken: false,
+          isAuthenticated: true,
+          accountType: 'parent',
+          familySetupComplete: null,
+        ),
+        '/parent/family-setup',
+      );
+    });
+
+    test('resolvePostAuthDestination sends new parent to gate', () {
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent',
+          familySetupComplete: false,
+        ),
+        '/parent/family-setup',
+      );
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent',
+          familySetupComplete: null,
+        ),
+        '/parent/family-setup',
+      );
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent/family-setup',
+          familySetupComplete: false,
+        ),
+        '/parent/family-setup',
+      );
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent',
+          familySetupComplete: true,
+        ),
+        '/parent',
+      );
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent',
+          familySetupComplete: true,
+          redirectPath: '/parent/account',
+        ),
+        '/parent/account',
+      );
+      expect(
+        resolvePostAuthDestination(
+          accountType: 'parent',
+          homePath: '/parent',
+          familySetupComplete: false,
+          redirectPath: '/parent/account',
+        ),
+        '/parent/family-setup',
+      );
+    });
+
+    test('null family setup blocks parent shell', () {
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: true,
+          path: '/parent',
+          accountType: 'parent',
+          familySetupComplete: null,
         ),
         '/parent/family-setup',
       );

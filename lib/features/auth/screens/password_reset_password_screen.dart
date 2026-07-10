@@ -66,7 +66,13 @@ class _PasswordResetPasswordScreenState extends State<PasswordResetPasswordScree
       if (!mounted) {
         return;
       }
-      context.go(mapHomePathToMobile(homePath));
+      context.go(
+        resolvePostAuthDestination(
+          accountType: AuthScope.of(context).user?.accountType,
+          homePath: homePath,
+          familySetupComplete: AuthScope.of(context).familySetupComplete,
+        ),
+      );
     } on PasswordResetApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {

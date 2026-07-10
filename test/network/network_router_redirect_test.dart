@@ -47,7 +47,7 @@ void main() {
           path: '/network',
           accountType: 'parent',
         ),
-        '/home',
+        '/parent',
       );
     });
 

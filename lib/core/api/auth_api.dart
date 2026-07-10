@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
+import 'package:larnes_mobile/core/api/api_error_body.dart';
 
 class AuthUser {
   const AuthUser({
@@ -114,11 +115,13 @@ class AuthApi {
         user: AuthUser.fromJson(data['user'] as Map<String, dynamic>),
       );
     } on DioException catch (error) {
-      final body = error.response?.data;
-      if (body is Map<String, dynamic>) {
-        throw AuthApiException(_messageFromBody(body, l10n));
-      }
-      throw AuthApiException(_networkMessage(error, l10n));
+      throw AuthApiException(
+        apiMessageFromBody(
+          error.response?.data,
+          l10n,
+          fallback: apiNetworkMessage(error, l10n),
+        ),
+      );
     }
   }
 
@@ -143,21 +146,8 @@ class AuthApi {
 
   Future<void> logout() => _client.tokenStorage.clearToken();
 
-  static String _messageFromBody(Map<String, dynamic>? body, AppLocalizations l10n) {
-    final message = body?['message'];
-    if (message is String && message.isNotEmpty) {
-      return message;
-    }
-    return l10n.requestError;
-  }
-
-  static String _networkMessage(DioException error, AppLocalizations l10n) {
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout) {
-      return l10n.noConnection;
-    }
-    return l10n.requestFailed;
-  }
+  static String _messageFromBody(Map<String, dynamic>? body, AppLocalizations l10n) =>
+      apiMessageFromBody(body, l10n);
 }
 
 class AuthApiException implements Exception {

@@ -553,6 +553,388 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountTitle => 'Аккаунт';
 
   @override
+  String get adminNavTrainers => 'Тренажёры';
+
+  @override
+  String get adminNavAccount => 'Аккаунт';
+
+  @override
+  String get adminTrainersTitle => 'Тренажёры';
+
+  @override
+  String get adminTrainersHint =>
+      'Каталог для ручной проверки тренажёров перед подключением в программы и ДЗ.';
+
+  @override
+  String get adminTrainersLoadFailed => 'Не удалось загрузить каталог.';
+
+  @override
+  String get adminTrainersOpen => 'Открыть';
+
+  @override
+  String get adminTrainersDirectionMental => 'Ментальная арифметика';
+
+  @override
+  String get adminTrainersDirectionMath => 'Математика';
+
+  @override
+  String get adminTrainersDirectionReading => 'Чтение';
+
+  @override
+  String get adminTrainersPlatformWeb => 'Web';
+
+  @override
+  String get adminTrainersPlatformMobile => 'Mobile';
+
+  @override
+  String get adminTrainersStatusInDevelopment => 'В разработке';
+
+  @override
+  String get adminTrainersStatusReadyForRelease => 'Готов к релизу';
+
+  @override
+  String adminTrainersGroupCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# тренажёра',
+      many: '# тренажёров',
+      few: '# тренажёра',
+      one: '# тренажёр',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String adminTrainersCatalogInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# в работе',
+      many: '# в работе',
+      few: '# в работе',
+      one: '# в работе',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminTrainersDetailPlaceholder =>
+      'Экран тренажёра (Play и Workflow) появится в следующих фазах.';
+
+  @override
+  String get adminTrainerWorkflowTabWorkflow => 'Workflow';
+
+  @override
+  String get adminTrainerWorkflowTabPlay => 'Play';
+
+  @override
+  String get adminTrainerWorkflowPlayPlaceholder =>
+      'Запуск тренажёра (Play) появится в следующей фазе.';
+
+  @override
+  String get adminTrainerWorkflowLoadFailed => 'Не удалось загрузить тренажёр.';
+
+  @override
+  String get adminTrainerWorkflowSectionFunnel => 'Воронка';
+
+  @override
+  String get adminTrainerWorkflowSectionTeam => 'Команда';
+
+  @override
+  String get adminTrainerWorkflowSectionFeed => 'Лента';
+
+  @override
+  String adminTrainerWorkflowInProgressCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# комментария в работе',
+      many: '# комментариев в работе',
+      few: '# комментария в работе',
+      one: '# комментарий в работе',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminTrainerWorkflowFeedEmpty => 'Комментариев пока нет.';
+
+  @override
+  String get adminTrainerWorkflowCommentAddTitle => 'Добавить комментарий';
+
+  @override
+  String get adminTrainerWorkflowCommentBodyPlaceholder =>
+      'Опишите замечание или задачу';
+
+  @override
+  String get adminTrainerWorkflowCommentAddSubmit => 'Добавить';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusInProgress => 'В работе';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusImplemented => 'Сделано';
+
+  @override
+  String get adminTrainerWorkflowCommentStatusRejected => 'Отклонено';
+
+  @override
+  String get adminTrainerWorkflowCommentActionInProgress => 'В работе';
+
+  @override
+  String get adminTrainerWorkflowCommentActionImplemented => 'Сделано';
+
+  @override
+  String get adminTrainerWorkflowCommentActionRejected => 'Отклонить';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusUnset => 'Не выбрано';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusNeedsFixes => 'Нужны правки';
+
+  @override
+  String get adminTrainerWorkflowSignoffStatusReadyForRelease =>
+      'Готов к релизу';
+
+  @override
+  String get adminTrainerWorkflowSignoffActionNeedsFixes => 'Нужны правки';
+
+  @override
+  String get adminTrainerWorkflowSignoffActionReadyForRelease => 'Готов';
+
+  @override
+  String get adminTrainerPlayLoadFailed => 'Не удалось загрузить параметры.';
+
+  @override
+  String get adminTrainerPlayLaunch => 'ЗАПУСТИТЬ';
+
+  @override
+  String get adminTrainerPlayInteractiveHint =>
+      'Интерактивный тренажёр завершится действием ребёнка.';
+
+  @override
+  String get adminTrainerPlayLetterCaseLabel => 'Регистр';
+
+  @override
+  String get adminTrainerPlayWordCaseLabel => 'Регистр слова';
+
+  @override
+  String get adminTrainerPlayLetterLabel => 'Буква';
+
+  @override
+  String get adminTrainerPlayPracticeLettersLabel => 'Буквы для тренировки';
+
+  @override
+  String get adminTrainerPlayShopItemLabel => 'Товар';
+
+  @override
+  String get adminTrainerPlayPriceLabel => 'Цена';
+
+  @override
+  String get adminTrainerPlayCoinCountLabel => 'Монет в кассе';
+
+  @override
+  String get adminTrainerPlayWholeLabel => 'Целое';
+
+  @override
+  String get adminTrainerPlayKnownPartLabel => 'Известная часть';
+
+  @override
+  String get adminTrainerPlayAnswerRangeStartLabel =>
+      'Начало диапазона ответов';
+
+  @override
+  String get adminTrainerPlayTargetFruitLabel => 'Какой фрукт считать';
+
+  @override
+  String get adminTrainerPlayFruitTargetCountLabel => 'Сколько на поле';
+
+  @override
+  String get adminTrainerPlayFruitTypeCountLabel => 'Видов фруктов';
+
+  @override
+  String get adminTrainerPlayTotalFruitsLabel => 'Всего фруктов';
+
+  @override
+  String get adminTrainerPlayDigitLabel => 'Цифра';
+
+  @override
+  String get adminTrainerPlayTargetCountLabel => 'Сколько найти';
+
+  @override
+  String get adminTrainerPlayDistractorCountLabel => 'Отвлекающих';
+
+  @override
+  String get adminTrainerPlayMissingSegmentLabel => 'Какой сегмент пропущен';
+
+  @override
+  String get adminTrainerPlayLetterCountLabel => 'Сколько букв';
+
+  @override
+  String get adminTrainerPlayOddLetterLabel =>
+      'Лишняя буква (random или буква)';
+
+  @override
+  String get adminTrainerPlayOptionCountLabel => 'Вариантов ответа';
+
+  @override
+  String get adminTrainerPlayDotModeLabel => 'Режим точек';
+
+  @override
+  String get adminTrainerPlayRoundsLabel => 'Раундов';
+
+  @override
+  String get adminTrainerPlayDisplaySecondsLabel => 'Секунд показа';
+
+  @override
+  String get adminTrainerPlayGridSizeLabel => 'Размер сетки';
+
+  @override
+  String get adminTrainerPlayFilledCountLabel => 'Заполненных ячеек';
+
+  @override
+  String get adminTrainerPlayWordSlugLabel => 'Слово';
+
+  @override
+  String get adminTrainerPlayEntityCountLabel => 'Сколько слов';
+
+  @override
+  String get adminTrainerPlayPairCountLabel => 'Пар';
+
+  @override
+  String get adminTrainerPlayCatchCountLabel => 'Сколько поймать';
+
+  @override
+  String get adminTrainerPlaySpeedLabel => 'Скорость';
+
+  @override
+  String get adminTrainerPlayWordItemCountLabel => 'Слов в задании';
+
+  @override
+  String get adminTrainerPlayTotalRodsLabel => 'Рядов';
+
+  @override
+  String get adminTrainerPlayValueLabel => 'Значение';
+
+  @override
+  String get adminTrainerPlayMatchValue1Label => 'Значение 1';
+
+  @override
+  String get adminTrainerPlayMatchValue2Label => 'Значение 2';
+
+  @override
+  String get adminTrainerPlayMatchValue3Label => 'Значение 3';
+
+  @override
+  String get adminTrainerPlayMatchValue4Label => 'Значение 4';
+
+  @override
+  String get adminTrainerPlayLetterCaseUpper => 'Заглавные';
+
+  @override
+  String get adminTrainerPlayLetterCaseLower => 'Строчные';
+
+  @override
+  String get adminTrainerPlayMissingSegmentRandom => 'Случайный';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex1 => 'Сегмент 1';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex2 => 'Сегмент 2';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex3 => 'Сегмент 3';
+
+  @override
+  String get adminTrainerPlayMissingSegmentIndex4 => 'Сегмент 4';
+
+  @override
+  String get adminTrainerPlayDotModeNumbered => 'По номерам';
+
+  @override
+  String get adminTrainerPlayDotModeFree => 'Свободно';
+
+  @override
+  String get adminTrainerPlaySpeedSlow => 'Медленно';
+
+  @override
+  String get adminTrainerPlaySpeedMedium => 'Средне';
+
+  @override
+  String get adminTrainerPlaySpeedFast => 'Быстро';
+
+  @override
+  String get adminTrainerPlayMobileHint =>
+      'Запуск в mobile-runtime (Flutter). Web-версию проверяйте на ПК.';
+
+  @override
+  String get adminTrainerPlayWebOnlyTitle => 'Нет mobile-реализации';
+
+  @override
+  String get adminTrainerPlayWebOnlyMessage =>
+      'Этот тренажёр пока только в web. Запуск и проверка play — на larnes.online в разделе «Тренажёры».';
+
+  @override
+  String get adminTrainerPlayExit => 'Назад';
+
+  @override
+  String get adminTrainerPlayContinueCheck => 'Продолжить проверку';
+
+  @override
+  String get adminAccountTitle => 'Аккаунт';
+
+  @override
+  String get adminAccountLoadFailed => 'Не удалось загрузить аккаунт.';
+
+  @override
+  String get adminAccountSaveFailed => 'Не удалось сохранить изменения.';
+
+  @override
+  String get adminAccountNotSet => 'Не указано';
+
+  @override
+  String get adminAccountSectionProfile => 'Профиль';
+
+  @override
+  String get adminAccountSectionContacts => 'Контакты';
+
+  @override
+  String get adminAccountSectionSecurity => 'Безопасность';
+
+  @override
+  String get adminAccountSectionLanguage => 'Язык';
+
+  @override
+  String get adminAccountProfileTitle => 'Сменить ФИО';
+
+  @override
+  String get adminAccountLoginTitle => 'Сменить логин';
+
+  @override
+  String get adminAccountPasswordTitle => 'Сменить пароль';
+
+  @override
+  String get adminAccountPhoneTitle => 'Сменить телефон';
+
+  @override
+  String get adminAccountEmailTitle => 'Сменить email';
+
+  @override
+  String get adminAccountSave => 'Сохранить';
+
+  @override
+  String get adminAccountSaveLogin => 'Сохранить логин';
+
+  @override
+  String get adminAccountSavePassword => 'Сохранить пароль';
+
+  @override
+  String get adminAccountActionLogoutAll => 'Выйти на всех устройствах';
+
+  @override
   String get parentAccountBackToPicker => 'Назад';
 
   @override
@@ -611,6 +993,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentFamilySetupGateTitle => 'Семья уже в LARNES?';
+
+  @override
+  String get parentFamilySetupContinueAction => 'Настроить семью';
 
   @override
   String get parentFamilySetupGateLead =>

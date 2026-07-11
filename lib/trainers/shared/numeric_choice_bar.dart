@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Четыре (или N) числовых кнопок ответа — порт web `AnswerBar` / `DigitChoiceBar`.
@@ -9,6 +11,10 @@ class NumericChoiceBar extends StatelessWidget {
     required this.onSelect,
     this.selectedValue,
     this.wrongValue,
+    this.enterDelayMsForIndex,
+    this.buttonHeight = 56,
+    this.fontSize = 28,
+    this.gap = 8,
   });
 
   final List<int> choices;
@@ -17,18 +23,27 @@ class NumericChoiceBar extends StatelessWidget {
   final int? selectedValue;
   final int? wrongValue;
 
+  /// Per-button enter delay (ms). When null, buttons appear immediately.
+  final int Function(int index)? enterDelayMsForIndex;
+  final double buttonHeight;
+  final double fontSize;
+  final double gap;
+
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         for (var index = 0; index < choices.length; index++) ...[
-          if (index > 0) const SizedBox(width: 8),
+          if (index > 0) SizedBox(width: gap),
           Expanded(
             child: _NumericChoiceButton(
               value: choices[index],
               disabled: disabled,
               isCorrect: selectedValue == choices[index] && wrongValue == null,
               isWrong: wrongValue == choices[index],
+              enterDelayMs: enterDelayMsForIndex?.call(index) ?? 0,
+              buttonHeight: buttonHeight,
+              fontSize: fontSize,
               onTap: () => onSelect(choices[index]),
             ),
           ),
@@ -44,6 +59,9 @@ class _NumericChoiceButton extends StatefulWidget {
     required this.disabled,
     required this.isCorrect,
     required this.isWrong,
+    required this.enterDelayMs,
+    required this.buttonHeight,
+    required this.fontSize,
     required this.onTap,
   });
 
@@ -51,6 +69,9 @@ class _NumericChoiceButton extends StatefulWidget {
   final bool disabled;
   final bool isCorrect;
   final bool isWrong;
+  final int enterDelayMs;
+  final double buttonHeight;
+  final double fontSize;
   final VoidCallback onTap;
 
   @override
@@ -58,9 +79,14 @@ class _NumericChoiceButton extends StatefulWidget {
 }
 
 class _NumericChoiceButtonState extends State<_NumericChoiceButton>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  static const _enterDurationMs = 250;
+
   late final AnimationController _shakeController;
   late final Animation<double> _shakeOffset;
+  AnimationController? _enterController;
+  Animation<double>? _enterProgress;
+  Timer? _enterTimer;
 
   @override
   void initState() {
@@ -80,6 +106,31 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
     if (widget.isWrong) {
       _shakeController.forward(from: 0);
     }
+
+    _scheduleEnterAnimation();
+  }
+
+  void _scheduleEnterAnimation() {
+    _enterController?.dispose();
+    _enterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: _enterDurationMs),
+    );
+    _enterProgress = CurvedAnimation(
+      parent: _enterController!,
+      curve: Curves.easeOutBack,
+    );
+
+    if (widget.enterDelayMs <= 0) {
+      _enterController!.value = 1;
+      return;
+    }
+
+    _enterTimer = Timer(Duration(milliseconds: widget.enterDelayMs), () {
+      if (mounted) {
+        _enterController!.forward();
+      }
+    });
   }
 
   @override
@@ -92,7 +143,9 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
 
   @override
   void dispose() {
+    _enterTimer?.cancel();
     _shakeController.dispose();
+    _enterController?.dispose();
     super.dispose();
   }
 
@@ -108,7 +161,9 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    final enterProgress = _enterProgress;
+
+    Widget button = AnimatedBuilder(
       animation: _shakeController,
       builder: (context, child) {
         return Transform.translate(
@@ -128,7 +183,7 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
             onTap: widget.disabled ? null : widget.onTap,
             borderRadius: BorderRadius.circular(16),
             child: Ink(
-              height: 56,
+              height: widget.buttonHeight,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFE5E7EB)),
@@ -141,13 +196,16 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
                 ],
               ),
               child: Center(
-                child: Text(
-                  '${widget.value}',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: _textColor,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${widget.value}',
+                    style: TextStyle(
+                      fontSize: widget.fontSize,
+                      fontWeight: FontWeight.w700,
+                      color: _textColor,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
                   ),
                 ),
               ),
@@ -156,5 +214,24 @@ class _NumericChoiceButtonState extends State<_NumericChoiceButton>
         ),
       ),
     );
+
+    if (enterProgress != null) {
+      button = AnimatedBuilder(
+        animation: enterProgress,
+        builder: (context, child) {
+          final t = enterProgress.value.clamp(0.0, 1.0);
+          return Opacity(
+            opacity: t,
+            child: Transform.scale(
+              scale: 0.88 + 0.12 * t,
+              child: child,
+            ),
+          );
+        },
+        child: button,
+      );
+    }
+
+    return button;
   }
 }

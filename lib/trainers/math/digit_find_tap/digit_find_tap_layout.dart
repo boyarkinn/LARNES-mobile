@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
 
 const digitFieldMaxPlacementAttempts = 80;
-const digitFieldMinDistancePercent = 11.0;
+const digitFieldMinDistancePercent = 16.0;
 const digitFieldPaddingPercent = 10.0;
 
 class PlacedDigit extends DigitToken {

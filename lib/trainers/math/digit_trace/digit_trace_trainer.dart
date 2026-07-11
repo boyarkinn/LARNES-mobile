@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/trace_pad.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
+/// Web v2: `platform/src/trainers/math/digit-trace/component.tsx`
 class DigitTraceTrainer extends StatefulWidget {
   const DigitTraceTrainer({
     super.key,
@@ -22,7 +24,7 @@ class _DigitTraceTrainerState extends State<DigitTraceTrainer> {
   var _completeCalled = false;
   Timer? _completeTimer;
 
-  void _handleScored(int _) {
+  void _handlePassed(int _) {
     _scheduleComplete();
   }
 
@@ -52,41 +54,11 @@ class _DigitTraceTrainerState extends State<DigitTraceTrainer> {
   Widget build(BuildContext context) {
     final digit = widget.params['digit'] as int? ?? 0;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'Обведи цифру $digit пальцем по пунктиру — покажем, насколько получилось похоже',
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF4B5563),
-          ),
-        ),
-        const SizedBox(height: 20),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE0E7FF)),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xB3EEF2FF),
-                Colors.white,
-              ],
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-            child: TracePad(
-              digit: digit,
-              onScored: _handleScored,
-            ),
-          ),
-        ),
-      ],
+    return TrainerScene(
+      child: TracePad(
+        digit: digit,
+        onPassed: _handlePassed,
+      ),
     );
   }
 }

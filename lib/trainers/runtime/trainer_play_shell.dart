@@ -74,22 +74,25 @@ class _TrainerPlayShellState extends State<TrainerPlayShell> {
               child: SafeArea(
                 bottom: false,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Semantics(
-                      label: 'Шаг $progressValue из $progressMax',
-                      value: '$progressValue',
-                      child: SizedBox(
-                        height: 7,
-                        child: ColoredBox(
-                          color: widget.theme.progressTrack,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: AnimatedFractionallySizedBox(
-                              duration: const Duration(milliseconds: 280),
-                              curve: ParentMotion.curve,
-                              widthFactor: progressPercent,
-                              child: ColoredBox(color: widget.theme.accent),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Semantics(
+                        label: 'Шаг $progressValue из $progressMax',
+                        value: '$progressValue',
+                        child: SizedBox(
+                          height: 7,
+                          child: ColoredBox(
+                            color: widget.theme.progressTrack,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: AnimatedFractionallySizedBox(
+                                duration: const Duration(milliseconds: 280),
+                                curve: ParentMotion.curve,
+                                widthFactor: progressPercent,
+                                child: ColoredBox(color: widget.theme.accent),
+                              ),
                             ),
                           ),
                         ),

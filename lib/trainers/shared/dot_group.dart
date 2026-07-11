@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/shared/dot_layout.dart';
 
@@ -15,26 +17,100 @@ enum DotGroupTone {
   indigo,
 }
 
-class DotGroup extends StatelessWidget {
+/// Web: `DOT_REVEAL_INTERVAL_MS` in dots-digit-abacus/dot-reveal.ts
+const _dotRevealIntervalMs = 500;
+
+class DotGroup extends StatefulWidget {
   const DotGroup({
     super.key,
     required this.count,
     this.size = DotGroupSize.auto,
     this.tone = DotGroupTone.orange,
+    this.revealProgressively = false,
+    this.frameWidth,
+    this.frameHeight,
   });
 
   final int count;
   final DotGroupSize size;
   final DotGroupTone tone;
+  final bool revealProgressively;
+  final double? frameWidth;
+  final double? frameHeight;
+
+  @override
+  State<DotGroup> createState() => _DotGroupState();
+}
+
+class _DotGroupState extends State<DotGroup> {
+  int _visibleCount = 0;
+  final List<Timer> _revealTimers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleReveal();
+  }
+
+  @override
+  void didUpdateWidget(DotGroup oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.count != widget.count ||
+        oldWidget.revealProgressively != widget.revealProgressively) {
+      _cancelRevealTimers();
+      _scheduleReveal();
+    }
+  }
+
+  @override
+  void dispose() {
+    _cancelRevealTimers();
+    super.dispose();
+  }
+
+  void _cancelRevealTimers() {
+    for (final timer in _revealTimers) {
+      timer.cancel();
+    }
+    _revealTimers.clear();
+  }
+
+  void _scheduleReveal() {
+    if (!widget.revealProgressively) {
+      setState(() => _visibleCount = widget.count);
+      return;
+    }
+
+    setState(() => _visibleCount = widget.count > 0 ? 1 : 0);
+
+    for (var index = 2; index <= widget.count; index++) {
+      final timer = Timer(
+        Duration(milliseconds: (index - 1) * _dotRevealIntervalMs),
+        () {
+          if (!mounted) {
+            return;
+          }
+          setState(() => _visibleCount = index);
+        },
+      );
+      _revealTimers.add(timer);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final spec = _sizeSpec(size, count);
-    final colors = _colorsForTone(tone);
+    final spec = _sizeSpec(widget.size, widget.count);
+    final colors = _colorsForTone(widget.tone);
+    final width = widget.frameWidth ?? spec.frameSize;
+    final height = widget.frameHeight ?? spec.frameSize;
+    final positions = getDotPositionsForValue(widget.count);
+    final visiblePositions = widget.revealProgressively
+        ? positions.take(_visibleCount).toList(growable: false)
+        : positions;
 
     return Container(
-      width: spec.frameSize,
-      height: spec.frameSize,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -49,7 +125,7 @@ class DotGroup extends StatelessWidget {
       ),
       child: CustomPaint(
         painter: _DotGroupPainter(
-          positions: getDotPositionsForValue(count),
+          positions: visiblePositions,
           dotRadius: spec.dotRadius,
           dotColor: colors.dot,
         ),

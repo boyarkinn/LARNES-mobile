@@ -41,25 +41,28 @@ class _TrainerPlayerMenuButtonState extends State<TrainerPlayerMenuButton> {
             widget.onPressed();
           },
           onTapCancel: () => setState(() => _pressed = false),
-          child: AnimatedContainer(
-            duration: ParentMotion.tapDuration,
-            curve: ParentMotion.curve,
-            width: 48,
-            height: 48,
-            transform: Matrix4.translationValues(0, _pressed ? 1 : 0, 0),
-            decoration: BoxDecoration(
-              color: widget.isOpen
-                  ? theme.accentDeep
-                  : (_pressed ? theme.accentPressed : theme.accent),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.isOpen ? const Color(0xFF16367A) : theme.accentDeep,
-                  offset: Offset(0, _pressed || widget.isOpen ? 2 : 3),
-                ),
-              ],
+          child: Transform.translate(
+            offset: Offset(0, _pressed ? 1 : 0),
+            child: AnimatedContainer(
+              duration: ParentMotion.tapDuration,
+              curve: ParentMotion.curve,
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: widget.isOpen
+                    ? theme.accentDeep
+                    : (_pressed ? theme.accentPressed : theme.accent),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.isOpen ? const Color(0xFF16367A) : theme.accentDeep,
+                    offset: Offset(0, _pressed || widget.isOpen ? 2 : 3),
+                  ),
+                ],
+              ),
+              child: const Center(child: _MenuIcon()),
             ),
-            child: const Center(child: _MenuIcon()),
           ),
         ),
       ),

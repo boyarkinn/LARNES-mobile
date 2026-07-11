@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/digit_target.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flash_card.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_grid_layout.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_hit_test.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
-
-const _hitRadius = 56.0;
 
 class _DrawLine {
   const _DrawLine({required this.from, required this.to});
@@ -66,6 +66,7 @@ class _MatchBoardState extends State<MatchBoard> {
   _ActiveDraw? _activeDraw;
   _WrongFlash? _wrongFlash;
   Timer? _wrongFlashTimer;
+  var _layoutVersion = 0;
 
   @override
   void initState() {
@@ -79,6 +80,9 @@ class _MatchBoardState extends State<MatchBoard> {
     if (oldWidget.round != widget.round) {
       _ensureKeys();
     }
+    if (oldWidget.connections != widget.connections) {
+      _scheduleLineRelayout();
+    }
   }
 
   void _ensureKeys() {
@@ -88,6 +92,14 @@ class _MatchBoardState extends State<MatchBoard> {
     for (final item in widget.round.rightItems) {
       _rightKeys.putIfAbsent(item.id, GlobalKey.new);
     }
+  }
+
+  void _scheduleLineRelayout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() => _layoutVersion++);
+      }
+    });
   }
 
   @override
@@ -102,26 +114,31 @@ class _MatchBoardState extends State<MatchBoard> {
   Set<String> get _connectedRightIds =>
       widget.connections.map((connection) => connection.rightId).toSet();
 
+  RenderBox? get _boardBox =>
+      _boardKey.currentContext?.findRenderObject() as RenderBox?;
+
+  RenderBox? _itemBox(GlobalKey key) =>
+      key.currentContext?.findRenderObject() as RenderBox?;
+
   Offset? _getAnchor(GlobalKey key, {required bool rightSide}) {
-    final boardBox = _boardKey.currentContext?.findRenderObject() as RenderBox?;
-    final itemBox = key.currentContext?.findRenderObject() as RenderBox?;
+    final boardBox = _boardBox;
+    final itemBox = _itemBox(key);
 
     if (boardBox == null || itemBox == null) {
       return null;
     }
 
-    final itemOrigin = itemBox.localToGlobal(Offset.zero);
-    final boardOrigin = boardBox.localToGlobal(Offset.zero);
-    final x = rightSide
-        ? itemOrigin.dx + itemBox.size.width - boardOrigin.dx
-        : itemOrigin.dx - boardOrigin.dx;
-    final y = itemOrigin.dy - boardOrigin.dy + itemBox.size.height / 2;
+    final anchor = getElementAnchorPoint(
+      itemBox,
+      boardBox,
+      rightSide: rightSide,
+    );
 
-    return Offset(x, y);
+    return boardPointToOffset(anchor);
   }
 
   Offset? _relativePoint(Offset globalPosition) {
-    final boardBox = _boardKey.currentContext?.findRenderObject() as RenderBox?;
+    final boardBox = _boardBox;
 
     if (boardBox == null) {
       return null;
@@ -153,33 +170,25 @@ class _MatchBoardState extends State<MatchBoard> {
     return lines;
   }
 
-  MatchItem? _findRightTarget(Offset point) {
-    MatchItem? closest;
-    var closestDistance = double.infinity;
-
-    for (final item in widget.round.rightItems) {
-      if (_connectedRightIds.contains(item.id)) {
-        continue;
-      }
-
-      final key = _rightKeys[item.id];
-      if (key == null) {
-        continue;
-      }
-
-      final anchor = _getAnchor(key, rightSide: false);
-      if (anchor == null) {
-        continue;
-      }
-
-      final distance = (anchor - point).distance;
-      if (distance <= _hitRadius && distance < closestDistance) {
-        closest = item;
-        closestDistance = distance;
-      }
+  MatchItem? _findRightTarget(List<Offset> points) {
+    final boardBox = _boardBox;
+    if (boardBox == null) {
+      return null;
     }
 
-    return closest;
+    final boardPoints = points.map(offsetToBoardPoint).toList();
+
+    return pickTargetAtPoints<MatchItem>(
+      board: boardBox,
+      elements: widget.round.rightItems,
+      getElement: (item) {
+        final key = _rightKeys[item.id];
+        return key == null ? null : _itemBox(key);
+      },
+      isAvailable: (item) => !_connectedRightIds.contains(item.id),
+      points: boardPoints,
+      padding: 20,
+    );
   }
 
   void _handleLeftPointerDown(String leftId, PointerDownEvent event) {
@@ -204,6 +213,18 @@ class _MatchBoardState extends State<MatchBoard> {
     });
   }
 
+  void _handleLeftPointerUp(String leftId, PointerUpEvent event) {
+    final activeDraw = _activeDraw;
+    if (activeDraw == null || activeDraw.leftId != leftId) {
+      return;
+    }
+
+    final point = _relativePoint(event.position);
+    if (point != null) {
+      _finishDraw(point);
+    }
+  }
+
   void _handlePointerMove(PointerMoveEvent event) {
     if (_activeDraw == null) {
       return;
@@ -223,25 +244,25 @@ class _MatchBoardState extends State<MatchBoard> {
     });
   }
 
-  void _finishDraw(Offset point) {
+  void _finishDraw(Offset releasePoint) {
     final activeDraw = _activeDraw;
     if (activeDraw == null) {
       return;
     }
+
+    setState(() => _activeDraw = null);
 
     final leftItem = widget.round.leftItems
         .where((item) => item.id == activeDraw.leftId)
         .firstOrNull;
 
     if (leftItem == null) {
-      setState(() => _activeDraw = null);
       return;
     }
 
-    final rightItem = _findRightTarget(point);
+    final rightItem = _findRightTarget([releasePoint, activeDraw.to]);
 
     if (rightItem == null) {
-      setState(() => _activeDraw = null);
       return;
     }
 
@@ -253,15 +274,12 @@ class _MatchBoardState extends State<MatchBoard> {
           value: leftItem.value,
         ),
       );
-      setState(() => _activeDraw = null);
       return;
     }
 
     final rightKey = _rightKeys[rightItem.id];
     final wrongTo =
         rightKey == null ? null : _getAnchor(rightKey, rightSide: false);
-
-    setState(() => _activeDraw = null);
 
     if (wrongTo != null) {
       _wrongFlashTimer?.cancel();
@@ -280,10 +298,108 @@ class _MatchBoardState extends State<MatchBoard> {
   }
 
   void _handlePointerEnd(PointerEvent event) {
+    if (_activeDraw == null) {
+      return;
+    }
+
     final point = _relativePoint(event.position);
     if (point != null) {
       _finishDraw(point);
     }
+  }
+
+  Widget _buildSidePanel({
+    required MatchSide side,
+    required List<MatchItem> items,
+    required int count,
+    required MatchBoardLayout layout,
+    required Widget Function(MatchItem item, GlobalKey key) buildItem,
+  }) {
+    final rowHeight = layout.rowHeight;
+    final rowGap = layout.rowGap;
+    final columnGap = layout.columnGap;
+    final gridHeight = layout.gridHeight;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: layout.paddingTop,
+        bottom: layout.paddingBottom,
+        left: side == MatchSide.left ? 4 : 0,
+        right: side == MatchSide.right ? 4 : 0,
+      ),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final columnWidth = (constraints.maxWidth - columnGap) / 2;
+
+            return SizedBox(
+              width: constraints.maxWidth,
+              height: gridHeight,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  for (var index = 0; index < items.length; index++)
+                    _buildGridSlot(
+                      item: items[index],
+                      index: index,
+                      count: count,
+                      side: side,
+                      columnWidth: columnWidth,
+                      rowHeight: rowHeight,
+                      rowGap: rowGap,
+                      columnGap: columnGap,
+                      buildItem: buildItem,
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridSlot({
+    required MatchItem item,
+    required int index,
+    required int count,
+    required MatchSide side,
+    required double columnWidth,
+    required double rowHeight,
+    required double rowGap,
+    required double columnGap,
+    required Widget Function(MatchItem item, GlobalKey key) buildItem,
+  }) {
+    final slot = getMatchGridSlotLayout(
+      index: index,
+      count: count,
+      side: side,
+    );
+    final key = side == MatchSide.left ? _leftKeys[item.id]! : _rightKeys[item.id]!;
+
+    final left = slot.column * (columnWidth + columnGap);
+    final top = slot.row * (rowHeight + rowGap);
+    final width = columnWidth * slot.columnSpan + columnGap * (slot.columnSpan - 1);
+    final height = rowHeight * slot.rowSpan + rowGap * (slot.rowSpan - 1);
+
+    return Positioned(
+      left: left,
+      top: top,
+      width: width,
+      height: height,
+      child: Align(
+        alignment: slot.alignment,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: slot.alignment,
+          child: KeyedSubtree(
+            key: key,
+            child: buildItem(item, key),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -293,108 +409,87 @@ class _MatchBoardState extends State<MatchBoard> {
         lockedLines.length < widget.connections.length;
 
     if (missingAnchors) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {});
-        }
-      });
+      _scheduleLineRelayout();
     }
 
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerMove: _handlePointerMove,
-      onPointerUp: _handlePointerEnd,
-      onPointerCancel: _handlePointerEnd,
-      child: DecoratedBox(
-        key: _boardKey,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFFFEDD5)),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xCCFFF7ED),
-              Colors.white,
-            ],
-          ),
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      children: [
-                        for (final item in widget.round.leftItems) ...[
-                          KeyedSubtree(
-                            key: _leftKeys[item.id],
-                            child: FlashCard(
-                              connected: _connectedLeftIds.contains(item.id),
-                              disabled: widget.disabled,
-                              onPointerDown: (event) =>
-                                  _handleLeftPointerDown(item.id, event),
-                              totalRods: widget.totalRods,
-                              value: item.value,
-                            ),
-                          ),
-                          if (item != widget.round.leftItems.last)
-                            const SizedBox(height: 16),
-                        ],
-                      ],
+    // Touch [_layoutVersion] so lines repaint after resize/connection updates.
+    // ignore: unnecessary_statements
+    _layoutVersion;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final layout = computeMatchBoardLayout(
+          viewportWidth: constraints.maxWidth,
+          viewportHeight: constraints.maxHeight,
+        );
+        final pairCount = widget.round.leftItems.length;
+
+        return Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerMove: widget.disabled ? null : _handlePointerMove,
+          onPointerUp: widget.disabled ? null : _handlePointerEnd,
+          onPointerCancel: widget.disabled ? null : _handlePointerEnd,
+          child: SizedBox(
+            key: _boardKey,
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _buildSidePanel(
+                        side: MatchSide.left,
+                        items: widget.round.leftItems,
+                        count: pairCount,
+                        layout: layout,
+                        buildItem: (item, _) => FlashCard(
+                          abacusHeight: layout.abacusHeight,
+                          connected: _connectedLeftIds.contains(item.id),
+                          disabled: widget.disabled,
+                          onPointerDown: (event) =>
+                              _handleLeftPointerDown(item.id, event),
+                          onPointerUp: (event) =>
+                              _handleLeftPointerUp(item.id, event),
+                          totalRods: widget.totalRods,
+                          value: item.value,
+                        ),
+                      ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      'соедини',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF9CA3AF),
+                    Expanded(
+                      child: _buildSidePanel(
+                        side: MatchSide.right,
+                        items: widget.round.rightItems,
+                        count: pairCount,
+                        layout: layout,
+                        buildItem: (item, _) => DigitTarget(
+                          connected: _connectedRightIds.contains(item.id),
+                          digit: item.value,
+                          fontSize: layout.digitFontSize,
+                          size: layout.digitSize,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _ConnectionLinesPainter(
+                        activeDraw: _activeDraw,
+                        lockedLines: lockedLines,
+                        wrongFlash: _wrongFlash,
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        for (final item in widget.round.rightItems) ...[
-                          KeyedSubtree(
-                            key: _rightKeys[item.id],
-                            child: DigitTarget(
-                              connected: _connectedRightIds.contains(item.id),
-                              digit: item.value,
-                            ),
-                          ),
-                          if (item != widget.round.rightItems.last)
-                            const SizedBox(height: 16),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: CustomPaint(
-                  painter: _ConnectionLinesPainter(
-                    activeDraw: _activeDraw,
-                    lockedLines: lockedLines,
-                    wrongFlash: _wrongFlash,
-                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

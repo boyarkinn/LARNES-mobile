@@ -37,5 +37,34 @@ void main() {
       });
       expect(result.ok, isFalse);
     });
+
+    test('accepts flashcard-digit-match admin form fields', () {
+      final result = validateTrainerParams('flashcard-digit-match', {
+        'pairCount': '3',
+        'totalRods': '1',
+        'value0': '0',
+        'value1': '1',
+        'value2': '2',
+      });
+
+      expect(result.ok, isTrue);
+      expect(result.params, {
+        'totalRods': 1,
+        'values': [0, 1, 2],
+      });
+    });
+
+    test('accepts flashcard-digit-match API values array', () {
+      final result = validateTrainerParams('flashcard-digit-match', {
+        'totalRods': 2,
+        'values': [3, 7],
+      });
+
+      expect(result.ok, isTrue);
+      expect(result.params, {
+        'totalRods': 2,
+        'values': [3, 7],
+      });
+    });
   });
 }

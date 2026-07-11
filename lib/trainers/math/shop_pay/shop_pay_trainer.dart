@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_pay_model.dart';
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_scene.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
+/// Web v2: `platform/src/trainers/math/shop-pay/component.tsx`
 class ShopPayTrainer extends StatefulWidget {
   const ShopPayTrainer({
     super.key,
@@ -57,27 +59,14 @@ class _ShopPayTrainerState extends State<ShopPayTrainer> {
     final price = widget.params['price'] as int? ?? 1;
     final coinCount = widget.params['coinCount'] as int? ?? price;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Положи в кассу столько монеток, сколько стоит товар, и нажми «Заплатить»',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF4B5563),
-          ),
-        ),
-        const SizedBox(height: 16),
-        ShopScene(
-          coinCount: coinCount,
-          disabled: _isComplete,
-          item: item,
-          onPaymentSuccess: _handlePaymentSuccess,
-          price: price,
-        ),
-      ],
+    return TrainerScene(
+      child: ShopScene(
+        coinCount: coinCount,
+        disabled: _isComplete,
+        item: item,
+        onPaymentSuccess: _handlePaymentSuccess,
+        price: price,
+      ),
     );
   }
 }

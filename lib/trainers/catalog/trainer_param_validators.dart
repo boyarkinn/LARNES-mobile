@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
@@ -180,7 +181,14 @@ ValidateTrainerParamsResult validateDigitTraceParams(Map<String, dynamic> raw) {
 
 ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynamic> raw) {
   final totalRods = coerceInt(raw['totalRods']);
-  final values = coerceIntList(raw['values']);
+  var values = coerceIntList(raw['values']);
+  values ??= parseMatchValuesFromInput(
+    pairCount: raw['pairCount'],
+    value0: raw['value0'],
+    value1: raw['value1'],
+    value2: raw['value2'],
+    value3: raw['value3'],
+  );
 
   if (totalRods == null || totalRods < 1 || totalRods > 21) {
     return _fail('Некорректные параметры.');

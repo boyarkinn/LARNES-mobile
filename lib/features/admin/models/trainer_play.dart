@@ -1,3 +1,6 @@
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
+import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
+
 enum TrainerPlayFieldType { number, text, select }
 
 class TrainerPlayFieldOption {
@@ -178,7 +181,17 @@ Map<String, dynamic> buildPlayParamsPayload(
   Map<String, String> values,
 ) {
   if (config.trainerKey == 'flashcard-digit-match') {
-    return Map<String, dynamic>.from(values);
+    final totalRods = coerceInt(values['totalRods']);
+    return {
+      'totalRods': totalRods ?? 1,
+      'values': parseMatchValuesFromInput(
+        pairCount: values['pairCount'],
+        value0: values['value0'],
+        value1: values['value1'],
+        value2: values['value2'],
+        value3: values['value3'],
+      ),
+    };
   }
 
   final payload = <String, dynamic>{};

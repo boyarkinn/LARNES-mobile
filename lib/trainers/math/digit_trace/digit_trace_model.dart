@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
-import 'package:larnes_mobile/trainers/math/digit_trace/digit_guides.dart';
+import 'package:larnes_mobile/trainers/math/digit_trace/digit_paths.dart';
+
+/// Web v2: `platform/src/trainers/math/digit-trace/model.ts`
 
 typedef TraceStroke = List<TracePoint>;
 
-const resamplePointCount = 48;
-const scoreDistanceScale = 0.42;
+const referenceSampleCount = 64;
+const corridorRadius = 0.095;
 const minScoreStrokeLength = 0.05;
 
 class TraceScore {
@@ -63,8 +65,7 @@ List<TracePoint> resamplePolyline(List<TracePoint> points, int targetCount) {
     final target = (index / (targetCount - 1)) * totalLength;
     var segmentIndex = 1;
 
-    while (segmentIndex < cumulative.length &&
-        cumulative[segmentIndex] < target) {
+    while (segmentIndex < cumulative.length && cumulative[segmentIndex] < target) {
       segmentIndex++;
     }
 
@@ -85,90 +86,70 @@ List<TracePoint> resamplePolyline(List<TracePoint> points, int targetCount) {
   return resampled;
 }
 
-List<TracePoint> normalizePath(List<TracePoint> points) {
-  if (points.isEmpty) {
-    return const [];
+double _distancePointToSegment(
+  TracePoint point,
+  TracePoint segmentStart,
+  TracePoint segmentEnd,
+) {
+  final dx = segmentEnd.x - segmentStart.x;
+  final dy = segmentEnd.y - segmentStart.y;
+  final lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared == 0) {
+    return _distance(point, segmentStart);
   }
 
-  var minX = double.infinity;
-  var minY = double.infinity;
-  var maxX = -double.infinity;
-  var maxY = -double.infinity;
+  final projection =
+      ((point.x - segmentStart.x) * dx + (point.y - segmentStart.y) * dy) /
+          lengthSquared;
+  final clamped = math.max(0, math.min(1, projection));
+  final projectedX = segmentStart.x + clamped * dx;
+  final projectedY = segmentStart.y + clamped * dy;
 
-  for (final point in points) {
-    minX = math.min(minX, point.x);
-    minY = math.min(minY, point.y);
-    maxX = math.max(maxX, point.x);
-    maxY = math.max(maxY, point.y);
-  }
-
-  final width = maxX - minX;
-  final height = maxY - minY;
-  final scale = math.max(width, math.max(height, 1e-6));
-  final centerX = (minX + maxX) / 2;
-  final centerY = (minY + maxY) / 2;
-
-  return points
-      .map(
-        (point) => TracePoint(
-          x: (point.x - centerX) / scale + 0.5,
-          y: (point.y - centerY) / scale + 0.5,
-        ),
-      )
-      .toList();
+  return _distance(point, TracePoint(x: projectedX, y: projectedY));
 }
 
-double dtwAverageDistance(List<TracePoint> a, List<TracePoint> b) {
-  final n = a.length;
-  final m = b.length;
+double _distancePointToStrokes(TracePoint point, List<TraceStroke> strokes) {
+  var minDistance = double.infinity;
 
-  if (n == 0 || m == 0) {
-    return scoreDistanceScale;
-  }
-
-  final dp = List.generate(n, (_) => List<double>.filled(m, 0));
-
-  dp[0][0] = _distance(a[0], b[0]);
-
-  for (var i = 0; i < n; i++) {
-    for (var j = 0; j < m; j++) {
-      if (i == 0 && j == 0) {
-        continue;
-      }
-
-      final cost = _distance(a[i], b[j]);
-      var best = double.infinity;
-
-      if (i > 0) {
-        best = math.min(best, dp[i - 1][j]);
-      }
-      if (j > 0) {
-        best = math.min(best, dp[i][j - 1]);
-      }
-      if (i > 0 && j > 0) {
-        best = math.min(best, dp[i - 1][j - 1]);
-      }
-
-      dp[i][j] = cost + best;
+  for (final stroke in strokes) {
+    for (var index = 1; index < stroke.length; index++) {
+      final segmentDistance = _distancePointToSegment(
+        point,
+        stroke[index - 1],
+        stroke[index],
+      );
+      minDistance = math.min(minDistance, segmentDistance);
     }
   }
 
-  return dp[n - 1][m - 1] / math.max(n, m);
+  return minDistance;
 }
 
-int distanceToSimilarityPercent(double avgDistance) {
-  final ratio = avgDistance / scoreDistanceScale;
-  final score = (100 * math.max(0, 1 - ratio)).round();
+int corridorCoveragePercent(
+  List<TracePoint> referencePoints,
+  List<TraceStroke> strokes, {
+  double radius = corridorRadius,
+}) {
+  if (referencePoints.isEmpty) {
+    return 0;
+  }
 
-  return math.min(100, score);
+  var hits = 0;
+
+  for (final point in referencePoints) {
+    if (_distancePointToStrokes(point, strokes) <= radius) {
+      hits++;
+    }
+  }
+
+  return ((100 * hits) / referencePoints.length).round();
 }
 
 TraceScore scoreTrace(int digit, List<TraceStroke> strokes) {
-  final drawn = flattenStrokes(strokes);
-  final reference = getDigitGuidePoints(digit);
   final strokeLength = getStrokeLength(strokes);
 
-  if (drawn.length < 2 || strokeLength < minScoreStrokeLength) {
+  if (flattenStrokes(strokes).length < 2 || strokeLength < minScoreStrokeLength) {
     return TraceScore(
       hasEnoughInk: false,
       similarityPercent: null,
@@ -176,15 +157,11 @@ TraceScore scoreTrace(int digit, List<TraceStroke> strokes) {
     );
   }
 
-  final userPath =
-      normalizePath(resamplePolyline(drawn, resamplePointCount));
-  final referencePath =
-      normalizePath(resamplePolyline(reference, resamplePointCount));
-  final avgDistance = dtwAverageDistance(userPath, referencePath);
+  final reference = getDigitReferenceSamples(digit, referenceSampleCount);
 
   return TraceScore(
     hasEnoughInk: true,
-    similarityPercent: distanceToSimilarityPercent(avgDistance),
+    similarityPercent: corridorCoveragePercent(reference, strokes),
     strokeLength: strokeLength,
   );
 }

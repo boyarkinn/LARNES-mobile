@@ -1,14 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/math/digit_trace/digit_guides.dart';
+import 'package:larnes_mobile/trainers/math/digit_trace/digit_paths.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/digit_trace_model.dart';
 
-List<TraceStroke> traceAlongGuide(int digit, [double noise = 0]) {
-  final guide = getDigitGuidePoints(digit);
+List<TraceStroke> traceAlongReference(int digit, [double noise = 0]) {
+  final reference = getDigitReferenceSamples(digit, referenceSampleCount);
 
   return [
-    guide
+    reference
         .map(
           (point) => TracePoint(
             x: point.x + noise,
@@ -56,25 +56,24 @@ void main() {
     });
   });
 
-  group('normalizePath', () {
-    test('centers path in unit box', () {
-      final normalized = normalizePath(const [
-        TracePoint(x: 0, y: 0),
-        TracePoint(x: 2, y: 2),
+  group('corridorCoveragePercent', () {
+    test('returns 100 when stroke follows the reference path', () {
+      final reference = getDigitReferenceSamples(2, 32);
+      final coverage = corridorCoveragePercent(reference, traceAlongReference(2));
+
+      expect(coverage, 100);
+    });
+
+    test('returns 0 when stroke is far from the reference', () {
+      final reference = getDigitReferenceSamples(2, 32);
+      final coverage = corridorCoveragePercent(reference, const [
+        [
+          TracePoint(x: 0.05, y: 0.05),
+          TracePoint(x: 0.1, y: 0.1),
+        ],
       ]);
 
-      expect(normalized.every((point) => point.x >= 0 && point.x <= 1), isTrue);
-      expect(normalized.every((point) => point.y >= 0 && point.y <= 1), isTrue);
-    });
-  });
-
-  group('distanceToSimilarityPercent', () {
-    test('returns 100 for zero distance', () {
-      expect(distanceToSimilarityPercent(0), 100);
-    });
-
-    test('returns 0 at scale distance', () {
-      expect(distanceToSimilarityPercent(0.42), 0);
+      expect(coverage, 0);
     });
   });
 
@@ -87,45 +86,36 @@ void main() {
     });
 
     test('scores a good trace highly', () {
-      final result = scoreTrace(5, traceAlongGuide(5));
+      final result = scoreTrace(5, traceAlongReference(5));
 
       expect(result.similarityPercent, isNotNull);
-      expect(result.similarityPercent!, greaterThanOrEqualTo(80));
+      expect(result.similarityPercent!, greaterThanOrEqualTo(90));
     });
 
     test('scores a good trace on digit 2 highly', () {
-      final result = scoreTrace(2, traceAlongGuide(2));
+      final result = scoreTrace(2, traceAlongReference(2));
 
-      expect(result.similarityPercent!, greaterThanOrEqualTo(80));
+      expect(result.similarityPercent!, greaterThanOrEqualTo(90));
     });
 
     test('scores top-only scribble low on digit 5', () {
       final result = scoreTrace(5, topOnlyScribbleOnFive());
 
       expect(result.similarityPercent, isNotNull);
-      expect(result.similarityPercent!, lessThan(40));
+      expect(result.similarityPercent!, lessThan(50));
     });
 
     test('scores vertical zigzag low on digit 5', () {
       final result = scoreTrace(5, verticalZigzagOnFive());
 
       expect(result.similarityPercent, isNotNull);
-      expect(result.similarityPercent!, lessThan(40));
+      expect(result.similarityPercent!, lessThan(50));
     });
 
     test('accepts slightly noisy tracing', () {
-      final result = scoreTrace(1, traceAlongGuide(1, 0.03));
+      final result = scoreTrace(1, traceAlongReference(1, corridorRadius * 0.25));
 
-      expect(result.similarityPercent!, greaterThanOrEqualTo(65));
-    });
-  });
-
-  group('dtwAverageDistance', () {
-    test('is zero for identical paths', () {
-      final path = normalizePath(resamplePolyline(getDigitGuidePoints(3), 24));
-      final distance = dtwAverageDistance(path, path);
-
-      expect(distance, 0);
+      expect(result.similarityPercent!, greaterThanOrEqualTo(75));
     });
   });
 }

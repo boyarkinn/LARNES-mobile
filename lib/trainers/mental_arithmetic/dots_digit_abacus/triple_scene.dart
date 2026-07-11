@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dot_reveal.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/triple_scene_layout.dart';
 import 'package:larnes_mobile/trainers/shared/dot_group.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 
+/// Web v2: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/triple-scene.tsx`
 class TripleScene extends StatefulWidget {
   const TripleScene({
     super.key,
@@ -21,22 +24,18 @@ class TripleScene extends StatefulWidget {
 
 class _TripleSceneState extends State<TripleScene>
     with SingleTickerProviderStateMixin {
-  static const _stagger = Duration(milliseconds: 450);
-  static const _itemDuration = Duration(milliseconds: 400);
+  static const _staggerMs = 450;
+  static const _itemDurationMs = 400;
 
-  late final AnimationController _controller;
-  late List<RodState> _abacusRods;
+  AnimationController? _controller;
+  List<RodState> _abacusRods = [];
   Timer? _abacusTimer;
 
   @override
   void initState() {
     super.initState();
     _abacusRods = emptyRods(widget.totalRods);
-    _controller = AnimationController(
-      vsync: this,
-      duration: _stagger * 4 + _itemDuration,
-    )..forward();
-    _scheduleAbacusReveal();
+    _restartScene();
   }
 
   @override
@@ -47,44 +46,73 @@ class _TripleSceneState extends State<TripleScene>
       return;
     }
 
-    _abacusTimer?.cancel();
-    setState(() => _abacusRods = emptyRods(widget.totalRods));
-    _controller
-      ..reset()
-      ..forward();
-    _scheduleAbacusReveal();
+    _restartScene();
   }
 
-  void _scheduleAbacusReveal() {
-    _abacusTimer = Timer(_stagger * 4, () {
-      if (!mounted) {
-        return;
-      }
-      setState(
-        () => _abacusRods = numberToAbacus(widget.value, widget.totalRods),
-      );
-    });
+  void _restartScene() {
+    _abacusTimer?.cancel();
+    _controller?.dispose();
+
+    setState(() => _abacusRods = emptyRods(widget.totalRods));
+
+    final totalDuration = _totalAnimDuration(widget.value);
+    _controller = AnimationController(vsync: this, duration: totalDuration)
+      ..forward();
+
+    _abacusTimer = Timer(
+      Duration(
+        milliseconds: getDotPhaseDurationMs(widget.value) + _staggerMs * 4,
+      ),
+      () {
+        if (!mounted) {
+          return;
+        }
+        setState(
+          () => _abacusRods = numberToAbacus(widget.value, widget.totalRods),
+        );
+      },
+    );
   }
 
   @override
   void dispose() {
     _abacusTimer?.cancel();
-    _controller.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
-  double _itemProgress(int index) {
-    final start = index * _stagger.inMilliseconds / _controller.duration!.inMilliseconds;
-    final end = start + _itemDuration.inMilliseconds / _controller.duration!.inMilliseconds;
-    final t = ((_controller.value - start) / (end - start)).clamp(0.0, 1.0);
+  Duration _totalAnimDuration(int value) {
+    return Duration(
+      milliseconds:
+          getDotPhaseDurationMs(value) + _staggerMs * 4 + _itemDurationMs,
+    );
+  }
+
+  int _beatDelayMs(int value, int beatIndex) {
+    if (beatIndex == 0) {
+      return 0;
+    }
+    return getDotPhaseDurationMs(value) + _staggerMs * beatIndex;
+  }
+
+  double _itemProgress(int value, int beatIndex) {
+    final controller = _controller;
+    if (controller == null || controller.duration == null) {
+      return 0;
+    }
+
+    final total = controller.duration!.inMilliseconds;
+    final start = _beatDelayMs(value, beatIndex) / total;
+    final end = start + _itemDurationMs / total;
+    final t = ((controller.value - start) / (end - start)).clamp(0.0, 1.0);
     return Curves.easeOutBack.transform(t).clamp(0.0, 1.0);
   }
 
-  Widget _staggeredItem(int index, Widget child) {
+  Widget _staggeredItem(int beatIndex, Widget child) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: _controller!,
       builder: (context, _) {
-        final progress = _itemProgress(index);
+        final progress = _itemProgress(widget.value, beatIndex);
         return Opacity(
           opacity: progress,
           child: Transform.translate(
@@ -99,94 +127,149 @@ class _TripleSceneState extends State<TripleScene>
     );
   }
 
+  Widget _equalsSign(double fontSize) {
+    return Text(
+      '=',
+      style: TextStyle(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w700,
+        height: 1,
+        color: const Color(0xFFFB923C),
+      ),
+    );
+  }
+
+  Widget _digitCard(double cardSize, double fontSize) {
+    return Container(
+      key: const Key('triple-digit-card'),
+      width: cardSize,
+      height: cardSize,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFED7AA), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          '${widget.value}',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w700,
+            height: 1,
+            color: const Color(0xFFEA580C),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _abacusCard(double width, double height) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFF7ED), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFED7AA), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: height,
+        child: AbacusWidget(
+          rods: _abacusRods,
+          totalRods: widget.totalRods,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: 12,
-      runSpacing: 16,
-      children: [
-        _staggeredItem(0, DotGroup(count: widget.value)),
-        _staggeredItem(
-          1,
-          const Text(
-            '=',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFFB923C),
-            ),
-          ),
-        ),
-        _staggeredItem(
-          2,
-          Container(
-            constraints: const BoxConstraints(minWidth: 64),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFED7AA), width: 2),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0D000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
+    final controller = _controller;
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportHeight = constraints.maxHeight;
+        final viewportWidth = constraints.maxWidth;
+        final layout = computeTripleSceneLayout(
+          viewportWidth: viewportWidth,
+          viewportHeight: viewportHeight,
+          dotCount: widget.value,
+        );
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Center(
+                  child: _staggeredItem(
+                    0,
+                    DotGroup(
+                      count: widget.value,
+                      revealProgressively: true,
+                      frameWidth: layout.dotFrameWidth,
+                      frameHeight: layout.dotFrameHeight,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-            child: Text(
-              '${widget.value}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFEA580C),
-                fontFeatures: [FontFeature.tabularFigures()],
               ),
-            ),
-          ),
-        ),
-        _staggeredItem(
-          3,
-          const Text(
-            '=',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFFFB923C),
-            ),
-          ),
-        ),
-        _staggeredItem(
-          4,
-          Container(
-            constraints: const BoxConstraints(minHeight: 140, minWidth: 200),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFF7ED), Colors.white],
+              const SizedBox(width: 8),
+              Center(
+                child: _staggeredItem(1, _equalsSign(layout.equalsFontSize)),
               ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFFEDD5)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0D000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 1),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Center(
+                  child: _staggeredItem(
+                    2,
+                    _digitCard(layout.digitCardSize, layout.digitFontSize),
+                  ),
                 ),
-              ],
-            ),
-            child: AbacusWidget(
-              rods: _abacusRods,
-              totalRods: widget.totalRods,
-            ),
+              ),
+              const SizedBox(width: 8),
+              Center(
+                child: _staggeredItem(3, _equalsSign(layout.equalsFontSize)),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Center(
+                  child: _staggeredItem(
+                    4,
+                    _abacusCard(layout.abacusWidth, layout.abacusHeight),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

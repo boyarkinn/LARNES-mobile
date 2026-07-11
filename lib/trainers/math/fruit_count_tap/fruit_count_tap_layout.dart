@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 
 const fruitFieldMaxPlacementAttempts = 100;
-const fruitFieldMinDistancePercent = 9.0;
+const fruitFieldMinDistancePercent = 11.0;
 const fruitFieldPaddingPercent = 8.0;
 
 class PlacedFruit extends FruitToken {

@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 
+/// Web v2: `platform/src/trainers/mental-arithmetic/flashcard-digit-match/digit-target.tsx`
 class DigitTarget extends StatelessWidget {
   const DigitTarget({
     super.key,
     required this.digit,
+    required this.size,
+    required this.fontSize,
     this.connected = false,
   });
 
   final int digit;
+  final double size;
+  final double fontSize;
   final bool connected;
 
   @override
@@ -31,18 +36,21 @@ class DigitTarget extends StatelessWidget {
         ],
       ),
       child: SizedBox(
-        width: 64,
-        height: 64,
+        width: size,
+        height: size,
         child: Center(
-          child: Text(
-            '$digit',
-            style: TextStyle(
-              fontSize: 36,
-              fontWeight: FontWeight.w700,
-              color: connected
-                  ? const Color(0xFF059669)
-                  : const Color(0xFF4F46E5),
-              fontFeatures: const [FontFeature.tabularFigures()],
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$digit',
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.w700,
+                color: connected
+                    ? const Color(0xFF059669)
+                    : const Color(0xFF4F46E5),
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ),

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_board.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
+/// Web v2: `platform/src/trainers/mental-arithmetic/flashcard-digit-match/component.tsx`
 class FlashcardDigitMatchTrainer extends StatefulWidget {
   const FlashcardDigitMatchTrainer({
     super.key,
@@ -77,47 +79,14 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
   Widget build(BuildContext context) {
     final totalRods = widget.params['totalRods'] as int? ?? 1;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          'Проведи пальцем линию от абакуса к подходящей цифре',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF4B5563),
-          ),
-        ),
-        const SizedBox(height: 16),
-        MatchBoard(
-          connections: _connections,
-          disabled: _isComplete,
-          onConnect: _handleConnect,
-          round: _round,
-          totalRods: totalRods,
-        ),
-        const SizedBox(height: 12),
-        if (_isComplete)
-          const Text(
-            'Все пары соединены!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF059669),
-            ),
-          )
-        else
-          Text(
-            'Соединено ${_connections.length} из ${_values.length}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-            ),
-          ),
-      ],
+    return TrainerScene(
+      child: MatchBoard(
+        connections: _connections,
+        disabled: _isComplete,
+        onConnect: _handleConnect,
+        round: _round,
+        totalRods: totalRods,
+      ),
     );
   }
 }

@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_answer_bar_layout.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_layout.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_field_scene.dart';
-import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_icon.dart';
+import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
-const _completeDelayMs = TrainerTimings.completeDelayMs;
-
+/// Web v2: `platform/src/trainers/math/fruit-count-tap/component.tsx`
 class FruitCountTapTrainer extends StatefulWidget {
   const FruitCountTapTrainer({
     super.key,
@@ -34,8 +34,12 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
 
   int? _wrongValue;
   int? _selectedValue;
-  bool _isCompleted = false;
-  bool _completeCalled = false;
+  var _isCompleted = false;
+  var _isFruitRevealComplete = false;
+  var _isAnswerRevealComplete = false;
+  var _completeCalled = false;
+  Timer? _fruitRevealTimer;
+  Timer? _answerRevealTimer;
   Timer? _completeTimer;
 
   @override
@@ -46,6 +50,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     _answerChoices =
         getAnswerChoices(widget.params['answerRangeStart'] as int? ?? 0);
     _fruits = _buildFruits();
+    _scheduleFruitReveal();
   }
 
   List<PlacedFruit> _buildFruits() {
@@ -78,11 +83,56 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     return placeFruitTokens(tokens, rng);
   }
 
-  FruitSlug get _targetFruit =>
-      normalizeFruitSlug(widget.params['targetFruit'] as String? ?? 'watermelon');
+  void _scheduleFruitReveal() {
+    _fruitRevealTimer?.cancel();
+    _answerRevealTimer?.cancel();
+
+    if (_fruits.isEmpty) {
+      setState(() => _isFruitRevealComplete = true);
+      _scheduleAnswerReveal();
+      return;
+    }
+
+    setState(() {
+      _isFruitRevealComplete = false;
+      _isAnswerRevealComplete = false;
+    });
+
+    _fruitRevealTimer = Timer(
+      Duration(milliseconds: getFruitRevealTotalMs(_fruits.length)),
+      () {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _isFruitRevealComplete = true);
+        _scheduleAnswerReveal();
+      },
+    );
+  }
+
+  void _scheduleAnswerReveal() {
+    _answerRevealTimer?.cancel();
+
+    if (_answerChoices.isEmpty) {
+      setState(() => _isAnswerRevealComplete = true);
+      return;
+    }
+
+    setState(() => _isAnswerRevealComplete = false);
+
+    _answerRevealTimer = Timer(
+      Duration(milliseconds: getAnswerRevealTotalMs(_answerChoices.length)),
+      () {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _isAnswerRevealComplete = true);
+      },
+    );
+  }
 
   void _handleSelect(int value) {
-    if (_isCompleted) {
+    if (_isCompleted || !_isAnswerRevealComplete) {
       return;
     }
 
@@ -97,16 +147,19 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     }
 
     setState(() => _wrongValue = value);
-    Future<void>.delayed(const Duration(milliseconds: _wrongFeedbackMs), () {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        if (_wrongValue == value) {
-          _wrongValue = null;
+    Future<void>.delayed(
+      const Duration(milliseconds: TrainerTimings.wrongFeedbackMs),
+      () {
+        if (!mounted) {
+          return;
         }
-      });
-    });
+        setState(() {
+          if (_wrongValue == value) {
+            _wrongValue = null;
+          }
+        });
+      },
+    );
   }
 
   void _scheduleComplete() {
@@ -116,7 +169,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
 
     _completeCalled = true;
     _completeTimer = Timer(
-      const Duration(milliseconds: _completeDelayMs),
+      const Duration(milliseconds: TrainerTimings.completeDelayMs),
       () {
         if (mounted) {
           widget.onComplete?.call();
@@ -127,65 +180,46 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
 
   @override
   void dispose() {
+    _fruitRevealTimer?.cancel();
+    _answerRevealTimer?.cancel();
     _completeTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final label = fruitLabels[_targetFruit] ?? 'фруктов';
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final answerLayout = computeFruitAnswerBarLayout(
+          viewportWidth: constraints.maxWidth,
+          viewportHeight: constraints.maxHeight,
+        );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Сколько ',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF4B5563),
-              ),
-            ),
-            FruitIcon(fruit: _targetFruit, size: 28),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                '$label ты видишь?',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF4B5563),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        FruitFieldScene(fruits: _fruits),
-        const SizedBox(height: 16),
-        NumericChoiceBar(
-          choices: _answerChoices,
-          disabled: _isCompleted,
-          onSelect: _handleSelect,
-          selectedValue: _selectedValue,
-          wrongValue: _wrongValue,
-        ),
-        if (_isCompleted) ...[
-          const SizedBox(height: 12),
-          const Text(
-            'Молодец!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF16A34A),
-            ),
-          ),
-        ],
-      ],
+        return TrainerSceneColumn(
+          body: FruitFieldScene(fruits: _fruits),
+          footer: _isFruitRevealComplete
+              ? Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    answerLayout.horizontalPadding,
+                    answerLayout.paddingTop,
+                    answerLayout.horizontalPadding,
+                    answerLayout.paddingBottom,
+                  ),
+                  child: NumericChoiceBar(
+                    choices: _answerChoices,
+                    disabled: _isCompleted || !_isAnswerRevealComplete,
+                    enterDelayMsForIndex: (index) =>
+                        getAnswerRevealDelayMs(index, _answerChoices.length),
+                    buttonHeight: answerLayout.buttonHeight,
+                    fontSize: answerLayout.fontSize,
+                    onSelect: _handleSelect,
+                    selectedValue: _selectedValue,
+                    wrongValue: _wrongValue,
+                  ),
+                )
+              : null,
+        );
+      },
     );
   }
 }

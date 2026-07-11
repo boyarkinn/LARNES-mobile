@@ -40,6 +40,12 @@ void main() {
       expect(find.bySemanticsLabel('Меню'), findsOneWidget);
       expect(find.text('Продолжить занятие'), findsNothing);
 
+      final menuButton = tester.getRect(find.bySemanticsLabel('Меню'));
+      expect(menuButton.width, 48);
+      expect(menuButton.height, 48);
+      expect(menuButton.left, greaterThan(0));
+      expect(menuButton.left, lessThan(tester.getSize(find.byType(TrainerPlayShell)).width / 2));
+
       await tester.tap(find.bySemanticsLabel('Меню'));
       await tester.pumpAndSettle();
 

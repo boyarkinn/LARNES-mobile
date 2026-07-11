@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_field_scene.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
+import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
-const _completeDelayMs = TrainerTimings.completeAfterBurstMs;
-
+/// Web v2: `platform/src/trainers/math/digit-find-tap/component.tsx`
 class DigitFindTapTrainer extends StatefulWidget {
   const DigitFindTapTrainer({
     super.key,
@@ -27,10 +27,13 @@ class DigitFindTapTrainer extends StatefulWidget {
 class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   late final int _layoutSalt;
   late final List<PlacedDigit> _digits;
+
   final Set<String> _foundIds = {};
   String? _wrongId;
-  bool _isCompleted = false;
-  bool _completeCalled = false;
+  var _isCompleted = false;
+  var _isRevealComplete = false;
+  var _completeCalled = false;
+  Timer? _revealTimer;
   Timer? _completeTimer;
 
   @override
@@ -38,6 +41,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     super.initState();
     _layoutSalt = createLayoutSalt();
     _digits = _buildDigits();
+    _scheduleReveal();
   }
 
   List<PlacedDigit> _buildDigits() {
@@ -64,13 +68,29 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     return placeDigitTokens(tokens, rng);
   }
 
-  int get _targetsTotal => _digits.where((digit) => digit.isTarget).length;
+  void _scheduleReveal() {
+    _revealTimer?.cancel();
 
-  int get _targetDigit =>
-      normalizeTargetDigit(widget.params['digit'] as num? ?? 0);
+    if (_digits.isEmpty) {
+      setState(() => _isRevealComplete = true);
+      return;
+    }
+
+    setState(() => _isRevealComplete = false);
+
+    _revealTimer = Timer(
+      Duration(milliseconds: getFruitRevealTotalMs(_digits.length)),
+      () {
+        if (!mounted) {
+          return;
+        }
+        setState(() => _isRevealComplete = true);
+      },
+    );
+  }
 
   void _handleTap(String id) {
-    if (_isCompleted || _foundIds.contains(id)) {
+    if (_isCompleted || !_isRevealComplete || _foundIds.contains(id)) {
       return;
     }
 
@@ -82,16 +102,19 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
 
     if (!token.isTarget) {
       setState(() => _wrongId = id);
-      Future<void>.delayed(const Duration(milliseconds: _wrongFeedbackMs), () {
-        if (!mounted) {
-          return;
-        }
-        setState(() {
-          if (_wrongId == id) {
-            _wrongId = null;
+      Future<void>.delayed(
+        const Duration(milliseconds: TrainerTimings.wrongFeedbackMs),
+        () {
+          if (!mounted) {
+            return;
           }
-        });
-      });
+          setState(() {
+            if (_wrongId == id) {
+              _wrongId = null;
+            }
+          });
+        },
+      );
       return;
     }
 
@@ -110,7 +133,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
 
     _completeCalled = true;
     _completeTimer = Timer(
-      const Duration(milliseconds: _completeDelayMs),
+      const Duration(milliseconds: TrainerTimings.completeAfterBurstMs),
       () {
         if (mounted) {
           widget.onComplete?.call();
@@ -121,69 +144,21 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
 
   @override
   void dispose() {
+    _revealTimer?.cancel();
     _completeTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text.rich(
-          TextSpan(
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF4B5563),
-            ),
-            children: [
-              const TextSpan(text: 'Найди все цифры '),
-              TextSpan(
-                text: '$_targetDigit',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF7C3AED),
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-              const TextSpan(
-                text: ' · ',
-                style: TextStyle(color: Color(0xFF9CA3AF)),
-              ),
-              TextSpan(
-                text: '${_foundIds.length}/$_targetsTotal',
-                style: const TextStyle(
-                  color: Color(0xFF6B7280),
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ],
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        DigitFieldScene(
-          digits: _digits,
-          disabled: _isCompleted,
-          foundIds: _foundIds,
-          onTap: _handleTap,
-          wrongId: _wrongId,
-        ),
-        if (_isCompleted) ...[
-          const SizedBox(height: 12),
-          const Text(
-            'Молодец!',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF16A34A),
-            ),
-          ),
-        ],
-      ],
+    return TrainerScene(
+      child: DigitFieldScene(
+        digits: _digits,
+        disabled: _isCompleted || !_isRevealComplete,
+        foundIds: _foundIds,
+        onTap: _handleTap,
+        wrongId: _wrongId,
+      ),
     );
   }
 }

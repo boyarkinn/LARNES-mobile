@@ -29,10 +29,3 @@ List<AppleMotionStep> buildAppleDropSequence(int appleCount) {
     );
   });
 }
-
-int appleDropTotalDurationMs(int appleCount) {
-  if (appleCount <= 0) {
-    return 0;
-  }
-  return (appleCount - 1) * appleDropStaggerMs + appleFlightDurationMs;
-}

@@ -84,8 +84,8 @@ void main() {
         'value2': '2',
       });
 
-      expect(payload['pairCount'], '3');
-      expect(payload['value2'], '2');
+      expect(payload['totalRods'], 1);
+      expect(payload['values'], [0, 1, 2]);
     });
   });
 }

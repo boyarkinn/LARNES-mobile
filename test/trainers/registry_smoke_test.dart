@@ -12,17 +12,25 @@ void main() {
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
-    test('has 10 native builders and 19 reading stubs', () {
-      expect(trainerBuilders.length, 10);
-      expect(hasTrainerBuilder('number-row-show'), isTrue);
-      expect(hasTrainerBuilder('letter-find-tap'), isFalse);
+    test('has native builder for every registered trainer', () {
+      expect(trainerBuilders.length, 29);
 
+      for (final key in TrainerKey.values) {
+        expect(
+          hasTrainerBuilder(key.apiValue),
+          isTrue,
+          reason: key.apiValue,
+        );
+      }
+    });
+
+    test('reading trainers are interactive', () {
       final readingDefinitions = trainerDefinitions.values
           .where((definition) => definition.direction == TrainerDirection.reading);
+
       expect(readingDefinitions.length, 19);
       for (final definition in readingDefinitions) {
         expect(definition.isInteractive, isTrue);
-        expect(hasTrainerBuilder(definition.key.apiValue), isFalse);
       }
     });
 

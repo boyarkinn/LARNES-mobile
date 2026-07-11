@@ -180,6 +180,15 @@ Map<String, dynamic> buildPlayParamsPayload(
   TrainerPlayConfig config,
   Map<String, String> values,
 ) {
+  if (config.trainerKey == 'letter-grid-match') {
+    return {
+      'practiceLetters': values['practiceLetters'],
+      'gridSize': coerceInt(values['digit']) ?? 3,
+      'filledCount': coerceInt(values['entityCount']) ?? 4,
+      'letterCase': values['letterCase'],
+    };
+  }
+
   if (config.trainerKey == 'flashcard-digit-match') {
     final totalRods = coerceInt(values['totalRods']);
     return {

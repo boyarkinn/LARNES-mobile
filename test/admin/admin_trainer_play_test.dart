@@ -1,16 +1,40 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
 import 'package:larnes_mobile/trainers/catalog/registry.dart';
+import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
   group('mobile play gate', () {
+    test('all registered trainers have native builders', () {
+      expect(trainerBuilders.length, 29);
+
+      for (final key in TrainerKey.values) {
+        expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);
+      }
+    });
+
     test('dots-digit-abacus has native builder', () {
       expect(hasTrainerBuilder('dots-digit-abacus'), isTrue);
     });
 
-    test('letter-find-tap is registered without native builder', () {
+    test('letter-find-tap has native builder', () {
       expect(isTrainerKey('letter-find-tap'), isTrue);
-      expect(hasTrainerBuilder('letter-find-tap'), isFalse);
+      expect(hasTrainerBuilder('letter-find-tap'), isTrue);
+    });
+
+    test('letter-trace has native builder', () {
+      expect(isTrainerKey('letter-trace'), isTrue);
+      expect(hasTrainerBuilder('letter-trace'), isTrue);
+    });
+
+    test('letter-color has native builder', () {
+      expect(isTrainerKey('letter-color'), isTrue);
+      expect(hasTrainerBuilder('letter-color'), isTrue);
+    });
+
+    test('letter-case-color has native builder', () {
+      expect(isTrainerKey('letter-case-color'), isTrue);
+      expect(hasTrainerBuilder('letter-case-color'), isTrue);
     });
   });
 
@@ -59,6 +83,37 @@ void main() {
   });
 
   group('buildPlayParamsPayload', () {
+    test('maps letter-grid-match admin form keys to trainer params', () {
+      final config = TrainerPlayConfig.fromJson({
+        'status': 'success',
+        'trainerKey': 'letter-grid-match',
+        'title': 'Grid match',
+        'direction': 'reading',
+        'isInteractive': true,
+        'defaultParams': {
+          'practiceLetters': 'А,М,К',
+          'digit': 3,
+          'entityCount': 5,
+          'letterCase': 'upper',
+        },
+        'fields': [],
+      });
+
+      final payload = buildPlayParamsPayload(config, {
+        'practiceLetters': 'А,М,К',
+        'digit': '3',
+        'entityCount': '5',
+        'letterCase': 'upper',
+      });
+
+      expect(payload['gridSize'], 3);
+      expect(payload['filledCount'], 5);
+      expect(payload['practiceLetters'], 'А,М,К');
+      expect(payload['letterCase'], 'upper');
+      expect(payload.containsKey('digit'), isFalse);
+      expect(payload.containsKey('entityCount'), isFalse);
+    });
+
     test('builds flashcard values array fields for API', () {
       final config = TrainerPlayConfig.fromJson({
         'status': 'success',

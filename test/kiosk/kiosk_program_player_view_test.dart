@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 
 const _programId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -109,6 +110,34 @@ void main() {
       expect(find.bySemanticsLabel('Меню'), findsOneWidget);
       expect(find.text('АННА ПЕТРОВА'), findsNothing);
       expect(find.text('Выйти'), findsNothing);
+    });
+
+    testWidgets('loads reading interactive step in trainer shell', (tester) async {
+      final gateway = FakeKioskProgramGateway(
+        snapshot: _snapshotWithSteps(const [
+          ParentProgramPlayStep(
+            id: 'step-reading',
+            trainerKey: 'letter-find-tap',
+            params: {
+              'letter': 'А',
+              'letterCase': 'upper',
+              'targetCount': 1,
+              'distractorCount': 3,
+            },
+            topicOrdinal: 1,
+            lessonOrdinal: 1,
+            isLastInLesson: true,
+            isLastInProgram: false,
+          ),
+        ]),
+      );
+
+      await tester.pumpWidget(wrap(gateway: gateway));
+      await tester.pump();
+
+      expect(find.byType(TrainerPlayShell), findsOneWidget);
+      expect(find.byType(LetterFindTapTrainer), findsOneWidget);
+      expect(find.text('Далее'), findsNothing);
     });
 
     testWidgets('advances non-interactive steps and completes lesson', (tester) async {

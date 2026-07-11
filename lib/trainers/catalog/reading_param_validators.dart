@@ -340,8 +340,9 @@ ValidateTrainerParamsResult validateLetterGridMatchParams(Map<String, dynamic> r
   if (practiceLetters.isEmpty) {
     return _fail(_practiceLettersMessage);
   }
-  final filledCount = coerceInt(raw['filledCount']) ?? 4;
-  final gridSize = coerceInt(raw['gridSize']) ?? 3;
+  final filledCount =
+      coerceInt(raw['filledCount']) ?? coerceInt(raw['entityCount']) ?? 4;
+  final gridSize = coerceInt(raw['gridSize']) ?? coerceInt(raw['digit']) ?? 3;
   if (!isValidGridSize(gridSize)) {
     return _fail('Размер сетки: 2 или 3.');
   }

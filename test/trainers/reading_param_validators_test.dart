@@ -60,6 +60,30 @@ void main() {
       expect(result.ok, isFalse);
     });
 
+    test('accepts letter-grid-match admin form aliases', () {
+      final result = validateTrainerParams('letter-grid-match', {
+        'practiceLetters': 'А,М,К',
+        'digit': 3,
+        'entityCount': 5,
+        'letterCase': 'upper',
+      });
+
+      expect(result.ok, isTrue);
+      expect(result.params?['gridSize'], 3);
+      expect(result.params?['filledCount'], 5);
+    });
+
+    test('rejects letter-grid-match overflow filled count', () {
+      final result = validateTrainerParams('letter-grid-match', {
+        'practiceLetters': 'А,М,К',
+        'gridSize': 2,
+        'filledCount': 5,
+        'letterCase': 'upper',
+      });
+
+      expect(result.ok, isFalse);
+    });
+
     test('registered reading key validates instead of unknown error', () {
       final result = validateTrainerParams('letter-trace', {
         'letter': 'Б',

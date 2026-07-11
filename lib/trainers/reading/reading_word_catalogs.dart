@@ -21,6 +21,36 @@ const fillGapWordLabels = {
   'watermelon': 'Арбуз',
 };
 
+const fillGapWordSlugs = [
+  'stork',
+  'watermelon',
+  'house',
+  'door',
+  'mama',
+  'cat',
+  'juice',
+  'duck',
+  'lemon',
+  'fish',
+  'owl',
+  'apple',
+  'nose',
+  'hand',
+  'bear',
+  'puddle',
+  'bridge',
+  'rose',
+];
+
+String getFillGapWordLabel(String slug) {
+  return fillGapWordLabels[slug] ?? 'Аист';
+}
+
+/// Путь к изображению слова; null — режим заглушки (текст на экране).
+String? getFillGapWordImageSrc(String slug) {
+  return null;
+}
+
 const wordLinkLabels = {
   'airplane': 'Аэроплан',
   'apple-fruit': 'Яблоко',
@@ -98,6 +128,15 @@ String normalizeFirstByImageWordSlug(String value) {
   return isFirstByImageWordSlug(value) ? value : 'stork';
 }
 
+String getFirstByImageWordLabel(String slug) {
+  return firstByImageWordLabels[normalizeFirstByImageWordSlug(slug)] ?? 'Аист';
+}
+
+/// Путь к изображению слова; null — режим заглушки (текст на экране).
+String? getFirstByImageWordImageSrc(String slug) {
+  return null;
+}
+
 bool canFitLetterChoices(int distractorCount) {
   return distractorCount >= 0 && 1 + distractorCount <= maxLetterChoices;
 }
@@ -153,6 +192,15 @@ String getWordLinkFirstLetter(String slug) {
     return 'А';
   }
   return normalizeTargetLetter(label[0]);
+}
+
+String getWordLinkLabel(String slug) {
+  return wordLinkLabels[slug] ?? 'Аист';
+}
+
+/// Путь к изображению предмета; null — режим заглушки (текст на экране).
+String? getWordLinkImageSrc(String slug) {
+  return null;
 }
 
 List<String> getWordsByFirstLetter(String letter) {

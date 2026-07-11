@@ -205,8 +205,8 @@ class _TrainerDetailScreenState extends State<TrainerDetailScreen>
               unselectedLabelColor: AdminColors.inkMuted,
               indicatorColor: AdminColors.accent,
               tabs: [
-                Tab(text: l10n.adminTrainerWorkflowTabWorkflow),
                 Tab(text: l10n.adminTrainerWorkflowTabPlay),
+                Tab(text: l10n.adminTrainerWorkflowTabWorkflow),
               ],
             ),
           ),
@@ -254,6 +254,7 @@ class _TrainerDetailScreenState extends State<TrainerDetailScreen>
     return TabBarView(
       controller: _tabController,
       children: [
+        TrainerPlayPanel(trainerKey: widget.trainerKey),
         RefreshIndicator(
           onRefresh: () => _load(silent: true),
           child: TrainerWorkflowPanel(
@@ -270,7 +271,6 @@ class _TrainerDetailScreenState extends State<TrainerDetailScreen>
             mutationError: _mutationError,
           ),
         ),
-        TrainerPlayPanel(trainerKey: widget.trainerKey),
       ],
     );
   }

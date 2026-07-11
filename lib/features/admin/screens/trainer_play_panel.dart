@@ -223,7 +223,7 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
   }
 }
 
-class _FieldEditor extends StatelessWidget {
+class _FieldEditor extends StatefulWidget {
   const _FieldEditor({
     super.key,
     required this.field,
@@ -238,43 +238,71 @@ class _FieldEditor extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   @override
-  Widget build(BuildContext context) {
-    final label = trainerPlayFieldLabel(l10n, field.labelKey);
+  State<_FieldEditor> createState() => _FieldEditorState();
+}
 
-    switch (field.type) {
+class _FieldEditorState extends State<_FieldEditor> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.value);
+  }
+
+  @override
+  void didUpdateWidget(_FieldEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: widget.value,
+        selection: TextSelection.collapsed(offset: widget.value.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = trainerPlayFieldLabel(widget.l10n, widget.field.labelKey);
+
+    switch (widget.field.type) {
       case TrainerPlayFieldType.select:
         return DropdownButtonFormField<String>(
-          value: value.isEmpty ? null : value,
+          value: widget.value.isEmpty ? null : widget.value,
           decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
           items: [
-            for (final option in field.options)
+            for (final option in widget.field.options)
               DropdownMenuItem(
                 value: option.value,
-                child: Text(trainerPlayOptionLabel(l10n, option)),
+                child: Text(trainerPlayOptionLabel(widget.l10n, option)),
               ),
           ],
           onChanged: (next) {
             if (next != null) {
-              onChanged(next);
+              widget.onChanged(next);
             }
           },
         );
       case TrainerPlayFieldType.text:
         return TextFormField(
-          key: ValueKey('text-$value'),
-          initialValue: value,
+          controller: _controller,
           decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
-          maxLength: field.maxLength,
-          onChanged: onChanged,
+          maxLength: widget.field.maxLength,
+          onChanged: widget.onChanged,
         );
       case TrainerPlayFieldType.number:
         return TextFormField(
-          key: ValueKey('number-$value'),
-          initialValue: value,
+          controller: _controller,
           decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'-?\d*'))],
-          onChanged: onChanged,
+          onChanged: widget.onChanged,
         );
     }
   }

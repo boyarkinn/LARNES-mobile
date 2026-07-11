@@ -14,6 +14,25 @@ import 'package:larnes_mobile/trainers/math/number_composition/number_compositio
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_color/letter_color_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_case_color/letter_case_color_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_build/letter_build_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_grid_match/letter_grid_match_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_case_match/letter_case_match_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_first_by_image/letter_first_by_image_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_complete/letter_complete_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_draw_show/letter_draw_show_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_half_draw/letter_half_draw_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_name_aloud/letter_name_aloud_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_odd_one_out/letter_odd_one_out_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/letter_marquee_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_word_link/letter_word_link_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_place_in_word/letter_place_in_word_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_connect_dots/letter_connect_dots_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/letter_orientation_pick_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_trace/letter_trace_trainer.dart';
 
 typedef TrainerWidgetBuilder = Widget Function({
   required Map<String, dynamic> params,
@@ -41,6 +60,44 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       DigitTraceTrainer(params: params, onComplete: onComplete),
   TrainerKey.flashcardDigitMatch: ({required params, onComplete}) =>
       FlashcardDigitMatchTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterFindTap: ({required params, onComplete}) =>
+      LetterFindTapTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterFindBySound: ({required params, onComplete}) =>
+      LetterFindBySoundTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterTrace: ({required params, onComplete}) =>
+      LetterTraceTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterHalfDraw: ({required params, onComplete}) =>
+      LetterHalfDrawTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterColor: ({required params, onComplete}) =>
+      LetterColorTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterCaseColor: ({required params, onComplete}) =>
+      LetterCaseColorTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterBuild: ({required params, onComplete}) =>
+      LetterBuildTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterGridMatch: ({required params, onComplete}) =>
+      LetterGridMatchTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterCaseMatch: ({required params, onComplete}) =>
+      LetterCaseMatchTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterOrientationPick: ({required params, onComplete}) =>
+      LetterOrientationPickTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterFirstByImage: ({required params, onComplete}) =>
+      LetterFirstByImageTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterMarqueeTap: ({required params, onComplete}) =>
+      LetterMarqueeTapTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterWordLink: ({required params, onComplete}) =>
+      LetterWordLinkTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterComplete: ({required params, onComplete}) =>
+      LetterCompleteTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterOddOneOut: ({required params, onComplete}) =>
+      LetterOddOneOutTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterPlaceInWord: ({required params, onComplete}) =>
+      LetterPlaceInWordTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterNameAloud: ({required params, onComplete}) =>
+      LetterNameAloudTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterDrawShow: ({required params, onComplete}) =>
+      LetterDrawShowTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterConnectDots: ({required params, onComplete}) =>
+      LetterConnectDotsTrainer(params: params, onComplete: onComplete),
 };
 
 final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {

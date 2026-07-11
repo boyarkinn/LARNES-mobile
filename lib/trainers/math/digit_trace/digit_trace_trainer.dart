@@ -33,7 +33,7 @@ class _DigitTraceTrainerState extends State<DigitTraceTrainer> {
 
     _completeCalled = true;
     _completeTimer = Timer(
-      const Duration(milliseconds: TrainerTimings.traceCompleteDelayMs),
+      const Duration(milliseconds: TrainerTimings.completeAfterBurstMs),
       () {
         if (mounted) {
           widget.onComplete?.call();

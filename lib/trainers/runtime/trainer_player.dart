@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/trainers/catalog/registry.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/runtime/unimplemented_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
@@ -12,12 +13,14 @@ class TrainerPlayer extends StatelessWidget {
     required this.params,
     required this.l10n,
     this.onComplete,
+    this.stepChrome,
   });
 
   final String trainerKey;
   final Map<String, dynamic> params;
   final AppLocalizations l10n;
   final VoidCallback? onComplete;
+  final TrainerStepChrome? stepChrome;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +40,33 @@ class TrainerPlayer extends StatelessWidget {
     final validatedParams = validated.params!;
 
     final builder = trainerBuilders[key];
-    if (builder != null) {
-      return builder(params: validatedParams, onComplete: onComplete);
-    }
+    final trainerWidget = builder != null
+        ? builder(params: validatedParams, onComplete: onComplete)
+        : UnimplementedTrainer(
+            title: definition.title,
+            trainerKey: trainerKey,
+            l10n: l10n,
+          );
 
-    return UnimplementedTrainer(
-      title: definition.title,
-      trainerKey: trainerKey,
-      l10n: l10n,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.center,
+                  child: trainerWidget,
+                ),
+              ),
+              if (stepChrome != null) TrainerStepChromeBar(chrome: stepChrome!),
+            ],
+          ),
+        );
+      },
     );
   }
 }

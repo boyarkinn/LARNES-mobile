@@ -220,6 +220,7 @@
   "parentHomeworkPlayCompletedTitle": "Homework completed",
   "parentHomeworkPlayBackToList": "Back to homework list",
   "parentHomeworkPlayExit": "Exit",
+  "parentHomeworkPlayMenuContinue": "Continue lesson",
   "parentHomeworkPlayEmpty": "This assignment has no trainers yet.",
   "parentHomeworkPlayStepLabel": "Step {step}",
   "@parentHomeworkPlayStepLabel": {
@@ -365,6 +366,9 @@
   "adminTrainerPlayWebOnlyTitle": "No mobile implementation",
   "adminTrainerPlayWebOnlyMessage": "This trainer is web-only for now. Run and test play at larnes.online under Trainers.",
   "adminTrainerPlayExit": "Back",
+  "adminTrainerPlayMenuContinue": "Continue check",
+  "adminTrainerPlayFinish": "Done",
+  "adminTrainerPlayNext": "Next",
   "adminTrainerPlayContinueCheck": "Continue check",
   "adminAccountTitle": "Account",
   "adminAccountLoadFailed": "Could not load account.",
@@ -605,6 +609,7 @@
   "parentProgramPlayCompletedTitle": "Program completed",
   "parentProgramPlayBackToHub": "Back to study",
   "parentProgramPlayExit": "Exit",
+  "parentProgramPlayMenuContinue": "Continue lesson",
   "parentProgramPlayEmptyProgram": "This program has no trainers to play yet.",
   "parentProgramPlayEmptyLesson": "Lesson {lesson} in topic {topic} has no trainers yet. Ask your teacher to add tasks.",
   "@parentProgramPlayEmptyLesson": {

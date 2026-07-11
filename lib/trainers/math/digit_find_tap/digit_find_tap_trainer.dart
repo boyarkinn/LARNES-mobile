@@ -8,7 +8,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 const _wrongFeedbackMs = TrainerTimings.wrongFeedbackMs;
-const _completeDelayMs = TrainerTimings.completeDelayMs;
+const _completeDelayMs = TrainerTimings.completeAfterBurstMs;
 
 class DigitFindTapTrainer extends StatefulWidget {
   const DigitFindTapTrainer({
@@ -25,6 +25,7 @@ class DigitFindTapTrainer extends StatefulWidget {
 }
 
 class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
+  late final int _layoutSalt;
   late final List<PlacedDigit> _digits;
   final Set<String> _foundIds = {};
   String? _wrongId;
@@ -35,6 +36,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   @override
   void initState() {
     super.initState();
+    _layoutSalt = createLayoutSalt();
     _digits = _buildDigits();
   }
 
@@ -43,7 +45,12 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     final targetCount = widget.params['targetCount'] as int? ?? 1;
     final distractorCount = widget.params['distractorCount'] as int? ?? 0;
 
-    final seed = hashParamsSeed([targetDigit, targetCount, distractorCount]);
+    final seed = hashParamsSeed([
+      targetDigit,
+      targetCount,
+      distractorCount,
+      _layoutSalt,
+    ]);
     final rng = createSeededRng(seed);
     final tokens = buildDigitTokens(
       BuildDigitFieldInput(

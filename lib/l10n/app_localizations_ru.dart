@@ -490,6 +490,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentHomeworkPlayExit => 'Выйти';
 
   @override
+  String get parentHomeworkPlayMenuContinue => 'Продолжить занятие';
+
+  @override
   String get parentHomeworkPlayEmpty => 'В задании пока нет тренажёров.';
 
   @override
@@ -879,6 +882,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminTrainerPlayExit => 'Назад';
+
+  @override
+  String get adminTrainerPlayMenuContinue => 'Продолжить проверку';
+
+  @override
+  String get adminTrainerPlayFinish => 'Готово';
+
+  @override
+  String get adminTrainerPlayNext => 'Далее';
 
   @override
   String get adminTrainerPlayContinueCheck => 'Продолжить проверку';
@@ -1540,6 +1552,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentProgramPlayExit => 'Выйти';
+
+  @override
+  String get parentProgramPlayMenuContinue => 'Продолжить занятие';
 
   @override
   String get parentProgramPlayEmptyProgram =>

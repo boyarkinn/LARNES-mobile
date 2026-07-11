@@ -8,7 +8,8 @@ void main() {
       expect(hasTrainerBuilder('dots-digit-abacus'), isTrue);
     });
 
-    test('letter-find-tap is web-only in mobile registry', () {
+    test('letter-find-tap is registered without native builder', () {
+      expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(hasTrainerBuilder('letter-find-tap'), isFalse);
     });
   });

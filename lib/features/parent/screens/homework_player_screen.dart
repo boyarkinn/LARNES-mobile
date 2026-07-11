@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -8,7 +7,9 @@ import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 
 class HomeworkPlayerScreen extends StatefulWidget {
   const HomeworkPlayerScreen({
@@ -196,59 +197,27 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
     final isLast = _stepIndex >= totalSteps - 1;
     final isInteractive = isTrainerInteractive(step.trainerKey);
 
-    return ParentPlayerShell(
-      eyebrow: l10n.parentHomeworkPlayProgress(_stepIndex + 1, totalSteps).toUpperCase(),
-      title: snapshot.title,
-      exitLabel: l10n.parentHomeworkPlayExit,
+    return TrainerPlayShell(
+      currentStep: _stepIndex + 1,
+      totalSteps: totalSteps,
+      menuContinueLabel: l10n.parentHomeworkPlayMenuContinue,
+      menuExitLabel: l10n.parentHomeworkPlayExit,
       onExit: _exit,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: TrainerPlayer(
-            key: ValueKey(step.id),
-            trainerKey: step.trainerKey,
-            params: step.params,
-            l10n: l10n,
-            onComplete: isInteractive ? _handleAdvance : null,
-          ),
+      child: TrainerPlayer(
+        key: ValueKey(step.id),
+        trainerKey: step.trainerKey,
+        params: step.params,
+        l10n: l10n,
+        onComplete: isInteractive ? _handleAdvance : null,
+        stepChrome: TrainerStepChrome(
+          errorMessage: _advanceError,
+          finishLabel: l10n.parentHomeworkPlayFinish,
+          isInteractive: isInteractive,
+          isLast: isLast,
+          isPending: _isAdvancing,
+          nextLabel: l10n.parentHomeworkPlayNext,
+          onAdvance: _isAdvancing ? null : _handleAdvance,
         ),
-      ),
-      footer: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (_advanceError != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                _advanceError!,
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 13, color: Color(0xFFDC2626)),
-              ),
-            ),
-          if (isInteractive)
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                l10n.parentHomeworkPlayInteractiveHint,
-                style: const TextStyle(fontSize: 14, color: ParentColors.inkMuted),
-              ),
-            )
-          else
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
-                onPressed: _isAdvancing ? null : _handleAdvance,
-                child: _isAdvancing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Text(isLast ? l10n.parentHomeworkPlayFinish : l10n.parentHomeworkPlayNext),
-              ),
-            ),
-        ],
       ),
     );
   }

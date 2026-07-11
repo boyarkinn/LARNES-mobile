@@ -974,6 +974,12 @@ abstract class AppLocalizations {
   /// **'Exit'**
   String get parentHomeworkPlayExit;
 
+  /// No description provided for @parentHomeworkPlayMenuContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue lesson'**
+  String get parentHomeworkPlayMenuContinue;
+
   /// No description provided for @parentHomeworkPlayEmpty.
   ///
   /// In en, this message translates to:
@@ -1651,6 +1657,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Back'**
   String get adminTrainerPlayExit;
+
+  /// No description provided for @adminTrainerPlayMenuContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue check'**
+  String get adminTrainerPlayMenuContinue;
+
+  /// No description provided for @adminTrainerPlayFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get adminTrainerPlayFinish;
+
+  /// No description provided for @adminTrainerPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get adminTrainerPlayNext;
 
   /// No description provided for @adminTrainerPlayContinueCheck.
   ///
@@ -2862,6 +2886,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Exit'**
   String get parentProgramPlayExit;
+
+  /// No description provided for @parentProgramPlayMenuContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue lesson'**
+  String get parentProgramPlayMenuContinue;
 
   /// No description provided for @parentProgramPlayEmptyProgram.
   ///

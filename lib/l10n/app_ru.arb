@@ -178,6 +178,7 @@
   "parentHomeworkPlayCompletedTitle": "Домашнее задание выполнено",
   "parentHomeworkPlayBackToList": "К списку ДЗ",
   "parentHomeworkPlayExit": "Выйти",
+  "parentHomeworkPlayMenuContinue": "Продолжить занятие",
   "parentHomeworkPlayEmpty": "В задании пока нет тренажёров.",
   "parentHomeworkPlayStepLabel": "Шаг {step}",
   "@parentHomeworkPlayStepLabel": {
@@ -323,6 +324,9 @@
   "adminTrainerPlayWebOnlyTitle": "Нет mobile-реализации",
   "adminTrainerPlayWebOnlyMessage": "Этот тренажёр пока только в web. Запуск и проверка play — на larnes.online в разделе «Тренажёры».",
   "adminTrainerPlayExit": "Назад",
+  "adminTrainerPlayMenuContinue": "Продолжить проверку",
+  "adminTrainerPlayFinish": "Готово",
+  "adminTrainerPlayNext": "Далее",
   "adminTrainerPlayContinueCheck": "Продолжить проверку",
   "adminAccountTitle": "Аккаунт",
   "adminAccountLoadFailed": "Не удалось загрузить аккаунт.",
@@ -563,6 +567,7 @@
   "parentProgramPlayCompletedTitle": "Программа завершена",
   "parentProgramPlayBackToHub": "К занятиям",
   "parentProgramPlayExit": "Выйти",
+  "parentProgramPlayMenuContinue": "Продолжить занятие",
   "parentProgramPlayEmptyProgram": "В программе пока нет тренажёров для прохождения.",
   "parentProgramPlayEmptyLesson": "В уроке {lesson} темы {topic} пока нет тренажёров. Попросите методиста добавить задания.",
   "@parentProgramPlayEmptyLesson": {

@@ -27,6 +27,7 @@ class FruitCountTapTrainer extends StatefulWidget {
 }
 
 class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
+  late final int _layoutSalt;
   late final List<PlacedFruit> _fruits;
   late final List<int> _answerChoices;
   late final int _targetCount;
@@ -40,6 +41,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
   @override
   void initState() {
     super.initState();
+    _layoutSalt = createLayoutSalt();
     _targetCount = widget.params['targetCount'] as int? ?? 0;
     _answerChoices =
         getAnswerChoices(widget.params['answerRangeStart'] as int? ?? 0);
@@ -59,6 +61,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       fruitTypeCount,
       totalFruits,
       answerRangeStart,
+      _layoutSalt,
     ]);
     final rng = createSeededRng(seed);
     final tokens = buildFruitTokens(

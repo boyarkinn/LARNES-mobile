@@ -6,6 +6,10 @@ enum TrainerShellTone {
   orange,
 }
 
+/// Legacy v1 gradient card. Prefer [TrainerScene] for new and migrated scenes.
+@Deprecated(
+  'Trainer scene v2 uses TrainerScene (full-bleed). Remove with trainers-mobile-v2 phases 2–11.',
+)
 class TrainerShell extends StatelessWidget {
   const TrainerShell({
     super.key,

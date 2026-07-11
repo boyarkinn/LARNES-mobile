@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 
 const _programId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const _childId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -61,6 +62,16 @@ ParentProgramPlaySnapshot _snapshotWithSteps(List<ParentProgramPlayStep> steps) 
   );
 }
 
+const _numberRowShowStep = ParentProgramPlayStep(
+  id: 'step-1',
+  trainerKey: 'number-row-show',
+  params: {'digit': 5},
+  topicOrdinal: 1,
+  lessonOrdinal: 1,
+  isLastInLesson: true,
+  isLastInProgram: false,
+);
+
 void main() {
   Widget wrap({
     required FakeKioskProgramGateway gateway,
@@ -81,19 +92,9 @@ void main() {
   }
 
   group('KioskProgramPlayerView', () {
-    testWidgets('loads snapshot and shows child name in eyebrow', (tester) async {
+    testWidgets('loads snapshot and shows game HUD without legacy header', (tester) async {
       final gateway = FakeKioskProgramGateway(
-        snapshot: _snapshotWithSteps(const [
-          ParentProgramPlayStep(
-            id: 'step-1',
-            trainerKey: 'unknown-trainer',
-            params: {},
-            topicOrdinal: 1,
-            lessonOrdinal: 1,
-            isLastInLesson: true,
-            isLastInProgram: false,
-          ),
-        ]),
+        snapshot: _snapshotWithSteps(const [_numberRowShowStep]),
       );
 
       await tester.pumpWidget(
@@ -103,10 +104,10 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.pumpAndSettle();
 
-      expect(find.text('АННА ПЕТРОВА'), findsOneWidget);
-      expect(find.text('Program A'), findsOneWidget);
+      expect(find.byType(TrainerPlayShell), findsOneWidget);
+      expect(find.bySemanticsLabel('Меню'), findsOneWidget);
+      expect(find.text('АННА ПЕТРОВА'), findsNothing);
       expect(find.text('Выйти'), findsNothing);
     });
 
@@ -115,8 +116,8 @@ void main() {
         snapshot: _snapshotWithSteps(const [
           ParentProgramPlayStep(
             id: 'step-1',
-            trainerKey: 'unknown-trainer',
-            params: {},
+            trainerKey: 'number-row-show',
+            params: {'digit': 3},
             topicOrdinal: 1,
             lessonOrdinal: 1,
             isLastInLesson: false,
@@ -124,8 +125,8 @@ void main() {
           ),
           ParentProgramPlayStep(
             id: 'step-2',
-            trainerKey: 'unknown-trainer',
-            params: {},
+            trainerKey: 'number-row-show',
+            params: {'digit': 4},
             topicOrdinal: 1,
             lessonOrdinal: 1,
             isLastInLesson: true,
@@ -136,16 +137,15 @@ void main() {
 
       await tester.pumpWidget(wrap(gateway: gateway));
       await tester.pump();
-      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Далее'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(gateway.completeCallCount, 0);
       expect(find.text('Далее'), findsOneWidget);
 
       await tester.tap(find.text('Далее'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(gateway.completeCallCount, 1);
       expect(gateway.lastTopicOrdinal, 1);
@@ -165,23 +165,12 @@ void main() {
       expect(find.text('Lesson is not active'), findsOneWidget);
 
       gateway.loadError = null;
-      gateway.snapshot = _snapshotWithSteps(const [
-        ParentProgramPlayStep(
-          id: 'step-1',
-          trainerKey: 'unknown-trainer',
-          params: {},
-          topicOrdinal: 1,
-          lessonOrdinal: 1,
-          isLastInLesson: true,
-          isLastInProgram: false,
-        ),
-      ]);
+      gateway.snapshot = _snapshotWithSteps(const [_numberRowShowStep]);
 
       await tester.tap(find.text('Продолжить'));
       await tester.pump();
-      await tester.pumpAndSettle();
 
-      expect(find.text('Program A'), findsOneWidget);
+      expect(find.text('Далее'), findsOneWidget);
     });
 
     testWidgets('shows completed state and calls onExit', (tester) async {
@@ -190,8 +179,8 @@ void main() {
         snapshot: _snapshotWithSteps(const [
           ParentProgramPlayStep(
             id: 'step-1',
-            trainerKey: 'unknown-trainer',
-            params: {},
+            trainerKey: 'number-row-show',
+            params: {'digit': 7},
             topicOrdinal: 1,
             lessonOrdinal: 1,
             isLastInLesson: true,
@@ -210,15 +199,14 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Завершить'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(find.text('Программа завершена'), findsOneWidget);
 
       await tester.tap(find.text('К занятиям'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       expect(exitCalled, isTrue);
     });

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
-import 'package:larnes_mobile/features/parent/utils/program_player_lesson_bounds.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 
 class KioskProgramPlayerView extends StatefulWidget {
   const KioskProgramPlayerView({
@@ -149,22 +149,6 @@ class _KioskProgramPlayerViewState extends State<KioskProgramPlayerView> {
     widget.onExit?.call();
   }
 
-  String _eyebrow(AppLocalizations l10n, ProgramPlayerLessonBounds lessonBounds) {
-    final childName = widget.childDisplayName?.trim();
-    if (childName != null && childName.isNotEmpty) {
-      return childName.toUpperCase();
-    }
-
-    return l10n
-        .parentProgramPlayLessonProgress(
-          lessonBounds.topicOrdinal,
-          lessonBounds.lessonOrdinal,
-          lessonBounds.currentInLesson,
-          lessonBounds.totalInLesson,
-        )
-        .toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     return _buildContent(context.l10n);
@@ -210,67 +194,30 @@ class _KioskProgramPlayerViewState extends State<KioskProgramPlayerView> {
     }
 
     final step = snapshot.steps[_stepIndex];
-    final lessonBounds = computeProgramPlayerLessonBounds(snapshot.steps, _stepIndex);
+    final totalSteps = snapshot.steps.length;
     final isInteractive = isTrainerInteractive(step.trainerKey);
 
-    return ParentPlayerShell(
-      eyebrow: _eyebrow(l10n, lessonBounds),
-      title: snapshot.title,
-      exitLabel: l10n.parentProgramPlayExit,
+    return TrainerPlayShell(
+      currentStep: _stepIndex + 1,
+      totalSteps: totalSteps,
+      menuContinueLabel: l10n.parentProgramPlayMenuContinue,
+      menuExitLabel: l10n.parentProgramPlayExit,
       onExit: _handleExit,
-      showExitButton: false,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: TrainerPlayer(
-            key: ValueKey(step.id),
-            trainerKey: step.trainerKey,
-            params: step.params,
-            l10n: l10n,
-            onComplete: isInteractive ? _handleAdvance : null,
-          ),
+      child: TrainerPlayer(
+        key: ValueKey(step.id),
+        trainerKey: step.trainerKey,
+        params: step.params,
+        l10n: l10n,
+        onComplete: isInteractive ? _handleAdvance : null,
+        stepChrome: TrainerStepChrome(
+          errorMessage: _advanceError,
+          finishLabel: l10n.parentProgramPlayFinish,
+          isInteractive: isInteractive,
+          isLast: step.isLastInProgram,
+          isPending: _isAdvancing,
+          nextLabel: l10n.parentProgramPlayNext,
+          onAdvance: _isAdvancing ? null : _handleAdvance,
         ),
-      ),
-      footer: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (_advanceError != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                _advanceError!,
-                textAlign: TextAlign.right,
-                style: const TextStyle(fontSize: 13, color: Color(0xFFDC2626)),
-              ),
-            ),
-          if (isInteractive)
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                l10n.parentProgramPlayInteractiveHint,
-                style: const TextStyle(fontSize: 14, color: ParentColors.inkMuted),
-              ),
-            )
-          else
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
-                onPressed: _isAdvancing ? null : _handleAdvance,
-                child: _isAdvancing
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Text(
-                        step.isLastInProgram
-                            ? l10n.parentProgramPlayFinish
-                            : l10n.parentProgramPlayNext,
-                      ),
-              ),
-            ),
-        ],
       ),
     );
   }

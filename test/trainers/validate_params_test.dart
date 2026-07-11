@@ -21,6 +21,14 @@ void main() {
       expect(result.ok, isFalse);
     });
 
+    test('registered reading key is known to registry', () {
+      final result = validateTrainerParams('letter-marquee-tap', {
+        'practiceLetters': 'А, Б',
+        'targetCount': 3,
+      });
+      expect(result.ok, isTrue);
+    });
+
     test('rejects invalid digit-find-tap field size', () {
       final result = validateTrainerParams('digit-find-tap', {
         'digit': 1,

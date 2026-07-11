@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class UnimplementedTrainer extends StatelessWidget {
   const UnimplementedTrainer({
@@ -17,50 +18,43 @@ class UnimplementedTrainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: parentCardDecoration(),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: LarnesColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            trainerKey,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: LarnesColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-            decoration: BoxDecoration(
-              color: LarnesColors.skyTop,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: LarnesColors.border),
-            ),
-            child: Text(
-              l10n.parentHomeworkPlayTrainerSoon,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: LarnesColors.textSecondary,
+    return TrainerScene(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.fredoka(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: ParentColors.ink,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                trainerKey,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: ParentColors.inkMuted,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.parentHomeworkPlayTrainerSoon,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: ParentColors.inkMuted,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

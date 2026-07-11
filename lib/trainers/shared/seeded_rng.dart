@@ -1,4 +1,6 @@
 /// Детерминированный RNG для раскладки полей (порт web `createSeededRng` / `hashParamsSeed`).
+import 'dart:math';
+
 double Function() createSeededRng(int seed) {
   var state = _toUint32(seed);
 
@@ -20,6 +22,11 @@ int hashParamsSeed(List<Object> parts) {
   }
 
   return _toUint32(hash);
+}
+
+/// Соль раскладки — новое поле при каждом mount play-сцены (web `createLayoutSalt`).
+int createLayoutSalt() {
+  return (Random.secure().nextDouble() * 0x100000000).floor() & 0xFFFFFFFF;
 }
 
 int _toUint32(int value) => value & 0xFFFFFFFF;

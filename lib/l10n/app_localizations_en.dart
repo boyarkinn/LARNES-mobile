@@ -485,6 +485,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkPlayExit => 'Exit';
 
   @override
+  String get parentHomeworkPlayMenuContinue => 'Continue lesson';
+
+  @override
   String get parentHomeworkPlayEmpty => 'This assignment has no trainers yet.';
 
   @override
@@ -865,6 +868,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminTrainerPlayExit => 'Back';
+
+  @override
+  String get adminTrainerPlayMenuContinue => 'Continue check';
+
+  @override
+  String get adminTrainerPlayFinish => 'Done';
+
+  @override
+  String get adminTrainerPlayNext => 'Next';
 
   @override
   String get adminTrainerPlayContinueCheck => 'Continue check';
@@ -1520,6 +1532,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentProgramPlayExit => 'Exit';
+
+  @override
+  String get parentProgramPlayMenuContinue => 'Continue lesson';
 
   @override
   String get parentProgramPlayEmptyProgram =>

@@ -1,6 +1,8 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
@@ -106,6 +108,51 @@ ValidateTrainerParamsResult validateStaticExampleShowParams(Map<String, dynamic>
     'operation': operation,
     'operandA': operandA,
     'operandB': operandB,
+    'totalRods': totalRods,
+  });
+}
+
+ValidateTrainerParamsResult validateExampleVisualizationParams(
+  Map<String, dynamic> raw,
+) {
+  final example = raw['example'];
+  final stepPauseSec = coerceDouble(raw['stepPauseSec']);
+  final totalRods = coerceInt(raw['totalRods']);
+
+  if (example is! String || example.trim().isEmpty) {
+    return _fail('Некорректные параметры.');
+  }
+  if (stepPauseSec == null || stepPauseSec < 0.5 || stepPauseSec > 30) {
+    return _fail('Некорректные параметры.');
+  }
+  if (totalRods == null || totalRods < 1 || totalRods > 2) {
+    return _fail('Некорректные параметры.');
+  }
+
+  final trimmedExample = example.trim();
+  late final List<ExampleAction> actions;
+
+  try {
+    actions = parseExampleActions(trimmedExample);
+  } on FormatException catch (error) {
+    return _fail(error.message);
+  } catch (_) {
+    return _fail('Неверный формат примера.');
+  }
+
+  final normalizedExample = formatExample(actions);
+
+  final stateError = validateExampleForRods(normalizedExample, totalRods);
+  final planError = validateExamplePlan(normalizedExample, totalRods);
+  final message = stateError ?? planError;
+
+  if (message != null) {
+    return _fail(message);
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'example': normalizedExample,
+    'stepPauseSec': stepPauseSec,
     'totalRods': totalRods,
   });
 }

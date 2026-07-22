@@ -5,6 +5,7 @@ enum TrainerKey {
   digitFindTap('digit-find-tap'),
   digitTrace('digit-trace'),
   dotsDigitAbacus('dots-digit-abacus'),
+  exampleVisualization('example-visualization'),
   flashcardDigitMatch('flashcard-digit-match'),
   fruitCountTap('fruit-count-tap'),
   letterBuild('letter-build'),

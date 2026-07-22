@@ -6,7 +6,7 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('mobile play gate', () {
     test('all registered trainers have native builders', () {
-      expect(trainerBuilders.length, 29);
+      expect(trainerBuilders.length, 31);
 
       for (final key in TrainerKey.values) {
         expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);
@@ -79,6 +79,33 @@ void main() {
       expect(config.isInteractive, isTrue);
       expect(config.initialValues()['digit'], '2');
       expect(config.fields, hasLength(1));
+    });
+
+    test('parses fractional min on number fields', () {
+      final config = TrainerPlayConfig.fromJson({
+        'status': 'success',
+        'trainerKey': 'example-visualization',
+        'title': 'Example visualization',
+        'direction': 'mental',
+        'isInteractive': false,
+        'defaultParams': {
+          'example': '+2 -1',
+          'stepPauseSec': 2,
+          'totalRods': 2,
+        },
+        'fields': [
+          {
+            'key': 'stepPauseSec',
+            'type': 'number',
+            'labelKey': 'stepPauseSecLabel',
+            'min': 0.5,
+            'max': 30,
+          },
+        ],
+      });
+
+      expect(config.fields.single.min, 0.5);
+      expect(config.fields.single.max, 30);
     });
   });
 

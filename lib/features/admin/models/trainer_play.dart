@@ -58,8 +58,8 @@ class TrainerPlayField {
       key: json['key'] as String,
       labelKey: json['labelKey'] as String,
       type: _parseType(json['type'] as String?),
-      min: json['min'] as int?,
-      max: json['max'] as int?,
+      min: _parseOptionalNum(json['min']),
+      max: _parseOptionalNum(json['max']),
       maxLength: json['maxLength'] as int?,
       placeholder: json['placeholder'] as String?,
       options: optionsJson
@@ -74,8 +74,8 @@ class TrainerPlayField {
   final String key;
   final String labelKey;
   final TrainerPlayFieldType type;
-  final int? min;
-  final int? max;
+  final num? min;
+  final num? max;
   final int? maxLength;
   final String? placeholder;
   final List<TrainerPlayFieldOption> options;
@@ -174,6 +174,16 @@ TrainerPlayFieldType _parseType(String? raw) {
     default:
       return TrainerPlayFieldType.number;
   }
+}
+
+num? _parseOptionalNum(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is num) {
+    return value;
+  }
+  return num.tryParse(value.toString());
 }
 
 Map<String, dynamic> buildPlayParamsPayload(

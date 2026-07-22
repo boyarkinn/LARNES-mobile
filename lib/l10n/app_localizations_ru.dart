@@ -819,6 +819,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayTotalRodsLabel => 'Рядов';
 
   @override
+  String get adminTrainerPlayStepPauseSecLabel => 'Пауза (сек)';
+
+  @override
+  String get adminTrainerPlayExampleStringLabel => 'Пример';
+
+  @override
   String get adminTrainerPlayValueLabel => 'Значение';
 
   @override

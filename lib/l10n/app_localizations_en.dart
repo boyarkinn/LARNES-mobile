@@ -805,6 +805,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayTotalRodsLabel => 'Rods';
 
   @override
+  String get adminTrainerPlayStepPauseSecLabel => 'Pause (sec)';
+
+  @override
+  String get adminTrainerPlayExampleStringLabel => 'Example';
+
+  @override
   String get adminTrainerPlayValueLabel => 'Value';
 
   @override

@@ -69,6 +69,10 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayWordItemCountLabel;
     case 'totalRodsLabel':
       return l10n.adminTrainerPlayTotalRodsLabel;
+    case 'stepPauseSecLabel':
+      return l10n.adminTrainerPlayStepPauseSecLabel;
+    case 'exampleStringLabel':
+      return l10n.adminTrainerPlayExampleStringLabel;
     case 'valueLabel':
       return l10n.adminTrainerPlayValueLabel;
     case 'matchValue1Label':

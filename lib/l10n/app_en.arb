@@ -345,6 +345,8 @@
   "adminTrainerPlaySpeedLabel": "Speed",
   "adminTrainerPlayWordItemCountLabel": "Words in task",
   "adminTrainerPlayTotalRodsLabel": "Rods",
+  "adminTrainerPlayStepPauseSecLabel": "Pause (sec)",
+  "adminTrainerPlayExampleStringLabel": "Example",
   "adminTrainerPlayValueLabel": "Value",
   "adminTrainerPlayMatchValue1Label": "Value 1",
   "adminTrainerPlayMatchValue2Label": "Value 2",

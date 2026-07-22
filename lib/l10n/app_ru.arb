@@ -303,6 +303,8 @@
   "adminTrainerPlaySpeedLabel": "Скорость",
   "adminTrainerPlayWordItemCountLabel": "Слов в задании",
   "adminTrainerPlayTotalRodsLabel": "Рядов",
+  "adminTrainerPlayStepPauseSecLabel": "Пауза (сек)",
+  "adminTrainerPlayExampleStringLabel": "Пример",
   "adminTrainerPlayValueLabel": "Значение",
   "adminTrainerPlayMatchValue1Label": "Значение 1",
   "adminTrainerPlayMatchValue2Label": "Значение 2",

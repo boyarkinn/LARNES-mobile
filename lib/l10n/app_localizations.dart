@@ -1532,6 +1532,18 @@ abstract class AppLocalizations {
   /// **'Rods'**
   String get adminTrainerPlayTotalRodsLabel;
 
+  /// No description provided for @adminTrainerPlayStepPauseSecLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause (sec)'**
+  String get adminTrainerPlayStepPauseSecLabel;
+
+  /// No description provided for @adminTrainerPlayExampleStringLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get adminTrainerPlayExampleStringLabel;
+
   /// No description provided for @adminTrainerPlayValueLabel.
   ///
   /// In en, this message translates to:

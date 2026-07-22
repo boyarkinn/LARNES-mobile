@@ -14,6 +14,7 @@ import 'package:larnes_mobile/trainers/math/number_composition/number_compositio
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_show_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_color/letter_color_trainer.dart';
@@ -60,6 +61,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       DigitTraceTrainer(params: params, onComplete: onComplete),
   TrainerKey.flashcardDigitMatch: ({required params, onComplete}) =>
       FlashcardDigitMatchTrainer(params: params, onComplete: onComplete),
+  TrainerKey.staticExampleShow: ({required params, onComplete}) =>
+      StaticExampleShowTrainer(params: params),
   TrainerKey.letterFindTap: ({required params, onComplete}) =>
       LetterFindTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindBySound: ({required params, onComplete}) =>
@@ -299,6 +302,12 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateLetterMarqueeTapParams,
+  ),
+  TrainerKey.staticExampleShow: TrainerDefinition(
+    key: TrainerKey.staticExampleShow,
+    title: 'Визуализация примера статично',
+    direction: TrainerDirection.mental,
+    validate: validateStaticExampleShowParams,
   ),
 };
 

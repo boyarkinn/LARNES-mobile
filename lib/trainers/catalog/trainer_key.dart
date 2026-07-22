@@ -28,7 +28,8 @@ enum TrainerKey {
   letterWordLink('letter-word-link'),
   numberComposition('number-composition'),
   numberRowShow('number-row-show'),
-  shopPay('shop-pay');
+  shopPay('shop-pay'),
+  staticExampleShow('static-example-show');
 
   const TrainerKey(this.apiValue);
 

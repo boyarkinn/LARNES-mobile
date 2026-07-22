@@ -1,5 +1,6 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
@@ -46,6 +47,67 @@ ValidateTrainerParamsResult validateAbacusShowParams(Map<String, dynamic> raw) {
 
 ValidateTrainerParamsResult validateDotsDigitAbacusParams(Map<String, dynamic> raw) {
   return validateAbacusShowParams(raw);
+}
+
+ValidateTrainerParamsResult validateStaticExampleShowParams(Map<String, dynamic> raw) {
+  final operation = raw['operation'];
+  final operandA = coerceInt(raw['operandA']);
+  final operandB = coerceInt(raw['operandB']);
+  final totalRods = coerceInt(raw['totalRods']);
+
+  if (operation is! String || !isStaticExampleOperation(operation)) {
+    return _fail('Некорректные параметры.');
+  }
+  if (operandA == null || operandA < 0 || operandA > 99) {
+    return _fail('Некорректные параметры.');
+  }
+  if (operandB == null || operandB < 0 || operandB > 99) {
+    return _fail('Некорректные параметры.');
+  }
+  if (totalRods == null || totalRods < 1 || totalRods > 2) {
+    return _fail('Некорректные параметры.');
+  }
+
+  final maxValue = maxValueForRods(totalRods);
+
+  if (operandA > maxValue) {
+    return _fail(
+      'Первое число не помещается в $totalRods разряд(ов) (макс. $maxValue)',
+    );
+  }
+
+  if (operation == 'subtract' && operandA < operandB) {
+    return _fail('При вычитании первое число не может быть меньше второго.');
+  }
+
+  final values = resolveStaticExampleAbacusValues(
+    operation: operation,
+    operandA: operandA,
+    operandB: operandB,
+  );
+
+  if (values.rightValue < 0) {
+    return _fail('Ответ не может быть отрицательным.');
+  }
+
+  if (values.rightValue > maxValue) {
+    return _fail(
+      'Ответ не помещается в $totalRods разряд(ов) (макс. $maxValue)',
+    );
+  }
+
+  if (values.leftValue > maxValue) {
+    return _fail(
+      'Левый абакус не помещается в $totalRods разряд(ов) (макс. $maxValue)',
+    );
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'operation': operation,
+    'operandA': operandA,
+    'operandB': operandB,
+    'totalRods': totalRods,
+  });
 }
 
 ValidateTrainerParamsResult validateDigitFindTapParams(Map<String, dynamic> raw) {

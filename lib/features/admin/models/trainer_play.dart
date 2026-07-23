@@ -213,6 +213,16 @@ Map<String, dynamic> buildPlayParamsPayload(
     };
   }
 
+  if (config.trainerKey == 'topic-chain-flash') {
+    return {
+      'actionCount': coerceInt(values['actionCount']) ?? 5,
+      'amountScope': values['amountScope'] ?? 'topic',
+      'signMode': values['signMode'] ?? 'mix',
+      'stepPauseSec': coerceDouble(values['stepPauseSec']) ?? 1,
+      'topicId': values['chainTopicId'] ?? values['topicId'] ?? 'simple-1',
+    };
+  }
+
   final payload = <String, dynamic>{};
   for (final field in config.fields) {
     if (!field.isVisible(values)) {

@@ -1544,6 +1544,30 @@ abstract class AppLocalizations {
   /// **'Example'**
   String get adminTrainerPlayExampleStringLabel;
 
+  /// No description provided for @adminTrainerPlayChainTopicIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Chain topic'**
+  String get adminTrainerPlayChainTopicIdLabel;
+
+  /// No description provided for @adminTrainerPlayActionCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of actions'**
+  String get adminTrainerPlayActionCountLabel;
+
+  /// No description provided for @adminTrainerPlaySignModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs'**
+  String get adminTrainerPlaySignModeLabel;
+
+  /// No description provided for @adminTrainerPlayAmountScopeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Operands'**
+  String get adminTrainerPlayAmountScopeLabel;
+
   /// No description provided for @adminTrainerPlayValueLabel.
   ///
   /// In en, this message translates to:

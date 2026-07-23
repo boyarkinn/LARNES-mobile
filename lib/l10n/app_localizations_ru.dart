@@ -825,6 +825,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayExampleStringLabel => 'Пример';
 
   @override
+  String get adminTrainerPlayChainTopicIdLabel => 'Тема цепочки';
+
+  @override
+  String get adminTrainerPlayActionCountLabel => 'Количество действий';
+
+  @override
+  String get adminTrainerPlaySignModeLabel => 'Знаки';
+
+  @override
+  String get adminTrainerPlayAmountScopeLabel => 'Операнды';
+
+  @override
   String get adminTrainerPlayValueLabel => 'Значение';
 
   @override

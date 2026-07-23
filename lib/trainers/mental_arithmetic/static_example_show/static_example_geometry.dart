@@ -112,7 +112,7 @@ String _moveOverlayArrowSide(int rodIndex, int totalRods) {
   required String arrowSide,
   required double cx,
 }) {
-  final beadLaneWidth = AbacusLayout.beadHalfWidth * 2 + 4;
+  final beadLaneWidth = AbacusLayout.beadHalfWidth * 2 + 4.4;
   final width = beadLaneWidth + _moveOverlayGutter;
 
   if (arrowSide == 'left') {
@@ -133,15 +133,11 @@ String _moveOverlayArrowSide(int rodIndex, int totalRods) {
 MoveOverlayLayout _travelZoneRect({
   required String arrowDirection,
   required String arrowSide,
+  required double bottomY,
   required double cx,
-  required double fromY,
   required String polarity,
-  required double toY,
+  required double topY,
 }) {
-  final halfBead = AbacusLayout.beadHeight / 2;
-  const padding = 2.0;
-  final topY = (fromY < toY ? fromY : toY) - halfBead - padding;
-  final bottomY = (fromY > toY ? fromY : toY) + halfBead + padding;
   final frame = _moveOverlayHorizontalFrame(arrowSide: arrowSide, cx: cx);
 
   return MoveOverlayLayout(
@@ -155,6 +151,29 @@ MoveOverlayLayout _travelZoneRect({
   );
 }
 
+({double bottomY, double topY}) _travelZoneBounds({
+  required double fromY,
+  required double toY,
+  required String zone,
+}) {
+  final halfBead = AbacusLayout.beadHeight / 2;
+  final beamBottom = AbacusLayout.beamY + AbacusLayout.barHeight;
+
+  if (zone == 'earth') {
+    if (toY < fromY) {
+      return (topY: beamBottom, bottomY: fromY + halfBead);
+    }
+
+    return (topY: fromY - halfBead, bottomY: toY + halfBead);
+  }
+
+  if (toY > fromY) {
+    return (topY: fromY - halfBead, bottomY: toY + halfBead);
+  }
+
+  return (topY: toY - halfBead, bottomY: fromY + halfBead);
+}
+
 MoveOverlayLayout _layoutMergedMoveOverlayGroup({
   required List<MoveOverlay> overlays,
   required List<RodState> rods,
@@ -164,10 +183,11 @@ MoveOverlayLayout _layoutMergedMoveOverlayGroup({
   final kind = overlays.first.kind;
   final cx = rodCenterX(rodIndex);
   final arrowSide = _moveOverlayArrowSide(rodIndex, totalRods);
+  final zone = _moveOverlayZone(kind);
   final slotCounters = <String, int>{};
 
-  var minEndpointY = double.infinity;
-  var maxEndpointY = double.negativeInfinity;
+  var topY = double.infinity;
+  var bottomY = double.negativeInfinity;
 
   for (final overlay in overlays) {
     final counterKey = '${overlay.rodIndex}:${overlay.kind}';
@@ -179,26 +199,23 @@ MoveOverlayLayout _layoutMergedMoveOverlayGroup({
       slotIndex: slotIndex,
       state: rods[overlay.rodIndex],
     );
+    final bounds = _travelZoneBounds(
+      fromY: endpoints.fromY,
+      toY: endpoints.toY,
+      zone: zone,
+    );
 
-    minEndpointY = [
-      minEndpointY,
-      endpoints.fromY,
-      endpoints.toY,
-    ].reduce((a, b) => a < b ? a : b);
-    maxEndpointY = [
-      maxEndpointY,
-      endpoints.fromY,
-      endpoints.toY,
-    ].reduce((a, b) => a > b ? a : b);
+    topY = topY < bounds.topY ? topY : bounds.topY;
+    bottomY = bottomY > bounds.bottomY ? bottomY : bounds.bottomY;
   }
 
   return _travelZoneRect(
     arrowDirection: _moveOverlayArrowDirection(kind),
     arrowSide: arrowSide,
+    bottomY: bottomY,
     cx: cx,
-    fromY: minEndpointY,
     polarity: _moveOverlayPolarity(kind),
-    toY: maxEndpointY,
+    topY: topY,
   );
 }
 
@@ -216,14 +233,19 @@ MoveOverlayLayout layoutMoveOverlay({
     slotIndex: slotIndex,
     state: state,
   );
+  final bounds = _travelZoneBounds(
+    fromY: endpoints.fromY,
+    toY: endpoints.toY,
+    zone: _moveOverlayZone(kind),
+  );
 
   return _travelZoneRect(
     arrowDirection: _moveOverlayArrowDirection(kind),
     arrowSide: arrowSide,
+    bottomY: bounds.bottomY,
     cx: cx,
-    fromY: endpoints.fromY < endpoints.toY ? endpoints.fromY : endpoints.toY,
     polarity: _moveOverlayPolarity(kind),
-    toY: endpoints.fromY > endpoints.toY ? endpoints.fromY : endpoints.toY,
+    topY: bounds.topY,
   );
 }
 

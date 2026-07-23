@@ -16,6 +16,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_show_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/topic_chain_flash_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_color/letter_color_trainer.dart';
@@ -66,6 +67,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       ExampleVisualizationTrainer(params: params),
   TrainerKey.staticExampleShow: ({required params, onComplete}) =>
       StaticExampleShowTrainer(params: params),
+  TrainerKey.topicChainFlash: ({required params, onComplete}) =>
+      TopicChainFlashTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindTap: ({required params, onComplete}) =>
       LetterFindTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindBySound: ({required params, onComplete}) =>
@@ -317,6 +320,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     title: 'Визуализация примера',
     direction: TrainerDirection.mental,
     validate: validateExampleVisualizationParams,
+  ),
+  TrainerKey.topicChainFlash: TrainerDefinition(
+    key: TrainerKey.topicChainFlash,
+    title: 'Цепочка по теме',
+    direction: TrainerDirection.mental,
+    isInteractive: true,
+    validate: validateTopicChainFlashParams,
   ),
 };
 

@@ -35,4 +35,21 @@ void main() {
       expect(oneRod.height, threeRods.height);
     });
   });
+
+  group('isMarkedEarthBead', () {
+    test('marks every 3rd rod from the right (hundreds, hundred-thousands, …)', () {
+      expect(isMarkedEarthBead(0, 0, 2), isFalse);
+      expect(isMarkedEarthBead(1, 0, 2), isFalse);
+
+      expect(isMarkedEarthBead(0, 0, 3), isTrue);
+      expect(isMarkedEarthBead(1, 0, 3), isFalse);
+      expect(isMarkedEarthBead(2, 0, 3), isFalse);
+
+      expect(isMarkedEarthBead(1, 0, 13), isTrue);
+      expect(isMarkedEarthBead(4, 0, 13), isTrue);
+      expect(isMarkedEarthBead(10, 0, 13), isTrue);
+      expect(isMarkedEarthBead(12, 0, 13), isFalse);
+      expect(isMarkedEarthBead(1, 1, 13), isFalse);
+    });
+  });
 }

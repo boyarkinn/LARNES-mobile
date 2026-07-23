@@ -1,4 +1,6 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
@@ -286,6 +288,44 @@ ValidateTrainerParamsResult validateDigitTraceParams(Map<String, dynamic> raw) {
     return _fail('Некорректные параметры.');
   }
   return ValidateTrainerParamsResult.success({'digit': digit});
+}
+
+ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> raw) {
+  final topicId = raw['topicId'];
+  final actionCount = coerceInt(raw['actionCount']);
+  final signMode = raw['signMode'];
+  final amountScopeRaw = raw['amountScope'];
+  final stepPauseSec = coerceDouble(raw['stepPauseSec']);
+
+  if (topicId is! String || !isTopicId(topicId)) {
+    return _fail('Некорректные параметры.');
+  }
+  if (actionCount == null ||
+      actionCount < kActionCountMin ||
+      actionCount > kActionCountMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (signMode is! String || !isSignMode(signMode)) {
+    return _fail('Некорректные параметры.');
+  }
+
+  final amountScope = amountScopeRaw == null || amountScopeRaw == ''
+      ? 'topic'
+      : amountScopeRaw;
+  if (amountScope is! String || !isAmountScope(amountScope)) {
+    return _fail('Некорректные параметры.');
+  }
+  if (stepPauseSec == null || stepPauseSec < 0.1 || stepPauseSec > 30) {
+    return _fail('Некорректные параметры.');
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'actionCount': actionCount,
+    'amountScope': amountScope,
+    'signMode': signMode,
+    'stepPauseSec': stepPauseSec,
+    'topicId': topicId,
+  });
 }
 
 ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynamic> raw) {

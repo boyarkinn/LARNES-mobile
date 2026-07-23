@@ -1,0 +1,145 @@
+/// Web: `platform/src/trainers/mental-arithmetic/chain-generator/classify.ts`
+
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
+
+const _techniquePriority = {
+  TechniqueKind.direct: 0,
+  TechniqueKind.brother: 1,
+  TechniqueKind.friend: 2,
+  TechniqueKind.friendBrother: 3,
+};
+
+bool _isBrotherN(int n) => n >= 1 && n <= 4;
+
+bool _isFriendN(int n) => n >= 1 && n <= 9;
+
+bool _isFriendBrotherN(int n) => n >= 6 && n <= 9;
+
+bool _subtractUsesBrother(int digit, int amount) {
+  if (amount <= 0 || digit < amount) {
+    return false;
+  }
+
+  final heavenUp = digit >= 5;
+  final target = digit - amount;
+  return heavenUp && target < 5;
+}
+
+bool _addUsesBrother(int digit, int amount) {
+  if (amount <= 0 || amount > 4) {
+    return false;
+  }
+
+  final heavenUp = digit >= 5;
+  final earthCount = heavenUp ? digit - 5 : digit;
+  return !heavenUp && earthCount + amount > 4;
+}
+
+Technique classifyAddDigit(int digit, int amount) {
+  if (!_isFriendN(amount)) {
+    throw ChainModelError('classifyAddDigit expects amount 1..9.');
+  }
+
+  final d = ((digit % 10) + 10) % 10;
+
+  if (d + amount > 9) {
+    final complement = 10 - amount;
+
+    if (_isFriendBrotherN(amount) && _subtractUsesBrother(d, complement)) {
+      return Technique.friendBrother(amount);
+    }
+
+    return Technique.friend(amount);
+  }
+
+  final heavenUp = d >= 5;
+  final earthCount = heavenUp ? d - 5 : d;
+
+  if (!heavenUp && earthCount + amount > 4) {
+    if (amount > 5) {
+      return const Technique.direct();
+    }
+
+    if (_isBrotherN(amount)) {
+      return Technique.brother(amount);
+    }
+  }
+
+  return const Technique.direct();
+}
+
+Technique classifySubDigit(int digit, int amount) {
+  if (!_isFriendN(amount)) {
+    throw ChainModelError('classifySubDigit expects amount 1..9.');
+  }
+
+  final d = ((digit % 10) + 10) % 10;
+
+  if (d < amount) {
+    final complement = 10 - amount;
+
+    if (_isFriendBrotherN(amount) && _addUsesBrother(d, complement)) {
+      return Technique.friendBrother(amount);
+    }
+
+    return Technique.friend(amount);
+  }
+
+  if (_isBrotherN(amount) && _subtractUsesBrother(d, amount)) {
+    return Technique.brother(amount);
+  }
+
+  return const Technique.direct();
+}
+
+Technique _pickStronger(Technique left, Technique right) {
+  return (_techniquePriority[right.kind] ?? 0) > (_techniquePriority[left.kind] ?? 0)
+      ? right
+      : left;
+}
+
+int _pow10(int place) {
+  var result = 1;
+  for (var i = 0; i < place; i++) {
+    result *= 10;
+  }
+  return result;
+}
+
+Technique classifyStep(int value, ChainStep step, int totalRods) {
+  applyChainStep(value, step, totalRods);
+
+  var currentValue = value < 0 ? 0 : value;
+  var remaining = step.amount;
+  var place = 0;
+  var result = const Technique.direct();
+
+  while (remaining > 0) {
+    final digitAmount = remaining % 10;
+
+    if (digitAmount > 0) {
+      final placeValue = digitAmount * _pow10(place);
+      final micro = ChainStep(amount: placeValue, sign: step.sign);
+      final rods = numberToAbacus(currentValue, totalRods);
+      final rodIndex = rods.length - 1 - place;
+
+      if (rodIndex < 0) {
+        throw ChainModelError('Значение не помещается в заданное число разрядов.');
+      }
+
+      final digit = beadsToDigit(rods[rodIndex]);
+      final part = step.sign == '+'
+          ? classifyAddDigit(digit, digitAmount)
+          : classifySubDigit(digit, digitAmount);
+      result = _pickStronger(result, part);
+      currentValue = applyChainStep(currentValue, micro, totalRods);
+    }
+
+    remaining ~/= 10;
+    place += 1;
+  }
+
+  return result;
+}

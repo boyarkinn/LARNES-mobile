@@ -41,6 +41,14 @@ class StaticAbacusPainter extends CustomPainter {
     final barX = AbacusLayout.sideInset;
     final rodLineBottomY = rodBottomY(base.bottomBarY);
 
+    for (final layout in overlayLayouts) {
+      _paintMoveOverlay(canvas, layout);
+    }
+
+    for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
+      _paintRodLine(canvas, rodIndex, rodLineBottomY);
+    }
+
     canvas.drawRect(
       Rect.fromLTWH(barX, base.topBarY, barWidth, AbacusLayout.barHeight),
       Paint()..color = StaticAbacusColors.bar,
@@ -54,12 +62,8 @@ class StaticAbacusPainter extends CustomPainter {
       Paint()..color = StaticAbacusColors.bar,
     );
 
-    for (final layout in overlayLayouts) {
-      _paintMoveOverlay(canvas, layout);
-    }
-
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
-      _paintRod(canvas, rodIndex, rodLayouts[rodIndex], rodLineBottomY);
+      _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex]);
     }
 
     canvas.restore();
@@ -151,13 +155,21 @@ class StaticAbacusPainter extends CustomPainter {
     canvas.drawPath(headPath, paint..style = PaintingStyle.fill);
   }
 
-  void _paintRod(
-    Canvas canvas,
-    int rodIndex,
-    RodBeadLayout beadLayout,
-    double bottomY,
-  ) {
+  void _paintRodLine(Canvas canvas, int rodIndex, double bottomY) {
     final cx = rodCenterX(rodIndex);
+
+    final edgePaint = Paint()
+      ..color = StaticAbacusColors.beadStroke
+      ..strokeWidth = AbacusLayout.rodEdgeStrokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    for (final offset in [-AbacusLayout.rodEdgeOffset, AbacusLayout.rodEdgeOffset]) {
+      canvas.drawLine(
+        Offset(cx + offset, AbacusLayout.rodTopY),
+        Offset(cx + offset, bottomY),
+        edgePaint,
+      );
+    }
 
     canvas.drawLine(
       Offset(cx, AbacusLayout.rodTopY),
@@ -167,6 +179,10 @@ class StaticAbacusPainter extends CustomPainter {
         ..strokeWidth = AbacusLayout.rodStrokeWidth
         ..strokeCap = StrokeCap.round,
     );
+  }
+
+  void _paintRodBeads(Canvas canvas, int rodIndex, RodBeadLayout beadLayout) {
+    final cx = rodCenterX(rodIndex);
 
     _paintHexBead(canvas, cx, beadLayout.heavenY);
 

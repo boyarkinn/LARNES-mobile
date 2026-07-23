@@ -811,6 +811,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayExampleStringLabel => 'Example';
 
   @override
+  String get adminTrainerPlayChainTopicIdLabel => 'Chain topic';
+
+  @override
+  String get adminTrainerPlayActionCountLabel => 'Number of actions';
+
+  @override
+  String get adminTrainerPlaySignModeLabel => 'Signs';
+
+  @override
+  String get adminTrainerPlayAmountScopeLabel => 'Operands';
+
+  @override
   String get adminTrainerPlayValueLabel => 'Value';
 
   @override

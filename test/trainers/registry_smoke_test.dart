@@ -5,17 +5,18 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
   group('trainer registry', () {
-    test('registers all 31 web trainer keys', () {
-      expect(TrainerKey.values.length, 31);
-      expect(trainerDefinitions.length, 31);
+    test('registers all 32 web trainer keys', () {
+      expect(TrainerKey.values.length, 32);
+      expect(trainerDefinitions.length, 32);
       expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(isTrainerKey('example-visualization'), isTrue);
       expect(isTrainerKey('static-example-show'), isTrue);
+      expect(isTrainerKey('topic-chain-flash'), isTrue);
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 31);
+      expect(trainerBuilders.length, 32);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -43,6 +44,7 @@ void main() {
       expect(getTrainerDefinition('example-visualization')?.isInteractive, isFalse);
       expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
       expect(getTrainerDefinition('flashcard-digit-match')?.isInteractive, isTrue);
+      expect(getTrainerDefinition('topic-chain-flash')?.isInteractive, isTrue);
     });
   });
 }

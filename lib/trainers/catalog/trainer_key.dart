@@ -30,7 +30,8 @@ enum TrainerKey {
   numberComposition('number-composition'),
   numberRowShow('number-row-show'),
   shopPay('shop-pay'),
-  staticExampleShow('static-example-show');
+  staticExampleShow('static-example-show'),
+  topicChainFlash('topic-chain-flash');
 
   const TrainerKey(this.apiValue);
 

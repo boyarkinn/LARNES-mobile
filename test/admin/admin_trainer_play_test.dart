@@ -6,7 +6,7 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('mobile play gate', () {
     test('all registered trainers have native builders', () {
-      expect(trainerBuilders.length, 31);
+      expect(trainerBuilders.length, 32);
 
       for (final key in TrainerKey.values) {
         expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);
@@ -139,6 +139,37 @@ void main() {
       expect(payload['letterCase'], 'upper');
       expect(payload.containsKey('digit'), isFalse);
       expect(payload.containsKey('entityCount'), isFalse);
+    });
+
+    test('maps topic-chain-flash chainTopicId to topicId', () {
+      final config = TrainerPlayConfig.fromJson({
+        'status': 'success',
+        'trainerKey': 'topic-chain-flash',
+        'title': 'Chain flash',
+        'direction': 'mental',
+        'isInteractive': true,
+        'defaultParams': {
+          'chainTopicId': 'simple-1',
+          'actionCount': 5,
+          'signMode': 'mix',
+          'amountScope': 'topic',
+          'stepPauseSec': 1,
+        },
+        'fields': [],
+      });
+
+      final payload = buildPlayParamsPayload(config, {
+        'chainTopicId': 'friend-9-1digit',
+        'actionCount': '5',
+        'signMode': 'mix',
+        'amountScope': 'topic',
+        'stepPauseSec': '0.5',
+      });
+
+      expect(payload['topicId'], 'friend-9-1digit');
+      expect(payload['actionCount'], 5);
+      expect(payload['stepPauseSec'], 0.5);
+      expect(payload.containsKey('chainTopicId'), isFalse);
     });
 
     test('builds flashcard values array fields for API', () {

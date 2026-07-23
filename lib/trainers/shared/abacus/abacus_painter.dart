@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
 abstract final class AbacusColors {
   static const bar = Color(0xFF6B5344);
   static const beadFill = Color(0xFFFFFCF8);
+  static const beadMarkerFill = Color(0xFFE53935);
   static const beadStroke = Color(0xFF5C4D3D);
   static const rod = Color(0xFFC9B8A8);
 }
@@ -24,6 +25,10 @@ class AbacusPainter extends CustomPainter {
     final barX = AbacusLayout.sideInset;
     final rodLineBottomY = rodBottomY(viewBox.bottomBarY);
 
+    for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
+      _paintRodLine(canvas, rodIndex, rodLineBottomY);
+    }
+
     canvas.drawRect(
       Rect.fromLTWH(barX, viewBox.topBarY, barWidth, AbacusLayout.barHeight),
       Paint()..color = AbacusColors.bar,
@@ -38,17 +43,25 @@ class AbacusPainter extends CustomPainter {
     );
 
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
-      _paintRod(canvas, rodIndex, rodLayouts[rodIndex], rodLineBottomY);
+      _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex]);
     }
   }
 
-  void _paintRod(
-    Canvas canvas,
-    int rodIndex,
-    RodBeadLayout beadLayout,
-    double bottomY,
-  ) {
+  void _paintRodLine(Canvas canvas, int rodIndex, double bottomY) {
     final cx = rodCenterX(rodIndex);
+
+    final edgePaint = Paint()
+      ..color = AbacusColors.beadStroke
+      ..strokeWidth = AbacusLayout.rodEdgeStrokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    for (final offset in [-AbacusLayout.rodEdgeOffset, AbacusLayout.rodEdgeOffset]) {
+      canvas.drawLine(
+        Offset(cx + offset, AbacusLayout.rodTopY),
+        Offset(cx + offset, bottomY),
+        edgePaint,
+      );
+    }
 
     canvas.drawLine(
       Offset(cx, AbacusLayout.rodTopY),
@@ -58,15 +71,24 @@ class AbacusPainter extends CustomPainter {
         ..strokeWidth = AbacusLayout.rodStrokeWidth
         ..strokeCap = StrokeCap.round,
     );
+  }
+
+  void _paintRodBeads(Canvas canvas, int rodIndex, RodBeadLayout beadLayout) {
+    final cx = rodCenterX(rodIndex);
 
     _paintHexBead(canvas, cx, beadLayout.heavenY);
 
-    for (final earthY in beadLayout.earthYs) {
-      _paintHexBead(canvas, cx, earthY);
+    for (var beadIndex = 0; beadIndex < beadLayout.earthYs.length; beadIndex++) {
+      _paintHexBead(
+        canvas,
+        cx,
+        beadLayout.earthYs[beadIndex],
+        marked: isMarkedEarthBead(rodIndex, beadIndex, totalRods),
+      );
     }
   }
 
-  void _paintHexBead(Canvas canvas, double cx, double cy) {
+  void _paintHexBead(Canvas canvas, double cx, double cy, {bool marked = false}) {
     final halfHeight = AbacusLayout.beadHeight / 2;
     final slant = AbacusLayout.beadHalfWidth * AbacusLayout.beadSlantRatio;
     final left = cx - AbacusLayout.beadHalfWidth;
@@ -84,7 +106,7 @@ class AbacusPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = AbacusColors.beadFill
+        ..color = marked ? AbacusColors.beadMarkerFill : AbacusColors.beadFill
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(

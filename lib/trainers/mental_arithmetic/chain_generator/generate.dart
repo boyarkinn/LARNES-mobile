@@ -148,10 +148,45 @@ List<String> _signsForMode(SignMode signMode, int value, int stepIndex) {
   return (target: target, setup: setup, rest: rest);
 }
 
+bool _isFocusStep(ChainStep step, List<int>? focusAmounts) {
+  return focusAmounts != null && focusAmounts.contains(step.amount);
+}
+
+/// Pre-slot: 1…⌊actionCount/2⌋ разных индексов (Просто N>1).
+Set<int> _sampleFocusSlots(int actionCount, double Function() random) {
+  final maxFocus = (actionCount / 2).floor();
+  final focusCount = 1 + (random() * maxFocus).floor();
+  final indices = [for (var index = 0; index < actionCount; index++) index];
+  _shuffleInPlace(indices, random);
+
+  // При длине ≥5 — ≥1 слот вне 0–1 (анти front-load после restart-bias).
+  if (actionCount >= 5) {
+    final later = indices.where((index) => index >= 2).toList();
+    final early = indices.where((index) => index <= 1).toList();
+    final slots = <int>{later.first};
+    final restPool = [...later.skip(1), ...early];
+    _shuffleInPlace(restPool, random);
+
+    for (final index in restPool) {
+      if (slots.length >= focusCount) {
+        break;
+      }
+      slots.add(index);
+    }
+
+    return slots;
+  }
+
+  return indices.take(focusCount).toSet();
+}
+
 List<ChainStep> _pickCandidatePool(
   ({List<ChainStep> target, List<ChainStep> setup, List<ChainStep> rest}) groups,
-  double Function() random,
-) {
+  double Function() random, {
+  required List<int>? focusAmounts,
+  required Set<int>? focusSlots,
+  required int stepIndex,
+}) {
   if (groups.target.isNotEmpty) {
     return groups.target;
   }
@@ -164,7 +199,20 @@ List<ChainStep> _pickCandidatePool(
     return groups.setup;
   }
 
-  return groups.rest;
+  if (focusAmounts == null || focusAmounts.isEmpty || focusSlots == null) {
+    return groups.rest;
+  }
+
+  final focusSteps =
+      groups.rest.where((step) => _isFocusStep(step, focusAmounts)).toList();
+  final lowerSteps =
+      groups.rest.where((step) => !_isFocusStep(step, focusAmounts)).toList();
+
+  if (focusSlots.contains(stepIndex)) {
+    return focusSteps;
+  }
+
+  return lowerSteps;
 }
 
 Chain? _tryBuildChain(
@@ -175,6 +223,11 @@ Chain? _tryBuildChain(
   final steps = <ChainStep>[];
   final intermediates = [0];
   var value = 0;
+  final focusAmounts = rule.focusAmounts;
+  final useFocusSlots =
+      (focusAmounts?.isNotEmpty ?? false) && rule.focusCap != false;
+  final focusSlots =
+      useFocusSlots ? _sampleFocusSlots(config.actionCount, random) : null;
 
   for (var stepIndex = 0; stepIndex < config.actionCount; stepIndex += 1) {
     var placed = false;
@@ -182,7 +235,13 @@ Chain? _tryBuildChain(
     for (var backtrack = 0; backtrack < _maxStepBacktracks; backtrack += 1) {
       final groups =
           _collectCandidates(value, stepIndex, config.signMode, rule);
-      final pool = _pickCandidatePool(groups, random);
+      final pool = _pickCandidatePool(
+        groups,
+        random,
+        focusAmounts: focusAmounts,
+        focusSlots: focusSlots,
+        stepIndex: stepIndex,
+      );
 
       if (pool.isEmpty) {
         break;

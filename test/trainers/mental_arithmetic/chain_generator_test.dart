@@ -90,5 +90,99 @@ void main() {
         }
       }
     });
+
+    test('simple-N: amounts 1..N, ≥1 focus ±N, ≤50% focus when N>1', () {
+      for (final digit in [1, 2, 4, 7, 9]) {
+        final topicId = 'simple-$digit';
+
+        for (var i = 0; i < 50; i++) {
+          final chain = generateChain(
+            GenerateConfig(
+              topicId: topicId,
+              actionCount: 5,
+              signMode: 'mix',
+            ),
+          );
+
+          expect(
+            chain.steps.every((step) => step.amount >= 1 && step.amount <= digit),
+            isTrue,
+            reason: topicId,
+          );
+
+          final focusCount =
+              chain.steps.where((step) => step.amount == digit).length;
+          expect(focusCount, greaterThanOrEqualTo(1), reason: topicId);
+
+          if (digit > 1) {
+            expect(
+              focusCount,
+              lessThanOrEqualTo((chain.steps.length / 2).floor()),
+              reason: topicId,
+            );
+            expect(
+              chain.steps.any((step) => step.amount < digit),
+              isTrue,
+              reason: topicId,
+            );
+          }
+        }
+      }
+    });
+
+    test('simple-N focus steps are not stuck in the first two positions', () {
+      for (final digit in [2, 5, 9]) {
+        final topicId = 'simple-$digit';
+        var early = 0;
+        var later = 0;
+        var chainsWithLaterFocus = 0;
+        const samples = 120;
+
+        for (var i = 0; i < samples; i++) {
+          final chain = generateChain(
+            GenerateConfig(
+              topicId: topicId,
+              actionCount: 5,
+              signMode: 'mix',
+            ),
+          );
+          var hasLater = false;
+
+          for (var stepIndex = 0; stepIndex < chain.steps.length; stepIndex++) {
+            if (chain.steps[stepIndex].amount != digit) {
+              continue;
+            }
+            if (stepIndex <= 1) {
+              early += 1;
+            } else {
+              later += 1;
+              hasLater = true;
+            }
+          }
+
+          if (hasLater) {
+            chainsWithLaterFocus += 1;
+          }
+        }
+
+        final total = early + later;
+        expect(total, greaterThan(0), reason: topicId);
+        expect(
+          later / total,
+          greaterThanOrEqualTo(0.3),
+          reason: '$topicId later focus share $later/$total',
+        );
+        expect(
+          early / total,
+          lessThanOrEqualTo(0.7),
+          reason: '$topicId early focus share $early/$total',
+        );
+        expect(
+          chainsWithLaterFocus,
+          samples,
+          reason: topicId,
+        );
+      }
+    });
   });
 }

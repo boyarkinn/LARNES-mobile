@@ -1,4 +1,7 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/simple-rules.ts`
+///
+/// Просто N (1…9): операнды ±1…±N (direct); ≥1 шаг ±N;
+/// при N>1 — не больше ⌊actionCount/2⌋ шагов ±N (остальное — пройденные 1…N−1).
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
@@ -20,12 +23,18 @@ bool _isDirect(Technique technique) => technique.kind == TechniqueKind.direct;
 TopicRule _rule(
   int totalRods,
   List<int> candidateAmounts,
-  TopicAllows allows,
-) {
+  TopicAllows allows, {
+  List<int>? focusAmounts,
+  bool? focusCap,
+  TopicChainValidator? isValidChain,
+}) {
   return TopicRule(
     allows: allows,
     candidateAmounts: candidateAmounts,
     totalRods: totalRods,
+    focusAmounts: focusAmounts,
+    focusCap: focusCap,
+    isValidChain: isValidChain,
   );
 }
 
@@ -36,6 +45,22 @@ bool _allowsDirectOnly(int value, ChainStep step, Technique technique) {
 int? _parseSimpleDigitTopic(String topicId) {
   final match = RegExp(r'^simple-([0-9])$').firstMatch(topicId);
   return match == null ? null : int.parse(match.group(1)!);
+}
+
+TopicChainValidator _createSimpleDigitChainValidator(int digit) {
+  return (steps, intermediates) {
+    final focusCount = steps.where((step) => step.amount == digit).length;
+
+    if (focusCount < 1) {
+      return false;
+    }
+
+    if (digit == 1) {
+      return true;
+    }
+
+    return focusCount <= (steps.length / 2).floor();
+  };
 }
 
 TopicRule? createSimpleTopicRule(TopicId topicId, AmountScope amountScope) {
@@ -58,7 +83,14 @@ TopicRule? createSimpleTopicRule(TopicId topicId, AmountScope amountScope) {
   }
 
   if (digit != null) {
-    return _rule(1, [digit], _allowsDirectOnly);
+    return _rule(
+      1,
+      _rangeInclusive(1, digit),
+      _allowsDirectOnly,
+      focusAmounts: [digit],
+      focusCap: digit > 1,
+      isValidChain: _createSimpleDigitChainValidator(digit),
+    );
   }
 
   if (topicId == 'simple-11-19') {

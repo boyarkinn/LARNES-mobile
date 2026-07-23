@@ -86,12 +86,20 @@ class TopicRule {
     required this.totalRods,
     required this.allows,
     this.isValidChain,
+    this.focusAmounts,
+    this.focusCap,
   });
 
   final List<int> candidateAmounts;
   final int totalRods;
   final TopicAllows allows;
   final TopicChainValidator? isValidChain;
+
+  /// Операнды «темы» (Просто N → [N]): walk bias + учёт квоты.
+  final List<int>? focusAmounts;
+
+  /// Default true if focusAmounts set. false для Просто 1.
+  final bool? focusCap;
 }
 
 class Chain {

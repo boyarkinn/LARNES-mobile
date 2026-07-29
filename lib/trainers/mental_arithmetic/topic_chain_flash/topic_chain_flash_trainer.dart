@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/play_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generate.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/check_answer.dart';
@@ -83,6 +85,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
+    unawaited(cancelStepAudio());
     _shakeController.dispose();
     _inputController.dispose();
     _inputFocus.dispose();
@@ -108,6 +111,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
+    unawaited(cancelStepAudio());
     if (resetCompleteFlag) {
       _completeCalled = false;
     }
@@ -170,9 +174,12 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
         1;
     final pause = Duration(milliseconds: (stepPauseSec * 1000).round());
     const blank = Duration(milliseconds: _interFlashBlankMs);
+    final playAudio = shouldPlayFlashAudio(stepPauseSec);
+    final playbackRate = flashAudioPlaybackRate(stepPauseSec);
     var index = 0;
 
     void goToAnswer() {
+      unawaited(cancelStepAudio());
       setState(() {
         _flashLabel = null;
         _phase = _Phase.answer;
@@ -197,6 +204,10 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       final step = chain.steps[index];
       setState(() => _flashLabel = formatChainStep(step));
       index += 1;
+
+      if (playAudio) {
+        unawaited(playStepAudio(step, playbackRate: playbackRate));
+      }
 
       _flashTimer = Timer(pause, () {
         if (!mounted || !identical(runToken, _runToken)) {
@@ -226,6 +237,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
+    unawaited(cancelStepAudio());
     _inputController.clear();
 
     final runToken = Object();

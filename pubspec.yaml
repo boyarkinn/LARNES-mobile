@@ -41,6 +41,7 @@ dependencies:
   flutter_svg: ^2.2.0
   share_plus: ^12.0.1
   mobile_scanner: ^7.2.0
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,9 @@ flutter:
 
   assets:
     - assets/parent/avatars/
+    - assets/audio/ru/mental-arithmetic/operations/
+    - assets/audio/ru/mental-arithmetic/numbers/
+    - assets/audio/ru/mental-arithmetic/hundreds/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

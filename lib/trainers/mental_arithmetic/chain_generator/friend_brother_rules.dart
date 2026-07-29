@@ -82,7 +82,11 @@ TopicAllows _allowsFriendBrother(int n, List<int> priorNs, int totalRods) {
   };
 }
 
-TopicChainValidator _createFriendBrotherChainValidator(int totalRods, int n) {
+TopicChainValidator _createFriendBrotherChainValidator(
+  int totalRods,
+  int n, {
+  bool requireHigherPlaceFocus = false,
+}) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
     var priorCount = 0;
@@ -111,6 +115,17 @@ TopicChainValidator _createFriendBrotherChainValidator(int totalRods, int n) {
     }
 
     if (steps.length >= 4 && priorCount < 1) {
+      return false;
+    }
+
+    if (requireHigherPlaceFocus &&
+        !chainHasFocusTechniqueOnPlaceAtLeast(
+          steps,
+          intermediates,
+          totalRods,
+          1,
+          (technique) => _isFocusFriendBrother(technique, n),
+        )) {
       return false;
     }
 
@@ -178,6 +193,7 @@ TopicRule? createFriendBrotherTopicRule(
   final n = parsed.n;
   final width = parsed.width;
   final placeWidth = width == '1digit' ? 1 : 2;
+  final rods = width == '1digit' ? 2 : 3;
   final includeOnes = width != '2digit';
   final priorNs = _priorFriendBrotherNs(n);
   final candidates = _candidatesForFriendBrother(
@@ -186,15 +202,19 @@ TopicRule? createFriendBrotherTopicRule(
     priorNs,
     includeOnes: includeOnes,
   );
-  final techniqueValidator = _createFriendBrotherChainValidator(2, n);
+  final techniqueValidator = _createFriendBrotherChainValidator(
+    rods,
+    n,
+    requireHigherPlaceFocus: width != '1digit',
+  );
   final TopicChainValidator widthValidator = width == '2digit'
       ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
       : (_, __) => true;
 
   return _rule(
-    2,
+    rods,
     candidates,
-    _allowsFriendBrother(n, priorNs, 2),
+    _allowsFriendBrother(n, priorNs, rods),
     andChainValidators([techniqueValidator, widthValidator]),
     focusTechniqueN: n,
   );

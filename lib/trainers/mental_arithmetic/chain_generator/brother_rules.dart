@@ -79,7 +79,11 @@ TopicAllows _allowsBrother(int? n, List<int> priorNs, int totalRods) {
       );
 }
 
-TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
+TopicChainValidator _createBrotherChainValidator(
+  int totalRods,
+  int? n, {
+  bool requireHigherPlaceFocus = false,
+}) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
     var priorCount = 0;
@@ -108,6 +112,17 @@ TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
     }
 
     if (steps.length >= 4 && priorCount < 1) {
+      return false;
+    }
+
+    if (requireHigherPlaceFocus &&
+        !chainHasFocusTechniqueOnPlaceAtLeast(
+          steps,
+          intermediates,
+          totalRods,
+          1,
+          (technique) => _isFocusBrother(technique, n),
+        )) {
       return false;
     }
 
@@ -181,7 +196,11 @@ TopicRule? createBrotherTopicRule(
       priorNs,
       includeOnes: includeOnes,
     );
-    final techniqueValidator = _createBrotherChainValidator(rods, n);
+    final techniqueValidator = _createBrotherChainValidator(
+      rods,
+      n,
+      requireHigherPlaceFocus: width != '1digit',
+    );
     final TopicChainValidator widthValidator = width == '2digit-1digit'
         ? (steps, _) => chainHasMixedDigitWidths(steps)
         : width == '2digit'
@@ -208,7 +227,7 @@ TopicRule? createBrotherTopicRule(
       3,
       candidates,
       _allowsBrother(null, const [], 3),
-      _createBrotherChainValidator(3, null),
+      _createBrotherChainValidator(3, null, requireHigherPlaceFocus: true),
     );
   }
 

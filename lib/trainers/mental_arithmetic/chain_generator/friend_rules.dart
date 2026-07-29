@@ -107,7 +107,11 @@ TopicAllows _allowsFriend(int? n, List<int> priorNs, int totalRods) {
   };
 }
 
-TopicChainValidator _createFriendChainValidator(int totalRods, int? n) {
+TopicChainValidator _createFriendChainValidator(
+  int totalRods,
+  int? n, {
+  bool requireHigherPlaceFocus = false,
+}) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
     var priorCount = 0;
@@ -136,6 +140,17 @@ TopicChainValidator _createFriendChainValidator(int totalRods, int? n) {
     }
 
     if (steps.length >= 4 && priorCount < 1) {
+      return false;
+    }
+
+    if (requireHigherPlaceFocus &&
+        !chainHasFocusTechniqueOnPlaceAtLeast(
+          steps,
+          intermediates,
+          totalRods,
+          1,
+          (technique) => _isTargetFriendTechnique(technique, n),
+        )) {
       return false;
     }
 
@@ -206,6 +221,7 @@ TopicRule? createFriendTopicRule(
     final n = parsed.n;
     final width = parsed.width;
     final placeWidth = width == '1digit' ? 1 : 2;
+    final rods = width == '1digit' ? 2 : 3;
     final includeOnes = width != '2digit';
     final priorNs = _priorFriendNs(n);
     final candidates = _candidatesForFriendDigit(
@@ -214,7 +230,11 @@ TopicRule? createFriendTopicRule(
       priorNs,
       includeOnes: includeOnes,
     );
-    final techniqueValidator = _createFriendChainValidator(2, n);
+    final techniqueValidator = _createFriendChainValidator(
+      rods,
+      n,
+      requireHigherPlaceFocus: width != '1digit',
+    );
     final TopicChainValidator widthValidator = width == '2digit-1digit'
         ? (steps, _) => chainHasMixedDigitWidths(steps)
         : width == '2digit'
@@ -222,9 +242,9 @@ TopicRule? createFriendTopicRule(
             : (_, __) => true;
 
     return _rule(
-      2,
+      rods,
       candidates,
-      _allowsFriend(n, priorNs, 2),
+      _allowsFriend(n, priorNs, rods),
       andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
     );
@@ -241,7 +261,7 @@ TopicRule? createFriendTopicRule(
       3,
       candidates,
       _allowsFriend(null, const [], 3),
-      _createFriendChainValidator(3, null),
+      _createFriendChainValidator(3, null, requireHigherPlaceFocus: true),
     );
   }
 

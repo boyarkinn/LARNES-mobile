@@ -141,7 +141,7 @@ List<TopicMeta> _buildTopicCatalog() {
         id: 'friend-$n-2digit',
         label: 'Друг $n двузначные',
         status: TopicStatus.mvp,
-        totalRods: 2,
+        totalRods: 3,
       ),
     );
     topics.add(
@@ -150,7 +150,7 @@ List<TopicMeta> _buildTopicCatalog() {
         id: 'friend-$n-2digit-1digit',
         label: 'Друг $n двузначные + однозначные',
         status: TopicStatus.mvp,
-        totalRods: 2,
+        totalRods: 3,
       ),
     );
   }
@@ -198,7 +198,7 @@ List<TopicMeta> _buildTopicCatalog() {
         id: 'friend-brother-$n-2digit',
         label: 'Друг + брат $n двузначные',
         status: TopicStatus.mvp,
-        totalRods: 2,
+        totalRods: 3,
       ),
     );
   }

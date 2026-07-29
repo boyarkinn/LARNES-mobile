@@ -50,11 +50,22 @@ TopicChainValidator _createAnzanChainValidator(int totalRods) {
   };
 }
 
-({List<int> amounts, int rods}) _candidatesForWidth(String width) {
+({List<int> amounts, int rods}) _candidatesForWidth(
+  String width,
+  SignMode? signMode,
+) {
+  // 1digit add/sub: операнды 1…9, коридор до 99 (rods=2). mix — по-прежнему 0…9.
   if (width == '1digit') {
+    if (signMode == 'add' || signMode == 'sub') {
+      return (amounts: _rangeInclusive(1, 9), rods: 2);
+    }
     return (amounts: _rangeInclusive(1, 9), rods: 1);
   }
+  // 2digit add/sub: операнды 10…99, коридор до 999 (rods=3). mix — 1…99 на 2 rods.
   if (width == '2digit') {
+    if (signMode == 'add' || signMode == 'sub') {
+      return (amounts: _rangeInclusive(10, 99), rods: 3);
+    }
     return (amounts: _rangeInclusive(1, 99), rods: 2);
   }
   return (amounts: _rangeInclusive(1, 999), rods: 3);
@@ -75,12 +86,26 @@ TopicRule? createAnzanTopicRule(
     return null;
   }
 
-  final candidates = _candidatesForWidth(parsed.width);
+  final candidates = _candidatesForWidth(parsed.width, parsed.signMode);
+
+  final int? subBootstrap = parsed.signMode == 'sub'
+      ? (parsed.width == '1digit'
+          ? 99
+          : parsed.width == '2digit'
+              ? 999
+              : null)
+      : null;
 
   return TopicRule(
     allows: (_, __, ___) => true,
-    balanceAmounts: true,
+    balanceAmounts:
+        parsed.signMode == 'mix' || parsed.signMode == null
+            ? candidates.rods >= 2
+            : false,
     candidateAmounts: candidates.amounts,
+    forcedFirstStep: subBootstrap != null
+        ? ChainStep(amount: subBootstrap, sign: '+')
+        : null,
     isValidChain: _createAnzanChainValidator(candidates.rods),
     totalRods: candidates.rods,
   );

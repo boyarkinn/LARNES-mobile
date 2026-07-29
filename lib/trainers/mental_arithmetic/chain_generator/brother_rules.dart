@@ -29,6 +29,8 @@ TopicRule _rule(
   TopicAllows allows,
   TopicChainValidator isValidChain, {
   int? focusTechniqueN,
+  int? minFocusSteps,
+  List<String>? preferDigitWidths,
 }) {
   return TopicRule(
     allows: allows,
@@ -37,6 +39,8 @@ TopicRule _rule(
     focusTechniqueN: focusTechniqueN,
     focusTechniques: const [TechniqueKind.brother],
     isValidChain: isValidChain,
+    minFocusSteps: minFocusSteps,
+    preferDigitWidths: preferDigitWidths,
     totalRods: totalRods,
   );
 }
@@ -82,7 +86,7 @@ TopicAllows _allowsBrother(int? n, List<int> priorNs, int totalRods) {
 TopicChainValidator _createBrotherChainValidator(
   int totalRods,
   int? n, {
-  bool requireHigherPlaceFocus = false,
+  bool requireFocusOnOnesAndHigher = false,
 }) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
@@ -115,12 +119,11 @@ TopicChainValidator _createBrotherChainValidator(
       return false;
     }
 
-    if (requireHigherPlaceFocus &&
-        !chainHasFocusTechniqueOnPlaceAtLeast(
+    if (requireFocusOnOnesAndHigher &&
+        !chainHasFocusOnOnesAndHigherPlaces(
           steps,
           intermediates,
           totalRods,
-          1,
           (technique) => _isFocusBrother(technique, n),
         )) {
       return false;
@@ -142,6 +145,11 @@ List<int> _candidatesForBrotherDigit(
 }) {
   if (!includeOnes) {
     return _rangeInclusive(10, 99);
+  }
+
+  // Mix: 1…9 + полный 10…99 (не только N·10).
+  if (rods >= 2) {
+    return [..._rangeInclusive(1, 9), ..._rangeInclusive(10, 99)];
   }
 
   final amounts = {..._rangeInclusive(1, 9)};
@@ -199,7 +207,7 @@ TopicRule? createBrotherTopicRule(
     final techniqueValidator = _createBrotherChainValidator(
       rods,
       n,
-      requireHigherPlaceFocus: width != '1digit',
+      requireFocusOnOnesAndHigher: width != '1digit',
     );
     final TopicChainValidator widthValidator = width == '2digit-1digit'
         ? (steps, _) => chainHasMixedDigitWidths(steps)
@@ -213,21 +221,24 @@ TopicRule? createBrotherTopicRule(
       _allowsBrother(n, priorNs, rods),
       andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
+      minFocusSteps: width != '1digit' ? 2 : null,
     );
   }
 
-  if (topicId == 'brother-3digit') {
-    final candidates = {
-      ..._rangeInclusive(1, 9),
-      ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 2)),
-      ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 3)),
-    }.toList();
+  final threeDigitWidth = parseThreeDigitWidth(topicId, 'brother');
+  if (threeDigitWidth != null) {
+    final candidates = candidatesForThreeDigitWidth(threeDigitWidth);
 
     return _rule(
       3,
       candidates,
       _allowsBrother(null, const [], 3),
-      _createBrotherChainValidator(3, null, requireHigherPlaceFocus: true),
+      andChainValidators([
+        _createBrotherChainValidator(3, null, requireFocusOnOnesAndHigher: true),
+        widthValidatorForThreeDigit(threeDigitWidth),
+      ]),
+      minFocusSteps: 2,
+      preferDigitWidths: preferDigitWidthsForThreeDigit(threeDigitWidth),
     );
   }
 

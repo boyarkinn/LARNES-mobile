@@ -294,7 +294,6 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
   final topicId = raw['topicId'];
   final actionCount = coerceInt(raw['actionCount']);
   final exampleCount = coerceInt(raw['exampleCount']) ?? 1;
-  final signMode = raw['signMode'];
   final stepPauseSec = coerceDouble(raw['stepPauseSec']);
 
   if (topicId is! String || !isTopicId(topicId)) {
@@ -308,9 +307,6 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
   if (exampleCount < 1 || exampleCount > 10) {
     return _fail('Некорректные параметры.');
   }
-  if (signMode is! String || !isSignMode(signMode)) {
-    return _fail('Некорректные параметры.');
-  }
   if (stepPauseSec == null || stepPauseSec < 0.1 || stepPauseSec > 30) {
     return _fail('Некорректные параметры.');
   }
@@ -318,7 +314,6 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
   return ValidateTrainerParamsResult.success({
     'actionCount': actionCount,
     'exampleCount': exampleCount,
-    'signMode': signMode,
     'stepPauseSec': stepPauseSec,
     'topicId': topicId,
   });

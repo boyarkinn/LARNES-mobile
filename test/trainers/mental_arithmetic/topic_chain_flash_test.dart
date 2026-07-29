@@ -18,7 +18,6 @@ void main() {
       final ok = validateTrainerParams('topic-chain-flash', {
         'topicId': 'simple-1',
         'actionCount': 5,
-        'signMode': 'mix',
         'stepPauseSec': 1,
       });
       expect(ok.ok, isTrue);
@@ -28,7 +27,6 @@ void main() {
         'topicId': 'simple-1',
         'actionCount': 5,
         'exampleCount': 3,
-        'signMode': 'mix',
         'stepPauseSec': 1,
       });
       expect(withExamples.ok, isTrue);
@@ -37,7 +35,6 @@ void main() {
       final bad = validateTrainerParams('topic-chain-flash', {
         'topicId': 'nope',
         'actionCount': 5,
-        'signMode': 'mix',
         'stepPauseSec': 1,
       });
       expect(bad.ok, isFalse);
@@ -56,7 +53,6 @@ void main() {
                 params: {
                   'topicId': 'simple-1',
                   'actionCount': 3,
-                  'signMode': 'add',
                   'stepPauseSec': 0.05,
                 },
               ),

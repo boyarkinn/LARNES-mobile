@@ -28,6 +28,8 @@ TopicRule _rule(
   TopicAllows allows,
   TopicChainValidator isValidChain, {
   int? focusTechniqueN,
+  int? minFocusSteps,
+  List<String>? preferDigitWidths,
 }) {
   return TopicRule(
     allows: allows,
@@ -36,6 +38,8 @@ TopicRule _rule(
     focusTechniqueN: focusTechniqueN,
     focusTechniques: const [TechniqueKind.friend, TechniqueKind.friendBrother],
     isValidChain: isValidChain,
+    minFocusSteps: minFocusSteps,
+    preferDigitWidths: preferDigitWidths,
     totalRods: totalRods,
   );
 }
@@ -110,7 +114,7 @@ TopicAllows _allowsFriend(int? n, List<int> priorNs, int totalRods) {
 TopicChainValidator _createFriendChainValidator(
   int totalRods,
   int? n, {
-  bool requireHigherPlaceFocus = false,
+  bool requireFocusOnOnesAndHigher = false,
 }) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
@@ -143,12 +147,11 @@ TopicChainValidator _createFriendChainValidator(
       return false;
     }
 
-    if (requireHigherPlaceFocus &&
-        !chainHasFocusTechniqueOnPlaceAtLeast(
+    if (requireFocusOnOnesAndHigher &&
+        !chainHasFocusOnOnesAndHigherPlaces(
           steps,
           intermediates,
           totalRods,
-          1,
           (technique) => _isTargetFriendTechnique(technique, n),
         )) {
       return false;
@@ -170,6 +173,11 @@ List<int> _candidatesForFriendDigit(
 }) {
   if (!includeOnes) {
     return _rangeInclusive(10, 99);
+  }
+
+  // Mix: 1…9 + полный 10…99 (не только N·10).
+  if (placeWidth >= 2) {
+    return [..._rangeInclusive(1, 9), ..._rangeInclusive(10, 99)];
   }
 
   final amounts = {..._rangeInclusive(1, 9)};
@@ -233,7 +241,7 @@ TopicRule? createFriendTopicRule(
     final techniqueValidator = _createFriendChainValidator(
       rods,
       n,
-      requireHigherPlaceFocus: width != '1digit',
+      requireFocusOnOnesAndHigher: width != '1digit',
     );
     final TopicChainValidator widthValidator = width == '2digit-1digit'
         ? (steps, _) => chainHasMixedDigitWidths(steps)
@@ -247,21 +255,24 @@ TopicRule? createFriendTopicRule(
       _allowsFriend(n, priorNs, rods),
       andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
+      minFocusSteps: width != '1digit' ? 2 : null,
     );
   }
 
-  if (topicId == 'friend-3digit') {
-    final candidates = {
-      ..._rangeInclusive(1, 9),
-      ..._friendNs.expand((n) => _placeAmountsForFriend(n, 2)),
-      ..._friendNs.expand((n) => _placeAmountsForFriend(n, 3)),
-    }.toList();
+  final threeDigitWidth = parseThreeDigitWidth(topicId, 'friend');
+  if (threeDigitWidth != null) {
+    final candidates = candidatesForThreeDigitWidth(threeDigitWidth);
 
     return _rule(
       3,
       candidates,
       _allowsFriend(null, const [], 3),
-      _createFriendChainValidator(3, null, requireHigherPlaceFocus: true),
+      andChainValidators([
+        _createFriendChainValidator(3, null, requireFocusOnOnesAndHigher: true),
+        widthValidatorForThreeDigit(threeDigitWidth),
+      ]),
+      minFocusSteps: 2,
+      preferDigitWidths: preferDigitWidthsForThreeDigit(threeDigitWidth),
     );
   }
 

@@ -178,7 +178,7 @@ bool everyPlaceTechnique(
       places.every((entry) => predicate(entry.technique));
 }
 
-/// Focus-техника на разряде place ≥ minPlace (десятки/сотни, не только единицы).
+/// Focus-техника на разряде place ≥ minPlace (десятки/сотни).
 bool chainHasFocusTechniqueOnPlaceAtLeast(
   List<ChainStep> steps,
   List<int> intermediates,
@@ -196,6 +196,48 @@ bool chainHasFocusTechniqueOnPlaceAtLeast(
     }
   }
   return false;
+}
+
+bool chainHasFocusTechniqueOnExactPlace(
+  List<ChainStep> steps,
+  List<int> intermediates,
+  int totalRods,
+  int exactPlace,
+  bool Function(Technique technique) isFocus,
+) {
+  for (var index = 0; index < steps.length; index += 1) {
+    final places =
+        classifyStepPlaces(intermediates[index], steps[index], totalRods);
+    if (places.any(
+      (entry) => entry.place == exactPlace && isFocus(entry.technique),
+    )) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Focus и на единицах (закрепление), и на старших разрядах.
+bool chainHasFocusOnOnesAndHigherPlaces(
+  List<ChainStep> steps,
+  List<int> intermediates,
+  int totalRods,
+  bool Function(Technique technique) isFocus,
+) {
+  return chainHasFocusTechniqueOnExactPlace(
+        steps,
+        intermediates,
+        totalRods,
+        0,
+        isFocus,
+      ) &&
+      chainHasFocusTechniqueOnPlaceAtLeast(
+        steps,
+        intermediates,
+        totalRods,
+        1,
+        isFocus,
+      );
 }
 
 Technique classifyStep(int value, ChainStep step, int totalRods) {

@@ -23,13 +23,29 @@ void main() {
         'audio/ru/mental-arithmetic/hundreds/100.mp3',
       );
       expect(getAmountAudioAsset(123), isNull);
+      expect(getAmountAudioAssets(154), [
+        'audio/ru/mental-arithmetic/hundreds/100.mp3',
+        'audio/ru/mental-arithmetic/numbers/54.mp3',
+      ]);
+      expect(getAmountAudioAssets(506), [
+        'audio/ru/mental-arithmetic/hundreds/500.mp3',
+        'audio/ru/mental-arithmetic/numbers/6.mp3',
+      ]);
     });
 
-    test('resolveStepAudio queues sign then amount', () {
+    test('resolveStepAudio queues sign then amount clip(s)', () {
       final resolved = resolveStepAudio(const ChainStep(amount: 4, sign: '+'));
       expect(resolved.assets, [
         'audio/ru/mental-arithmetic/operations/plus.mp3',
         'audio/ru/mental-arithmetic/numbers/4.mp3',
+      ]);
+
+      final composite =
+          resolveStepAudio(const ChainStep(amount: 123, sign: '+'));
+      expect(composite.assets, [
+        'audio/ru/mental-arithmetic/operations/plus.mp3',
+        'audio/ru/mental-arithmetic/hundreds/100.mp3',
+        'audio/ru/mental-arithmetic/numbers/23.mp3',
       ]);
     });
   });
@@ -39,8 +55,8 @@ void main() {
       expect(shouldPlayFlashAudio(0.5), isFalse);
       expect(shouldPlayFlashAudio(0.7), isTrue);
       expect(flashAudioPlaybackRate(1), 2);
-      expect(flashAudioPlaybackRate(2), 1);
-      expect(flashAudioPlaybackRate(5), 1);
+      expect(flashAudioPlaybackRate(2), 2);
+      expect(flashAudioPlaybackRate(5), 2);
     });
   });
 }

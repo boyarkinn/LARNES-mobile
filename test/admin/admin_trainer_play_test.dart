@@ -151,7 +151,6 @@ void main() {
         'defaultParams': {
           'chainTopicId': 'simple-1',
           'actionCount': 5,
-          'signMode': 'mix',
           'stepPauseSec': 1,
         },
         'fields': [],
@@ -160,7 +159,6 @@ void main() {
       final payload = buildPlayParamsPayload(config, {
         'chainTopicId': 'friend-9-1digit',
         'actionCount': '5',
-        'signMode': 'mix',
         'stepPauseSec': '0.5',
       });
 
@@ -169,6 +167,7 @@ void main() {
       expect(payload['stepPauseSec'], 0.5);
       expect(payload.containsKey('chainTopicId'), isFalse);
       expect(payload.containsKey('amountScope'), isFalse);
+      expect(payload.containsKey('signMode'), isFalse);
     });
 
     test('builds flashcard values array fields for API', () {

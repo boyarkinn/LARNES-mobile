@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/anzan_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topic_rule.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/transition_rules.dart';
@@ -163,10 +164,67 @@ bool _isImmediateReverse(ChainStep? previous, ChainStep next) {
       previous.sign != next.sign;
 }
 
-/// Pre-slot: 1…⌊actionCount/2⌋ разных индексов (Просто N>1).
-Set<int> _sampleFocusSlots(int actionCount, double Function() random) {
+/// Запас ≥1 на каждый оставшийся шаг (длинный add/sub анзан и др.).
+List<ChainStep> _preferHeadroomSteps(
+  List<ChainStep> pool,
+  int value,
+  int stepIndex,
+  int actionCount,
+  int totalRods,
+  SignMode signMode,
+) {
+  final remainingAfter = actionCount - stepIndex - 1;
+
+  if (remainingAfter <= 0 || pool.length <= 1) {
+    return pool;
+  }
+
+  if (signMode == 'add' || signMode == 'mix') {
+    final maxAmount = maxValueForRods(totalRods) - value - remainingAfter;
+    if (maxAmount >= 1) {
+      final safe = pool
+          .where((step) => step.sign == '-' || step.amount <= maxAmount)
+          .toList();
+      if (safe.isNotEmpty) {
+        return safe;
+      }
+    }
+  }
+
+  if (signMode == 'sub') {
+    if (stepIndex == 0) {
+      final safe = pool
+          .where((step) => step.sign == '+' && step.amount >= remainingAfter)
+          .toList();
+      return safe.isNotEmpty ? safe : pool;
+    }
+
+    final safe = pool
+        .where(
+          (step) =>
+              step.sign == '+' || value - step.amount >= remainingAfter,
+        )
+        .toList();
+    return safe.isNotEmpty ? safe : pool;
+  }
+
+  return pool;
+}
+
+/// Pre-slot: minFocus…⌊actionCount/2⌋ разных индексов (Просто N>1).
+Set<int> _sampleFocusSlots(
+  int actionCount,
+  double Function() random, [
+  int minFocus = 1,
+]) {
   final maxFocus = (actionCount / 2).floor();
-  final focusCount = 1 + (random() * maxFocus).floor();
+  if (maxFocus < 1) {
+    return <int>{};
+  }
+
+  final minCount = maxFocus < minFocus ? maxFocus : (minFocus < 1 ? 1 : minFocus);
+  final focusCount =
+      minCount + (random() * (maxFocus - minCount + 1)).floor();
   final indices = [for (var index = 0; index < actionCount; index++) index];
   _shuffleInPlace(indices, random);
 
@@ -301,10 +359,28 @@ Chain? _tryBuildChain(
       (focusTechniques?.isNotEmpty ?? false) && rule.focusCap != false;
   final useFocusSlots = useAmountSlots || useTechniqueSlots;
   final focusSlots =
-      useFocusSlots ? _sampleFocusSlots(config.actionCount, random) : null;
+      useFocusSlots
+          ? _sampleFocusSlots(
+              config.actionCount,
+              random,
+              rule.minFocusSteps ?? 1,
+            )
+          : null;
 
   for (var stepIndex = 0; stepIndex < config.actionCount; stepIndex += 1) {
     var placed = false;
+
+    final forced = rule.forcedFirstStep;
+    if (stepIndex == 0 && forced != null) {
+      final next = tryApplyChainStep(value, forced, rule.totalRods);
+      if (next == null) {
+        return null;
+      }
+      value = next;
+      steps.add(forced);
+      intermediates.add(value);
+      continue;
+    }
 
     for (var backtrack = 0; backtrack < _maxStepBacktracks; backtrack += 1) {
       final groups =
@@ -338,6 +414,22 @@ Chain? _tryBuildChain(
                   .compareTo(amountCounts[right.amount] ?? 0),
         );
       }
+
+      final headroomPool = _preferHeadroomSteps(
+        pool,
+        value,
+        stepIndex,
+        config.actionCount,
+        rule.totalRods,
+        config.signMode,
+      );
+      // Не clear()+addAll на том же списке — потеряем кандидатов.
+      if (!identical(headroomPool, pool)) {
+        pool
+          ..clear()
+          ..addAll(headroomPool);
+      }
+
       final boundary = rule.crossBoundary;
       if (boundary != null &&
           !chainCrossesBoundary(intermediates, boundary)) {
@@ -356,6 +448,33 @@ Chain? _tryBuildChain(
           }
         }
       }
+
+      final preferWidths = rule.preferDigitWidths;
+      if (preferWidths != null && preferWidths.isNotEmpty) {
+        final present = <String>{
+          for (final step in steps)
+            if (digitWidthClass(step.amount) != null)
+              digitWidthClass(step.amount)!,
+        };
+        final missing =
+            preferWidths.where((width) => !present.contains(width)).toList();
+        if (missing.isNotEmpty) {
+          final matching = pool.where((candidate) {
+            final width = digitWidthClass(candidate.amount);
+            return width != null && missing.contains(width);
+          }).toList();
+          if (matching.isNotEmpty) {
+            final urgent = stepIndex >= config.actionCount - missing.length ||
+                random() < 0.65;
+            if (urgent) {
+              pool
+                ..clear()
+                ..addAll(matching);
+            }
+          }
+        }
+      }
+
       var step = pool[0];
       if (useFocusSlots) {
         final previous = steps.isEmpty ? null : steps.last;

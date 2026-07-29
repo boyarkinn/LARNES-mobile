@@ -14,8 +14,8 @@ void main() {
       expect(shouldPlayFlashAudio(1), isTrue);
       expect(shouldPlayFlashAudio(2), isTrue);
       expect(flashAudioPlaybackRate(1), 2);
-      expect(flashAudioPlaybackRate(2), 1);
-      expect(flashAudioPlaybackRate(5), 1);
+      expect(flashAudioPlaybackRate(2), 2);
+      expect(flashAudioPlaybackRate(5), 2);
     });
 
     test('resolves assets for simple-1 and simple-hundreds chains', () {
@@ -23,7 +23,6 @@ void main() {
         final validated = validateTrainerParams('topic-chain-flash', {
           'topicId': topicId,
           'actionCount': 5,
-          'signMode': 'mix',
           'stepPauseSec': 1,
         });
         expect(validated.ok, isTrue, reason: validated.error);
@@ -36,11 +35,14 @@ void main() {
           final resolved = resolveStepAudio(step);
           expect(resolved.assets, isNotEmpty);
           expect(File('assets/${resolved.operationAsset}').existsSync(), isTrue);
-          if (resolved.amountAsset != null) {
-            expect(File('assets/${resolved.amountAsset}').existsSync(), isTrue);
+          for (final amountAsset in resolved.amountAssets) {
+            expect(File('assets/$amountAsset').existsSync(), isTrue);
           }
           if (topicId == 'simple-hundreds') {
-            expect(resolved.amountAsset, contains('/hundreds/'));
+            expect(
+              resolved.amountAssets.any((asset) => asset.contains('/hundreds/')),
+              isTrue,
+            );
           }
         }
       }

@@ -83,6 +83,27 @@ List<TopicMeta> _buildTopicCatalog() {
       status: TopicStatus.mvp,
       totalRods: 3,
     ),
+    TopicMeta(
+      block: TopicBlock.simple,
+      id: 'simple-3digit-1digit',
+      label: 'Просто трёхзначные + однозначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.simple,
+      id: 'simple-3digit-2digit',
+      label: 'Просто трёхзначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.simple,
+      id: 'simple-3digit-2digit-1digit',
+      label: 'Просто трёхзначные + однозначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
   ]);
 
   for (final n in _brotherNs) {
@@ -115,15 +136,36 @@ List<TopicMeta> _buildTopicCatalog() {
     );
   }
 
-  topics.add(
-    const TopicMeta(
+  topics.addAll(const [
+    TopicMeta(
       block: TopicBlock.brother,
       id: 'brother-3digit',
       label: 'Братья трёхзначные',
       status: TopicStatus.mvp,
       totalRods: 3,
     ),
-  );
+    TopicMeta(
+      block: TopicBlock.brother,
+      id: 'brother-3digit-1digit',
+      label: 'Братья трёхзначные + однозначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.brother,
+      id: 'brother-3digit-2digit',
+      label: 'Братья трёхзначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.brother,
+      id: 'brother-3digit-2digit-1digit',
+      label: 'Братья трёхзначные + однозначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+  ]);
 
   for (final n in _friendNs) {
     topics.add(
@@ -155,15 +197,36 @@ List<TopicMeta> _buildTopicCatalog() {
     );
   }
 
-  topics.add(
-    const TopicMeta(
+  topics.addAll(const [
+    TopicMeta(
       block: TopicBlock.friend,
       id: 'friend-3digit',
       label: 'Друзья трёхзначные',
       status: TopicStatus.mvp,
       totalRods: 3,
     ),
-  );
+    TopicMeta(
+      block: TopicBlock.friend,
+      id: 'friend-3digit-1digit',
+      label: 'Друзья трёхзначные + однозначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.friend,
+      id: 'friend-3digit-2digit',
+      label: 'Друзья трёхзначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+    TopicMeta(
+      block: TopicBlock.friend,
+      id: 'friend-3digit-2digit-1digit',
+      label: 'Друзья трёхзначные + однозначные + двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 3,
+    ),
+  ]);
 
   topics.addAll(const [
     TopicMeta(
@@ -209,14 +272,14 @@ List<TopicMeta> _buildTopicCatalog() {
       id: 'anzan-1digit-add',
       label: 'Анзан однозначные сложение',
       status: TopicStatus.mvp,
-      totalRods: 1,
+      totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-1digit-sub',
       label: 'Анзан однозначные вычитание',
       status: TopicStatus.mvp,
-      totalRods: 1,
+      totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
@@ -230,14 +293,14 @@ List<TopicMeta> _buildTopicCatalog() {
       id: 'anzan-2digit-add',
       label: 'Анзан двузначные сложение',
       status: TopicStatus.mvp,
-      totalRods: 2,
+      totalRods: 3,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-2digit-sub',
       label: 'Анзан двузначные вычитание',
       status: TopicStatus.mvp,
-      totalRods: 2,
+      totalRods: 3,
     ),
     TopicMeta(
       block: TopicBlock.anzan,

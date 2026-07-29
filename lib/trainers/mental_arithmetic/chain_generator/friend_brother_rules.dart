@@ -27,6 +27,7 @@ TopicRule _rule(
   TopicAllows allows,
   TopicChainValidator isValidChain, {
   required int focusTechniqueN,
+  int? minFocusSteps,
 }) {
   return TopicRule(
     allows: allows,
@@ -35,6 +36,7 @@ TopicRule _rule(
     focusTechniqueN: focusTechniqueN,
     focusTechniques: const [TechniqueKind.friendBrother],
     isValidChain: isValidChain,
+    minFocusSteps: minFocusSteps,
     totalRods: totalRods,
   );
 }
@@ -85,7 +87,7 @@ TopicAllows _allowsFriendBrother(int n, List<int> priorNs, int totalRods) {
 TopicChainValidator _createFriendBrotherChainValidator(
   int totalRods,
   int n, {
-  bool requireHigherPlaceFocus = false,
+  bool requireFocusOnOnesAndHigher = false,
 }) {
   return (steps, intermediates) {
     final focusIndices = <int>[];
@@ -118,12 +120,11 @@ TopicChainValidator _createFriendBrotherChainValidator(
       return false;
     }
 
-    if (requireHigherPlaceFocus &&
-        !chainHasFocusTechniqueOnPlaceAtLeast(
+    if (requireFocusOnOnesAndHigher &&
+        !chainHasFocusOnOnesAndHigherPlaces(
           steps,
           intermediates,
           totalRods,
-          1,
           (technique) => _isFocusFriendBrother(technique, n),
         )) {
       return false;
@@ -205,7 +206,7 @@ TopicRule? createFriendBrotherTopicRule(
   final techniqueValidator = _createFriendBrotherChainValidator(
     rods,
     n,
-    requireHigherPlaceFocus: width != '1digit',
+    requireFocusOnOnesAndHigher: width != '1digit',
   );
   final TopicChainValidator widthValidator = width == '2digit'
       ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
@@ -217,5 +218,6 @@ TopicRule? createFriendBrotherTopicRule(
     _allowsFriendBrother(n, priorNs, rods),
     andChainValidators([techniqueValidator, widthValidator]),
     focusTechniqueN: n,
+    minFocusSteps: width != '1digit' ? 2 : null,
   );
 }

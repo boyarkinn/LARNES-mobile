@@ -98,8 +98,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   ) {
     return a['topicId'] != b['topicId'] ||
         a['actionCount'] != b['actionCount'] ||
-        a['exampleCount'] != b['exampleCount'] ||
-        a['signMode'] != b['signMode'];
+        a['exampleCount'] != b['exampleCount'];
   }
 
   void _startSession() {
@@ -132,7 +131,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
         GenerateConfig(
           topicId: widget.params['topicId'] as String? ?? 'simple-1',
           actionCount: _readIntParam(widget.params['actionCount'], 5),
-          signMode: widget.params['signMode'] as String? ?? 'mix',
+          signMode: 'mix',
         ),
       );
 

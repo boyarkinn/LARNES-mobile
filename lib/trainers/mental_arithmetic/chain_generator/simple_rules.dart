@@ -28,6 +28,8 @@ bool isOneDigitAmount(int amount) => amount >= 1 && amount <= 9;
 
 bool isTwoDigitAmount(int amount) => amount >= 10 && amount <= 99;
 
+bool isThreeDigitAmount(int amount) => amount >= 100 && amount <= 999;
+
 bool chainHasMixedDigitWidths(List<ChainStep> steps) {
   return steps.any((step) => isOneDigitAmount(step.amount)) &&
       steps.any((step) => isTwoDigitAmount(step.amount));
@@ -36,6 +38,109 @@ bool chainHasMixedDigitWidths(List<ChainStep> steps) {
 bool chainIsOnlyTwoDigitAmounts(List<ChainStep> steps) {
   return steps.isNotEmpty &&
       steps.every((step) => isTwoDigitAmount(step.amount));
+}
+
+bool chainIsOnlyThreeDigitAmounts(List<ChainStep> steps) {
+  return steps.isNotEmpty &&
+      steps.every((step) => isThreeDigitAmount(step.amount));
+}
+
+bool chainHasThreeAndOneDigitWidths(List<ChainStep> steps) {
+  return steps.any((step) => isThreeDigitAmount(step.amount)) &&
+      steps.any((step) => isOneDigitAmount(step.amount));
+}
+
+bool chainHasThreeAndTwoDigitWidths(List<ChainStep> steps) {
+  return steps.any((step) => isThreeDigitAmount(step.amount)) &&
+      steps.any((step) => isTwoDigitAmount(step.amount));
+}
+
+bool chainHasThreeTwoAndOneDigitWidths(List<ChainStep> steps) {
+  return steps.any((step) => isThreeDigitAmount(step.amount)) &&
+      steps.any((step) => isTwoDigitAmount(step.amount)) &&
+      steps.any((step) => isOneDigitAmount(step.amount));
+}
+
+/// Суффикс ширины трёхзначных тем (longest-first).
+typedef ThreeDigitWidth = String;
+
+const _threeDigitWidths = [
+  '3digit-2digit-1digit',
+  '3digit-1digit',
+  '3digit-2digit',
+  '3digit',
+];
+
+ThreeDigitWidth? parseThreeDigitWidth(String topicId, String blockPrefix) {
+  for (final width in _threeDigitWidths) {
+    if (topicId == '$blockPrefix-$width') {
+      return width;
+    }
+  }
+  return null;
+}
+
+List<int> candidatesForThreeDigitWidth(ThreeDigitWidth width) {
+  final hundreds = _rangeInclusive(100, 999);
+  switch (width) {
+    case '3digit':
+      return hundreds;
+    case '3digit-1digit':
+      return [..._rangeInclusive(1, 9), ...hundreds];
+    case '3digit-2digit':
+      return [..._rangeInclusive(10, 99), ...hundreds];
+    case '3digit-2digit-1digit':
+      return [
+        ..._rangeInclusive(1, 9),
+        ..._rangeInclusive(10, 99),
+        ...hundreds,
+      ];
+    default:
+      throw ArgumentError('Unknown three-digit width: $width');
+  }
+}
+
+TopicChainValidator widthValidatorForThreeDigit(ThreeDigitWidth width) {
+  switch (width) {
+    case '3digit':
+      return (steps, _) => chainIsOnlyThreeDigitAmounts(steps);
+    case '3digit-1digit':
+      return (steps, _) => chainHasThreeAndOneDigitWidths(steps);
+    case '3digit-2digit':
+      return (steps, _) => chainHasThreeAndTwoDigitWidths(steps);
+    case '3digit-2digit-1digit':
+      return (steps, _) => chainHasThreeTwoAndOneDigitWidths(steps);
+    default:
+      throw ArgumentError('Unknown three-digit width: $width');
+  }
+}
+
+List<String>? preferDigitWidthsForThreeDigit(ThreeDigitWidth width) {
+  switch (width) {
+    case '3digit':
+      return null;
+    case '3digit-1digit':
+      return const ['3', '1'];
+    case '3digit-2digit':
+      return const ['3', '2'];
+    case '3digit-2digit-1digit':
+      return const ['3', '2', '1'];
+    default:
+      throw ArgumentError('Unknown three-digit width: $width');
+  }
+}
+
+String? digitWidthClass(int amount) {
+  if (isOneDigitAmount(amount)) {
+    return '1';
+  }
+  if (isTwoDigitAmount(amount)) {
+    return '2';
+  }
+  if (isThreeDigitAmount(amount)) {
+    return '3';
+  }
+  return null;
 }
 
 TopicChainValidator andChainValidators(List<TopicChainValidator> validators) {
@@ -94,6 +199,7 @@ TopicRule _rule(
   bool? focusCap,
   bool? balanceAmounts,
   TopicChainValidator? isValidChain,
+  List<String>? preferDigitWidths,
 }) {
   return TopicRule(
     allows: allows,
@@ -103,6 +209,7 @@ TopicRule _rule(
     focusCap: focusCap,
     balanceAmounts: balanceAmounts,
     isValidChain: isValidChain,
+    preferDigitWidths: preferDigitWidths,
   );
 }
 
@@ -318,17 +425,38 @@ TopicRule? createSimpleTopicRule(TopicId topicId, [AmountScope amountScope = 'wi
     );
   }
 
-  if (topicId == 'simple-3digit') {
+  final threeDigitWidth = parseThreeDigitWidth(topicId, 'simple');
+  if (threeDigitWidth != null) {
+    final candidates = candidatesForThreeDigitWidth(threeDigitWidth);
+    final widthValidator = widthValidatorForThreeDigit(threeDigitWidth);
+
+    if (threeDigitWidth == '3digit') {
+      return _rule(
+        3,
+        candidates,
+        _allowsDirectOnly(3),
+        balanceAmounts: true,
+        isValidChain: andChainValidators([
+          widthValidator,
+          (steps, _) => hasEnoughSimpleTopicVariation(steps, 0),
+        ]),
+      );
+    }
+
     final focusAmounts = _rangeInclusive(100, 999);
     return _rule(
       3,
-      [..._rangeInclusive(1, 9), ..._rangeInclusive(10, 99), ...focusAmounts],
+      candidates,
       _allowsDirectOnly(3),
       focusAmounts: focusAmounts,
       focusCap: true,
-      isValidChain: _createRangeFocusChainValidator(
-        (amount) => amount >= 100 && amount <= 999,
-      ),
+      preferDigitWidths: preferDigitWidthsForThreeDigit(threeDigitWidth),
+      isValidChain: andChainValidators([
+        _createRangeFocusChainValidator(
+          (amount) => amount >= 100 && amount <= 999,
+        ),
+        widthValidator,
+      ]),
     );
   }
 

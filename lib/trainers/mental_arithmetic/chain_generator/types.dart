@@ -90,8 +90,11 @@ class TopicRule {
     this.focusTechniques,
     this.focusTechniqueN,
     this.focusCap,
+    this.minFocusSteps,
     this.balanceAmounts,
     this.crossBoundary,
+    this.preferDigitWidths,
+    this.forcedFirstStep,
   });
 
   final List<int> candidateAmounts;
@@ -111,11 +114,20 @@ class TopicRule {
   /// Default true if focusAmounts/focusTechniques set. false для Просто 1.
   final bool? focusCap;
 
+  /// Минимум focus-слотов (2digit / mix). Clamp к ⌊len/2⌋.
+  final int? minFocusSteps;
+
   /// Десятки/сотни: не закреплять ±10/±100.
   final bool? balanceAmounts;
 
   /// Переход через N: prefer + isValidChain.
   final int? crossBoundary;
+
+  /// Трёхзначные миксы: prefer недостающие классы ширины 1/2/3.
+  final List<String>? preferDigitWidths;
+
+  /// Жёсткий первый шаг (анзан-1digit-sub → +99).
+  final ChainStep? forcedFirstStep;
 }
 
 class Chain {

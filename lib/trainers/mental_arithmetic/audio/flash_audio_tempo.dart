@@ -2,8 +2,8 @@
 
 const kAudioPlaybackRateMax = 4.0;
 
-/// Не замедляем клипы — только норма и быстрее (web parity).
-const kFlashAudioPlaybackRateMin = 1.0;
+/// Базовый темп записей (как старая платформа). Ниже не опускаем.
+const kFlashAudioPlaybackRateMin = 2.0;
 
 /// Ниже — только визуал.
 const kFlashAudioMuteBelowSec = 0.7;
@@ -12,7 +12,7 @@ bool shouldPlayFlashAudio(double stepPauseSec) {
   return stepPauseSec.isFinite && stepPauseSec >= kFlashAudioMuteBelowSec;
 }
 
-/// При 1 c → 2; ≥2 c → 1×; короче → быстрее.
+/// При 1 c → 2; ≥1 c → ≥2×; короче → быстрее.
 double flashAudioPlaybackRate(double stepPauseSec) {
   if (!stepPauseSec.isFinite || stepPauseSec <= 0) {
     return 2;

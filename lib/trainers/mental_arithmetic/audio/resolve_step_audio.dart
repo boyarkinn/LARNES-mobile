@@ -10,14 +10,16 @@ const kMentalAudioAssetBase = 'audio/ru/mental-arithmetic';
 class StepAudioResolution {
   const StepAudioResolution({
     required this.operationAsset,
-    required this.amountAsset,
+    required this.amountAssets,
     required this.assets,
   });
 
   final String operationAsset;
-  final String? amountAsset;
 
-  /// Очередь: знак, затем число (если есть).
+  /// Клипы числа: 0…1 или 2 (hundreds + numbers).
+  final List<String> amountAssets;
+
+  /// Очередь: знак, затем число.
   final List<String> assets;
 }
 
@@ -26,33 +28,40 @@ String getOperationAudioAsset(String sign) {
   return '$kMentalAudioAssetBase/operations/$file';
 }
 
-/// 0…99 → numbers; круглые 100…900 → hundreds; иначе null.
-String? getAmountAudioAsset(int amount) {
-  if (amount < 0) {
-    return null;
+/// 0…99 → numbers; круглые / составные 100…999 → hundreds [+ numbers].
+List<String> getAmountAudioAssets(int amount) {
+  if (amount < 0 || amount > 999) {
+    return const [];
   }
 
   if (amount <= 99) {
-    return '$kMentalAudioAssetBase/numbers/$amount.mp3';
+    return ['$kMentalAudioAssetBase/numbers/$amount.mp3'];
   }
 
-  if (amount <= 900 && amount % 100 == 0) {
-    return '$kMentalAudioAssetBase/hundreds/$amount.mp3';
+  final hundreds = (amount ~/ 100) * 100;
+  final rest = amount % 100;
+  final paths = <String>['$kMentalAudioAssetBase/hundreds/$hundreds.mp3'];
+
+  if (rest > 0) {
+    paths.add('$kMentalAudioAssetBase/numbers/$rest.mp3');
   }
 
-  return null;
+  return paths;
+}
+
+/// Один клип, если операнд целиком в одном файле; иначе null.
+String? getAmountAudioAsset(int amount) {
+  final paths = getAmountAudioAssets(amount);
+  return paths.length == 1 ? paths.first : null;
 }
 
 StepAudioResolution resolveStepAudio(ChainStep step) {
   final operationAsset = getOperationAudioAsset(step.sign);
-  final amountAsset = getAmountAudioAsset(step.amount);
-  final assets = amountAsset == null
-      ? <String>[operationAsset]
-      : <String>[operationAsset, amountAsset];
+  final amountAssets = getAmountAudioAssets(step.amount);
 
   return StepAudioResolution(
     operationAsset: operationAsset,
-    amountAsset: amountAsset,
-    assets: assets,
+    amountAssets: amountAssets,
+    assets: [operationAsset, ...amountAssets],
   );
 }

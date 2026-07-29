@@ -90,6 +90,8 @@ class TopicRule {
     this.focusTechniques,
     this.focusTechniqueN,
     this.focusCap,
+    this.balanceAmounts,
+    this.crossBoundary,
   });
 
   final List<int> candidateAmounts;
@@ -108,6 +110,12 @@ class TopicRule {
 
   /// Default true if focusAmounts/focusTechniques set. false для Просто 1.
   final bool? focusCap;
+
+  /// Десятки/сотни: не закреплять ±10/±100.
+  final bool? balanceAmounts;
+
+  /// Переход через N: prefer + isValidChain.
+  final int? crossBoundary;
 }
 
 class Chain {

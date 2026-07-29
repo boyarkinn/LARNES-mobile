@@ -60,22 +60,23 @@ bool _isFocusBrother(Technique technique, int? n) {
       (n == null || technique.n == n);
 }
 
-TopicAllows _allowsBrother(int? n, List<int> priorNs) {
-  return (value, step, technique) {
-    if (technique.kind == TechniqueKind.brother) {
-      if (n == null) {
-        return true;
-      }
-
-      return technique.n == n || priorNs.contains(technique.n);
-    }
-
-    if (technique.kind == TechniqueKind.direct) {
+bool _isAllowedBrotherTechnique(Technique technique, int? n, List<int> priorNs) {
+  if (technique.kind == TechniqueKind.brother) {
+    if (n == null) {
       return true;
     }
+    return technique.n == n || priorNs.contains(technique.n);
+  }
+  return technique.kind == TechniqueKind.direct;
+}
 
-    return false;
-  };
+TopicAllows _allowsBrother(int? n, List<int> priorNs, int totalRods) {
+  return (value, step, _) => everyPlaceTechnique(
+        value,
+        step,
+        totalRods,
+        (technique) => _isAllowedBrotherTechnique(technique, n, priorNs),
+      );
 }
 
 TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
@@ -118,7 +119,16 @@ TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
   };
 }
 
-List<int> _candidatesForBrotherDigit(int n, int rods, List<int> priorNs) {
+List<int> _candidatesForBrotherDigit(
+  int n,
+  int rods,
+  List<int> priorNs, {
+  required bool includeOnes,
+}) {
+  if (!includeOnes) {
+    return _rangeInclusive(10, 99);
+  }
+
   final amounts = {..._rangeInclusive(1, 9)};
 
   for (final brotherN in [n, ...priorNs]) {
@@ -128,9 +138,9 @@ List<int> _candidatesForBrotherDigit(int n, int rods, List<int> priorNs) {
   return amounts.toList();
 }
 
-({int n, int rods})? _parseBrotherDigitTopic(TopicId topicId) {
-  final match =
-      RegExp(r'^brother-([1-4])-(1digit|2digit)$').firstMatch(topicId);
+({int n, int rods, String width})? _parseBrotherDigitTopic(TopicId topicId) {
+  final match = RegExp(r'^brother-([1-4])-(1digit|2digit-1digit|2digit)$')
+      .firstMatch(topicId);
 
   if (match == null) {
     return null;
@@ -142,7 +152,8 @@ List<int> _candidatesForBrotherDigit(int n, int rods, List<int> priorNs) {
     return null;
   }
 
-  return (n: n, rods: match.group(2) == '1digit' ? 1 : 2);
+  final width = match.group(2)!;
+  return (n: n, rods: width == '1digit' ? 1 : 2, width: width);
 }
 
 /// `amountScope` deprecated — 2/3 знака всегда с младшими.
@@ -161,14 +172,27 @@ TopicRule? createBrotherTopicRule(
   if (parsed != null) {
     final n = parsed.n;
     final rods = parsed.rods;
+    final width = parsed.width;
     final priorNs = _priorBrotherNs(n);
-    final candidates = _candidatesForBrotherDigit(n, rods, priorNs);
+    final includeOnes = width != '2digit';
+    final candidates = _candidatesForBrotherDigit(
+      n,
+      rods,
+      priorNs,
+      includeOnes: includeOnes,
+    );
+    final techniqueValidator = _createBrotherChainValidator(rods, n);
+    final TopicChainValidator widthValidator = width == '2digit-1digit'
+        ? (steps, _) => chainHasMixedDigitWidths(steps)
+        : width == '2digit'
+            ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
+            : (_, __) => true;
 
     return _rule(
       rods,
       candidates,
-      _allowsBrother(n, priorNs),
-      _createBrotherChainValidator(rods, n),
+      _allowsBrother(n, priorNs, rods),
+      andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
     );
   }
@@ -183,7 +207,7 @@ TopicRule? createBrotherTopicRule(
     return _rule(
       3,
       candidates,
-      _allowsBrother(null, const []),
+      _allowsBrother(null, const [], 3),
       _createBrotherChainValidator(3, null),
     );
   }

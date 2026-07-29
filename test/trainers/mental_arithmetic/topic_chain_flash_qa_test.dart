@@ -26,10 +26,16 @@ const _regressionCases = [
     stepPauseSec: 1,
   ),
   _RegressionCase(
-    topicId: 'simple-2digit',
+    topicId: 'simple-2digit-1digit',
     actionCount: 5,
     signMode: 'add',
     stepPauseSec: 0.5,
+  ),
+  _RegressionCase(
+    topicId: 'simple-2digit',
+    actionCount: 5,
+    signMode: 'mix',
+    stepPauseSec: 1,
   ),
   _RegressionCase(
     topicId: 'brother-4-1digit',

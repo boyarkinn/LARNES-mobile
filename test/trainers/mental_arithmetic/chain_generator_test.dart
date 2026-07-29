@@ -72,9 +72,19 @@ void main() {
     test('spot-check MVP topics stay in-topic', () {
       const cases = [
         ('simple-1', 'mix', 'topic'),
-        ('simple-2digit', 'add', 'withLower'),
+        ('simple-2digit-1digit', 'add', 'withLower'),
+        ('simple-2digit', 'mix', 'withLower'),
+        ('brother-4-2digit-1digit', 'mix', 'topic'),
+        ('brother-4-2digit', 'mix', 'topic'),
         ('brother-4-1digit', 'mix', 'topic'),
         ('friend-9-1digit', 'mix', 'topic'),
+        ('transition-50', 'mix', 'topic'),
+        ('transition-100', 'mix', 'topic'),
+        ('friend-brother-6-1digit', 'mix', 'topic'),
+        ('friend-brother-8-2digit', 'mix', 'topic'),
+        ('anzan-1digit-mix', 'mix', 'topic'),
+        ('anzan-2digit-add', 'sub', 'topic'),
+        ('anzan-3digit', 'mix', 'topic'),
       ];
 
       for (final (topicId, signMode, amountScope) in cases) {

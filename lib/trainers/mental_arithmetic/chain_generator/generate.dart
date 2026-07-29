@@ -2,10 +2,12 @@
 
 import 'dart:math';
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/anzan_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topic_rule.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/transition_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
 const _maxChainRestarts = 800;
@@ -73,10 +75,12 @@ GenerateConfig assertGenerateConfig(GenerateConfig config) {
 
   getTopicMeta(topicId);
 
+  final anzanSign = resolveAnzanSignMode(topicId);
+
   return GenerateConfig(
     actionCount: actionCount,
     amountScope: rawScope,
-    signMode: config.signMode,
+    signMode: anzanSign ?? config.signMode,
     topicId: topicId,
   );
 }
@@ -322,6 +326,36 @@ Chain? _tryBuildChain(
       }
 
       _shuffleInPlace(pool, random);
+      if (rule.balanceAmounts == true) {
+        final amountCounts = <int, int>{};
+        for (final placedStep in steps) {
+          amountCounts[placedStep.amount] =
+              (amountCounts[placedStep.amount] ?? 0) + 1;
+        }
+        pool.sort(
+          (left, right) =>
+              (amountCounts[left.amount] ?? 0)
+                  .compareTo(amountCounts[right.amount] ?? 0),
+        );
+      }
+      final boundary = rule.crossBoundary;
+      if (boundary != null &&
+          !chainCrossesBoundary(intermediates, boundary)) {
+        final crossing = pool.where((candidate) {
+          final next = tryApplyChainStep(value, candidate, rule.totalRods);
+          return next != null &&
+              stepCrossesBoundary(value, next, boundary);
+        }).toList();
+        if (crossing.isNotEmpty) {
+          final urgent =
+              stepIndex >= config.actionCount - 2 || random() < 0.55;
+          if (urgent) {
+            pool
+              ..clear()
+              ..addAll(crossing);
+          }
+        }
+      }
       var step = pool[0];
       if (useFocusSlots) {
         final previous = steps.isEmpty ? null : steps.last;

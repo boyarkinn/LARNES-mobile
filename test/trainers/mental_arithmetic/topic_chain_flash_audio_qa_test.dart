@@ -15,6 +15,7 @@ void main() {
       expect(shouldPlayFlashAudio(2), isTrue);
       expect(flashAudioPlaybackRate(1), 2);
       expect(flashAudioPlaybackRate(2), 1);
+      expect(flashAudioPlaybackRate(5), 1);
     });
 
     test('resolves assets for simple-1 and simple-hundreds chains', () {

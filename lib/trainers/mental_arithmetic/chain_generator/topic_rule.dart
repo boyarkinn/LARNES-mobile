@@ -1,9 +1,12 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/topic-rule.ts`
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/anzan_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/brother_rules.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/friend_brother_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/friend_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/transition_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
 class TopicRuleNotImplementedError implements Exception {
@@ -60,6 +63,21 @@ TopicRule getTopicRule(String topicId, [AmountScope amountScope = 'withLower']) 
   final friendRule = createFriendTopicRule(topicId, amountScope);
   if (friendRule != null) {
     return friendRule;
+  }
+
+  final transitionRule = createTransitionTopicRule(topicId, amountScope);
+  if (transitionRule != null) {
+    return transitionRule;
+  }
+
+  final friendBrotherRule = createFriendBrotherTopicRule(topicId, amountScope);
+  if (friendBrotherRule != null) {
+    return friendBrotherRule;
+  }
+
+  final anzanRule = createAnzanTopicRule(topicId, amountScope);
+  if (anzanRule != null) {
+    return anzanRule;
   }
 
   getTopicMeta(topicId);

@@ -77,30 +77,33 @@ bool violatesFriendFiftyZone(int value, ChainStep step) {
   return false;
 }
 
-TopicAllows _allowsFriend(int? n, List<int> priorNs) {
-  return (value, step, technique) {
+bool _isAllowedFriendTechnique(Technique technique, int? n, List<int> priorNs) {
+  if (technique.kind == TechniqueKind.friend ||
+      technique.kind == TechniqueKind.friendBrother) {
+    if (n == null) {
+      return true;
+    }
+    return technique.n == n || priorNs.contains(technique.n);
+  }
+
+  if (technique.kind == TechniqueKind.brother) {
+    return _brotherNs.contains(technique.n);
+  }
+
+  return technique.kind == TechniqueKind.direct;
+}
+
+TopicAllows _allowsFriend(int? n, List<int> priorNs, int totalRods) {
+  return (value, step, _) {
     if (violatesFriendFiftyZone(value, step)) {
       return false;
     }
-
-    if (technique.kind == TechniqueKind.friend ||
-        technique.kind == TechniqueKind.friendBrother) {
-      if (n == null) {
-        return true;
-      }
-
-      return technique.n == n || priorNs.contains(technique.n);
-    }
-
-    if (technique.kind == TechniqueKind.brother) {
-      return _brotherNs.contains(technique.n);
-    }
-
-    if (technique.kind == TechniqueKind.direct) {
-      return true;
-    }
-
-    return false;
+    return everyPlaceTechnique(
+      value,
+      step,
+      totalRods,
+      (technique) => _isAllowedFriendTechnique(technique, n, priorNs),
+    );
   };
 }
 
@@ -144,7 +147,16 @@ TopicChainValidator _createFriendChainValidator(int totalRods, int? n) {
   };
 }
 
-List<int> _candidatesForFriendDigit(int n, int placeWidth, List<int> priorNs) {
+List<int> _candidatesForFriendDigit(
+  int n,
+  int placeWidth,
+  List<int> priorNs, {
+  required bool includeOnes,
+}) {
+  if (!includeOnes) {
+    return _rangeInclusive(10, 99);
+  }
+
   final amounts = {..._rangeInclusive(1, 9)};
 
   for (final friendN in [n, ...priorNs]) {
@@ -163,7 +175,8 @@ List<int> _candidatesForFriendDigit(int n, int placeWidth, List<int> priorNs) {
 }
 
 ({int n, String width})? _parseFriendDigitTopic(String topicId) {
-  final match = RegExp(r'^friend-([1-9])-(1digit|2digit)$').firstMatch(topicId);
+  final match =
+      RegExp(r'^friend-([1-9])-(1digit|2digit-1digit|2digit)$').firstMatch(topicId);
   if (match == null) {
     return null;
   }
@@ -193,14 +206,26 @@ TopicRule? createFriendTopicRule(
     final n = parsed.n;
     final width = parsed.width;
     final placeWidth = width == '1digit' ? 1 : 2;
+    final includeOnes = width != '2digit';
     final priorNs = _priorFriendNs(n);
-    final candidates = _candidatesForFriendDigit(n, placeWidth, priorNs);
+    final candidates = _candidatesForFriendDigit(
+      n,
+      placeWidth,
+      priorNs,
+      includeOnes: includeOnes,
+    );
+    final techniqueValidator = _createFriendChainValidator(2, n);
+    final TopicChainValidator widthValidator = width == '2digit-1digit'
+        ? (steps, _) => chainHasMixedDigitWidths(steps)
+        : width == '2digit'
+            ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
+            : (_, __) => true;
 
     return _rule(
       2,
       candidates,
-      _allowsFriend(n, priorNs),
-      _createFriendChainValidator(2, n),
+      _allowsFriend(n, priorNs, 2),
+      andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
     );
   }
@@ -215,7 +240,7 @@ TopicRule? createFriendTopicRule(
     return _rule(
       3,
       candidates,
-      _allowsFriend(null, const []),
+      _allowsFriend(null, const [], 3),
       _createFriendChainValidator(3, null),
     );
   }

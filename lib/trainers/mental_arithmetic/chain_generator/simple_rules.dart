@@ -3,6 +3,7 @@
 /// Просто N: focus ±N + prior ±1…±(N−1); анти-откат жёсткий кроме Просто 5;
 /// 2/3 знака всегда с младшими; десятки/сотни — исключения без prior.
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
@@ -22,6 +23,31 @@ bool _isDirect(Technique technique) => technique.kind == TechniqueKind.direct;
 
 /// Как в старой МА: Просто 1–4 → ≤4; 5–9 → ≤9.
 int simpleIntermediateMax(int digit) => digit <= 4 ? 4 : 9;
+
+bool isOneDigitAmount(int amount) => amount >= 1 && amount <= 9;
+
+bool isTwoDigitAmount(int amount) => amount >= 10 && amount <= 99;
+
+bool chainHasMixedDigitWidths(List<ChainStep> steps) {
+  return steps.any((step) => isOneDigitAmount(step.amount)) &&
+      steps.any((step) => isTwoDigitAmount(step.amount));
+}
+
+bool chainIsOnlyTwoDigitAmounts(List<ChainStep> steps) {
+  return steps.isNotEmpty &&
+      steps.every((step) => isTwoDigitAmount(step.amount));
+}
+
+TopicChainValidator andChainValidators(List<TopicChainValidator> validators) {
+  return (steps, intermediates) {
+    for (final validator in validators) {
+      if (!validator(steps, intermediates)) {
+        return false;
+      }
+    }
+    return true;
+  };
+}
 
 bool isImmediateReverse(ChainStep? previous, ChainStep next) {
   return previous != null &&
@@ -66,6 +92,7 @@ TopicRule _rule(
   TopicAllows allows, {
   List<int>? focusAmounts,
   bool? focusCap,
+  bool? balanceAmounts,
   TopicChainValidator? isValidChain,
 }) {
   return TopicRule(
@@ -74,12 +101,39 @@ TopicRule _rule(
     totalRods: totalRods,
     focusAmounts: focusAmounts,
     focusCap: focusCap,
+    balanceAmounts: balanceAmounts,
     isValidChain: isValidChain,
   );
 }
 
-bool _allowsDirectOnly(int value, ChainStep step, Technique technique) {
-  return _isDirect(technique);
+/// Десятки/сотни: ≥2 разных операнда; ни один не чаще ⌊len/2⌋.
+TopicChainValidator _createRoundPlaceChainValidator() {
+  return (steps, intermediates) {
+    if (steps.length < 3) {
+      return true;
+    }
+
+    final counts = <int, int>{};
+    for (final step in steps) {
+      counts[step.amount] = (counts[step.amount] ?? 0) + 1;
+    }
+
+    if (counts.length < 2) {
+      return false;
+    }
+
+    final maxCount = counts.values.reduce((a, b) => a > b ? a : b);
+    return maxCount <= steps.length ~/ 2;
+  };
+}
+
+TopicAllows _allowsDirectOnly(int totalRods) {
+  return (value, step, _) => everyPlaceTechnique(
+        value,
+        step,
+        totalRods,
+        (technique) => _isDirect(technique),
+      );
 }
 
 int? _parseSimpleDigitTopic(String topicId) {
@@ -161,16 +215,6 @@ TopicRule? createSimpleTopicRule(TopicId topicId, [AmountScope amountScope = 'wi
 
   final digit = _parseSimpleDigitTopic(topicId);
 
-  if (digit == 0) {
-    return _rule(1, _rangeInclusive(1, 4), (value, step, technique) {
-      if (!_isDirect(technique)) {
-        return false;
-      }
-      final next = _nextValue(value, step);
-      return next >= 0 && next <= 4;
-    });
-  }
-
   if (digit != null) {
     final intermediateMax = simpleIntermediateMax(digit);
 
@@ -195,8 +239,13 @@ TopicRule? createSimpleTopicRule(TopicId topicId, [AmountScope amountScope = 'wi
     return _rule(
       2,
       [..._rangeInclusive(1, 9), ...focusAmounts],
-      (value, step, technique) {
-        if (!_isDirect(technique)) {
+      (value, step, _) {
+        if (!everyPlaceTechnique(
+          value,
+          step,
+          2,
+          (technique) => _isDirect(technique),
+        )) {
           return false;
         }
 
@@ -220,24 +269,52 @@ TopicRule? createSimpleTopicRule(TopicId topicId, [AmountScope amountScope = 'wi
   }
 
   if (topicId == 'simple-tens') {
-    return _rule(2, _tensAmounts(), _allowsDirectOnly);
+    return _rule(
+      2,
+      _tensAmounts(),
+      _allowsDirectOnly(2),
+      balanceAmounts: true,
+      isValidChain: _createRoundPlaceChainValidator(),
+    );
   }
 
   if (topicId == 'simple-hundreds') {
-    return _rule(3, _hundredsAmounts(), _allowsDirectOnly);
+    return _rule(
+      3,
+      _hundredsAmounts(),
+      _allowsDirectOnly(3),
+      balanceAmounts: true,
+      isValidChain: _createRoundPlaceChainValidator(),
+    );
   }
 
-  if (topicId == 'simple-2digit') {
+  if (topicId == 'simple-2digit-1digit') {
     final focusAmounts = _rangeInclusive(10, 99);
     return _rule(
       2,
       [..._rangeInclusive(1, 9), ...focusAmounts],
-      _allowsDirectOnly,
+      _allowsDirectOnly(2),
       focusAmounts: focusAmounts,
       focusCap: true,
-      isValidChain: _createRangeFocusChainValidator(
-        (amount) => amount >= 10 && amount <= 99,
-      ),
+      isValidChain: andChainValidators([
+        _createRangeFocusChainValidator(
+          (amount) => amount >= 10 && amount <= 99,
+        ),
+        (steps, _) => chainHasMixedDigitWidths(steps),
+      ]),
+    );
+  }
+
+  if (topicId == 'simple-2digit') {
+    return _rule(
+      2,
+      _rangeInclusive(10, 99),
+      _allowsDirectOnly(2),
+      balanceAmounts: true,
+      isValidChain: andChainValidators([
+        (steps, _) => chainIsOnlyTwoDigitAmounts(steps),
+        (steps, _) => hasEnoughSimpleTopicVariation(steps, 0),
+      ]),
     );
   }
 
@@ -246,7 +323,7 @@ TopicRule? createSimpleTopicRule(TopicId topicId, [AmountScope amountScope = 'wi
     return _rule(
       3,
       [..._rangeInclusive(1, 9), ..._rangeInclusive(10, 99), ...focusAmounts],
-      _allowsDirectOnly,
+      _allowsDirectOnly(3),
       focusAmounts: focusAmounts,
       focusCap: true,
       isValidChain: _createRangeFocusChainValidator(

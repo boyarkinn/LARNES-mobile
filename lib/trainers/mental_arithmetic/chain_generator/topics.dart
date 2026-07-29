@@ -20,7 +20,7 @@ class TopicMeta {
   final int totalRods;
 }
 
-const _simpleDigitTopics = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const _simpleDigitTopics = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const _brotherNs = [4, 3, 2, 1];
 const _friendNs = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 const _friendBrotherNs = [6, 7, 8, 9];
@@ -43,6 +43,13 @@ List<TopicMeta> _buildTopicCatalog() {
   topics.addAll(const [
     TopicMeta(
       block: TopicBlock.simple,
+      id: 'simple-tens',
+      label: 'Просто десятки',
+      status: TopicStatus.mvp,
+      totalRods: 2,
+    ),
+    TopicMeta(
+      block: TopicBlock.simple,
       id: 'simple-11-19',
       label: 'Просто 11–19',
       status: TopicStatus.mvp,
@@ -50,8 +57,15 @@ List<TopicMeta> _buildTopicCatalog() {
     ),
     TopicMeta(
       block: TopicBlock.simple,
-      id: 'simple-tens',
-      label: 'Просто десятки',
+      id: 'simple-2digit',
+      label: 'Просто двузначные',
+      status: TopicStatus.mvp,
+      totalRods: 2,
+    ),
+    TopicMeta(
+      block: TopicBlock.simple,
+      id: 'simple-2digit-1digit',
+      label: 'Просто двузначные + однозначные',
       status: TopicStatus.mvp,
       totalRods: 2,
     ),
@@ -61,13 +75,6 @@ List<TopicMeta> _buildTopicCatalog() {
       label: 'Просто сотни',
       status: TopicStatus.mvp,
       totalRods: 3,
-    ),
-    TopicMeta(
-      block: TopicBlock.simple,
-      id: 'simple-2digit',
-      label: 'Просто двузначные',
-      status: TopicStatus.mvp,
-      totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.simple,
@@ -93,6 +100,15 @@ List<TopicMeta> _buildTopicCatalog() {
         block: TopicBlock.brother,
         id: 'brother-$n-2digit',
         label: 'Брат $n двузначные',
+        status: TopicStatus.mvp,
+        totalRods: 2,
+      ),
+    );
+    topics.add(
+      TopicMeta(
+        block: TopicBlock.brother,
+        id: 'brother-$n-2digit-1digit',
+        label: 'Брат $n двузначные + однозначные',
         status: TopicStatus.mvp,
         totalRods: 2,
       ),
@@ -128,6 +144,15 @@ List<TopicMeta> _buildTopicCatalog() {
         totalRods: 2,
       ),
     );
+    topics.add(
+      TopicMeta(
+        block: TopicBlock.friend,
+        id: 'friend-$n-2digit-1digit',
+        label: 'Друг $n двузначные + однозначные',
+        status: TopicStatus.mvp,
+        totalRods: 2,
+      ),
+    );
   }
 
   topics.add(
@@ -145,14 +170,14 @@ List<TopicMeta> _buildTopicCatalog() {
       block: TopicBlock.transition,
       id: 'transition-50',
       label: 'Переход через 50',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.transition,
       id: 'transition-100',
       label: 'Переход через 100',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 3,
     ),
   ]);
@@ -163,8 +188,8 @@ List<TopicMeta> _buildTopicCatalog() {
         block: TopicBlock.friendBrother,
         id: 'friend-brother-$n-1digit',
         label: 'Друг + брат $n однозначные',
-        status: TopicStatus.later,
-        totalRods: 1,
+        status: TopicStatus.mvp,
+        totalRods: 2,
       ),
     );
     topics.add(
@@ -172,7 +197,7 @@ List<TopicMeta> _buildTopicCatalog() {
         block: TopicBlock.friendBrother,
         id: 'friend-brother-$n-2digit',
         label: 'Друг + брат $n двузначные',
-        status: TopicStatus.later,
+        status: TopicStatus.mvp,
         totalRods: 2,
       ),
     );
@@ -183,49 +208,49 @@ List<TopicMeta> _buildTopicCatalog() {
       block: TopicBlock.anzan,
       id: 'anzan-1digit-add',
       label: 'Анзан однозначные сложение',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 1,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-1digit-sub',
       label: 'Анзан однозначные вычитание',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 1,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-1digit-mix',
       label: 'Анзан однозначные',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 1,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-2digit-add',
       label: 'Анзан двузначные сложение',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-2digit-sub',
       label: 'Анзан двузначные вычитание',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-2digit-mix',
       label: 'Анзан двузначные',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 2,
     ),
     TopicMeta(
       block: TopicBlock.anzan,
       id: 'anzan-3digit',
       label: 'Анзан трёхзначные',
-      status: TopicStatus.later,
+      status: TopicStatus.mvp,
       totalRods: 3,
     ),
   ]);

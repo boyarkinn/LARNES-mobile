@@ -108,13 +108,30 @@ int _pow10(int place) {
   return result;
 }
 
-Technique classifyStep(int value, ChainStep step, int totalRods) {
+class PlaceTechnique {
+  const PlaceTechnique({
+    required this.digitAmount,
+    required this.place,
+    required this.technique,
+  });
+
+  final int digitAmount;
+  final int place;
+  final Technique technique;
+}
+
+/// Поразрядная классификация — чтобы не пропускать чужой brother/friend на другом стержне.
+List<PlaceTechnique> classifyStepPlaces(
+  int value,
+  ChainStep step,
+  int totalRods,
+) {
   applyChainStep(value, step, totalRods);
 
   var currentValue = value < 0 ? 0 : value;
   var remaining = step.amount;
   var place = 0;
-  var result = const Technique.direct();
+  final places = <PlaceTechnique>[];
 
   while (remaining > 0) {
     final digitAmount = remaining % 10;
@@ -130,10 +147,16 @@ Technique classifyStep(int value, ChainStep step, int totalRods) {
       }
 
       final digit = beadsToDigit(rods[rodIndex]);
-      final part = step.sign == '+'
+      final technique = step.sign == '+'
           ? classifyAddDigit(digit, digitAmount)
           : classifySubDigit(digit, digitAmount);
-      result = _pickStronger(result, part);
+      places.add(
+        PlaceTechnique(
+          digitAmount: digitAmount,
+          place: place,
+          technique: technique,
+        ),
+      );
       currentValue = applyChainStep(currentValue, micro, totalRods);
     }
 
@@ -141,5 +164,25 @@ Technique classifyStep(int value, ChainStep step, int totalRods) {
     place += 1;
   }
 
+  return places;
+}
+
+bool everyPlaceTechnique(
+  int value,
+  ChainStep step,
+  int totalRods,
+  bool Function(Technique technique) predicate,
+) {
+  final places = classifyStepPlaces(value, step, totalRods);
+  return places.isNotEmpty &&
+      places.every((entry) => predicate(entry.technique));
+}
+
+Technique classifyStep(int value, ChainStep step, int totalRods) {
+  final places = classifyStepPlaces(value, step, totalRods);
+  var result = const Technique.direct();
+  for (final entry in places) {
+    result = _pickStronger(result, entry.technique);
+  }
   return result;
 }

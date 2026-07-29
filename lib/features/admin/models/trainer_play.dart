@@ -216,7 +216,7 @@ Map<String, dynamic> buildPlayParamsPayload(
   if (config.trainerKey == 'topic-chain-flash') {
     return {
       'actionCount': coerceInt(values['actionCount']) ?? 5,
-      'amountScope': values['amountScope'] ?? 'topic',
+      'exampleCount': coerceInt(values['exampleCount']) ?? 1,
       'signMode': values['signMode'] ?? 'mix',
       'stepPauseSec': coerceDouble(values['stepPauseSec']) ?? 1,
       'topicId': values['chainTopicId'] ?? values['topicId'] ?? 'simple-1',

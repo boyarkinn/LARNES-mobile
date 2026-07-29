@@ -1,22 +1,40 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/friend-rules.ts`
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
 const _friendNs = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const _brotherNs = [1, 2, 3, 4];
+
+/// Порядок преподавания в школе (не 1→9).
+const _friendSchoolOrder = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 
 bool _isFriendN(int value) => value >= 1 && value <= 9;
+
+List<int> _priorFriendNs(int n) {
+  final index = _friendSchoolOrder.indexOf(n);
+  return index <= 0 ? const [] : _friendSchoolOrder.sublist(0, index);
+}
+
+List<int> _rangeInclusive(int from, int to) {
+  return [for (var amount = from; amount <= to; amount++) amount];
+}
 
 TopicRule _rule(
   int totalRods,
   List<int> candidateAmounts,
   TopicAllows allows,
-  TopicChainValidator isValidChain,
-) {
+  TopicChainValidator isValidChain, {
+  int? focusTechniqueN,
+}) {
   return TopicRule(
     allows: allows,
     candidateAmounts: candidateAmounts,
+    focusCap: true,
+    focusTechniqueN: focusTechniqueN,
+    focusTechniques: const [TechniqueKind.friend, TechniqueKind.friendBrother],
     isValidChain: isValidChain,
     totalRods: totalRods,
   );
@@ -33,31 +51,6 @@ List<int> _placeAmountsForFriend(int n, int totalRods) {
   return amounts;
 }
 
-bool _isFriendOperandAmount(int amount, int? n) {
-  if (n != null) {
-    return amount == n || amount == n * 10 || amount == n * 100;
-  }
-
-  return _friendNs.any((friendN) => _isFriendOperandAmount(amount, friendN));
-}
-
-List<int> _setupAmountsForFriend(int? n, int placeWidth) {
-  if (n == null) {
-    return _friendNs
-        .expand((friendN) => _placeAmountsForFriend(friendN, placeWidth))
-        .toList();
-  }
-
-  final amounts = _placeAmountsForFriend(n, placeWidth);
-  final complement = 10 - n;
-
-  if (complement >= 1 && complement <= 9 && complement != n) {
-    amounts.addAll(_placeAmountsForFriend(complement, placeWidth));
-  }
-
-  return {...amounts}.toList();
-}
-
 bool _isTargetFriendTechnique(Technique technique, int? n) {
   if (technique.kind != TechniqueKind.friend &&
       technique.kind != TechniqueKind.friendBrother) {
@@ -67,23 +60,43 @@ bool _isTargetFriendTechnique(Technique technique, int? n) {
   return n == null || technique.n == n;
 }
 
-TopicAllows _allowsFriend(int? n, List<int> setupAmounts) {
-  return (value, step, technique) {
-    if (_isTargetFriendTechnique(technique, n)) {
-      return n == null || _isFriendOperandAmount(step.amount, n);
-    }
+/// Запрет старой МА: переходы 41…49 ±1…9 ↔ 50.
+bool violatesFriendFiftyZone(int value, ChainStep step) {
+  if (step.amount < 1 || step.amount > 9) {
+    return false;
+  }
 
-    if (!setupAmounts.contains(step.amount)) {
+  if (step.sign == '+' && value >= 41 && value <= 49) {
+    return value + step.amount == 50;
+  }
+
+  if (step.sign == '-' && value == 50) {
+    return true;
+  }
+
+  return false;
+}
+
+TopicAllows _allowsFriend(int? n, List<int> priorNs) {
+  return (value, step, technique) {
+    if (violatesFriendFiftyZone(value, step)) {
       return false;
     }
 
-    if (technique.kind == TechniqueKind.direct) {
-      return true;
+    if (technique.kind == TechniqueKind.friend ||
+        technique.kind == TechniqueKind.friendBrother) {
+      if (n == null) {
+        return true;
+      }
+
+      return technique.n == n || priorNs.contains(technique.n);
     }
 
-    if (technique.kind == TechniqueKind.brother &&
-        _isFriendOperandAmount(step.amount, n) &&
-        (n == null || technique.n == n)) {
+    if (technique.kind == TechniqueKind.brother) {
+      return _brotherNs.contains(technique.n);
+    }
+
+    if (technique.kind == TechniqueKind.direct) {
       return true;
     }
 
@@ -93,17 +106,60 @@ TopicAllows _allowsFriend(int? n, List<int> setupAmounts) {
 
 TopicChainValidator _createFriendChainValidator(int totalRods, int? n) {
   return (steps, intermediates) {
+    final focusIndices = <int>[];
+    var priorCount = 0;
+
     for (var index = 0; index < steps.length; index++) {
       final technique =
           classifyStep(intermediates[index], steps[index], totalRods);
 
       if (_isTargetFriendTechnique(technique, n)) {
-        return true;
+        focusIndices.add(index);
+      } else {
+        priorCount += 1;
       }
     }
 
-    return false;
+    if (focusIndices.isEmpty) {
+      return false;
+    }
+
+    if (focusIndices.length > (steps.length / 2).floor()) {
+      return false;
+    }
+
+    if (steps.length >= 5 && !focusIndices.any((index) => index >= 2)) {
+      return false;
+    }
+
+    if (steps.length >= 4 && priorCount < 1) {
+      return false;
+    }
+
+    if (!hasEnoughSimpleTopicVariation(steps, 0)) {
+      return false;
+    }
+
+    return true;
   };
+}
+
+List<int> _candidatesForFriendDigit(int n, int placeWidth, List<int> priorNs) {
+  final amounts = {..._rangeInclusive(1, 9)};
+
+  for (final friendN in [n, ...priorNs]) {
+    amounts.addAll(_placeAmountsForFriend(friendN, placeWidth));
+    final complement = 10 - friendN;
+    if (complement >= 1 && complement <= 9) {
+      amounts.addAll(_placeAmountsForFriend(complement, placeWidth));
+    }
+  }
+
+  for (final brotherN in _brotherNs) {
+    amounts.addAll(_placeAmountsForFriend(brotherN, placeWidth));
+  }
+
+  return amounts.toList();
 }
 
 ({int n, String width})? _parseFriendDigitTopic(String topicId) {
@@ -120,7 +176,11 @@ TopicChainValidator _createFriendChainValidator(int totalRods, int? n) {
   return (n: n, width: match.group(2)!);
 }
 
-TopicRule? createFriendTopicRule(String topicId, AmountScope amountScope) {
+/// `amountScope` deprecated — 2/3 знака всегда с младшими.
+TopicRule? createFriendTopicRule(
+  String topicId, [
+  AmountScope amountScope = 'withLower',
+]) {
   final meta = getTopicMeta(topicId);
 
   if (meta.block != TopicBlock.friend) {
@@ -133,34 +193,29 @@ TopicRule? createFriendTopicRule(String topicId, AmountScope amountScope) {
     final n = parsed.n;
     final width = parsed.width;
     final placeWidth = width == '1digit' ? 1 : 2;
-    final setupAmounts = _setupAmountsForFriend(n, placeWidth);
-    final candidates = amountScope == 'withLower' && width == '2digit'
-        ? {..._setupAmountsForFriend(n, 1), ...setupAmounts}.toList()
-        : setupAmounts;
+    final priorNs = _priorFriendNs(n);
+    final candidates = _candidatesForFriendDigit(n, placeWidth, priorNs);
 
     return _rule(
       2,
       candidates,
-      _allowsFriend(n, candidates),
+      _allowsFriend(n, priorNs),
       _createFriendChainValidator(2, n),
+      focusTechniqueN: n,
     );
   }
 
   if (topicId == 'friend-3digit') {
-    final topicOnly =
-        _friendNs.expand((n) => _placeAmountsForFriend(n, 3)).toList();
-    final candidates = amountScope == 'withLower'
-        ? {
-            ..._setupAmountsForFriend(null, 1),
-            ..._setupAmountsForFriend(null, 2),
-            ...topicOnly,
-          }.toList()
-        : {...topicOnly}.toList();
+    final candidates = {
+      ..._rangeInclusive(1, 9),
+      ..._friendNs.expand((n) => _placeAmountsForFriend(n, 2)),
+      ..._friendNs.expand((n) => _placeAmountsForFriend(n, 3)),
+    }.toList();
 
     return _rule(
       3,
       candidates,
-      _allowsFriend(null, candidates),
+      _allowsFriend(null, const []),
       _createFriendChainValidator(3, null),
     );
   }

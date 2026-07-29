@@ -46,7 +46,7 @@ TopicRule createOpenTopicRule(int totalRods) {
   );
 }
 
-TopicRule getTopicRule(String topicId, [AmountScope amountScope = 'topic']) {
+TopicRule getTopicRule(String topicId, [AmountScope amountScope = 'withLower']) {
   final simpleRule = createSimpleTopicRule(topicId, amountScope);
   if (simpleRule != null) {
     return simpleRule;

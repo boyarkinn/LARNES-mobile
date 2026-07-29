@@ -307,6 +307,7 @@
   "adminTrainerPlayExampleStringLabel": "Пример",
   "adminTrainerPlayChainTopicIdLabel": "Тема цепочки",
   "adminTrainerPlayActionCountLabel": "Количество действий",
+  "adminTrainerPlayExampleCountLabel": "Количество примеров",
   "adminTrainerPlaySignModeLabel": "Знаки",
   "adminTrainerPlayAmountScopeLabel": "Операнды",
   "adminTrainerPlayValueLabel": "Значение",

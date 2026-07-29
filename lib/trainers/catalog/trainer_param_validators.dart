@@ -293,8 +293,8 @@ ValidateTrainerParamsResult validateDigitTraceParams(Map<String, dynamic> raw) {
 ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> raw) {
   final topicId = raw['topicId'];
   final actionCount = coerceInt(raw['actionCount']);
+  final exampleCount = coerceInt(raw['exampleCount']) ?? 1;
   final signMode = raw['signMode'];
-  final amountScopeRaw = raw['amountScope'];
   final stepPauseSec = coerceDouble(raw['stepPauseSec']);
 
   if (topicId is! String || !isTopicId(topicId)) {
@@ -305,14 +305,10 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
       actionCount > kActionCountMax) {
     return _fail('Некорректные параметры.');
   }
-  if (signMode is! String || !isSignMode(signMode)) {
+  if (exampleCount < 1 || exampleCount > 10) {
     return _fail('Некорректные параметры.');
   }
-
-  final amountScope = amountScopeRaw == null || amountScopeRaw == ''
-      ? 'topic'
-      : amountScopeRaw;
-  if (amountScope is! String || !isAmountScope(amountScope)) {
+  if (signMode is! String || !isSignMode(signMode)) {
     return _fail('Некорректные параметры.');
   }
   if (stepPauseSec == null || stepPauseSec < 0.1 || stepPauseSec > 30) {
@@ -321,7 +317,7 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
 
   return ValidateTrainerParamsResult.success({
     'actionCount': actionCount,
-    'amountScope': amountScope,
+    'exampleCount': exampleCount,
     'signMode': signMode,
     'stepPauseSec': stepPauseSec,
     'topicId': topicId,

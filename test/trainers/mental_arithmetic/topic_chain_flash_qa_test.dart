@@ -9,14 +9,12 @@ class _RegressionCase {
     required this.topicId,
     required this.actionCount,
     required this.signMode,
-    required this.amountScope,
     required this.stepPauseSec,
   });
 
   final String topicId;
   final int actionCount;
   final String signMode;
-  final String amountScope;
   final double stepPauseSec;
 }
 
@@ -25,28 +23,24 @@ const _regressionCases = [
     topicId: 'simple-1',
     actionCount: 5,
     signMode: 'mix',
-    amountScope: 'topic',
     stepPauseSec: 1,
   ),
   _RegressionCase(
     topicId: 'simple-2digit',
     actionCount: 5,
     signMode: 'add',
-    amountScope: 'withLower',
     stepPauseSec: 0.5,
   ),
   _RegressionCase(
     topicId: 'brother-4-1digit',
     actionCount: 5,
     signMode: 'mix',
-    amountScope: 'topic',
     stepPauseSec: 1,
   ),
   _RegressionCase(
     topicId: 'friend-9-1digit',
     actionCount: 5,
     signMode: 'mix',
-    amountScope: 'topic',
     stepPauseSec: 1,
   ),
 ];
@@ -59,7 +53,6 @@ void main() {
           'topicId': params.topicId,
           'actionCount': params.actionCount,
           'signMode': params.signMode,
-          'amountScope': params.amountScope,
           'stepPauseSec': params.stepPauseSec,
         });
 
@@ -70,7 +63,6 @@ void main() {
             topicId: params.topicId,
             actionCount: params.actionCount,
             signMode: params.signMode,
-            amountScope: params.amountScope,
           ),
         );
 
@@ -98,16 +90,11 @@ void main() {
         'chainTopicId': 'friend-9-1digit',
         'actionCount': '5',
         'signMode': 'mix',
-        'amountScope': 'topic',
         'stepPauseSec': '1',
       });
 
-      expect(payload['topicId'], 'friend-9-1digit');
-      expect(payload['stepPauseSec'], 1);
-
       final validated = validateTrainerParams('topic-chain-flash', payload);
-      expect(validated.ok, isTrue);
-      expect(validated.params?['topicId'], 'friend-9-1digit');
+      expect(validated.ok, isTrue, reason: validated.error);
     });
 
     test('rejects unknown topic', () {

@@ -1556,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'Number of actions'**
   String get adminTrainerPlayActionCountLabel;
 
+  /// No description provided for @adminTrainerPlayExampleCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of examples'**
+  String get adminTrainerPlayExampleCountLabel;
+
   /// No description provided for @adminTrainerPlaySignModeLabel.
   ///
   /// In en, this message translates to:

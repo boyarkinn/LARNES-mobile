@@ -62,6 +62,7 @@ GenerateConfig assertGenerateConfig(GenerateConfig config) {
     );
   }
 
+  // Curriculum: default withLower; param deprecated.
   final rawScope = config.amountScope;
 
   if (!isAmountScope(rawScope)) {
@@ -152,6 +153,12 @@ bool _isFocusStep(ChainStep step, List<int>? focusAmounts) {
   return focusAmounts != null && focusAmounts.contains(step.amount);
 }
 
+bool _isImmediateReverse(ChainStep? previous, ChainStep next) {
+  return previous != null &&
+      previous.amount == next.amount &&
+      previous.sign != next.sign;
+}
+
 /// Pre-slot: 1…⌊actionCount/2⌋ разных индексов (Просто N>1).
 Set<int> _sampleFocusSlots(int actionCount, double Function() random) {
   final maxFocus = (actionCount / 2).floor();
@@ -180,13 +187,72 @@ Set<int> _sampleFocusSlots(int actionCount, double Function() random) {
   return indices.take(focusCount).toSet();
 }
 
+bool _isFocusTechniqueStep(
+  int value,
+  ChainStep step,
+  int totalRods,
+  List<TechniqueKind> focusTechniques,
+  int? focusTechniqueN,
+) {
+  final technique = classifyStep(value, step, totalRods);
+
+  if (!focusTechniques.contains(technique.kind)) {
+    return false;
+  }
+
+  if (focusTechniqueN == null) {
+    return true;
+  }
+
+  return technique.n == focusTechniqueN;
+}
+
 List<ChainStep> _pickCandidatePool(
   ({List<ChainStep> target, List<ChainStep> setup, List<ChainStep> rest}) groups,
   double Function() random, {
   required List<int>? focusAmounts,
+  required List<TechniqueKind>? focusTechniques,
+  required int? focusTechniqueN,
   required Set<int>? focusSlots,
   required int stepIndex,
+  required int value,
+  required int totalRods,
 }) {
+  if (focusSlots != null &&
+      focusTechniques != null &&
+      focusTechniques.isNotEmpty) {
+    final all = [...groups.target, ...groups.setup, ...groups.rest];
+    final focusSteps = all
+        .where(
+          (step) => _isFocusTechniqueStep(
+            value,
+            step,
+            totalRods,
+            focusTechniques,
+            focusTechniqueN,
+          ),
+        )
+        .toList();
+    final otherSteps = all
+        .where(
+          (step) => !_isFocusTechniqueStep(
+            value,
+            step,
+            totalRods,
+            focusTechniques,
+            focusTechniqueN,
+          ),
+        )
+        .toList();
+
+    // Focus-слот жёстко; prior — soft fallback (как Просто curriculum).
+    if (focusSlots.contains(stepIndex)) {
+      return focusSteps;
+    }
+
+    return otherSteps.isNotEmpty ? otherSteps : focusSteps;
+  }
+
   if (groups.target.isNotEmpty) {
     return groups.target;
   }
@@ -205,14 +271,14 @@ List<ChainStep> _pickCandidatePool(
 
   final focusSteps =
       groups.rest.where((step) => _isFocusStep(step, focusAmounts)).toList();
-  final lowerSteps =
+  final priorSteps =
       groups.rest.where((step) => !_isFocusStep(step, focusAmounts)).toList();
 
   if (focusSlots.contains(stepIndex)) {
     return focusSteps;
   }
 
-  return lowerSteps;
+  return priorSteps.isNotEmpty ? priorSteps : focusSteps;
 }
 
 Chain? _tryBuildChain(
@@ -224,8 +290,12 @@ Chain? _tryBuildChain(
   final intermediates = [0];
   var value = 0;
   final focusAmounts = rule.focusAmounts;
-  final useFocusSlots =
+  final focusTechniques = rule.focusTechniques;
+  final useAmountSlots =
       (focusAmounts?.isNotEmpty ?? false) && rule.focusCap != false;
+  final useTechniqueSlots =
+      (focusTechniques?.isNotEmpty ?? false) && rule.focusCap != false;
+  final useFocusSlots = useAmountSlots || useTechniqueSlots;
   final focusSlots =
       useFocusSlots ? _sampleFocusSlots(config.actionCount, random) : null;
 
@@ -239,8 +309,12 @@ Chain? _tryBuildChain(
         groups,
         random,
         focusAmounts: focusAmounts,
+        focusTechniques: focusTechniques,
+        focusTechniqueN: rule.focusTechniqueN,
         focusSlots: focusSlots,
         stepIndex: stepIndex,
+        value: value,
+        totalRods: rule.totalRods,
       );
 
       if (pool.isEmpty) {
@@ -248,7 +322,14 @@ Chain? _tryBuildChain(
       }
 
       _shuffleInPlace(pool, random);
-      final step = pool[0];
+      var step = pool[0];
+      if (useFocusSlots) {
+        final previous = steps.isEmpty ? null : steps.last;
+        final preferred = pool
+            .where((candidate) => !_isImmediateReverse(previous, candidate))
+            .toList();
+        step = preferred.isNotEmpty ? preferred[0] : pool[0];
+      }
       value = applyChainStep(value, step, rule.totalRods);
       steps.add(step);
       intermediates.add(value);

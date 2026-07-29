@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generate.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/friend_rules.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
@@ -128,6 +130,81 @@ void main() {
           }
         }
       }
+    });
+
+    test('simple-N v2: caps, final ≤ N, limited reverses', () {
+      for (final digit in [1, 2, 4, 5, 7, 9]) {
+        final topicId = 'simple-$digit';
+        final intermediateMax = simpleIntermediateMax(digit);
+
+        for (var i = 0; i < 40; i++) {
+          final chain = generateChain(
+            GenerateConfig(
+              topicId: topicId,
+              actionCount: 5,
+              signMode: 'mix',
+            ),
+          );
+
+          expect(
+            chain.intermediates.every((v) => v >= 0 && v <= intermediateMax),
+            isTrue,
+            reason: topicId,
+          );
+          final hasSub = chain.steps.any((step) => step.sign == '-');
+          if (hasSub) {
+            expect(chain.answer, lessThanOrEqualTo(digit), reason: topicId);
+          }
+          if (digit > 1) {
+            expect(
+              hasEnoughSimpleTopicVariation(chain.steps),
+              isTrue,
+              reason: topicId,
+            );
+          }
+        }
+      }
+    });
+
+    test('v2: brother target later + quota', () {
+      for (var i = 0; i < 40; i++) {
+        final chain = generateChain(
+          const GenerateConfig(
+            topicId: 'brother-4-1digit',
+            actionCount: 5,
+            signMode: 'mix',
+          ),
+        );
+        final targetIndices = <int>[];
+        for (var stepIndex = 0; stepIndex < chain.steps.length; stepIndex++) {
+          final technique = classifyStep(
+            chain.intermediates[stepIndex],
+            chain.steps[stepIndex],
+            1,
+          );
+          if (technique.kind == TechniqueKind.brother) {
+            targetIndices.add(stepIndex);
+          }
+        }
+        expect(targetIndices, isNotEmpty);
+        expect(targetIndices.length, lessThanOrEqualTo(2));
+        expect(targetIndices.any((index) => index >= 2), isTrue);
+      }
+    });
+
+    test('v2: friend fifty-zone forbidden', () {
+      expect(
+        violatesFriendFiftyZone(41, const ChainStep(amount: 9, sign: '+')),
+        isTrue,
+      );
+      expect(
+        violatesFriendFiftyZone(50, const ChainStep(amount: 3, sign: '-')),
+        isTrue,
+      );
+      expect(
+        violatesFriendFiftyZone(40, const ChainStep(amount: 9, sign: '+')),
+        isFalse,
+      );
     });
 
     test('simple-N focus steps are not stuck in the first two positions', () {

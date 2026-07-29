@@ -817,6 +817,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayActionCountLabel => 'Number of actions';
 
   @override
+  String get adminTrainerPlayExampleCountLabel => 'Number of examples';
+
+  @override
   String get adminTrainerPlaySignModeLabel => 'Signs';
 
   @override

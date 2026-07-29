@@ -152,7 +152,6 @@ void main() {
           'chainTopicId': 'simple-1',
           'actionCount': 5,
           'signMode': 'mix',
-          'amountScope': 'topic',
           'stepPauseSec': 1,
         },
         'fields': [],
@@ -162,7 +161,6 @@ void main() {
         'chainTopicId': 'friend-9-1digit',
         'actionCount': '5',
         'signMode': 'mix',
-        'amountScope': 'topic',
         'stepPauseSec': '0.5',
       });
 
@@ -170,6 +168,7 @@ void main() {
       expect(payload['actionCount'], 5);
       expect(payload['stepPauseSec'], 0.5);
       expect(payload.containsKey('chainTopicId'), isFalse);
+      expect(payload.containsKey('amountScope'), isFalse);
     });
 
     test('builds flashcard values array fields for API', () {

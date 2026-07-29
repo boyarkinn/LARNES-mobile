@@ -77,6 +77,8 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayChainTopicIdLabel;
     case 'actionCountLabel':
       return l10n.adminTrainerPlayActionCountLabel;
+    case 'exampleCountLabel':
+      return l10n.adminTrainerPlayExampleCountLabel;
     case 'signModeLabel':
       return l10n.adminTrainerPlaySignModeLabel;
     case 'amountScopeLabel':

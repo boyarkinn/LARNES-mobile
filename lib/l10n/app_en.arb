@@ -349,6 +349,7 @@
   "adminTrainerPlayExampleStringLabel": "Example",
   "adminTrainerPlayChainTopicIdLabel": "Chain topic",
   "adminTrainerPlayActionCountLabel": "Number of actions",
+  "adminTrainerPlayExampleCountLabel": "Number of examples",
   "adminTrainerPlaySignModeLabel": "Signs",
   "adminTrainerPlayAmountScopeLabel": "Operands",
   "adminTrainerPlayValueLabel": "Value",

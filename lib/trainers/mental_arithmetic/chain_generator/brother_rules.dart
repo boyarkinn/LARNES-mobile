@@ -1,24 +1,41 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/brother-rules.ts`
 
-import 'classify.dart';
-import 'topics.dart';
-import 'types.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
 const _brotherNs = [1, 2, 3, 4];
 
+/// Порядок преподавания в школе (не 1→4).
+const _brotherSchoolOrder = [4, 3, 2, 1];
+
 bool _isBrotherN(int value) {
   return value == 1 || value == 2 || value == 3 || value == 4;
+}
+
+List<int> _priorBrotherNs(int n) {
+  final index = _brotherSchoolOrder.indexOf(n);
+  return index <= 0 ? const [] : _brotherSchoolOrder.sublist(0, index);
+}
+
+List<int> _rangeInclusive(int from, int to) {
+  return [for (var amount = from; amount <= to; amount++) amount];
 }
 
 TopicRule _rule(
   int totalRods,
   List<int> candidateAmounts,
   TopicAllows allows,
-  TopicChainValidator isValidChain,
-) {
+  TopicChainValidator isValidChain, {
+  int? focusTechniqueN,
+}) {
   return TopicRule(
     allows: allows,
     candidateAmounts: candidateAmounts,
+    focusCap: true,
+    focusTechniqueN: focusTechniqueN,
+    focusTechniques: const [TechniqueKind.brother],
     isValidChain: isValidChain,
     totalRods: totalRods,
   );
@@ -38,22 +55,22 @@ List<int> _placeAmountsForBrother(int n, int totalRods) {
   return amounts;
 }
 
-bool _isBrotherOperandAmount(int amount, int? n) {
-  if (n != null) {
-    return amount == n || amount == n * 10 || amount == n * 100;
-  }
-
-  return _brotherNs.any((brotherN) => _isBrotherOperandAmount(amount, brotherN));
+bool _isFocusBrother(Technique technique, int? n) {
+  return technique.kind == TechniqueKind.brother &&
+      (n == null || technique.n == n);
 }
 
-TopicAllows _allowsBrother(int? n) {
+TopicAllows _allowsBrother(int? n, List<int> priorNs) {
   return (value, step, technique) {
     if (technique.kind == TechniqueKind.brother) {
-      return n == null || technique.n == n;
+      if (n == null) {
+        return true;
+      }
+
+      return technique.n == n || priorNs.contains(technique.n);
     }
 
-    if (technique.kind == TechniqueKind.direct &&
-        _isBrotherOperandAmount(step.amount, n)) {
+    if (technique.kind == TechniqueKind.direct) {
       return true;
     }
 
@@ -63,21 +80,52 @@ TopicAllows _allowsBrother(int? n) {
 
 TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
   return (steps, intermediates) {
+    final focusIndices = <int>[];
+    var priorCount = 0;
+
     for (var index = 0; index < steps.length; index++) {
       final technique =
           classifyStep(intermediates[index], steps[index], totalRods);
 
-      if (technique.kind != TechniqueKind.brother) {
-        continue;
-      }
-
-      if (n == null || technique.n == n) {
-        return true;
+      if (_isFocusBrother(technique, n)) {
+        focusIndices.add(index);
+      } else {
+        priorCount += 1;
       }
     }
 
-    return false;
+    if (focusIndices.isEmpty) {
+      return false;
+    }
+
+    if (focusIndices.length > (steps.length / 2).floor()) {
+      return false;
+    }
+
+    if (steps.length >= 5 && !focusIndices.any((index) => index >= 2)) {
+      return false;
+    }
+
+    if (steps.length >= 4 && priorCount < 1) {
+      return false;
+    }
+
+    if (!hasEnoughSimpleTopicVariation(steps, 0)) {
+      return false;
+    }
+
+    return true;
   };
+}
+
+List<int> _candidatesForBrotherDigit(int n, int rods, List<int> priorNs) {
+  final amounts = {..._rangeInclusive(1, 9)};
+
+  for (final brotherN in [n, ...priorNs]) {
+    amounts.addAll(_placeAmountsForBrother(brotherN, rods));
+  }
+
+  return amounts.toList();
 }
 
 ({int n, int rods})? _parseBrotherDigitTopic(TopicId topicId) {
@@ -97,7 +145,11 @@ TopicChainValidator _createBrotherChainValidator(int totalRods, int? n) {
   return (n: n, rods: match.group(2) == '1digit' ? 1 : 2);
 }
 
-TopicRule? createBrotherTopicRule(TopicId topicId, AmountScope amountScope) {
+/// `amountScope` deprecated — 2/3 знака всегда с младшими.
+TopicRule? createBrotherTopicRule(
+  TopicId topicId, [
+  AmountScope amountScope = 'withLower',
+]) {
   final meta = getTopicMeta(topicId);
 
   if (meta.block != TopicBlock.brother) {
@@ -109,40 +161,29 @@ TopicRule? createBrotherTopicRule(TopicId topicId, AmountScope amountScope) {
   if (parsed != null) {
     final n = parsed.n;
     final rods = parsed.rods;
-    final topicAmounts = _placeAmountsForBrother(n, rods);
-    final candidates = amountScope == 'withLower' && rods == 2
-        ? [
-            ..._placeAmountsForBrother(n, 1),
-            ...topicAmounts.where((amount) => amount >= 10),
-          ]
-        : topicAmounts;
-
-    final unique = candidates.toSet().toList();
+    final priorNs = _priorBrotherNs(n);
+    final candidates = _candidatesForBrotherDigit(n, rods, priorNs);
 
     return _rule(
       rods,
-      unique,
-      _allowsBrother(n),
+      candidates,
+      _allowsBrother(n, priorNs),
       _createBrotherChainValidator(rods, n),
+      focusTechniqueN: n,
     );
   }
 
   if (topicId == 'brother-3digit') {
-    final topicAmounts =
-        _brotherNs.expand((n) => _placeAmountsForBrother(n, 3)).toList();
-    final candidates = amountScope == 'withLower'
-        ? [
-            ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 1)),
-            ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 2)),
-            ...topicAmounts,
-          ]
-        : topicAmounts;
-    final unique = candidates.toSet().toList();
+    final candidates = {
+      ..._rangeInclusive(1, 9),
+      ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 2)),
+      ..._brotherNs.expand((n) => _placeAmountsForBrother(n, 3)),
+    }.toList();
 
     return _rule(
       3,
-      unique,
-      _allowsBrother(null),
+      candidates,
+      _allowsBrother(null, const []),
       _createBrotherChainValidator(3, null),
     );
   }

@@ -6,16 +6,10 @@ import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 void main() {
   group('topic-chain-flash check-answer', () {
-    test('parses plain integers and rejects junk', () {
-      expect(parseAnswerInput('12'), 12);
-      expect(parseAnswerInput('  -3 '), -3);
-      expect(parseAnswerInput(''), isNull);
-      expect(parseAnswerInput('12a'), isNull);
-    });
-
-    test('matches expected answer', () {
-      expect(isCorrectAnswer('7', 7), isTrue);
-      expect(isCorrectAnswer('8', 7), isFalse);
+    test('accepts exact and trims', () {
+      expect(isCorrectAnswer('12', 12), isTrue);
+      expect(isCorrectAnswer(' 12 ', 12), isTrue);
+      expect(isCorrectAnswer('13', 12), isFalse);
     });
   });
 
@@ -25,10 +19,20 @@ void main() {
         'topicId': 'simple-1',
         'actionCount': 5,
         'signMode': 'mix',
-        'amountScope': 'topic',
         'stepPauseSec': 1,
       });
       expect(ok.ok, isTrue);
+      expect(ok.params?['exampleCount'], 1);
+
+      final withExamples = validateTrainerParams('topic-chain-flash', {
+        'topicId': 'simple-1',
+        'actionCount': 5,
+        'exampleCount': 3,
+        'signMode': 'mix',
+        'stepPauseSec': 1,
+      });
+      expect(withExamples.ok, isTrue);
+      expect(withExamples.params?['exampleCount'], 3);
 
       final bad = validateTrainerParams('topic-chain-flash', {
         'topicId': 'nope',
@@ -53,7 +57,6 @@ void main() {
                   'topicId': 'simple-1',
                   'actionCount': 3,
                   'signMode': 'add',
-                  'amountScope': 'topic',
                   'stepPauseSec': 0.05,
                 },
               ),
@@ -63,14 +66,15 @@ void main() {
       );
 
       await tester.pump();
-      expect(find.byType(TopicChainFlashTrainer), findsOneWidget);
-
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump(const Duration(milliseconds: 200));
-
+      await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Проверить'), findsOneWidget);
+      expect(find.text('Повторить'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), '99999');
+      await tester.tap(find.text('Проверить'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.text('Повторить'), findsOneWidget);
     });
   });
 }

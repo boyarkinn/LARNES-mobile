@@ -58,7 +58,7 @@ class Technique {
 class GenerateConfig {
   const GenerateConfig({
     required this.actionCount,
-    this.amountScope = 'topic',
+    this.amountScope = 'withLower',
     required this.signMode,
     required this.topicId,
   });
@@ -87,6 +87,8 @@ class TopicRule {
     required this.allows,
     this.isValidChain,
     this.focusAmounts,
+    this.focusTechniques,
+    this.focusTechniqueN,
     this.focusCap,
   });
 
@@ -95,10 +97,16 @@ class TopicRule {
   final TopicAllows allows;
   final TopicChainValidator? isValidChain;
 
-  /// Операнды «темы» (Просто N → [N]): walk bias + учёт квоты.
+  /// Операнды «темы» (Просто N → [N]): при focusCap — pre-slot.
   final List<int>? focusAmounts;
 
-  /// Default true if focusAmounts set. false для Просто 1.
+  /// Целевые техники (Братья/Друзья): pre-slot по classify.
+  final List<TechniqueKind>? focusTechniques;
+
+  /// Curriculum: целевой N техники (brother-3 → 3). null = любой N (3digit).
+  final int? focusTechniqueN;
+
+  /// Default true if focusAmounts/focusTechniques set. false для Просто 1.
   final bool? focusCap;
 }
 

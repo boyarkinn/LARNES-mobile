@@ -36,7 +36,7 @@ TopicRule _rule(
     candidateAmounts: candidateAmounts,
     focusCap: true,
     focusTechniqueN: focusTechniqueN,
-    focusTechniques: const [TechniqueKind.friend, TechniqueKind.friendBrother],
+    focusTechniques: const [TechniqueKind.friend],
     isValidChain: isValidChain,
     minFocusSteps: minFocusSteps,
     preferDigitWidths: preferDigitWidths,
@@ -56,8 +56,7 @@ List<int> _placeAmountsForFriend(int n, int totalRods) {
 }
 
 bool _isTargetFriendTechnique(Technique technique, int? n) {
-  if (technique.kind != TechniqueKind.friend &&
-      technique.kind != TechniqueKind.friendBrother) {
+  if (technique.kind != TechniqueKind.friend) {
     return false;
   }
 
@@ -82,8 +81,12 @@ bool violatesFriendFiftyZone(int value, ChainStep step) {
 }
 
 bool _isAllowedFriendTechnique(Technique technique, int? n, List<int> priorNs) {
-  if (technique.kind == TechniqueKind.friend ||
-      technique.kind == TechniqueKind.friendBrother) {
+  // friendBrother — только блок «Друг + брат»; ребёнок ещё не учил.
+  if (technique.kind == TechniqueKind.friendBrother) {
+    return false;
+  }
+
+  if (technique.kind == TechniqueKind.friend) {
     if (n == null) {
       return true;
     }
@@ -228,8 +231,10 @@ TopicRule? createFriendTopicRule(
   if (parsed != null) {
     final n = parsed.n;
     final width = parsed.width;
+    // 1digit / 2digit*: коридор 0…99 (rods=2). Friend на десятках тянет сотни —
+    // для двузначных тем запрещён; focus только на единицах внутри операнда.
     final placeWidth = width == '1digit' ? 1 : 2;
-    final rods = width == '1digit' ? 2 : 3;
+    const rods = 2;
     final includeOnes = width != '2digit';
     final priorNs = _priorFriendNs(n);
     final candidates = _candidatesForFriendDigit(
@@ -241,7 +246,7 @@ TopicRule? createFriendTopicRule(
     final techniqueValidator = _createFriendChainValidator(
       rods,
       n,
-      requireFocusOnOnesAndHigher: width != '1digit',
+      requireFocusOnOnesAndHigher: false,
     );
     final TopicChainValidator widthValidator = width == '2digit-1digit'
         ? (steps, _) => chainHasMixedDigitWidths(steps)
@@ -255,7 +260,6 @@ TopicRule? createFriendTopicRule(
       _allowsFriend(n, priorNs, rods),
       andChainValidators([techniqueValidator, widthValidator]),
       focusTechniqueN: n,
-      minFocusSteps: width != '1digit' ? 2 : null,
     );
   }
 

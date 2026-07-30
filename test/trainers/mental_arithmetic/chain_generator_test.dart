@@ -83,8 +83,10 @@ void main() {
         ('friend-brother-6-1digit', 'mix', 'topic'),
         ('friend-brother-8-2digit', 'mix', 'topic'),
         ('anzan-1digit-mix', 'mix', 'topic'),
-        ('anzan-2digit-add', 'sub', 'topic'),
+        ('anzan-2digit', 'mix', 'topic'),
+        ('anzan-2digit-1digit', 'mix', 'topic'),
         ('anzan-3digit', 'mix', 'topic'),
+        ('anzan-3digit-2digit-1digit', 'mix', 'topic'),
       ];
 
       for (final (topicId, signMode, amountScope) in cases) {

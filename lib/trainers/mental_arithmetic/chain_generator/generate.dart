@@ -279,6 +279,7 @@ List<ChainStep> _pickCandidatePool(
   required int stepIndex,
   required int value,
   required int totalRods,
+  bool techniqueSummary = false,
 }) {
   if (focusSlots != null &&
       focusTechniques != null &&
@@ -313,6 +314,11 @@ List<ChainStep> _pickCandidatePool(
     }
 
     return otherSteps.isNotEmpty ? otherSteps : focusSteps;
+  }
+
+  // Анзан-сводка: не залипать на friend — весь пул равноправен.
+  if (techniqueSummary) {
+    return [...groups.target, ...groups.setup, ...groups.rest];
   }
 
   if (groups.target.isNotEmpty) {
@@ -395,6 +401,7 @@ Chain? _tryBuildChain(
         stepIndex: stepIndex,
         value: value,
         totalRods: rule.totalRods,
+        techniqueSummary: rule.techniqueSummary == true,
       );
 
       if (pool.isEmpty) {
@@ -431,20 +438,135 @@ Chain? _tryBuildChain(
       }
 
       final boundary = rule.crossBoundary;
-      if (boundary != null &&
-          !chainCrossesBoundary(intermediates, boundary)) {
-        final crossing = pool.where((candidate) {
-          final next = tryApplyChainStep(value, candidate, rule.totalRods);
-          return next != null &&
-              stepCrossesBoundary(value, next, boundary);
-        }).toList();
-        if (crossing.isNotEmpty) {
-          final urgent =
-              stepIndex >= config.actionCount - 2 || random() < 0.55;
-          if (urgent) {
+      if (boundary != null && (boundary == 50 || boundary == 100)) {
+        final zoneCount =
+            countTransitionZoneSteps(steps, intermediates, boundary);
+        final quota = transitionZoneStepQuota(config.actionCount);
+        final zoneSteps = pool
+            .where(
+              (candidate) => isTransitionZoneStep(value, candidate, boundary),
+            )
+            .toList();
+        final nonZoneSteps = pool
+            .where(
+              (candidate) => !isTransitionZoneStep(value, candidate, boundary),
+            )
+            .toList();
+
+        int distanceToZone(int current) {
+          if (current >= boundary - 9 && current <= boundary) {
+            return 0;
+          }
+          if (current < boundary - 9) {
+            return boundary - 9 - current;
+          }
+          return current - boundary;
+        }
+
+        final inZoneWindow = distanceToZone(value) == 0;
+
+        ({bool hasDirect, bool hasBrother}) priorKinds() {
+          var hasDirect = false;
+          var hasBrother = false;
+          for (var index = 0; index < steps.length; index++) {
+            final technique = classifyStep(
+              intermediates[index],
+              steps[index],
+              rule.totalRods,
+            );
+            if (technique.kind == TechniqueKind.direct) {
+              hasDirect = true;
+            }
+            if (technique.kind == TechniqueKind.brother) {
+              hasBrother = true;
+            }
+          }
+          return (hasDirect: hasDirect, hasBrother: hasBrother);
+        }
+
+        List<ChainStep> filterPriorFill(List<ChainStep> candidates) {
+          final kinds = priorKinds();
+          if (kinds.hasDirect && kinds.hasBrother) {
+            return const [];
+          }
+          return candidates.where((candidate) {
+            if (isTransitionZoneStep(value, candidate, boundary)) {
+              return false;
+            }
+            final technique = classifyStep(value, candidate, rule.totalRods);
+            return (!kinds.hasDirect && technique.kind == TechniqueKind.direct) ||
+                (!kinds.hasBrother && technique.kind == TechniqueKind.brother);
+          }).toList();
+        }
+
+        void biasTowardZone() {
+          if (zoneSteps.isNotEmpty) {
             pool
               ..clear()
-              ..addAll(crossing);
+              ..addAll(zoneSteps);
+            return;
+          }
+          if (inZoneWindow) {
+            final stay = pool.where((candidate) {
+              final next = tryApplyChainStep(value, candidate, rule.totalRods);
+              return next != null && distanceToZone(next) == 0;
+            }).toList();
+            if (stay.isNotEmpty) {
+              pool
+                ..clear()
+                ..addAll(stay);
+            }
+            return;
+          }
+          final currentDistance = distanceToZone(value);
+          final scored = <({ChainStep step, int distance})>[];
+          for (final candidate in pool) {
+            final next = tryApplyChainStep(value, candidate, rule.totalRods);
+            if (next == null) {
+              continue;
+            }
+            final distance = distanceToZone(next);
+            if (distance < currentDistance) {
+              scored.add((step: candidate, distance: distance));
+            }
+          }
+          if (scored.isNotEmpty) {
+            final best =
+                scored.map((entry) => entry.distance).reduce((a, b) => a < b ? a : b);
+            pool
+              ..clear()
+              ..addAll(
+                scored
+                    .where((entry) => entry.distance == best)
+                    .map((entry) => entry.step),
+              );
+          }
+        }
+
+        if (zoneCount >= quota.max && nonZoneSteps.isNotEmpty) {
+          pool
+            ..clear()
+            ..addAll(nonZoneSteps);
+          final priorFill = filterPriorFill(pool);
+          if (priorFill.isNotEmpty) {
+            pool
+              ..clear()
+              ..addAll(priorFill);
+          }
+        } else if (zoneCount < quota.min) {
+          biasTowardZone();
+        } else {
+          final priorFill = filterPriorFill(nonZoneSteps);
+          if (config.actionCount >= 5 && priorFill.isNotEmpty) {
+            pool
+              ..clear()
+              ..addAll(priorFill);
+          } else if (zoneCount < quota.softMin) {
+            biasTowardZone();
+          } else if (nonZoneSteps.isNotEmpty && random() < 0.75) {
+            pool
+              ..clear()
+              ..addAll(nonZoneSteps);
           }
         }
       }

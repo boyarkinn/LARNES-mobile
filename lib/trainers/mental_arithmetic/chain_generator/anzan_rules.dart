@@ -1,4 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/anzan-rules.ts`
+///
+/// 1digit: add|sub|mix; 2/3 знака — только mix, матрица ширин как у Просто.
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
@@ -9,15 +11,47 @@ List<int> _rangeInclusive(int from, int to) {
   return [for (var amount = from; amount <= to; amount++) amount];
 }
 
-({String width, SignMode? signMode})? _parseAnzanTopic(TopicId topicId) {
-  final withSign =
-      RegExp(r'^anzan-(1digit|2digit)-(add|sub|mix)$').firstMatch(topicId);
-  if (withSign != null) {
-    return (width: withSign.group(1)!, signMode: withSign.group(2)!);
+({
+  String kind,
+  SignMode? signMode,
+  bool? onlyTwoDigit,
+  ThreeDigitWidth? threeWidth,
+})? _parseAnzanTopic(TopicId topicId) {
+  final oneDigit = RegExp(r'^anzan-1digit-(add|sub|mix)$').firstMatch(topicId);
+  if (oneDigit != null) {
+    return (
+      kind: '1digit',
+      signMode: oneDigit.group(1)!,
+      onlyTwoDigit: null,
+      threeWidth: null,
+    );
   }
 
-  if (topicId == 'anzan-3digit') {
-    return (width: '3digit', signMode: null);
+  if (topicId == 'anzan-2digit-1digit') {
+    return (
+      kind: '2digit',
+      signMode: null,
+      onlyTwoDigit: false,
+      threeWidth: null,
+    );
+  }
+  if (topicId == 'anzan-2digit') {
+    return (
+      kind: '2digit',
+      signMode: null,
+      onlyTwoDigit: true,
+      threeWidth: null,
+    );
+  }
+
+  final threeDigitWidth = parseThreeDigitWidth(topicId, 'anzan');
+  if (threeDigitWidth != null) {
+    return (
+      kind: '3digit',
+      signMode: null,
+      onlyTwoDigit: null,
+      threeWidth: threeDigitWidth,
+    );
   }
 
   return null;
@@ -28,47 +62,46 @@ SignMode? resolveAnzanSignMode(TopicId topicId) {
   return _parseAnzanTopic(topicId)?.signMode;
 }
 
-TopicChainValidator _createAnzanChainValidator(int totalRods) {
+TopicChainValidator _createAnzanTechniqueValidator(int totalRods) {
   return (steps, intermediates) {
     if (!hasEnoughSimpleTopicVariation(steps, 0)) {
       return false;
     }
 
-    if (steps.length < 4) {
-      return true;
-    }
+    var hasDirect = false;
+    var hasBrother = false;
+    var hasFriend = false;
+    var hasNonDirect = false;
 
     for (var index = 0; index < steps.length; index += 1) {
       final technique =
           classifyStep(intermediates[index], steps[index], totalRods);
-      if (technique.kind != TechniqueKind.direct) {
-        return true;
+
+      if (technique.kind == TechniqueKind.direct) {
+        hasDirect = true;
+      } else {
+        hasNonDirect = true;
+      }
+
+      if (technique.kind == TechniqueKind.brother) {
+        hasBrother = true;
+      }
+
+      if (technique.kind == TechniqueKind.friend) {
+        hasFriend = true;
       }
     }
 
-    return false;
-  };
-}
+    if (steps.length >= 5) {
+      return hasDirect && hasBrother && hasFriend;
+    }
 
-({List<int> amounts, int rods}) _candidatesForWidth(
-  String width,
-  SignMode? signMode,
-) {
-  // 1digit add/sub: операнды 1…9, коридор до 99 (rods=2). mix — по-прежнему 0…9.
-  if (width == '1digit') {
-    if (signMode == 'add' || signMode == 'sub') {
-      return (amounts: _rangeInclusive(1, 9), rods: 2);
+    if (steps.length >= 4) {
+      return hasNonDirect;
     }
-    return (amounts: _rangeInclusive(1, 9), rods: 1);
-  }
-  // 2digit add/sub: операнды 10…99, коридор до 999 (rods=3). mix — 1…99 на 2 rods.
-  if (width == '2digit') {
-    if (signMode == 'add' || signMode == 'sub') {
-      return (amounts: _rangeInclusive(10, 99), rods: 3);
-    }
-    return (amounts: _rangeInclusive(1, 99), rods: 2);
-  }
-  return (amounts: _rangeInclusive(1, 999), rods: 3);
+
+    return true;
+  };
 }
 
 TopicRule? createAnzanTopicRule(
@@ -86,27 +119,52 @@ TopicRule? createAnzanTopicRule(
     return null;
   }
 
-  final candidates = _candidatesForWidth(parsed.width, parsed.signMode);
+  if (parsed.kind == '1digit') {
+    return TopicRule(
+      allows: (_, __, ___) => true,
+      balanceAmounts: false,
+      candidateAmounts: _rangeInclusive(1, 9),
+      forcedFirstStep: parsed.signMode == 'sub'
+          ? const ChainStep(amount: 99, sign: '+')
+          : null,
+      isValidChain: _createAnzanTechniqueValidator(2),
+      techniqueSummary: true,
+      totalRods: 2,
+    );
+  }
 
-  final int? subBootstrap = parsed.signMode == 'sub'
-      ? (parsed.width == '1digit'
-          ? 99
-          : parsed.width == '2digit'
-              ? 999
-              : null)
-      : null;
+  if (parsed.kind == '2digit') {
+    final onlyTwo = parsed.onlyTwoDigit == true;
+    final TopicChainValidator widthValidator = onlyTwo
+        ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
+        : (steps, _) => chainHasMixedDigitWidths(steps);
 
+    return TopicRule(
+      allows: (_, __, ___) => true,
+      balanceAmounts: true,
+      candidateAmounts:
+          onlyTwo ? _rangeInclusive(10, 99) : _rangeInclusive(1, 99),
+      isValidChain: andChainValidators([
+        _createAnzanTechniqueValidator(2),
+        widthValidator,
+      ]),
+      preferDigitWidths: onlyTwo ? null : const ['2', '1'],
+      techniqueSummary: true,
+      totalRods: 2,
+    );
+  }
+
+  final threeWidth = parsed.threeWidth!;
   return TopicRule(
     allows: (_, __, ___) => true,
-    balanceAmounts:
-        parsed.signMode == 'mix' || parsed.signMode == null
-            ? candidates.rods >= 2
-            : false,
-    candidateAmounts: candidates.amounts,
-    forcedFirstStep: subBootstrap != null
-        ? ChainStep(amount: subBootstrap, sign: '+')
-        : null,
-    isValidChain: _createAnzanChainValidator(candidates.rods),
-    totalRods: candidates.rods,
+    balanceAmounts: true,
+    candidateAmounts: candidatesForThreeDigitWidth(threeWidth),
+    isValidChain: andChainValidators([
+      _createAnzanTechniqueValidator(3),
+      widthValidatorForThreeDigit(threeWidth),
+    ]),
+    preferDigitWidths: preferDigitWidthsForThreeDigit(threeWidth),
+    techniqueSummary: true,
+    totalRods: 3,
   );
 }

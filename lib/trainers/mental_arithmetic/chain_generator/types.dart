@@ -95,6 +95,7 @@ class TopicRule {
     this.crossBoundary,
     this.preferDigitWidths,
     this.forcedFirstStep,
+    this.techniqueSummary,
   });
 
   final List<int> candidateAmounts;
@@ -128,6 +129,9 @@ class TopicRule {
 
   /// Жёсткий первый шаг (анзан-1digit-sub → +99).
   final ChainStep? forcedFirstStep;
+
+  /// Анзан / сводка: walk без приоритета friend; isValidChain — квота техник.
+  final bool? techniqueSummary;
 }
 
 class Chain {

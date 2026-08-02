@@ -319,6 +319,30 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
   });
 }
 
+ValidateTrainerParamsResult validateTopicChainTableParams(Map<String, dynamic> raw) {
+  final topicId = raw['topicId'];
+  final actionCount = coerceInt(raw['actionCount']);
+  final exampleCount = coerceInt(raw['exampleCount']) ?? 5;
+
+  if (topicId is! String || !isTopicId(topicId)) {
+    return _fail('Некорректные параметры.');
+  }
+  if (actionCount == null ||
+      actionCount < kActionCountMin ||
+      actionCount > kActionCountMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (exampleCount < 1 || exampleCount > 12) {
+    return _fail('Некорректные параметры.');
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'actionCount': actionCount,
+    'exampleCount': exampleCount,
+    'topicId': topicId,
+  });
+}
+
 ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynamic> raw) {
   final totalRods = coerceInt(raw['totalRods']);
   var values = coerceIntList(raw['values']);

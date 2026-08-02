@@ -31,7 +31,8 @@ enum TrainerKey {
   numberRowShow('number-row-show'),
   shopPay('shop-pay'),
   staticExampleShow('static-example-show'),
-  topicChainFlash('topic-chain-flash');
+  topicChainFlash('topic-chain-flash'),
+  topicChainTable('topic-chain-table');
 
   const TrainerKey(this.apiValue);
 

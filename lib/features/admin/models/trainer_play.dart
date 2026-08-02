@@ -222,6 +222,14 @@ Map<String, dynamic> buildPlayParamsPayload(
     };
   }
 
+  if (config.trainerKey == 'topic-chain-table') {
+    return {
+      'actionCount': coerceInt(values['actionCount']) ?? 4,
+      'exampleCount': coerceInt(values['exampleCount']) ?? 5,
+      'topicId': values['chainTopicId'] ?? values['topicId'] ?? 'simple-1',
+    };
+  }
+
   final payload = <String, dynamic>{};
   for (final field in config.fields) {
     if (!field.isVisible(values)) {

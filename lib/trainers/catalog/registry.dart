@@ -17,6 +17,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/topic_chain_flash_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_table/topic_chain_table_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_color/letter_color_trainer.dart';
@@ -69,6 +70,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       StaticExampleShowTrainer(params: params),
   TrainerKey.topicChainFlash: ({required params, onComplete}) =>
       TopicChainFlashTrainer(params: params, onComplete: onComplete),
+  TrainerKey.topicChainTable: ({required params, onComplete}) =>
+      TopicChainTableTrainer(params: params),
   TrainerKey.letterFindTap: ({required params, onComplete}) =>
       LetterFindTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindBySound: ({required params, onComplete}) =>
@@ -327,6 +330,12 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.mental,
     isInteractive: true,
     validate: validateTopicChainFlashParams,
+  ),
+  TrainerKey.topicChainTable: TrainerDefinition(
+    key: TrainerKey.topicChainTable,
+    title: 'Таблица цепочек',
+    direction: TrainerDirection.mental,
+    validate: validateTopicChainTableParams,
   ),
 };
 

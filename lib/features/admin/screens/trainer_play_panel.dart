@@ -60,10 +60,8 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final config = await AuthScope.of(context).adminTrainersApi.fetchPlayConfig(
-            trainerKey: widget.trainerKey,
-            locale: locale,
-          );
+      final config = await AuthScope.of(context).adminTrainersApi
+          .fetchPlayConfig(trainerKey: widget.trainerKey, locale: locale);
       if (!mounted) {
         return;
       }
@@ -154,7 +152,9 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
     if (_isLoading && _config == null) {
       return [
         const SizedBox(height: 120),
-        const Center(child: CircularProgressIndicator(color: AdminColors.accent)),
+        const Center(
+          child: CircularProgressIndicator(color: AdminColors.accent),
+        ),
       ];
     }
 
@@ -274,13 +274,21 @@ class _FieldEditorState extends State<_FieldEditor> {
     switch (widget.field.type) {
       case TrainerPlayFieldType.select:
         return DropdownButtonFormField<String>(
-          value: widget.value.isEmpty ? null : widget.value,
-          decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
+          key: ValueKey('${widget.field.key}:${widget.value}'),
+          initialValue: widget.value.isEmpty ? null : widget.value,
+          isExpanded: true,
+          decoration: AdminTextField.inputDecoration().copyWith(
+            labelText: label,
+          ),
           items: [
             for (final option in widget.field.options)
               DropdownMenuItem(
                 value: option.value,
-                child: Text(trainerPlayOptionLabel(widget.l10n, option)),
+                child: Text(
+                  trainerPlayOptionLabel(widget.l10n, option),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
           ],
           onChanged: (next) {
@@ -292,16 +300,22 @@ class _FieldEditorState extends State<_FieldEditor> {
       case TrainerPlayFieldType.text:
         return TextFormField(
           controller: _controller,
-          decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
+          decoration: AdminTextField.inputDecoration().copyWith(
+            labelText: label,
+          ),
           maxLength: widget.field.maxLength,
           onChanged: widget.onChanged,
         );
       case TrainerPlayFieldType.number:
         return TextFormField(
           controller: _controller,
-          decoration: AdminTextField.inputDecoration().copyWith(labelText: label),
+          decoration: AdminTextField.inputDecoration().copyWith(
+            labelText: label,
+          ),
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'-?\d*'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'-?\d*')),
+          ],
           onChanged: widget.onChanged,
         );
     }

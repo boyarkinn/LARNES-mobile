@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show FontFeature;
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo.dart';
@@ -53,7 +52,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
 
-  int get _totalExamples => _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
+  int get _totalExamples =>
+      _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
 
   @override
   void initState() {
@@ -62,13 +62,16 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       vsync: this,
       duration: const Duration(milliseconds: _wrongFeedbackMs),
     );
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 8, end: -5), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -5, end: 5), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 5, end: 0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut));
+    _shakeAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 8, end: -5), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -5, end: 5), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 5, end: 0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+        );
     _startSession();
   }
 
@@ -92,10 +95,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     super.dispose();
   }
 
-  bool _semanticParamsChanged(
-    Map<String, dynamic> a,
-    Map<String, dynamic> b,
-  ) {
+  bool _semanticParamsChanged(Map<String, dynamic> a, Map<String, dynamic> b) {
     return a['topicId'] != b['topicId'] ||
         a['actionCount'] != b['actionCount'] ||
         a['exampleCount'] != b['exampleCount'];
@@ -155,7 +155,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       setState(() {
         _chain = null;
         _phase = _Phase.error;
-        _errorMessage = 'Не удалось собрать цепочку. Попробуйте другие параметры.';
+        _errorMessage =
+            'Не удалось собрать цепочку. Попробуйте другие параметры.';
       });
     } catch (_) {
       setState(() {
@@ -204,24 +205,38 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       setState(() => _flashLabel = formatChainStep(step));
       index += 1;
 
-      if (playAudio) {
-        unawaited(playStepAudio(step, playbackRate: playbackRate));
-      }
-
-      _flashTimer = Timer(pause, () {
+      void startStepTimer() {
         if (!mounted || !identical(runToken, _runToken)) {
           return;
         }
 
-        if (index >= chain.steps.length) {
-          goToAnswer();
-          return;
-        }
+        _flashTimer = Timer(pause, () {
+          if (!mounted || !identical(runToken, _runToken)) {
+            return;
+          }
 
-        // Blank между шагами — иначе одинаковые лейблы не отличить.
-        setState(() => _flashLabel = null);
-        _flashTimer = Timer(blank, showNext);
-      });
+          if (index >= chain.steps.length) {
+            goToAnswer();
+            return;
+          }
+
+          // Blank между шагами — иначе одинаковые лейблы не отличить.
+          setState(() => _flashLabel = null);
+          _flashTimer = Timer(blank, showNext);
+        });
+      }
+
+      if (playAudio) {
+        unawaited(
+          playStepAudio(
+            step,
+            playbackRate: playbackRate,
+            onStarted: startStepTimer,
+          ),
+        );
+      } else {
+        startStepTimer();
+      }
     }
 
     showNext();
@@ -351,105 +366,129 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
           Center(
             child: switch (_phase) {
               _Phase.error => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    _errorMessage ?? 'Ошибка',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: Color(0xFF57534E)),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _errorMessage ?? 'Ошибка',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF57534E),
                   ),
                 ),
+              ),
               _Phase.boot || _Phase.flash => AnimatedOpacity(
-                  opacity: _flashLabel == null ? 0 : 1,
-                  duration: const Duration(milliseconds: 150),
-                  child: Text(
-                    _flashLabel ?? ' ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
-                      height: 1,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      color: const Color(0xFF171717),
-                    ),
+                opacity: _flashLabel == null ? 0 : 1,
+                duration: const Duration(milliseconds: 150),
+                child: Text(
+                  _flashLabel ?? ' ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
+                    height: 1,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: const Color(0xFF171717),
                   ),
                 ),
+              ),
               _Phase.answer => AnimatedBuilder(
-                  animation: _shakeAnimation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(_shakeAnimation.value, 0),
-                      child: child,
-                    );
-                  },
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                          controller: _inputController,
-                          focusNode: _inputFocus,
-                          enabled: !_isSubmitting,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          autofocus: true,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: MediaQuery.sizeOf(context).shortestSide * 0.14,
-                            height: 1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            color: const Color(0xFF171717),
-                          ),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: const Color(0xCCFFFFFF),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                width: 2,
-                                color: _isWrong
-                                    ? const Color(0xFFEF4444)
-                                    : const Color(0xFFD6D3D1),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                width: 2,
-                                color: _isWrong
-                                    ? const Color(0xFFEF4444)
-                                    : const Color(0xFFD6D3D1),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(
-                                width: 2,
-                                color: _isWrong
-                                    ? const Color(0xFFEF4444)
-                                    : const Color(0xFF262626),
-                              ),
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _isWrong = false;
-                              _answerDraft = value;
-                            });
-                          },
-                          onSubmitted: (_) => _submit(),
+                animation: _shakeAnimation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(_shakeAnimation.value, 0),
+                    child: child,
+                  );
+                },
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: _inputController,
+                        focusNode: _inputFocus,
+                        enabled: !_isSubmitting,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        autofocus: true,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize:
+                              MediaQuery.sizeOf(context).shortestSide * 0.14,
+                          height: 1,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          color: const Color(0xFF171717),
                         ),
-                        const SizedBox(height: 20),
-                        FilledButton(
-                          onPressed: _isSubmitting || _answerDraft.trim().isEmpty
-                              ? null
-                              : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF171717),
-                            foregroundColor: Colors.white,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: const Color(0xCCFFFFFF),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              width: 2,
+                              color: _isWrong
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFFD6D3D1),
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              width: 2,
+                              color: _isWrong
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFFD6D3D1),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              width: 2,
+                              color: _isWrong
+                                  ? const Color(0xFFEF4444)
+                                  : const Color(0xFF262626),
+                            ),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _isWrong = false;
+                            _answerDraft = value;
+                          });
+                        },
+                        onSubmitted: (_) => _submit(),
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: _isSubmitting || _answerDraft.trim().isEmpty
+                            ? null
+                            : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF171717),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Проверить'),
+                      ),
+                      if (_hasFailedAttempt) ...[
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _isSubmitting ? null : _replayExample,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF262626),
+                            side: const BorderSide(
+                              width: 2,
+                              color: Color(0xFFD6D3D1),
+                            ),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
                               vertical: 12,
@@ -458,33 +497,13 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Проверить'),
+                          child: const Text('Повторить'),
                         ),
-                        if (_hasFailedAttempt) ...[
-                          const SizedBox(height: 12),
-                          OutlinedButton(
-                            onPressed: _isSubmitting ? null : _replayExample,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF262626),
-                              side: const BorderSide(
-                                width: 2,
-                                color: Color(0xFFD6D3D1),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Повторить'),
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
                 ),
+              ),
             },
           ),
           _progressDots(),

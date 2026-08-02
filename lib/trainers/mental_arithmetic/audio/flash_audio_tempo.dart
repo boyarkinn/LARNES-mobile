@@ -1,5 +1,7 @@
 /// Web: `platform/src/trainers/mental-arithmetic/audio/flash-audio-tempo.ts`
 
+/// Абсолютный пол для плеера (web: AUDIO_PLAYBACK_RATE_MIN).
+const kAudioPlaybackRateMin = 0.25;
 const kAudioPlaybackRateMax = 4.0;
 
 /// Базовый темп записей (как старая платформа). Ниже не опускаем.
@@ -19,5 +21,5 @@ double flashAudioPlaybackRate(double stepPauseSec) {
   }
 
   final rate = 2 / stepPauseSec;
-  return rate.clamp(kFlashAudioPlaybackRateMin, kAudioPlaybackRateMax);
+  return rate.clamp(kFlashAudioPlaybackRateMin, kAudioPlaybackRateMax).toDouble();
 }

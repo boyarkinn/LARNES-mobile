@@ -1,4 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/chain-generator/friend-rules.ts`
+///
+/// rods=2: цепь в одной половине 0…49 или 50…99 (рандом), без креста 50.
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/simple_rules.dart';
@@ -10,6 +12,44 @@ const _brotherNs = [1, 2, 3, 4];
 
 /// Порядок преподавания в школе (не 1→9).
 const _friendSchoolOrder = [9, 8, 7, 6, 5, 4, 3, 2, 1];
+
+const friendHalfZoneLow = (min: 0, max: 49);
+const friendHalfZoneHigh = (min: 50, max: 99);
+
+ValueCorridor pickFriendHalfZoneCorridor(double Function() random) {
+  return random() < 0.5 ? friendHalfZoneLow : friendHalfZoneHigh;
+}
+
+/// После первого шага все промежуточные в одной половине 0…49 или 50…99.
+bool chainRespectsFriendHalfZone(List<int> intermediates) {
+  if (intermediates.length < 2) {
+    return true;
+  }
+
+  final afterFirst = intermediates[1];
+  if (afterFirst >= friendHalfZoneLow.min &&
+      afterFirst <= friendHalfZoneLow.max) {
+    return intermediates
+        .skip(1)
+        .every(
+          (value) =>
+              value >= friendHalfZoneLow.min && value <= friendHalfZoneLow.max,
+        );
+  }
+
+  if (afterFirst >= friendHalfZoneHigh.min &&
+      afterFirst <= friendHalfZoneHigh.max) {
+    return intermediates
+        .skip(1)
+        .every(
+          (value) =>
+              value >= friendHalfZoneHigh.min &&
+              value <= friendHalfZoneHigh.max,
+        );
+  }
+
+  return false;
+}
 
 bool _isFriendN(int value) => value >= 1 && value <= 9;
 
@@ -30,6 +70,7 @@ TopicRule _rule(
   int? focusTechniqueN,
   int? minFocusSteps,
   List<String>? preferDigitWidths,
+  ResolveValueCorridor? resolveValueCorridor,
 }) {
   return TopicRule(
     allows: allows,
@@ -40,6 +81,7 @@ TopicRule _rule(
     isValidChain: isValidChain,
     minFocusSteps: minFocusSteps,
     preferDigitWidths: preferDigitWidths,
+    resolveValueCorridor: resolveValueCorridor,
     totalRods: totalRods,
   );
 }
@@ -254,12 +296,23 @@ TopicRule? createFriendTopicRule(
             ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
             : (_, __) => true;
 
+    // 1digit: операнды 1…9 → с 0 в 50…99 не прыгнуть; коридор всегда низ.
+    // 2digit*: рандом половины 0…49 / 50…99.
+    final ResolveValueCorridor resolveCorridor = width == '1digit'
+        ? (_) => friendHalfZoneLow
+        : pickFriendHalfZoneCorridor;
+
     return _rule(
       rods,
       candidates,
       _allowsFriend(n, priorNs, rods),
-      andChainValidators([techniqueValidator, widthValidator]),
+      andChainValidators([
+        techniqueValidator,
+        widthValidator,
+        (_, intermediates) => chainRespectsFriendHalfZone(intermediates),
+      ]),
       focusTechniqueN: n,
+      resolveValueCorridor: resolveCorridor,
     );
   }
 

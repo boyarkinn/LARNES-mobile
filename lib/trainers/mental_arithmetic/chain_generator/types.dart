@@ -80,6 +80,11 @@ typedef TopicChainValidator = bool Function(
   List<int> intermediates,
 );
 
+/// Коридор промежуточных (Друзья: 0…49 или 50…99).
+typedef ValueCorridor = ({int min, int max});
+
+typedef ResolveValueCorridor = ValueCorridor Function(double Function() random);
+
 class TopicRule {
   const TopicRule({
     required this.candidateAmounts,
@@ -96,6 +101,7 @@ class TopicRule {
     this.preferDigitWidths,
     this.forcedFirstStep,
     this.techniqueSummary,
+    this.resolveValueCorridor,
   });
 
   final List<int> candidateAmounts;
@@ -132,6 +138,9 @@ class TopicRule {
 
   /// Анзан / сводка: walk без приоритета friend; isValidChain — квота техник.
   final bool? techniqueSummary;
+
+  /// Друзья rods=2: выбрать коридор половины на старте цепи.
+  final ResolveValueCorridor? resolveValueCorridor;
 }
 
 class Chain {

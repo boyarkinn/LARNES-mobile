@@ -120,6 +120,7 @@ List<String> _signsForMode(SignMode signMode, int value, int stepIndex) {
   int stepIndex,
   SignMode signMode,
   TopicRule rule,
+  ValueCorridor? corridor,
 ) {
   final target = <ChainStep>[];
   final setup = <ChainStep>[];
@@ -131,6 +132,11 @@ List<String> _signsForMode(SignMode signMode, int value, int stepIndex) {
       final next = tryApplyChainStep(value, step, rule.totalRods);
 
       if (next == null) {
+        continue;
+      }
+
+      if (corridor != null &&
+          (next < corridor.min || next > corridor.max)) {
         continue;
       }
 
@@ -172,6 +178,7 @@ List<ChainStep> _preferHeadroomSteps(
   int actionCount,
   int totalRods,
   SignMode signMode,
+  ValueCorridor? corridor,
 ) {
   final remainingAfter = actionCount - stepIndex - 1;
 
@@ -179,8 +186,11 @@ List<ChainStep> _preferHeadroomSteps(
     return pool;
   }
 
+  final maxValue = corridor?.max ?? maxValueForRods(totalRods);
+  final minValue = corridor?.min ?? 0;
+
   if (signMode == 'add' || signMode == 'mix') {
-    final maxAmount = maxValueForRods(totalRods) - value - remainingAfter;
+    final maxAmount = maxValue - value - remainingAfter;
     if (maxAmount >= 1) {
       final safe = pool
           .where((step) => step.sign == '-' || step.amount <= maxAmount)
@@ -202,7 +212,8 @@ List<ChainStep> _preferHeadroomSteps(
     final safe = pool
         .where(
           (step) =>
-              step.sign == '+' || value - step.amount >= remainingAfter,
+              step.sign == '+' ||
+              value - step.amount >= minValue + remainingAfter,
         )
         .toList();
     return safe.isNotEmpty ? safe : pool;
@@ -372,6 +383,7 @@ Chain? _tryBuildChain(
               rule.minFocusSteps ?? 1,
             )
           : null;
+  final corridor = rule.resolveValueCorridor?.call(random);
 
   for (var stepIndex = 0; stepIndex < config.actionCount; stepIndex += 1) {
     var placed = false;
@@ -382,6 +394,10 @@ Chain? _tryBuildChain(
       if (next == null) {
         return null;
       }
+      if (corridor != null &&
+          (next < corridor.min || next > corridor.max)) {
+        return null;
+      }
       value = next;
       steps.add(forced);
       intermediates.add(value);
@@ -389,8 +405,13 @@ Chain? _tryBuildChain(
     }
 
     for (var backtrack = 0; backtrack < _maxStepBacktracks; backtrack += 1) {
-      final groups =
-          _collectCandidates(value, stepIndex, config.signMode, rule);
+      final groups = _collectCandidates(
+        value,
+        stepIndex,
+        config.signMode,
+        rule,
+        corridor,
+      );
       final pool = _pickCandidatePool(
         groups,
         random,
@@ -429,6 +450,7 @@ Chain? _tryBuildChain(
         config.actionCount,
         rule.totalRods,
         config.signMode,
+        corridor,
       );
       // Не clear()+addAll на том же списке — потеряем кандидатов.
       if (!identical(headroomPool, pool)) {

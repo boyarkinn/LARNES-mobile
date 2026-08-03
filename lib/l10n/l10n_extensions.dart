@@ -5,6 +5,16 @@ import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
+extension ActivityHubKindL10n on ActivityHubKind {
+  String title(AppLocalizations l10n) {
+    return switch (this) {
+      ActivityHubKind.attendance => l10n.parentActivityAttendance,
+      ActivityHubKind.schedule => l10n.parentActivitySchedule,
+      ActivityHubKind.payments => l10n.parentActivityPayments,
+    };
+  }
+}
+
 extension L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;
 }

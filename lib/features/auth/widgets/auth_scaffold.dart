@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_language_picker.dart';
@@ -57,7 +58,8 @@ class AuthScaffold extends StatelessWidget {
                       child: centerContent
                           ? ConstrainedBox(
                               constraints: BoxConstraints(
-                                minHeight: constraints.maxHeight - padding.vertical,
+                                minHeight:
+                                    constraints.maxHeight - padding.vertical,
                               ),
                               child: Center(child: content),
                             )
@@ -94,7 +96,7 @@ class _AuthPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = buildParentTextTheme();
     final topPadding = MediaQuery.paddingOf(context).top;
-    final sideInset = showBack ? 48.0 : 20.0;
+    const sideInset = 48.0;
 
     return ClipRect(
       child: BackdropFilter(
@@ -130,7 +132,18 @@ class _AuthPageHeader extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: _AuthHeaderBackButton(
                         semanticsLabel: context.l10n.parentBack,
-                        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+                        onPressed:
+                            onBack ?? () => Navigator.of(context).maybePop(),
+                      ),
+                    )
+                  else
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SvgPicture.asset(
+                        'assets/brand/mark-blue.svg',
+                        width: 32,
+                        height: 32,
+                        semanticsLabel: 'LARNES',
                       ),
                     ),
                 ],
@@ -187,10 +200,7 @@ class _AuthHeaderBackButtonState extends State<_AuthHeaderBackButton> {
 
 /// Step hint / subtitle under the page title (title lives in [AuthScaffold]).
 class AuthHeader extends StatelessWidget {
-  const AuthHeader({
-    super.key,
-    this.subtitle,
-  });
+  const AuthHeader({super.key, this.subtitle});
 
   final String? subtitle;
 
@@ -202,10 +212,7 @@ class AuthHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        subtitle!,
-        style: Theme.of(context).textTheme.bodyMedium,
-      ),
+      child: Text(subtitle!, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 }
@@ -225,10 +232,7 @@ class AuthBodyHint extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.bodyMedium,
-      ),
+      child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 }
@@ -253,10 +257,9 @@ class AuthMutedText extends StatelessWidget {
       child: Text(
         text,
         textAlign: textAlign,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontSize: 13,
-              height: 1.35,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.35),
       ),
     );
   }

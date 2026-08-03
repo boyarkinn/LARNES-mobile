@@ -71,3 +71,15 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:3200
 ## Документация
 
 Журнал: [platform/docs/completed/larnes-mobile-dev.md](../platform/docs/completed/larnes-mobile-dev.md)
+
+### Parent activity diary (приёмка)
+
+Hub ребёнка → **Посещаемость** · **График** · **Оплаты** — read-only parity с web `/parent/:childId/activity/*`.
+
+Smoke на staging (тот же ребёнок, что web):
+
+1. Hub → Посещаемость → класс → календарь месяца.
+2. Hub → График → place dock, листание дней.
+3. Hub → Оплаты → Начисления / Чеки → деталь строки.
+
+Эпик: [platform/docs/completed/parent-activity-mobile-v1.md](../platform/docs/completed/parent-activity-mobile-v1.md)

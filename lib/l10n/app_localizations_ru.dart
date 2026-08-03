@@ -289,6 +289,153 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentStudyProfileCard => 'Профиль';
 
   @override
+  String get parentStudyCoursesCard => 'Курсы LARNES';
+
+  @override
+  String get parentCoursesTitle => 'Курсы';
+
+  @override
+  String get parentCoursesEmpty => 'Пока нет опубликованных курсов.';
+
+  @override
+  String get parentActivityAttendance => 'Посещаемость';
+
+  @override
+  String get parentActivitySchedule => 'График';
+
+  @override
+  String get parentActivityScheduleEmpty => 'На этот день занятий нет.';
+
+  @override
+  String get parentActivitySchedulePrevDay => 'Предыдущий день';
+
+  @override
+  String get parentActivityScheduleNextDay => 'Следующий день';
+
+  @override
+  String get parentActivityScheduleNotFound =>
+      'График для этого дня недоступен.';
+
+  @override
+  String get parentActivityPayments => 'Оплаты';
+
+  @override
+  String get parentActivityPaymentsTabAccruals => 'Начисления';
+
+  @override
+  String get parentActivityPaymentsTabReceipts => 'Чеки';
+
+  @override
+  String get parentActivityPaymentsTabsLabel => 'Режим оплат';
+
+  @override
+  String get parentActivityPaymentsEmptyAccruals => 'Пока нет начислений.';
+
+  @override
+  String get parentActivityPaymentsEmptyReceipts => 'Пока нет чеков.';
+
+  @override
+  String get parentActivityPaymentReceiptTitle => 'Чек';
+
+  @override
+  String get parentActivityPaymentReceiptAccepted => 'Принято';
+
+  @override
+  String get parentActivityPaymentReceiptGift => 'Подарочных';
+
+  @override
+  String get parentActivityPaymentReceiptRefund => 'Возврат за пропуски';
+
+  @override
+  String get parentActivityPaymentReceiptTotalOnAccount => 'Всего на счёт';
+
+  @override
+  String get parentActivityPaymentAccrualTitle => 'Начисление';
+
+  @override
+  String get parentActivityPaymentAccrualHeadSuffix => 'распределено на:';
+
+  @override
+  String get parentActivityPaymentAccrualColAmount => 'Сумма';
+
+  @override
+  String get parentActivityPaymentAccrualColDate => 'Дата';
+
+  @override
+  String get parentActivityPaymentAccrualColTime => 'Время';
+
+  @override
+  String get parentActivityPaymentAccrualColCenter => 'Центр';
+
+  @override
+  String get parentActivityPaymentAccrualColClass => 'Класс';
+
+  @override
+  String get parentActivityPaymentDetailNotFound => 'Детали оплаты недоступны.';
+
+  @override
+  String get parentActivityComingSoon => 'Раздел скоро появится в приложении.';
+
+  @override
+  String get parentActivityLoadFailed =>
+      'Не удалось загрузить дневник занятий.';
+
+  @override
+  String get parentActivityPlaceSummary => 'Сводная';
+
+  @override
+  String get parentActivityPlaceDockLabel => 'Фильтр мест';
+
+  @override
+  String get parentActivityAttendanceEmpty =>
+      'Пока нет классов в выбранном месте.';
+
+  @override
+  String parentActivityCalendarTitle(Object name) {
+    return '«$name»';
+  }
+
+  @override
+  String get parentActivityCalendarNotFound =>
+      'Календарь для этого класса недоступен.';
+
+  @override
+  String get parentActivityCalendarPrevMonth => 'Предыдущий месяц';
+
+  @override
+  String get parentActivityCalendarNextMonth => 'Следующий месяц';
+
+  @override
+  String get parentActivityCalendarLegendPaid => 'Оплачено';
+
+  @override
+  String get parentActivityCalendarLegendFirstUnpaid => 'Первое неоплаченное';
+
+  @override
+  String get parentActivityCalendarLegendUnpaid => 'Неоплачено';
+
+  @override
+  String get parentActivityCalendarLegendMakeup => 'Отработка';
+
+  @override
+  String get parentActivityCalendarCodesTitle => 'Коды посещаемости';
+
+  @override
+  String get parentActivityCalendarCodePresent => 'был';
+
+  @override
+  String get parentActivityCalendarCodeAbsent => 'не пришёл';
+
+  @override
+  String get parentActivityCalendarCodeSick => 'заболел';
+
+  @override
+  String get parentActivityCalendarCodeExcused => 'отпросился';
+
+  @override
+  String get parentActivityCalendarCodeAdvanceNotice => 'тайм-аут';
+
+  @override
   String get parentHomeworkTitle => 'Домашние задания';
 
   @override

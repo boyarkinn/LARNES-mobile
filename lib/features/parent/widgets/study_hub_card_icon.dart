@@ -57,6 +57,22 @@ String _svgForKind(HubCardIconKind kind) {
 <path d="M12 4.5 5 8v8l7 3.5 7-3.5V8l-7-3.5Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
 <path d="M12 12 5 8M12 12v7.5M12 12l7-4" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
 ''',
+    HubCardIconKind.courses => '''
+<path d="M5.5 8.5 12 5l6.5 3.5v7L12 19l-6.5-3.5v-7Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
+<path d="M12 12v7M5.5 8.5 12 12l6.5-3.5" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
+''',
+    HubCardIconKind.attendance => '''
+<path d="M8 4h8a2 2 0 0 1 2 2v13.5H6V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
+<path d="M9 2.5V6M15 2.5V6M8 11h3M8 14.5h8" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
+''',
+    HubCardIconKind.schedule => '''
+<circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="1.75" fill="none"/>
+<path d="M12 7.5V12l3 2" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
+''',
+    HubCardIconKind.payments => '''
+<rect x="4" y="7" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.75" fill="none"/>
+<path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M4 11h16" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
+''',
   };
 
   return '<svg $xmlns viewBox="0 0 24 24" fill="none">$body</svg>';

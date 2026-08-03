@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
-import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
-import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
-import 'package:larnes_mobile/features/parent/widgets/parent_panel_error_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -25,10 +22,10 @@ class StudyHubScreen extends StatefulWidget {
 
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
-  String? _error;
-  String? _errorCode;
-  List<ParentDirectionCard> _directions = const [];
+  bool _hasPublishedCourses = false;
   bool _wasInactive = false;
+
+  static const _activityKinds = ActivityHubKind.values;
 
   @override
   void initState() {
@@ -68,41 +65,32 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
     if (!refreshing) {
       setState(() {
         _isLoading = true;
-        _error = null;
-        _errorCode = null;
       });
     }
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final directions = await AuthScope.of(context).parentApi.listDirections(
-        widget.childId,
+      final hasPublishedCourses = await AuthScope.of(context).parentApi.hasPublishedLarnesCourses(
         locale: locale,
       );
       if (!mounted) {
         return;
       }
       setState(() {
-        _directions = directions;
+        _hasPublishedCourses = hasPublishedCourses;
         _isLoading = false;
-        _error = null;
-        _errorCode = null;
       });
-    } on ParentApiException catch (error) {
-      if (mounted && redirectToFamilySetupIfRequired(context, code: error.code)) {
-        return;
-      }
+    } on ParentApiException catch (_) {
       if (mounted) {
         setState(() {
-          _error = error.message;
-          _errorCode = error.code;
+          _hasPublishedCourses = false;
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _error = context.l10n.requestFailed;
+          _hasPublishedCourses = false;
           _isLoading = false;
         });
       }
@@ -154,38 +142,29 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                     segment: 'homework',
                   ),
                 ),
-                if (_error != null) ...[
-                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
-                  ParentPanelErrorPanel(
-                    message: _error!,
-                    showFamilySetupAction: isFamilySetupRequiredCode(
-                      _errorCode,
-                    ),
-                    onFamilySetup: () => redirectToFamilySetupIfRequired(
-                      context,
-                      code: _errorCode,
-                    ),
-                    onRetry: _load,
-                  ),
-                ],
-                for (final direction in _directions) ...[
+                if (_hasPublishedCourses) ...[
                   const SizedBox(height: ParentChildCardMetrics.pickerListGap),
                   StudyHubCard(
-                    title: direction.directionTitle,
-                    tokens: directionHubCardTokens(
-                      direction.directionSlug,
-                      sortOrder: direction.sortOrder,
-                    ),
-                    icon: resolveDirectionHubIconKind(direction.directionSlug),
+                    title: l10n.parentStudyCoursesCard,
+                    tokens: coursesHubCardTokens(),
+                    icon: HubCardIconKind.courses,
                     onTap: () => ParentChildRoutes.pushForChild(
                       context,
                       childId: widget.childId,
-                      segment: 'directions/${direction.directionId}',
-                      extra: DirectionProgramsRouteExtra(
-                        directionTitle: direction.directionTitle,
-                        directionSlug: direction.directionSlug,
-                        sortOrder: direction.sortOrder,
-                      ),
+                      segment: 'courses',
+                    ),
+                  ),
+                ],
+                for (final kind in _activityKinds) ...[
+                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  StudyHubCard(
+                    title: kind.title(l10n),
+                    tokens: activityHubCardTokens(kind),
+                    icon: activityHubIconKind(kind),
+                    onTap: () => ParentChildRoutes.pushForChild(
+                      context,
+                      childId: widget.childId,
+                      segment: 'activity/${kind.name}',
                     ),
                   ),
                 ],

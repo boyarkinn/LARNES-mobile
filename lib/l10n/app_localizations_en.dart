@@ -288,6 +288,154 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentStudyProfileCard => 'Profile';
 
   @override
+  String get parentStudyCoursesCard => 'LARNES courses';
+
+  @override
+  String get parentCoursesTitle => 'Courses';
+
+  @override
+  String get parentCoursesEmpty => 'No published courses yet.';
+
+  @override
+  String get parentActivityAttendance => 'Attendance';
+
+  @override
+  String get parentActivitySchedule => 'Schedule';
+
+  @override
+  String get parentActivityScheduleEmpty => 'No lessons on this day.';
+
+  @override
+  String get parentActivitySchedulePrevDay => 'Previous day';
+
+  @override
+  String get parentActivityScheduleNextDay => 'Next day';
+
+  @override
+  String get parentActivityScheduleNotFound =>
+      'Schedule is not available for this day.';
+
+  @override
+  String get parentActivityPayments => 'Payments';
+
+  @override
+  String get parentActivityPaymentsTabAccruals => 'Accruals';
+
+  @override
+  String get parentActivityPaymentsTabReceipts => 'Receipts';
+
+  @override
+  String get parentActivityPaymentsTabsLabel => 'Payment mode';
+
+  @override
+  String get parentActivityPaymentsEmptyAccruals => 'No accruals yet.';
+
+  @override
+  String get parentActivityPaymentsEmptyReceipts => 'No receipts yet.';
+
+  @override
+  String get parentActivityPaymentReceiptTitle => 'Receipt';
+
+  @override
+  String get parentActivityPaymentReceiptAccepted => 'Accepted';
+
+  @override
+  String get parentActivityPaymentReceiptGift => 'Gift';
+
+  @override
+  String get parentActivityPaymentReceiptRefund => 'Refund for missed lessons';
+
+  @override
+  String get parentActivityPaymentReceiptTotalOnAccount => 'Total on account';
+
+  @override
+  String get parentActivityPaymentAccrualTitle => 'Accrual';
+
+  @override
+  String get parentActivityPaymentAccrualHeadSuffix => 'allocated to:';
+
+  @override
+  String get parentActivityPaymentAccrualColAmount => 'Amount';
+
+  @override
+  String get parentActivityPaymentAccrualColDate => 'Date';
+
+  @override
+  String get parentActivityPaymentAccrualColTime => 'Time';
+
+  @override
+  String get parentActivityPaymentAccrualColCenter => 'Center';
+
+  @override
+  String get parentActivityPaymentAccrualColClass => 'Class';
+
+  @override
+  String get parentActivityPaymentDetailNotFound =>
+      'Payment details are not available.';
+
+  @override
+  String get parentActivityComingSoon =>
+      'This section is coming soon in the app.';
+
+  @override
+  String get parentActivityLoadFailed => 'Could not load activity diary.';
+
+  @override
+  String get parentActivityPlaceSummary => 'Summary';
+
+  @override
+  String get parentActivityPlaceDockLabel => 'Place filter';
+
+  @override
+  String get parentActivityAttendanceEmpty =>
+      'No classes in the selected place yet.';
+
+  @override
+  String parentActivityCalendarTitle(Object name) {
+    return '“$name”';
+  }
+
+  @override
+  String get parentActivityCalendarNotFound =>
+      'Calendar is not available for this class.';
+
+  @override
+  String get parentActivityCalendarPrevMonth => 'Previous month';
+
+  @override
+  String get parentActivityCalendarNextMonth => 'Next month';
+
+  @override
+  String get parentActivityCalendarLegendPaid => 'Paid';
+
+  @override
+  String get parentActivityCalendarLegendFirstUnpaid => 'First unpaid';
+
+  @override
+  String get parentActivityCalendarLegendUnpaid => 'Unpaid';
+
+  @override
+  String get parentActivityCalendarLegendMakeup => 'Make-up';
+
+  @override
+  String get parentActivityCalendarCodesTitle => 'Attendance codes';
+
+  @override
+  String get parentActivityCalendarCodePresent => 'present';
+
+  @override
+  String get parentActivityCalendarCodeAbsent => 'absent';
+
+  @override
+  String get parentActivityCalendarCodeSick => 'sick';
+
+  @override
+  String get parentActivityCalendarCodeExcused => 'excused';
+
+  @override
+  String get parentActivityCalendarCodeAdvanceNotice => 'advance notice';
+
+  @override
   String get parentHomeworkTitle => 'Homework';
 
   @override

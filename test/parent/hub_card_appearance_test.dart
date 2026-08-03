@@ -3,6 +3,30 @@ import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 
 void main() {
+  group('coursesHubCardTokens', () {
+    test('uses violet tokens', () {
+      final tokens = coursesHubCardTokens();
+      expect(tokens.tag, childCardColorTokens(ChildCardColor.violet).tag);
+    });
+  });
+
+  group('activityHubCardTokens', () {
+    test('maps kinds to web palette', () {
+      expect(
+        activityHubCardTokens(ActivityHubKind.attendance).tag,
+        childCardColorTokens(ChildCardColor.emerald).tag,
+      );
+      expect(
+        activityHubCardTokens(ActivityHubKind.schedule).tag,
+        profileHubCardTokens.tag,
+      );
+      expect(
+        activityHubCardTokens(ActivityHubKind.payments).tag,
+        childCardColorTokens(ChildCardColor.orange).tag,
+      );
+    });
+  });
+
   group('homeworkHubCardTokens', () {
     test('uses orange tokens', () {
       final tokens = homeworkHubCardTokens();

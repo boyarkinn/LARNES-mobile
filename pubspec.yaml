@@ -66,6 +66,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/brand/
     - assets/parent/avatars/
     - assets/audio/ru/mental-arithmetic/operations/
     - assets/audio/ru/mental-arithmetic/numbers/

@@ -4,6 +4,8 @@ import 'package:larnes_mobile/core/api/family_setup_api.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 
+export 'package:larnes_mobile/core/api/parent_panel_error.dart' show isFamilySetupRequiredCode;
+
 /// Зарезервированные сегменты — не id ребёнка; иначе ловим gate как :childId.
 const reservedParentChildRouteIds = {'family-setup', 'family-join-dedup', 'children'};
 

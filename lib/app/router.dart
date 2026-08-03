@@ -52,6 +52,15 @@ import 'package:larnes_mobile/features/parent/screens/homework_list_screen.dart'
 import 'package:larnes_mobile/features/parent/screens/homework_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/program_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/courses_directions_screen.dart';
+import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_attendance_classes_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_attendance_calendar_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_schedule_day_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_payments_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_payment_receipt_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/activity/parent_payment_accrual_screen.dart';
+import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_shell_scaffold.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
@@ -330,6 +339,104 @@ GoRouter createAppRouter({
                             },
                           ),
                         ],
+                      ),
+                      GoRoute(
+                        path: 'courses',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return CoursesDirectionsScreen(childId: childId);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'activity/attendance',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ParentAttendanceClassesScreen(childId: childId);
+                        },
+                        routes: [
+                          GoRoute(
+                            path: ':groupId',
+                            builder: (context, state) {
+                              final childId = state.pathParameters['childId'];
+                              final groupId = state.pathParameters['groupId'];
+                              if (childId == null ||
+                                  childId.isEmpty ||
+                                  groupId == null ||
+                                  groupId.isEmpty) {
+                                return const ChildPickerScreen();
+                              }
+                              final extra = state.extra;
+                              final placeId = extra is String && extra.isNotEmpty
+                                  ? extra
+                                  : parentActivitySummaryPlaceId;
+                              return ParentAttendanceCalendarScreen(
+                                childId: childId,
+                                groupId: groupId,
+                                placeId: placeId,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'activity/schedule',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ParentScheduleDayScreen(childId: childId);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'activity/payments',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ParentPaymentsScreen(childId: childId);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'activity/payments/receipts/:batchId',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          final batchId = state.pathParameters['batchId'];
+                          if (childId == null ||
+                              childId.isEmpty ||
+                              batchId == null ||
+                              batchId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ParentPaymentReceiptScreen(
+                            childId: childId,
+                            batchId: batchId,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'activity/payments/accruals/:batchId',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          final batchId = state.pathParameters['batchId'];
+                          if (childId == null ||
+                              childId.isEmpty ||
+                              batchId == null ||
+                              batchId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ParentPaymentAccrualScreen(
+                            childId: childId,
+                            batchId: batchId,
+                          );
+                        },
                       ),
                       GoRoute(
                         path: 'directions/:directionId',

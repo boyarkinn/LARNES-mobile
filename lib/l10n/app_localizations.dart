@@ -620,6 +620,288 @@ abstract class AppLocalizations {
   /// **'Profile'**
   String get parentStudyProfileCard;
 
+  /// No description provided for @parentStudyCoursesCard.
+  ///
+  /// In en, this message translates to:
+  /// **'LARNES courses'**
+  String get parentStudyCoursesCard;
+
+  /// No description provided for @parentCoursesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Courses'**
+  String get parentCoursesTitle;
+
+  /// No description provided for @parentCoursesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No published courses yet.'**
+  String get parentCoursesEmpty;
+
+  /// No description provided for @parentActivityAttendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance'**
+  String get parentActivityAttendance;
+
+  /// No description provided for @parentActivitySchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get parentActivitySchedule;
+
+  /// No description provided for @parentActivityScheduleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No lessons on this day.'**
+  String get parentActivityScheduleEmpty;
+
+  /// No description provided for @parentActivitySchedulePrevDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous day'**
+  String get parentActivitySchedulePrevDay;
+
+  /// No description provided for @parentActivityScheduleNextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next day'**
+  String get parentActivityScheduleNextDay;
+
+  /// No description provided for @parentActivityScheduleNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule is not available for this day.'**
+  String get parentActivityScheduleNotFound;
+
+  /// No description provided for @parentActivityPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get parentActivityPayments;
+
+  /// No description provided for @parentActivityPaymentsTabAccruals.
+  ///
+  /// In en, this message translates to:
+  /// **'Accruals'**
+  String get parentActivityPaymentsTabAccruals;
+
+  /// No description provided for @parentActivityPaymentsTabReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get parentActivityPaymentsTabReceipts;
+
+  /// No description provided for @parentActivityPaymentsTabsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment mode'**
+  String get parentActivityPaymentsTabsLabel;
+
+  /// No description provided for @parentActivityPaymentsEmptyAccruals.
+  ///
+  /// In en, this message translates to:
+  /// **'No accruals yet.'**
+  String get parentActivityPaymentsEmptyAccruals;
+
+  /// No description provided for @parentActivityPaymentsEmptyReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipts yet.'**
+  String get parentActivityPaymentsEmptyReceipts;
+
+  /// No description provided for @parentActivityPaymentReceiptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get parentActivityPaymentReceiptTitle;
+
+  /// No description provided for @parentActivityPaymentReceiptAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted'**
+  String get parentActivityPaymentReceiptAccepted;
+
+  /// No description provided for @parentActivityPaymentReceiptGift.
+  ///
+  /// In en, this message translates to:
+  /// **'Gift'**
+  String get parentActivityPaymentReceiptGift;
+
+  /// No description provided for @parentActivityPaymentReceiptRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund for missed lessons'**
+  String get parentActivityPaymentReceiptRefund;
+
+  /// No description provided for @parentActivityPaymentReceiptTotalOnAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total on account'**
+  String get parentActivityPaymentReceiptTotalOnAccount;
+
+  /// No description provided for @parentActivityPaymentAccrualTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accrual'**
+  String get parentActivityPaymentAccrualTitle;
+
+  /// No description provided for @parentActivityPaymentAccrualHeadSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'allocated to:'**
+  String get parentActivityPaymentAccrualHeadSuffix;
+
+  /// No description provided for @parentActivityPaymentAccrualColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get parentActivityPaymentAccrualColAmount;
+
+  /// No description provided for @parentActivityPaymentAccrualColDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get parentActivityPaymentAccrualColDate;
+
+  /// No description provided for @parentActivityPaymentAccrualColTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get parentActivityPaymentAccrualColTime;
+
+  /// No description provided for @parentActivityPaymentAccrualColCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get parentActivityPaymentAccrualColCenter;
+
+  /// No description provided for @parentActivityPaymentAccrualColClass.
+  ///
+  /// In en, this message translates to:
+  /// **'Class'**
+  String get parentActivityPaymentAccrualColClass;
+
+  /// No description provided for @parentActivityPaymentDetailNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment details are not available.'**
+  String get parentActivityPaymentDetailNotFound;
+
+  /// No description provided for @parentActivityComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'This section is coming soon in the app.'**
+  String get parentActivityComingSoon;
+
+  /// No description provided for @parentActivityLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load activity diary.'**
+  String get parentActivityLoadFailed;
+
+  /// No description provided for @parentActivityPlaceSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get parentActivityPlaceSummary;
+
+  /// No description provided for @parentActivityPlaceDockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Place filter'**
+  String get parentActivityPlaceDockLabel;
+
+  /// No description provided for @parentActivityAttendanceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No classes in the selected place yet.'**
+  String get parentActivityAttendanceEmpty;
+
+  /// No description provided for @parentActivityCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'“{name}”'**
+  String parentActivityCalendarTitle(Object name);
+
+  /// No description provided for @parentActivityCalendarNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar is not available for this class.'**
+  String get parentActivityCalendarNotFound;
+
+  /// No description provided for @parentActivityCalendarPrevMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get parentActivityCalendarPrevMonth;
+
+  /// No description provided for @parentActivityCalendarNextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get parentActivityCalendarNextMonth;
+
+  /// No description provided for @parentActivityCalendarLegendPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get parentActivityCalendarLegendPaid;
+
+  /// No description provided for @parentActivityCalendarLegendFirstUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'First unpaid'**
+  String get parentActivityCalendarLegendFirstUnpaid;
+
+  /// No description provided for @parentActivityCalendarLegendUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get parentActivityCalendarLegendUnpaid;
+
+  /// No description provided for @parentActivityCalendarLegendMakeup.
+  ///
+  /// In en, this message translates to:
+  /// **'Make-up'**
+  String get parentActivityCalendarLegendMakeup;
+
+  /// No description provided for @parentActivityCalendarCodesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Attendance codes'**
+  String get parentActivityCalendarCodesTitle;
+
+  /// No description provided for @parentActivityCalendarCodePresent.
+  ///
+  /// In en, this message translates to:
+  /// **'present'**
+  String get parentActivityCalendarCodePresent;
+
+  /// No description provided for @parentActivityCalendarCodeAbsent.
+  ///
+  /// In en, this message translates to:
+  /// **'absent'**
+  String get parentActivityCalendarCodeAbsent;
+
+  /// No description provided for @parentActivityCalendarCodeSick.
+  ///
+  /// In en, this message translates to:
+  /// **'sick'**
+  String get parentActivityCalendarCodeSick;
+
+  /// No description provided for @parentActivityCalendarCodeExcused.
+  ///
+  /// In en, this message translates to:
+  /// **'excused'**
+  String get parentActivityCalendarCodeExcused;
+
+  /// No description provided for @parentActivityCalendarCodeAdvanceNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'advance notice'**
+  String get parentActivityCalendarCodeAdvanceNotice;
+
   /// No description provided for @parentHomeworkTitle.
   ///
   /// In en, this message translates to:

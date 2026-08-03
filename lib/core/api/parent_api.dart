@@ -6,6 +6,7 @@ import 'package:larnes_mobile/features/parent/models/child_classroom_qr.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
+import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
@@ -186,6 +187,236 @@ class ParentApi {
       return ParentHomeworkPlaySnapshot.fromJson(
         Map<String, dynamic>.from(snapshot),
       );
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<bool> hasPublishedLarnesCourses({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/larnes-courses/available',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.requestFailed),
+        );
+      }
+      return data['hasPublishedCourses'] == true;
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityContextPage> fetchActivityContext(
+    String childId, {
+    String? place,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/context',
+        queryParameters: {
+          'locale': locale,
+          if (place != null && place.isNotEmpty) 'place': place,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityLoadFailed),
+        );
+      }
+      return ParentActivityContextPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityClassesPage> listAttendanceClasses(
+    String childId, {
+    String? place,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/attendance/classes',
+        queryParameters: {
+          'locale': locale,
+          if (place != null && place.isNotEmpty) 'place': place,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityLoadFailed),
+        );
+      }
+      return ParentActivityClassesPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityScheduleDayPage> fetchScheduleDay(
+    String childId, {
+    String? date,
+    String? place,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/schedule/day',
+        queryParameters: {
+          'locale': locale,
+          if (date != null && date.isNotEmpty) 'date': date,
+          if (place != null && place.isNotEmpty) 'place': place,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityScheduleNotFound),
+        );
+      }
+      return ParentActivityScheduleDayPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityPaymentsPage> fetchPayments(
+    String childId, {
+    String? place,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/payments',
+        queryParameters: {
+          'locale': locale,
+          if (place != null && place.isNotEmpty) 'place': place,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityLoadFailed),
+        );
+      }
+      return ParentActivityPaymentsPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityReceiptDetailPage> fetchPaymentReceipt(
+    String childId,
+    String batchId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/payments/receipts/$batchId',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityPaymentDetailNotFound),
+        );
+      }
+      return ParentActivityReceiptDetailPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentActivityAccrualDetailPage> fetchPaymentAccrual(
+    String childId,
+    String batchId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/payments/accruals/$batchId',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityPaymentDetailNotFound),
+        );
+      }
+      return ParentActivityAccrualDetailPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentAttendanceCalendarPage> fetchAttendanceCalendar(
+    String childId,
+    String groupId, {
+    String? month,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/activity/attendance/$groupId/calendar',
+        queryParameters: {
+          'locale': locale,
+          if (month != null && month.isNotEmpty) 'month': month,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentActivityCalendarNotFound),
+        );
+      }
+      return ParentAttendanceCalendarPage.fromJson(data);
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

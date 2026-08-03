@@ -9,6 +9,16 @@ enum HubCardIconKind {
   writing,
   math,
   direction,
+  courses,
+  attendance,
+  schedule,
+  payments,
+}
+
+enum ActivityHubKind {
+  attendance,
+  schedule,
+  payments,
 }
 
 /// Эталон: platform/src/server/parent/hub-card-appearance.ts
@@ -20,6 +30,26 @@ const profileHubCardTokens = ChildCardColorTokens(
 
 ChildCardColorTokens homeworkHubCardTokens() {
   return childCardColorTokens(ChildCardColor.orange);
+}
+
+ChildCardColorTokens coursesHubCardTokens() {
+  return childCardColorTokens(ChildCardColor.violet);
+}
+
+ChildCardColorTokens activityHubCardTokens(ActivityHubKind kind) {
+  return switch (kind) {
+    ActivityHubKind.attendance => childCardColorTokens(ChildCardColor.emerald),
+    ActivityHubKind.schedule => profileHubCardTokens,
+    ActivityHubKind.payments => childCardColorTokens(ChildCardColor.orange),
+  };
+}
+
+HubCardIconKind activityHubIconKind(ActivityHubKind kind) {
+  return switch (kind) {
+    ActivityHubKind.attendance => HubCardIconKind.attendance,
+    ActivityHubKind.schedule => HubCardIconKind.schedule,
+    ActivityHubKind.payments => HubCardIconKind.payments,
+  };
 }
 
 const _directionSlugColor = <String, ChildCardColor>{

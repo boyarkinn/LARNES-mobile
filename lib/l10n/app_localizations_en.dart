@@ -513,6 +513,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentChildFormAvatarOwl => 'Owl';
 
   @override
+  String get parentChildLegalBasisLabel => 'Legal authority basis';
+
+  @override
+  String get parentChildLegalBasisParent => 'Parent';
+
+  @override
+  String get parentChildLegalBasisAdoptiveParent => 'Adoptive parent';
+
+  @override
+  String get parentChildLegalBasisGuardian => 'Appointed guardian';
+
+  @override
+  String get parentChildLegalAuthority =>
+      'I confirm that I am the selected legal representative of this child, my authority has not ended or been restricted, and no conflict of interest has been established. I will notify LARNES if my authority changes.';
+
+  @override
+  String get parentChildLegalConsent =>
+      'I consent to the processing of this child\'s personal data.';
+
+  @override
+  String get parentChildLegalDocumentLink =>
+      'Child Data Processing Consent';
+
+  @override
+  String get parentChildLegalRequired =>
+      'Confirm your authority and accept the child data consent.';
+
+  @override
   String get parentChildFormSubmit => 'Create profile';
 
   @override
@@ -1544,6 +1572,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountChildrenProfiles => 'Profiles';
 
   @override
+  String get parentAccountChildrenArchiveTitle => 'Archived children';
+
+  @override
+  String get parentAccountChildrenArchiveHint =>
+      'Connections are closed. School and teacher access must be granted again after restoration.';
+
+  @override
+  String get parentAccountChildrenRestore => 'Restore profile';
+
+  @override
   String get parentAccountChildrenActions => 'Actions';
 
   @override
@@ -1610,18 +1648,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAccountChildBackToProfile => 'Back to profile';
 
   @override
-  String get parentAccountDeleteChildTitle => 'Delete child?';
+  String get parentAccountDeleteChildTitle => 'Archive this child profile?';
 
   @override
   String get parentAccountDeleteChildMessage =>
-      'The profile will disappear from your cabinet and cannot be restored.';
+      'The profile will leave the active list and can be restored later.';
 
   @override
   String get parentAccountDeleteChildMessageActiveNetwork =>
-      'The profile will disappear from your cabinet; center enrollment will end; visit and payment history at the center will be kept.';
+      'The profile will leave the active list; connections will end; learning and payment history will be kept. The profile can be restored later.';
 
   @override
-  String get parentAccountDeleteChildConfirm => 'Delete child';
+  String get parentAccountDeleteChildConfirm => 'Archive profile';
 
   @override
   String get parentUpdateChildFailed => 'Could not update child profile.';
@@ -1946,4 +1984,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get kioskEnrollNoClassroomsForCenter =>
       'This center has no classrooms yet.';
+
+  @override
+  String get optionalPatronymicLabel => 'Patronymic (optional)';
+  @override
+  String get registrationOwnerEmailUnverifiedHint =>
+      'The email will be saved as unverified. Verify it in account settings after registration.';
+  @override
+  String get optionalDateOfBirthLabel => 'Date of birth (optional)';
+  @override
+  String get optionalCityLabel => 'City (optional)';
+  @override
+  String get notSpecifiedLabel => 'Not specified';
+  @override
+  String get registrationTermsRequired =>
+      'Accept the current Terms to create an account.';
+  @override
+  String get registrationTermsLink => 'Terms of Service';
+  @override
+  String get registrationPrivacyLink => 'Personal Data Policy';
+  @override
+  String get registrationTermsParent =>
+      'I accept the Terms of Service.';
+  @override
+  String get registrationTermsTeacher =>
+      'I accept the Terms of Service.';
+  @override
+  String get registrationTermsNetworkOwner =>
+      'I accept the Terms of Service.';
+  @override
+  String get voluntaryConsentTitle => 'Separate consent for optional data';
+  @override
+  String get voluntaryConsentParentFields =>
+      'Covers only patronymic, city, and date of birth. Core account functions do not depend on it.';
+  @override
+  String get voluntaryConsentParentCheckbox =>
+      'I consent to processing my patronymic, city, and date of birth for maintaining my private extended profile.';
+  @override
+  String voluntaryConsentOpenVersion(String version) => 'Open version $version';
+  @override
+  String get voluntaryConsentVersionMissing => 'The published consent version is unavailable.';
+  @override
+  String get voluntaryConsentRequired =>
+      'Confirm the separate consent to save a non-empty optional field.';
+  @override
+  String get voluntaryConsentRevokeTitle => 'Withdraw profile data consent';
+  @override
+  String get voluntaryConsentRevokeDescription =>
+      'Patronymic, city, and date of birth will be permanently erased. The core account will continue to work.';
+  @override
+  String get voluntaryConsentRevokeConfirm => 'I confirm withdrawal and data erasure';
+  @override
+  String get voluntaryConsentRevokeButton => 'Withdraw and erase';
+  @override
+  String get voluntaryConsentRevokeSuccess => 'Consent was withdrawn and the data was erased.';
+  @override
+  String get voluntaryConsentRevokeFailed =>
+      'Consent could not be withdrawn. No data was erased.';
 }

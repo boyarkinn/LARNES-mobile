@@ -28,6 +28,29 @@ ParentApiException _parentApiException(
       code: parentPanelErrorCode(body),
     );
 
+class ChildProfileLegalSubmission {
+  const ChildProfileLegalSubmission({
+    required this.authorityBasis,
+    required this.childId,
+    required this.documentVersionId,
+    required this.idempotencyKey,
+  });
+
+  final String authorityBasis;
+  final String childId;
+  final String documentVersionId;
+  final String idempotencyKey;
+
+  Map<String, dynamic> toJson() => {
+        'authorityBasis': authorityBasis,
+        'authorityDeclared': true,
+        'childId': childId,
+        'consentAccepted': true,
+        'documentVersionId': documentVersionId,
+        'idempotencyKey': idempotencyKey,
+      };
+}
+
 class ParentApi {
   ParentApi(this._client);
 
@@ -58,6 +81,27 @@ class ParentApi {
     }
   }
 
+  Future<List<ParentChild>> listArchivedChildren({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get('/api/mobile/parent/children');
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentLoadChildrenFailed));
+      }
+      final children = data['archivedChildren'] as List<dynamic>? ?? const [];
+      return children
+          .map((item) => ParentChild.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList();
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
   Future<ParentChildDetail> fetchChild(String childId, {String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
@@ -77,6 +121,7 @@ class ParentApi {
   }
 
   Future<ParentChild> createChild({
+    required ChildProfileLegalSubmission legal,
     required CreateChildPayload payload,
     String locale = 'ru',
   }) async {
@@ -84,7 +129,10 @@ class ParentApi {
     try {
       final response = await _client.dio.post(
         '/api/mobile/parent/children',
-        data: payload.toJson(locale),
+        data: {
+          ...payload.toJson(locale),
+          ...legal.toJson(),
+        },
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
@@ -659,6 +707,26 @@ class ParentApi {
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentDeleteChildFailed));
+      }
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> restoreChild(String childId, {String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/restore',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(_messageFromBody(data, l10n));
       }
     } on DioException catch (error) {
       throw _parentApiException(

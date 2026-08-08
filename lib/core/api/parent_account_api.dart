@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
@@ -6,6 +8,63 @@ import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
+
+String newLegalIdempotencyKey() {
+  final bytes = List<int>.generate(16, (_) => Random.secure().nextInt(256));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  final hex = bytes.map((value) => value.toRadixString(16).padLeft(2, '0')).join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+      '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+}
+
+class VoluntaryConsentContext {
+  const VoluntaryConsentContext({
+    required this.activeEventId,
+    required this.fields,
+    required this.versionId,
+    required this.versionLabel,
+  });
+
+  factory VoluntaryConsentContext.fromJson(Map<String, dynamic> json) {
+    final version = json['version'] is Map
+        ? Map<String, dynamic>.from(json['version'] as Map)
+        : const <String, dynamic>{};
+    return VoluntaryConsentContext(
+      activeEventId: json['activeEventId'] as String?,
+      fields: (json['fields'] as List<dynamic>? ?? const [])
+          .whereType<String>()
+          .toList(growable: false),
+      versionId: version['id'] as String?,
+      versionLabel: version['label'] as String?,
+    );
+  }
+
+  final String? activeEventId;
+  final List<String> fields;
+  final String? versionId;
+  final String? versionLabel;
+
+  bool get isActive => activeEventId != null;
+}
+
+class VoluntaryConsentSubmission {
+  const VoluntaryConsentSubmission({
+    required this.accepted,
+    required this.idempotencyKey,
+    required this.versionId,
+  });
+
+  final bool accepted;
+  final String idempotencyKey;
+  final String versionId;
+
+  Map<String, dynamic> toJson() => {
+    'voluntaryConsentAccepted': accepted,
+    'voluntaryConsentIdempotencyKey': idempotencyKey,
+    'voluntaryConsentVersionId': versionId,
+  };
+}
 
 String _messageFromBody(
   dynamic body,
@@ -28,17 +87,22 @@ class ParentAccountSnapshot {
   const ParentAccountSnapshot({
     required this.user,
     required this.childrenCount,
+    required this.voluntaryConsent,
   });
 
   factory ParentAccountSnapshot.fromJson(Map<String, dynamic> json) {
     return ParentAccountSnapshot(
       user: AuthUser.fromJson(Map<String, dynamic>.from(json['user'] as Map)),
       childrenCount: json['childrenCount'] as int? ?? 0,
+      voluntaryConsent: VoluntaryConsentContext.fromJson(
+        Map<String, dynamic>.from(json['voluntaryConsent'] as Map),
+      ),
     );
   }
 
   final AuthUser user;
   final int childrenCount;
+  final VoluntaryConsentContext voluntaryConsent;
 }
 
 class ParentAccountApi {
@@ -49,7 +113,10 @@ class ParentAccountApi {
   Future<ParentAccountSnapshot> fetchAccount({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
-      final response = await _client.dio.get('/api/mobile/parent/account');
+      final response = await _client.dio.get(
+        '/api/mobile/parent/account',
+        queryParameters: {'locale': locale},
+      );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw ParentAccountApiException(
@@ -70,6 +137,7 @@ class ParentAccountApi {
     required String firstName,
     required String lastName,
     required String patronymic,
+    VoluntaryConsentSubmission? consent,
     String locale = 'ru',
   }) {
     return _patchUser(
@@ -79,6 +147,7 @@ class ParentAccountApi {
         'lastName': lastName,
         'patronymic': patronymic,
         'locale': locale,
+        if (consent != null) ...consent.toJson(),
       },
       locale: locale,
     );
@@ -86,24 +155,62 @@ class ParentAccountApi {
 
   Future<AuthUser> updateDateOfBirth({
     required String dateOfBirth,
+    VoluntaryConsentSubmission? consent,
     String locale = 'ru',
   }) {
     return _patchUser(
       '/api/mobile/parent/account/date-of-birth',
-      {'dateOfBirth': dateOfBirth, 'locale': locale},
+      {
+        'dateOfBirth': dateOfBirth,
+        'locale': locale,
+        if (consent != null) ...consent.toJson(),
+      },
       locale: locale,
     );
   }
 
   Future<AuthUser> updateCity({
     required String city,
+    VoluntaryConsentSubmission? consent,
     String locale = 'ru',
   }) {
     return _patchUser(
       '/api/mobile/parent/account/city',
-      {'city': city, 'locale': locale},
+      {
+        'city': city,
+        'locale': locale,
+        if (consent != null) ...consent.toJson(),
+      },
       locale: locale,
     );
+  }
+
+  Future<void> revokeVoluntaryConsent({
+    required String idempotencyKey,
+    required String targetEventId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/account/voluntary-consent/revoke',
+        data: {
+          'idempotencyKey': idempotencyKey,
+          'locale': locale,
+          'targetEventId': targetEventId,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentAccountApiException(_messageFromBody(data, l10n));
+      }
+    } on DioException catch (error) {
+      throw _parentAccountApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
   }
 
   Future<String> updateRelationship({

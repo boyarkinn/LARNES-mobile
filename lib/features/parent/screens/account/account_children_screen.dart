@@ -21,6 +21,8 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
   bool _isLoading = true;
   String? _error;
   List<ParentChild> _children = const [];
+  List<ParentChild> _archivedChildren = const [];
+  String? _restoringChildId;
   bool _wasInactive = false;
 
   @override
@@ -62,12 +64,15 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final children = await AuthScope.of(context).parentApi.listChildren(locale: locale);
+      final api = AuthScope.of(context).parentApi;
+      final children = await api.listChildren(locale: locale);
+      final archivedChildren = await api.listArchivedChildren(locale: locale);
       if (!mounted) {
         return;
       }
       setState(() {
         _children = children;
+        _archivedChildren = archivedChildren;
         _isLoading = false;
         _error = null;
       });
@@ -104,6 +109,27 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
     await context.push('/parent/$childId/profile?from=account');
     if (mounted) {
       await _load(silent: true);
+    }
+  }
+
+  Future<void> _restoreChild(String childId) async {
+    setState(() {
+      _restoringChildId = childId;
+      _error = null;
+    });
+    try {
+      final locale = LocaleScope.read(context).localeCode;
+      await AuthScope.of(context).parentApi.restoreChild(childId, locale: locale);
+      AuthScope.of(context).notifyParentDataChanged();
+      await _load(silent: true);
+    } on ParentApiException catch (error) {
+      if (mounted) {
+        setState(() => _error = error.message);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _restoringChildId = null);
+      }
     }
   }
 
@@ -167,6 +193,51 @@ class _AccountChildrenScreenState extends State<AccountChildrenScreen> {
             ],
           ),
         ),
+        if (_archivedChildren.isNotEmpty)
+          AccountDeskCard(
+            bandTitle: l10n.parentAccountChildrenArchiveTitle,
+            child: Column(
+              children: [
+                for (var i = 0; i < _archivedChildren.length; i++) ...[
+                  if (i > 0) const AccountDivider(),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          _childTitle(_archivedChildren[i]),
+                          style: const TextStyle(
+                            color: ParentColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.parentAccountChildrenArchiveHint,
+                          style: const TextStyle(color: ParentColors.inkMuted),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _restoringChildId == null
+                              ? () => _restoreChild(_archivedChildren[i].id)
+                              : null,
+                          child: _restoringChildId == _archivedChildren[i].id
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : Text(l10n.parentAccountChildrenRestore),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         AccountDeskCard(
           bandTitle: l10n.parentAccountChildrenActions,
           child: AccountLinkRow(

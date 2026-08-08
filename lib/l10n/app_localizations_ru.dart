@@ -515,6 +515,34 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentChildFormAvatarOwl => 'Сова';
 
   @override
+  String get parentChildLegalBasisLabel => 'Основание представительства';
+
+  @override
+  String get parentChildLegalBasisParent => 'Родитель';
+
+  @override
+  String get parentChildLegalBasisAdoptiveParent => 'Усыновитель';
+
+  @override
+  String get parentChildLegalBasisGuardian => 'Назначенный опекун';
+
+  @override
+  String get parentChildLegalAuthority =>
+      'Я подтверждаю, что являюсь выбранным законным представителем этого ребёнка, мои полномочия не прекращены и не ограничены, конфликта интересов не установлено. Я сообщу LARNES, если полномочия изменятся.';
+
+  @override
+  String get parentChildLegalConsent =>
+      'Я даю согласие на обработку персональных данных этого ребёнка.';
+
+  @override
+  String get parentChildLegalDocumentLink =>
+      'Согласие на обработку данных ребёнка';
+
+  @override
+  String get parentChildLegalRequired =>
+      'Подтвердите полномочия и примите согласие на обработку данных ребёнка.';
+
+  @override
   String get parentChildFormSubmit => 'Создать профиль';
 
   @override
@@ -1560,6 +1588,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountChildrenProfiles => 'Профили';
 
   @override
+  String get parentAccountChildrenArchiveTitle => 'Архив детей';
+
+  @override
+  String get parentAccountChildrenArchiveHint =>
+      'Подключения закрыты. После восстановления доступ школам и педагогам нужно выдать заново.';
+
+  @override
+  String get parentAccountChildrenRestore => 'Восстановить профиль';
+
+  @override
   String get parentAccountChildrenActions => 'Действия';
 
   @override
@@ -1626,18 +1664,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAccountChildBackToProfile => 'К профилю';
 
   @override
-  String get parentAccountDeleteChildTitle => 'Удалить ребёнка?';
+  String get parentAccountDeleteChildTitle => 'Архивировать профиль ребёнка?';
 
   @override
   String get parentAccountDeleteChildMessage =>
-      'Профиль исчезнет из кабинета без возможности восстановления.';
+      'Профиль исчезнет из активного списка, но его можно будет восстановить.';
 
   @override
   String get parentAccountDeleteChildMessageActiveNetwork =>
-      'Профиль исчезнет из вашего кабинета; обучение в центре будет завершено; история посещений и оплат у центра сохранится.';
+      'Профиль исчезнет из активного списка; подключения завершатся; история обучения и оплат сохранится. Профиль можно будет восстановить.';
 
   @override
-  String get parentAccountDeleteChildConfirm => 'Удалить ребёнка';
+  String get parentAccountDeleteChildConfirm => 'Архивировать профиль';
 
   @override
   String get parentUpdateChildFailed => 'Не удалось обновить профиль ребёнка.';
@@ -1964,4 +2002,62 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get kioskEnrollNoClassroomsForCenter =>
       'В этом центре пока нет классов.';
+
+  @override
+  String get optionalPatronymicLabel => 'Отчество (необязательно)';
+  @override
+  String get registrationOwnerEmailUnverifiedHint =>
+      'Email будет сохранён как неподтверждённый. После регистрации подтвердите его в настройках аккаунта.';
+  @override
+  String get optionalDateOfBirthLabel => 'Дата рождения (необязательно)';
+  @override
+  String get optionalCityLabel => 'Город (необязательно)';
+  @override
+  String get notSpecifiedLabel => 'Не указан';
+  @override
+  String get registrationTermsRequired =>
+      'Чтобы создать аккаунт, примите действующее Пользовательское соглашение.';
+  @override
+  String get registrationTermsLink => 'Пользовательское соглашение';
+  @override
+  String get registrationPrivacyLink =>
+      'Политика обработки персональных данных';
+  @override
+  String get registrationTermsParent =>
+      'Я принимаю Пользовательское соглашение.';
+  @override
+  String get registrationTermsTeacher =>
+      'Я принимаю Пользовательское соглашение.';
+  @override
+  String get registrationTermsNetworkOwner =>
+      'Я принимаю Пользовательское соглашение.';
+  @override
+  String get voluntaryConsentTitle => 'Отдельное согласие на необязательные данные';
+  @override
+  String get voluntaryConsentParentFields =>
+      'Охватывает только отчество, город и дату рождения. Основные функции аккаунта от него не зависят.';
+  @override
+  String get voluntaryConsentParentCheckbox =>
+      'Я согласен на обработку отчества, города и даты рождения для ведения закрытого расширенного профиля.';
+  @override
+  String voluntaryConsentOpenVersion(String version) => 'Открыть версию $version';
+  @override
+  String get voluntaryConsentVersionMissing => 'Опубликованная версия согласия недоступна.';
+  @override
+  String get voluntaryConsentRequired =>
+      'Подтвердите отдельное согласие для сохранения заполненного необязательного поля.';
+  @override
+  String get voluntaryConsentRevokeTitle => 'Отозвать согласие на данные профиля';
+  @override
+  String get voluntaryConsentRevokeDescription =>
+      'Отчество, город и дата рождения будут безвозвратно удалены. Основной аккаунт продолжит работать.';
+  @override
+  String get voluntaryConsentRevokeConfirm => 'Подтверждаю отзыв и удаление данных';
+  @override
+  String get voluntaryConsentRevokeButton => 'Отозвать и удалить';
+  @override
+  String get voluntaryConsentRevokeSuccess => 'Согласие отозвано, данные удалены.';
+  @override
+  String get voluntaryConsentRevokeFailed =>
+      'Не удалось отозвать согласие. Данные не удалены.';
 }

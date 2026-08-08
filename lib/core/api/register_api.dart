@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:larnes_mobile/core/api/api_error_body.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/api_error_body.dart';
@@ -23,13 +22,19 @@ class RegisterApi {
   final ApiClient _client;
   MobileConfig? _cachedConfig;
 
-  Future<MobileConfig> fetchConfig({bool forceRefresh = false}) async {
+  Future<MobileConfig> fetchConfig({
+    bool forceRefresh = false,
+    String locale = 'ru',
+  }) async {
     if (_cachedConfig != null && !forceRefresh) {
       return _cachedConfig!;
     }
 
     try {
-      final response = await _client.dio.get('/api/mobile/config');
+      final response = await _client.dio.get(
+        '/api/mobile/config',
+        queryParameters: {'locale': locale},
+      );
       final data = _asJsonMap(response.data);
       if (data != null && data['status'] == 'success') {
         _cachedConfig = MobileConfig.fromJson(data);
@@ -148,6 +153,8 @@ class RegisterApi {
     required RegisterFlowData flow,
     required String verificationToken,
     required Map<String, String> profile,
+    required String idempotencyKey,
+    required String termsVersionId,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
@@ -159,6 +166,9 @@ class RegisterApi {
           'channel': _channelValue(flow.channel),
           'contact': flow.contact,
           'locale': locale,
+          'idempotencyKey': idempotencyKey,
+          'termsAccepted': true,
+          'termsVersionId': termsVersionId,
           'verificationToken': verificationToken,
           ...profile,
         },

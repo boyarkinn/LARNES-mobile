@@ -1040,6 +1040,22 @@ abstract class AppLocalizations {
   /// **'Owl'**
   String get parentChildFormAvatarOwl;
 
+  String get parentChildLegalBasisLabel;
+
+  String get parentChildLegalBasisParent;
+
+  String get parentChildLegalBasisAdoptiveParent;
+
+  String get parentChildLegalBasisGuardian;
+
+  String get parentChildLegalAuthority;
+
+  String get parentChildLegalConsent;
+
+  String get parentChildLegalDocumentLink;
+
+  String get parentChildLegalRequired;
+
   /// No description provided for @parentChildFormSubmit.
   ///
   /// In en, this message translates to:
@@ -2936,6 +2952,24 @@ abstract class AppLocalizations {
   /// **'Profiles'**
   String get parentAccountChildrenProfiles;
 
+  /// No description provided for @parentAccountChildrenArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived children'**
+  String get parentAccountChildrenArchiveTitle;
+
+  /// No description provided for @parentAccountChildrenArchiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Connections are closed. School and teacher access must be granted again after restoration.'**
+  String get parentAccountChildrenArchiveHint;
+
+  /// No description provided for @parentAccountChildrenRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore profile'**
+  String get parentAccountChildrenRestore;
+
   /// No description provided for @parentAccountChildrenActions.
   ///
   /// In en, this message translates to:
@@ -3648,6 +3682,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This center has no classrooms yet.'**
   String get kioskEnrollNoClassroomsForCenter;
+
+  String get optionalPatronymicLabel;
+  String get registrationOwnerEmailUnverifiedHint;
+  String get optionalDateOfBirthLabel;
+  String get optionalCityLabel;
+  String get notSpecifiedLabel;
+  String get registrationTermsRequired;
+  String get registrationTermsLink;
+  String get registrationPrivacyLink;
+  String get registrationTermsParent;
+  String get registrationTermsTeacher;
+  String get registrationTermsNetworkOwner;
+  String get voluntaryConsentTitle;
+  String get voluntaryConsentParentFields;
+  String get voluntaryConsentParentCheckbox;
+  String voluntaryConsentOpenVersion(String version);
+  String get voluntaryConsentVersionMissing;
+  String get voluntaryConsentRequired;
+  String get voluntaryConsentRevokeTitle;
+  String get voluntaryConsentRevokeDescription;
+  String get voluntaryConsentRevokeConfirm;
+  String get voluntaryConsentRevokeButton;
+  String get voluntaryConsentRevokeSuccess;
+  String get voluntaryConsentRevokeFailed;
 }
 
 class _AppLocalizationsDelegate

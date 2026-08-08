@@ -1,7 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
+import 'package:larnes_mobile/core/config/app_config.dart';
+import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
@@ -13,6 +17,16 @@ import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:share_plus/share_plus.dart';
+
+String _childConsentUuid() {
+  final bytes = List<int>.generate(16, (_) => Random.secure().nextInt(256));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  final hex = bytes.map((value) => value.toRadixString(16).padLeft(2, '0')).join();
+  return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+      '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+}
 
 class AddChildScreen extends StatefulWidget {
   const AddChildScreen({super.key});
@@ -27,10 +41,23 @@ class _AddChildScreenState extends State<AddChildScreen> {
   final _patronymicController = TextEditingController();
   final _dateOfBirthController = TextEditingController();
   String? _gender;
+  String _authorityBasis = 'parent';
   ChildCardColor _cardColor = defaultChildCardColor;
   ChildAvatarSlug _avatarSlug = defaultChildAvatarSlug;
+  final String _childId = _childConsentUuid();
+  final String _idempotencyKey = _childConsentUuid();
+  MobileConfig? _config;
+  bool _authorityDeclared = false;
+  bool _consentAccepted = false;
+  bool _isLoadingLegal = true;
   bool _isSubmitting = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLegalConfig();
+  }
 
   @override
   void dispose() {
@@ -41,11 +68,34 @@ class _AddChildScreenState extends State<AddChildScreen> {
     super.dispose();
   }
 
+  Future<void> _loadLegalConfig() async {
+    try {
+      final locale = LocaleScope.of(context).localeCode;
+      final config = await AuthScope.of(
+        context,
+      ).registerApi.fetchConfig(locale: locale);
+      if (!mounted) return;
+      setState(() {
+        _config = config;
+        _isLoadingLegal = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingLegal = false);
+    }
+  }
+
   Future<void> _submit() async {
     final l10n = context.l10n;
     final gender = _gender;
     if (gender == null) {
       setState(() => _error = l10n.parentChildFormGenderRequired);
+      return;
+    }
+
+    if (!_authorityDeclared ||
+        !_consentAccepted ||
+        (_config?.childConsentVersionId.isEmpty ?? true)) {
+      setState(() => _error = l10n.parentChildLegalRequired);
       return;
     }
 
@@ -63,6 +113,12 @@ class _AddChildScreenState extends State<AddChildScreen> {
     try {
       final locale = LocaleScope.of(context).localeCode;
       final child = await AuthScope.of(context).parentApi.createChild(
+        legal: ChildProfileLegalSubmission(
+          authorityBasis: _authorityBasis,
+          childId: _childId,
+          documentVersionId: _config!.childConsentVersionId,
+          idempotencyKey: _idempotencyKey,
+        ),
         payload: CreateChildPayload(
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
@@ -151,9 +207,60 @@ class _AddChildScreenState extends State<AddChildScreen> {
               onCardColorChanged: (color) => setState(() => _cardColor = color),
               onAvatarSlugChanged: (slug) => setState(() => _avatarSlug = slug),
             ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              initialValue: _authorityBasis,
+              decoration: InputDecoration(
+                labelText: l10n.parentChildLegalBasisLabel,
+              ),
+              items: [
+                DropdownMenuItem(
+                  value: 'parent',
+                  child: Text(l10n.parentChildLegalBasisParent),
+                ),
+                DropdownMenuItem(
+                  value: 'adoptive_parent',
+                  child: Text(l10n.parentChildLegalBasisAdoptiveParent),
+                ),
+                DropdownMenuItem(
+                  value: 'appointed_guardian',
+                  child: Text(l10n.parentChildLegalBasisGuardian),
+                ),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _authorityBasis = value);
+              },
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _authorityDeclared,
+              onChanged: (value) =>
+                  setState(() => _authorityDeclared = value ?? false),
+              title: Text(l10n.parentChildLegalAuthority),
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _consentAccepted,
+              onChanged: (value) =>
+                  setState(() => _consentAccepted = value ?? false),
+              title: Text(l10n.parentChildLegalConsent),
+            ),
+            TextButton(
+              onPressed: _config?.childConsentPath.isNotEmpty == true
+                  ? () {
+                      final base = AppConfig.apiBaseUrl.replaceFirst(RegExp(r'/$'), '');
+                      SharePlus.instance.share(
+                        ShareParams(text: '$base${_config!.childConsentPath}'),
+                      );
+                    }
+                  : null,
+              child: Text(l10n.parentChildLegalDocumentLink),
+            ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
+              onPressed: _isSubmitting || _isLoadingLegal ? null : _submit,
               child: _isSubmitting
                   ? const SizedBox(
                       width: 22,

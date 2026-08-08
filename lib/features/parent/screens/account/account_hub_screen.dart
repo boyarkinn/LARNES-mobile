@@ -15,7 +15,6 @@ import 'package:larnes_mobile/features/parent/utils/guardian_relationship_displa
 import 'package:larnes_mobile/features/parent/widgets/account/account_family_section.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_language_picker.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
-import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -35,6 +34,8 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
   ParentAccountSnapshot? _snapshot;
   List<ParentChild> _children = const [];
   GuardiansSnapshot? _guardians;
+  String? _revokeIdempotencyKey;
+  String? _revokeTargetEventId;
   bool _wasInactive = false;
 
   @override
@@ -198,6 +199,80 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     }
   }
 
+  Future<void> _revokeVoluntaryConsent(String targetEventId) async {
+    final l10n = context.l10n;
+    if (_revokeTargetEventId != targetEventId) {
+      _revokeTargetEventId = targetEventId;
+      _revokeIdempotencyKey = newLegalIdempotencyKey();
+    }
+    var confirmed = false;
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.voluntaryConsentRevokeTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.voluntaryConsentRevokeDescription),
+              CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                value: confirmed,
+                onChanged: (value) => setDialogState(
+                  () => confirmed = value ?? false,
+                ),
+                title: Text(l10n.voluntaryConsentRevokeConfirm),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.parentAccountCancel),
+            ),
+            FilledButton(
+              onPressed: confirmed
+                  ? () => Navigator.pop(dialogContext, true)
+                  : null,
+              child: Text(l10n.voluntaryConsentRevokeButton),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (accepted != true || !mounted) return;
+
+    try {
+      final locale = LocaleScope.of(context).localeCode;
+      await AuthScope.of(context).parentAccountApi.revokeVoluntaryConsent(
+        idempotencyKey: _revokeIdempotencyKey!,
+        targetEventId: targetEventId,
+        locale: locale,
+      );
+      if (!mounted) return;
+      await _load(silent: true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.voluntaryConsentRevokeSuccess)),
+        );
+      }
+    } on ParentAccountApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.voluntaryConsentRevokeFailed)),
+        );
+      }
+    }
+  }
+
   Future<void> _openAddChild() async {
     await context.push('/parent/children/new');
     if (mounted) {
@@ -266,6 +341,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
     final localeCode = LocaleScope.of(context).localeCode;
     final formattedDob = formatAccountDateOfBirth(user.dateOfBirth, localeCode);
     final selfRelationship = selfGuardianRelationship(_guardians);
+    final voluntaryEventId = _snapshot!.voluntaryConsent.activeEventId;
     const passwordMask = '••••••••';
 
     return AccountDeskShell(
@@ -383,6 +459,24 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           bandTitle: l10n.parentAccountSectionLanguage,
           child: const AccountLanguagePicker(),
         ),
+        if (voluntaryEventId != null)
+          AccountDeskCard(
+            bandTitle: l10n.voluntaryConsentRevokeTitle,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(l10n.voluntaryConsentRevokeDescription),
+                ),
+                const AccountDivider(),
+                AccountDestructiveButton(
+                  label: l10n.voluntaryConsentRevokeButton,
+                  onTap: () => _revokeVoluntaryConsent(voluntaryEventId),
+                ),
+              ],
+            ),
+          ),
         AccountDeskCard(
           bandTitle: l10n.parentAccountSectionSecurity,
           child: Column(

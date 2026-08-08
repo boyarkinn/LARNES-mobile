@@ -51,6 +51,13 @@ class ChildProfileLegalSubmission {
       };
 }
 
+class DsarReceipt {
+  const DsarReceipt({required this.dueAt, required this.requestNumber});
+
+  final DateTime dueAt;
+  final String requestNumber;
+}
+
 class ParentApi {
   ParentApi(this._client);
 
@@ -728,6 +735,43 @@ class ParentApi {
       if (data == null || data['status'] != 'success') {
         throw ParentApiException(_messageFromBody(data, l10n));
       }
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<DsarReceipt> createDataRequest({
+    required String description,
+    required String requesterEmail,
+    required String requesterName,
+    required String requestType,
+    required String subjectType,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/dsar',
+        data: {
+          'description': description,
+          'locale': locale,
+          'requesterEmail': requesterEmail,
+          'requesterName': requesterName,
+          'requestType': requestType,
+          'subjectType': subjectType,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      final number = data?['requestNumber'] as String?;
+      final dueAt = DateTime.tryParse(data?['dueAt'] as String? ?? '');
+      if (number == null || dueAt == null) {
+        throw ParentApiException(l10n.parentAccountSaveFailed);
+      }
+      return DsarReceipt(requestNumber: number, dueAt: dueAt);
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

@@ -459,6 +459,15 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           bandTitle: l10n.parentAccountSectionLanguage,
           child: const AccountLanguagePicker(),
         ),
+        AccountDeskCard(
+          bandTitle: localeCode == 'ru' ? 'Персональные данные' : 'Personal data',
+          child: AccountLinkRow(
+            label: localeCode == 'ru'
+                ? 'Копия, исправление или удаление данных'
+                : 'Access, correction, or erasure',
+            onTap: () => _openAccountRoute('/parent/account/data-request'),
+          ),
+        ),
         if (voluntaryEventId != null)
           AccountDeskCard(
             bandTitle: l10n.voluntaryConsentRevokeTitle,

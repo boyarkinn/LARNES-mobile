@@ -30,6 +30,7 @@ import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
 import 'package:larnes_mobile/features/network/screens/network_centers_screen.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_change_contact_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/account/account_data_request_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_child_detail_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_children_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_relationship_screen.dart';
@@ -219,6 +220,10 @@ GoRouter createAppRouter({
                   GoRoute(
                     path: 'guardians',
                     redirect: (context, state) => '/parent/account',
+                  ),
+                  GoRoute(
+                    path: 'data-request',
+                    builder: (context, state) => const AccountDataRequestScreen(),
                   ),
                   GoRoute(
                     path: 'children',

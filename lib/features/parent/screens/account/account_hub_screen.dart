@@ -468,6 +468,15 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
             onTap: () => _openAccountRoute('/parent/account/data-request'),
           ),
         ),
+        AccountDeskCard(
+          bandTitle: localeCode == 'ru' ? 'Безопасность ребёнка' : 'Child safety',
+          child: AccountLinkRow(
+            label: localeCode == 'ru'
+                ? 'Сообщить о проблеме или угрозе'
+                : 'Report a concern or threat',
+            onTap: () => _openAccountRoute('/parent/account/safety'),
+          ),
+        ),
         if (voluntaryEventId != null)
           AccountDeskCard(
             bandTitle: l10n.voluntaryConsentRevokeTitle,

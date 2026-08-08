@@ -58,6 +58,25 @@ class DsarReceipt {
   final String requestNumber;
 }
 
+class SafetyCaseReceipt {
+  const SafetyCaseReceipt({required this.caseNumber, required this.dueAt});
+
+  final String caseNumber;
+  final DateTime dueAt;
+}
+
+class SafetyCaseSummary {
+  const SafetyCaseSummary({
+    required this.caseNumber,
+    required this.receivedAt,
+    required this.status,
+  });
+
+  final String caseNumber;
+  final DateTime receivedAt;
+  final String status;
+}
+
 class ParentApi {
   ParentApi(this._client);
 
@@ -772,6 +791,64 @@ class ParentApi {
         throw ParentApiException(l10n.parentAccountSaveFailed);
       }
       return DsarReceipt(requestNumber: number, dueAt: dueAt);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<SafetyCaseReceipt> createSafetyCase({
+    required String category,
+    required String description,
+    required String idempotencyKey,
+    required String priority,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/safety',
+        data: {
+          'category': category,
+          'description': description,
+          'idempotencyKey': idempotencyKey,
+          'locale': locale,
+          'priority': priority,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      final number = data?['caseNumber'] as String?;
+      final dueAt = DateTime.tryParse(data?['dueAt'] as String? ?? '');
+      if (number == null || dueAt == null) {
+        throw ParentApiException(l10n.parentAccountSaveFailed);
+      }
+      return SafetyCaseReceipt(caseNumber: number, dueAt: dueAt);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<List<SafetyCaseSummary>> listSafetyCases({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get('/api/mobile/safety');
+      final data = _asJsonMap(response.data);
+      final rows = data?['cases'] as List<dynamic>? ?? const [];
+      return rows.map((raw) {
+        final row = Map<String, dynamic>.from(raw as Map);
+        return SafetyCaseSummary(
+          caseNumber: row['caseNumber'] as String? ?? '',
+          receivedAt: DateTime.tryParse(row['receivedAt'] as String? ?? '') ?? DateTime(1970),
+          status: row['status'] as String? ?? 'received',
+        );
+      }).where((item) => item.caseNumber.isNotEmpty).toList();
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

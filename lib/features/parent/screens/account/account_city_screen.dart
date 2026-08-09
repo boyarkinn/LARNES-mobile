@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
+import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/widgets/place_autocomplete_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/voluntary_consent_panel.dart';
@@ -17,9 +19,7 @@ class AccountCityScreen extends StatefulWidget {
 }
 
 class _AccountCityScreenState extends State<AccountCityScreen> {
-  String? _selectedCity;
-  List<String> _cities = const ['Москва'];
-  bool _isLoadingConfig = true;
+  PlaceCitySelection? _citySelection;
   bool _isSubmitting = false;
   String? _error;
   bool _initialized = false;
@@ -27,10 +27,11 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
   bool _consentAccepted = false;
   final String _consentIdempotencyKey = newLegalIdempotencyKey();
   String _originalCity = '';
+  bool _selectionDirty = false;
 
   bool get _consentNeeded {
     final consent = _consentContext;
-    final next = _selectedCity?.trim() ?? '';
+    final next = _citySelection?.displayLabel.trim() ?? '';
     return consent != null &&
         !consent.isActive &&
         next.isNotEmpty &&
@@ -42,9 +43,7 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      _selectedCity = AuthScope.of(context).user?.city ?? '';
-      _originalCity = _selectedCity!.trim();
-      _loadConfig();
+      _originalCity = AuthScope.of(context).user?.city?.trim() ?? '';
       _loadConsent();
     }
   }
@@ -61,33 +60,20 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
     }
   }
 
-  Future<void> _loadConfig() async {
-    try {
-      final config = await AuthScope.of(context).registerApi.fetchConfig();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _cities = config.cities.isEmpty ? const ['Москва'] : config.cities;
-        if (_selectedCity != null &&
-            _selectedCity!.isNotEmpty &&
-            !_cities.contains(_selectedCity)) {
-          _selectedCity = _cities.first;
-        }
-        _isLoadingConfig = false;
-      });
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoadingConfig = false);
-      }
-    }
-  }
-
   Future<void> _submit() async {
-    final city = _selectedCity;
-    if (city == null) {
+    final l10n = context.l10n;
+    if (!_selectionDirty) {
+      context.pop();
       return;
     }
+
+    final selection = _citySelection;
+    if (selection == null ||
+        (selection.mapboxId.isEmpty && selection.displayLabel.isNotEmpty)) {
+      setState(() => _error = l10n.placesAutocompleteInvalidSelection);
+      return;
+    }
+
     final consentContext = _consentContext;
     if (_consentNeeded &&
         (!_consentAccepted || consentContext?.versionId == null)) {
@@ -103,7 +89,7 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
     try {
       final locale = LocaleScope.of(context).localeCode;
       final user = await AuthScope.of(context).parentAccountApi.updateCity(
-        city: city,
+        placeMapboxId: selection.mapboxId,
         consent: _consentNeeded
             ? VoluntaryConsentSubmission(
                 accepted: true,
@@ -132,6 +118,7 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final locale = LocaleScope.of(context).localeCode;
 
     return ParentScaffold(
       title: l10n.parentAccountCityTitle,
@@ -140,14 +127,16 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_error != null) AuthErrorBanner(message: _error!),
-            DropdownMenu<String>(
-              initialSelection: _selectedCity,
-              label: Text(l10n.cityLabel),
-              dropdownMenuEntries: [
-                DropdownMenuEntry(value: '', label: l10n.notSpecifiedLabel),
-                ..._cities.map((city) => DropdownMenuEntry(value: city, label: city)),
-              ],
-              onSelected: (value) => setState(() => _selectedCity = value),
+            PlaceAutocompleteField(
+              placesApi: AuthScope.of(context).placesApi,
+              locale: locale,
+              label: l10n.cityLabel,
+              initialDisplayLabel: _originalCity,
+              optional: true,
+              onChanged: (selection) => setState(() {
+                _citySelection = selection;
+                _selectionDirty = true;
+              }),
             ),
             if (_consentNeeded && _consentContext != null) ...[
               const SizedBox(height: 16),
@@ -161,7 +150,7 @@ class _AccountCityScreenState extends State<AccountCityScreen> {
             AccountPrimaryButton(
               label: l10n.parentAccountSaveCity,
               isLoading: _isSubmitting,
-              onPressed: _isLoadingConfig ? null : _submit,
+              onPressed: _submit,
             ),
           ],
         ),

@@ -15,9 +15,9 @@ flutter devices
 flutter run
 ```
 
-По умолчанию **debug** ходит в prod API: `https://larnes.online` (та же БД, что web на VPS). Отдельный флаг не нужен.
+По умолчанию **debug** ходит в prod API: `https://larnes.ru` (та же БД, что web на VPS). Отдельный флаг не нужен.
 
-Release-сборки — тоже `https://larnes.online`.
+Release-сборки — тоже `https://larnes.ru`.
 
 ```powershell
 flutter clean

@@ -1040,20 +1040,52 @@ abstract class AppLocalizations {
   /// **'Owl'**
   String get parentChildFormAvatarOwl;
 
+  /// No description provided for @parentChildLegalBasisLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal authority basis'**
   String get parentChildLegalBasisLabel;
 
+  /// No description provided for @parentChildLegalBasisParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent'**
   String get parentChildLegalBasisParent;
 
+  /// No description provided for @parentChildLegalBasisAdoptiveParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Adoptive parent'**
   String get parentChildLegalBasisAdoptiveParent;
 
+  /// No description provided for @parentChildLegalBasisGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Appointed guardian'**
   String get parentChildLegalBasisGuardian;
 
+  /// No description provided for @parentChildLegalAuthority.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm that I am the selected legal representative of this child, my authority has not ended or been restricted, and no conflict of interest has been established. I will notify LARNES if my authority changes.'**
   String get parentChildLegalAuthority;
 
+  /// No description provided for @parentChildLegalConsent.
+  ///
+  /// In en, this message translates to:
+  /// **'I consent to the processing of this child\'s personal data.'**
   String get parentChildLegalConsent;
 
+  /// No description provided for @parentChildLegalDocumentLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Child Data Processing Consent'**
   String get parentChildLegalDocumentLink;
 
+  /// No description provided for @parentChildLegalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your authority and accept the child data consent.'**
   String get parentChildLegalRequired;
 
   /// No description provided for @parentChildFormSubmit.
@@ -1989,7 +2021,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminTrainerPlayWebOnlyMessage.
   ///
   /// In en, this message translates to:
-  /// **'This trainer is web-only for now. Run and test play at larnes.online under Trainers.'**
+  /// **'This trainer is web-only for now. Run and test play at larnes.ru under Trainers.'**
   String get adminTrainerPlayWebOnlyMessage;
 
   /// No description provided for @adminTrainerPlayExit.
@@ -3093,25 +3125,25 @@ abstract class AppLocalizations {
   /// No description provided for @parentAccountDeleteChildTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete child?'**
+  /// **'Archive this child profile?'**
   String get parentAccountDeleteChildTitle;
 
   /// No description provided for @parentAccountDeleteChildMessage.
   ///
   /// In en, this message translates to:
-  /// **'The profile will disappear from your cabinet and cannot be restored.'**
+  /// **'The profile will leave the active list and can be restored later.'**
   String get parentAccountDeleteChildMessage;
 
   /// No description provided for @parentAccountDeleteChildMessageActiveNetwork.
   ///
   /// In en, this message translates to:
-  /// **'The profile will disappear from your cabinet; center enrollment will end; visit and payment history at the center will be kept.'**
+  /// **'The profile will leave the active list; connections will end; learning and payment history will be kept. The profile can be restored later.'**
   String get parentAccountDeleteChildMessageActiveNetwork;
 
   /// No description provided for @parentAccountDeleteChildConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete child'**
+  /// **'Archive profile'**
   String get parentAccountDeleteChildConfirm;
 
   /// No description provided for @parentUpdateChildFailed.
@@ -3683,28 +3715,148 @@ abstract class AppLocalizations {
   /// **'This center has no classrooms yet.'**
   String get kioskEnrollNoClassroomsForCenter;
 
+  /// No description provided for @optionalPatronymicLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Patronymic (optional)'**
   String get optionalPatronymicLabel;
+
+  /// No description provided for @registrationOwnerEmailUnverifiedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The email will be saved as unverified. Verify it in account settings after registration.'**
   String get registrationOwnerEmailUnverifiedHint;
+
+  /// No description provided for @optionalDateOfBirthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth (optional)'**
   String get optionalDateOfBirthLabel;
+
+  /// No description provided for @optionalCityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'City (optional)'**
   String get optionalCityLabel;
+
+  /// No description provided for @placesAutocompleteUnavailable.
+  String get placesAutocompleteUnavailable;
+
+  /// No description provided for @placesAutocompleteInvalidSelection.
+  String get placesAutocompleteInvalidSelection;
+
+  /// No description provided for @notSpecifiedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
   String get notSpecifiedLabel;
+
+  /// No description provided for @registrationTermsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the current Terms to create an account.'**
   String get registrationTermsRequired;
+
+  /// No description provided for @registrationTermsLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
   String get registrationTermsLink;
+
+  /// No description provided for @registrationPrivacyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal Data Policy'**
   String get registrationPrivacyLink;
+
+  /// No description provided for @registrationTermsParent.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Service.'**
   String get registrationTermsParent;
+
+  /// No description provided for @registrationTermsTeacher.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Service.'**
   String get registrationTermsTeacher;
+
+  /// No description provided for @registrationTermsNetworkOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'I accept the Terms of Service.'**
   String get registrationTermsNetworkOwner;
+
+  /// No description provided for @voluntaryConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate consent for optional data'**
   String get voluntaryConsentTitle;
+
+  /// No description provided for @voluntaryConsentParentFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Covers only patronymic, city, and date of birth. Core account functions do not depend on it.'**
   String get voluntaryConsentParentFields;
+
+  /// No description provided for @voluntaryConsentParentCheckbox.
+  ///
+  /// In en, this message translates to:
+  /// **'I consent to processing my patronymic, city, and date of birth for maintaining my private extended profile.'**
   String get voluntaryConsentParentCheckbox;
+
+  /// No description provided for @voluntaryConsentOpenVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Open version {version}'**
   String voluntaryConsentOpenVersion(String version);
+
+  /// No description provided for @voluntaryConsentVersionMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The published consent version is unavailable.'**
   String get voluntaryConsentVersionMissing;
+
+  /// No description provided for @voluntaryConsentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the separate consent to save a non-empty optional field.'**
   String get voluntaryConsentRequired;
+
+  /// No description provided for @voluntaryConsentRevokeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw profile data consent'**
   String get voluntaryConsentRevokeTitle;
+
+  /// No description provided for @voluntaryConsentRevokeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Patronymic, city, and date of birth will be permanently erased. The core account will continue to work.'**
   String get voluntaryConsentRevokeDescription;
+
+  /// No description provided for @voluntaryConsentRevokeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm withdrawal and data erasure'**
   String get voluntaryConsentRevokeConfirm;
+
+  /// No description provided for @voluntaryConsentRevokeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw and erase'**
   String get voluntaryConsentRevokeButton;
+
+  /// No description provided for @voluntaryConsentRevokeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent was withdrawn and the data was erased.'**
   String get voluntaryConsentRevokeSuccess;
+
+  /// No description provided for @voluntaryConsentRevokeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Consent could not be withdrawn. No data was erased.'**
   String get voluntaryConsentRevokeFailed;
 }
 

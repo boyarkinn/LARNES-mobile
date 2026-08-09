@@ -1074,7 +1074,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminTrainerPlayWebOnlyMessage =>
-      'Этот тренажёр пока только в web. Запуск и проверка play — на larnes.online в разделе «Тренажёры».';
+      'Этот тренажёр пока только в web. Запуск и проверка play — на larnes.ru в разделе «Тренажёры».';
 
   @override
   String get adminTrainerPlayExit => 'Назад';
@@ -2005,58 +2005,94 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get optionalPatronymicLabel => 'Отчество (необязательно)';
+
   @override
   String get registrationOwnerEmailUnverifiedHint =>
       'Email будет сохранён как неподтверждённый. После регистрации подтвердите его в настройках аккаунта.';
+
   @override
   String get optionalDateOfBirthLabel => 'Дата рождения (необязательно)';
+
   @override
   String get optionalCityLabel => 'Город (необязательно)';
+
+  @override
+  String get placesAutocompleteUnavailable => 'Поиск мест временно недоступен.';
+
+  @override
+  String get placesAutocompleteInvalidSelection =>
+      'Не удалось подтвердить место. Выберите пункт из списка ещё раз.';
+
   @override
   String get notSpecifiedLabel => 'Не указан';
+
   @override
   String get registrationTermsRequired =>
       'Чтобы создать аккаунт, примите действующее Пользовательское соглашение.';
+
   @override
   String get registrationTermsLink => 'Пользовательское соглашение';
+
   @override
   String get registrationPrivacyLink =>
       'Политика обработки персональных данных';
+
   @override
   String get registrationTermsParent =>
       'Я принимаю Пользовательское соглашение.';
+
   @override
   String get registrationTermsTeacher =>
       'Я принимаю Пользовательское соглашение.';
+
   @override
   String get registrationTermsNetworkOwner =>
       'Я принимаю Пользовательское соглашение.';
+
   @override
-  String get voluntaryConsentTitle => 'Отдельное согласие на необязательные данные';
+  String get voluntaryConsentTitle =>
+      'Отдельное согласие на необязательные данные';
+
   @override
   String get voluntaryConsentParentFields =>
       'Охватывает только отчество, город и дату рождения. Основные функции аккаунта от него не зависят.';
+
   @override
   String get voluntaryConsentParentCheckbox =>
       'Я согласен на обработку отчества, города и даты рождения для ведения закрытого расширенного профиля.';
+
   @override
-  String voluntaryConsentOpenVersion(String version) => 'Открыть версию $version';
+  String voluntaryConsentOpenVersion(String version) {
+    return 'Открыть версию $version';
+  }
+
   @override
-  String get voluntaryConsentVersionMissing => 'Опубликованная версия согласия недоступна.';
+  String get voluntaryConsentVersionMissing =>
+      'Опубликованная версия согласия недоступна.';
+
   @override
   String get voluntaryConsentRequired =>
       'Подтвердите отдельное согласие для сохранения заполненного необязательного поля.';
+
   @override
-  String get voluntaryConsentRevokeTitle => 'Отозвать согласие на данные профиля';
+  String get voluntaryConsentRevokeTitle =>
+      'Отозвать согласие на данные профиля';
+
   @override
   String get voluntaryConsentRevokeDescription =>
       'Отчество, город и дата рождения будут безвозвратно удалены. Основной аккаунт продолжит работать.';
+
   @override
-  String get voluntaryConsentRevokeConfirm => 'Подтверждаю отзыв и удаление данных';
+  String get voluntaryConsentRevokeConfirm =>
+      'Подтверждаю отзыв и удаление данных';
+
   @override
   String get voluntaryConsentRevokeButton => 'Отозвать и удалить';
+
   @override
-  String get voluntaryConsentRevokeSuccess => 'Согласие отозвано, данные удалены.';
+  String get voluntaryConsentRevokeSuccess =>
+      'Согласие отозвано, данные удалены.';
+
   @override
   String get voluntaryConsentRevokeFailed =>
       'Не удалось отозвать согласие. Данные не удалены.';

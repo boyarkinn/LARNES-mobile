@@ -11,6 +11,7 @@ import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
+import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
@@ -63,6 +64,7 @@ class ApiClient {
   FamilyInvitesApi? _familyInvitesApi;
   FamilyJoinDedupApi? _familyJoinDedupApi;
   NetworkApi? _networkApi;
+  PlacesApi? _placesApi;
 
   Dio get dio => _dio;
 
@@ -91,4 +93,6 @@ class ApiClient {
       _familyJoinDedupApi ??= FamilyJoinDedupApi(this);
 
   NetworkApi get networkApi => _networkApi ??= NetworkApi(this);
+
+  PlacesApi get placesApi => _placesApi ??= PlacesApi(this);
 }

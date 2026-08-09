@@ -170,14 +170,14 @@ class ParentAccountApi {
   }
 
   Future<AuthUser> updateCity({
-    required String city,
+    required String placeMapboxId,
     VoluntaryConsentSubmission? consent,
     String locale = 'ru',
   }) {
     return _patchUser(
       '/api/mobile/parent/account/city',
       {
-        'city': city,
+        'placeMapboxId': placeMapboxId,
         'locale': locale,
         if (consent != null) ...consent.toJson(),
       },

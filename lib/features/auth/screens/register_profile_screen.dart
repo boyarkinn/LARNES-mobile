@@ -16,6 +16,8 @@ import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dar
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
+import 'package:larnes_mobile/core/api/places_api.dart';
+import 'package:larnes_mobile/core/widgets/place_autocomplete_field.dart';
 import 'package:share_plus/share_plus.dart';
 
 String _registrationUuid() {
@@ -47,8 +49,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   final _dateOfBirthController = TextEditingController();
 
   String? _selectedRelationship = 'mother';
-  String? _selectedCity;
-  List<String> _cities = const ['Москва'];
+  PlaceCitySelection? _citySelection;
   bool _isLoadingConfig = true;
   bool _isSubmitting = false;
   bool _termsAccepted = false;
@@ -89,8 +90,6 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
         return;
       }
       setState(() {
-        _cities = config.cities.isEmpty ? const ['Москва'] : config.cities;
-        _selectedCity = null;
         _config = config;
         _isLoadingConfig = false;
       });
@@ -118,11 +117,22 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
         final dateText = _dateOfBirthController.text.trim();
         payload['dateOfBirth'] =
             dateText.isEmpty ? '' : displayDateToIso(dateText) ?? '';
-        payload['city'] = _selectedCity ?? '';
+        if (_citySelection != null) {
+          payload['placeMapboxId'] = _citySelection!.mapboxId;
+          payload['city'] = _citySelection!.displayLabel;
+        } else {
+          payload['city'] = '';
+        }
         break;
       case RegisterAccountType.networkOwner:
         payload['lastName'] = _lastNameController.text.trim();
         payload['patronymic'] = _patronymicController.text.trim();
+        if (_citySelection != null) {
+          payload['placeMapboxId'] = _citySelection!.mapboxId;
+          payload['city'] = _citySelection!.displayLabel;
+        } else {
+          payload['city'] = '';
+        }
         payload['networkDisplayName'] = _networkNameController.text.trim();
         if (widget.flow.channel == RegisterContactChannel.sms) {
           payload['email'] = _emailController.text.trim();
@@ -255,6 +265,17 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
     );
   }
 
+  Widget _cityField(AppLocalizations l10n) {
+    final locale = LocaleScope.of(context).localeCode;
+    return PlaceAutocompleteField(
+      placesApi: AuthScope.of(context).placesApi,
+      locale: locale,
+      label: l10n.optionalCityLabel,
+      optional: true,
+      onChanged: (selection) => setState(() => _citySelection = selection),
+    );
+  }
+
   List<Widget> _buildFields(AppLocalizations l10n) {
     switch (widget.flow.accountType) {
       case RegisterAccountType.parent:
@@ -317,17 +338,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          DropdownMenu<String>(
-            initialSelection: _selectedCity,
-            label: Text(l10n.optionalCityLabel),
-            dropdownMenuEntries: [
-              DropdownMenuEntry(value: '', label: l10n.notSpecifiedLabel),
-              ..._cities.map(
-                (city) => DropdownMenuEntry(value: city, label: city),
-              ),
-            ],
-            onSelected: (value) => setState(() => _selectedCity = value),
-          ),
+          _cityField(l10n),
           const SizedBox(height: 12),
           _passwordFields(l10n),
         ];
@@ -356,6 +367,8 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
             label: l10n.optionalPatronymicLabel,
             textInputAction: TextInputAction.next,
           ),
+          const SizedBox(height: 12),
+          _cityField(l10n),
           const SizedBox(height: 12),
           if (widget.flow.channel == RegisterContactChannel.email)
             AuthTextField(

@@ -1,7 +1,7 @@
 class AppConfig {
   const AppConfig._();
 
-  static const prodApiBaseUrl = 'https://larnes.online';
+  static const prodApiBaseUrl = 'https://larnes.ru';
 
   /// Override at run time: `--dart-define=API_BASE_URL=...`
   ///

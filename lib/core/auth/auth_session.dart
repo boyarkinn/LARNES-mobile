@@ -13,6 +13,7 @@ import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
+import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 
@@ -67,6 +68,8 @@ class AuthSession extends ChangeNotifier {
   FamilyJoinDedupApi get familyJoinDedupApi => _client.familyJoinDedupApi;
 
   NetworkApi get networkApi => _client.networkApi;
+
+  PlacesApi get placesApi => _client.placesApi;
 
   int _parentDataRevision = 0;
 

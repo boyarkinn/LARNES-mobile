@@ -533,8 +533,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'I consent to the processing of this child\'s personal data.';
 
   @override
-  String get parentChildLegalDocumentLink =>
-      'Child Data Processing Consent';
+  String get parentChildLegalDocumentLink => 'Child Data Processing Consent';
 
   @override
   String get parentChildLegalRequired =>
@@ -1061,7 +1060,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminTrainerPlayWebOnlyMessage =>
-      'This trainer is web-only for now. Run and test play at larnes.online under Trainers.';
+      'This trainer is web-only for now. Run and test play at larnes.ru under Trainers.';
 
   @override
   String get adminTrainerPlayExit => 'Back';
@@ -1987,57 +1986,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionalPatronymicLabel => 'Patronymic (optional)';
+
   @override
   String get registrationOwnerEmailUnverifiedHint =>
       'The email will be saved as unverified. Verify it in account settings after registration.';
+
   @override
   String get optionalDateOfBirthLabel => 'Date of birth (optional)';
+
   @override
   String get optionalCityLabel => 'City (optional)';
+
+  @override
+  String get placesAutocompleteUnavailable => 'Location search is temporarily unavailable.';
+
+  @override
+  String get placesAutocompleteInvalidSelection =>
+      'Could not confirm the place. Choose an item from the list again.';
+
   @override
   String get notSpecifiedLabel => 'Not specified';
+
   @override
   String get registrationTermsRequired =>
       'Accept the current Terms to create an account.';
+
   @override
   String get registrationTermsLink => 'Terms of Service';
+
   @override
   String get registrationPrivacyLink => 'Personal Data Policy';
+
   @override
-  String get registrationTermsParent =>
-      'I accept the Terms of Service.';
+  String get registrationTermsParent => 'I accept the Terms of Service.';
+
   @override
-  String get registrationTermsTeacher =>
-      'I accept the Terms of Service.';
+  String get registrationTermsTeacher => 'I accept the Terms of Service.';
+
   @override
-  String get registrationTermsNetworkOwner =>
-      'I accept the Terms of Service.';
+  String get registrationTermsNetworkOwner => 'I accept the Terms of Service.';
+
   @override
   String get voluntaryConsentTitle => 'Separate consent for optional data';
+
   @override
   String get voluntaryConsentParentFields =>
       'Covers only patronymic, city, and date of birth. Core account functions do not depend on it.';
+
   @override
   String get voluntaryConsentParentCheckbox =>
       'I consent to processing my patronymic, city, and date of birth for maintaining my private extended profile.';
+
   @override
-  String voluntaryConsentOpenVersion(String version) => 'Open version $version';
+  String voluntaryConsentOpenVersion(String version) {
+    return 'Open version $version';
+  }
+
   @override
-  String get voluntaryConsentVersionMissing => 'The published consent version is unavailable.';
+  String get voluntaryConsentVersionMissing =>
+      'The published consent version is unavailable.';
+
   @override
   String get voluntaryConsentRequired =>
       'Confirm the separate consent to save a non-empty optional field.';
+
   @override
   String get voluntaryConsentRevokeTitle => 'Withdraw profile data consent';
+
   @override
   String get voluntaryConsentRevokeDescription =>
       'Patronymic, city, and date of birth will be permanently erased. The core account will continue to work.';
+
   @override
-  String get voluntaryConsentRevokeConfirm => 'I confirm withdrawal and data erasure';
+  String get voluntaryConsentRevokeConfirm =>
+      'I confirm withdrawal and data erasure';
+
   @override
   String get voluntaryConsentRevokeButton => 'Withdraw and erase';
+
   @override
-  String get voluntaryConsentRevokeSuccess => 'Consent was withdrawn and the data was erased.';
+  String get voluntaryConsentRevokeSuccess =>
+      'Consent was withdrawn and the data was erased.';
+
   @override
   String get voluntaryConsentRevokeFailed =>
       'Consent could not be withdrawn. No data was erased.';

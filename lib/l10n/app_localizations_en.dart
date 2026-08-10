@@ -1998,7 +1998,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get optionalCityLabel => 'City (optional)';
 
   @override
-  String get placesAutocompleteUnavailable => 'Location search is temporarily unavailable.';
+  String get placesAutocompleteUnavailable =>
+      'Location search is temporarily unavailable.';
 
   @override
   String get placesAutocompleteInvalidSelection =>

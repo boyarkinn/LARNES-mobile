@@ -5,7 +5,7 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
 import 'package:larnes_mobile/l10n/app_localizations.dart';
-
+import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_gender_silhouette.dart';
 
 class ChildProfileAppearanceFields extends StatelessWidget {

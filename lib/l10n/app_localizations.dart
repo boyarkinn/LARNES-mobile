@@ -1067,13 +1067,13 @@ abstract class AppLocalizations {
   /// No description provided for @parentChildLegalAuthority.
   ///
   /// In en, this message translates to:
-  /// **'I confirm that I am the selected legal representative of this child, my authority has not ended or been restricted, and no conflict of interest has been established. I will notify LARNES if my authority changes.'**
+  /// **'I am the child\'s legal representative'**
   String get parentChildLegalAuthority;
 
   /// No description provided for @parentChildLegalConsent.
   ///
   /// In en, this message translates to:
-  /// **'I consent to the processing of this child\'s personal data.'**
+  /// **'I consent to the processing of the child\'s data'**
   String get parentChildLegalConsent;
 
   /// No description provided for @parentChildLegalDocumentLink.
@@ -1091,7 +1091,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentChildFormSubmit.
   ///
   /// In en, this message translates to:
-  /// **'Create profile'**
+  /// **'Create child'**
   String get parentChildFormSubmit;
 
   /// No description provided for @parentChildFormAutosaveSaved.
@@ -3740,9 +3740,15 @@ abstract class AppLocalizations {
   String get optionalCityLabel;
 
   /// No description provided for @placesAutocompleteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location search is temporarily unavailable.'**
   String get placesAutocompleteUnavailable;
 
   /// No description provided for @placesAutocompleteInvalidSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm the place. Choose an item from the list again.'**
   String get placesAutocompleteInvalidSelection;
 
   /// No description provided for @notSpecifiedLabel.

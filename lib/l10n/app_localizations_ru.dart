@@ -527,8 +527,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentChildLegalBasisGuardian => 'Назначенный опекун';
 
   @override
-  String get parentChildLegalAuthority =>
-      'Я законный представитель ребёнка';
+  String get parentChildLegalAuthority => 'Я законный представитель ребёнка';
 
   @override
   String get parentChildLegalConsent =>

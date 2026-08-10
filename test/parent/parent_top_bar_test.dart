@@ -50,6 +50,27 @@ void main() {
       expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
     });
 
+    testWidgets('shows back chevron when onBackPressed is set', (tester) async {
+      var pressed = false;
+
+      await tester.pumpWidget(
+        wrap(
+          ParentHeader(
+            title: 'Аккаунт',
+            onBackPressed: () => pressed = true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.chevron_left_rounded));
+      await tester.pumpAndSettle();
+
+      expect(pressed, isTrue);
+    });
+
     testWidgets('back tap pops navigator when stack allows', (tester) async {
       await tester.pumpWidget(
         LocaleScope(

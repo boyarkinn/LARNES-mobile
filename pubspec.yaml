@@ -67,7 +67,6 @@ flutter:
 
   assets:
     - assets/brand/
-    - assets/parent/avatars/
     - assets/audio/ru/mental-arithmetic/operations/
     - assets/audio/ru/mental-arithmetic/numbers/
     - assets/audio/ru/mental-arithmetic/hundreds/

@@ -63,8 +63,7 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
       final page = results[0] as ParentHomeworkListPage;
       if (_childTitle.isEmpty && results.length > 1) {
         final detail = results[1] as ParentChildDetail;
-        final lines = childDisplayNameLines(detail.child);
-        _childTitle = '${lines.lastName} ${lines.givenName}'.trim();
+        _childTitle = childHubHeaderTitle(detail.child);
       }
 
       setState(() {

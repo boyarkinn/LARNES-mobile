@@ -526,11 +526,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentChildLegalAuthority =>
-      'I confirm that I am the selected legal representative of this child, my authority has not ended or been restricted, and no conflict of interest has been established. I will notify LARNES if my authority changes.';
+      'I am the child\'s legal representative';
 
   @override
   String get parentChildLegalConsent =>
-      'I consent to the processing of this child\'s personal data.';
+      'I consent to the processing of the child\'s data';
 
   @override
   String get parentChildLegalDocumentLink => 'Child Data Processing Consent';
@@ -540,7 +540,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Confirm your authority and accept the child data consent.';
 
   @override
-  String get parentChildFormSubmit => 'Create profile';
+  String get parentChildFormSubmit => 'Create child';
 
   @override
   String get parentChildFormAutosaveSaved => 'Saved';
@@ -606,7 +606,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String parentHomeworkListTitle(String name) {
-    return 'Homework — $name';
+    return 'Homework $name';
   }
 
   @override

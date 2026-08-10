@@ -12,18 +12,25 @@ class ParentHeader extends StatelessWidget {
     super.key,
     required this.title,
     this.showBack,
+    this.onBackPressed,
   });
 
   final String title;
 
-  /// When null, back is shown if [GoRouter] can pop the current branch stack.
+  /// When null, back is shown if [onBackPressed] is set or [GoRouter] can pop the current branch stack.
   final bool? showBack;
+
+  /// Custom back action instead of stack pop (e.g. account hub → `/parent`).
+  final VoidCallback? onBackPressed;
 
   static const _sideSlotWidth = 48.0;
 
   bool _showsBack(BuildContext context) {
     if (showBack != null) {
       return showBack!;
+    }
+    if (onBackPressed != null) {
+      return true;
     }
     final router = GoRouter.maybeOf(context);
     if (router != null) {
@@ -32,7 +39,12 @@ class ParentHeader extends StatelessWidget {
     return Navigator.of(context).canPop();
   }
 
-  void _pop(BuildContext context) {
+  void _handleBack(BuildContext context) {
+    if (onBackPressed != null) {
+      onBackPressed!();
+      return;
+    }
+
     if (GoRouter.maybeOf(context) != null) {
       context.pop();
       return;
@@ -67,7 +79,7 @@ class ParentHeader extends StatelessWidget {
                             alignment: Alignment.centerLeft,
                             child: _HeaderBackButton(
                               semanticsLabel: context.l10n.parentBack,
-                              onPressed: () => _pop(context),
+                              onPressed: () => _handleBack(context),
                             ),
                           )
                         : null,

@@ -1211,7 +1211,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentHomeworkListTitle.
   ///
   /// In en, this message translates to:
-  /// **'Homework — {name}'**
+  /// **'Homework {name}'**
   String parentHomeworkListTitle(String name);
 
   /// No description provided for @parentHomeworkBack.

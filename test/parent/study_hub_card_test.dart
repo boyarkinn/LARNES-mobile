@@ -4,7 +4,6 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
@@ -117,7 +116,6 @@ void main() {
                   lastName: 'Иванова',
                   patronymic: 'Петровна',
                   cardColor: ChildCardColor.violet,
-                  avatarSlug: ChildAvatarSlug.owl,
                   ageYears: 7,
                 ),
                 onTap: () {},

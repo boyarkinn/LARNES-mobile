@@ -3,10 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
-import 'package:larnes_mobile/features/parent/widgets/child_avatar.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
 
 /// Name-tag карточка ребёнка на picker (Morning Desk v4).
 /// Эталон: platform/src/components/parent/child-profile-card.tsx
@@ -62,9 +61,9 @@ class ChildProfileCard extends StatelessWidget {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _AvatarRing(
+                            ChildCardColorRing(
                               tokens: tokens,
-                              avatarSlug: child.avatarSlug,
+                              gender: child.gender,
                             ),
                             const SizedBox(width: ParentChildCardMetrics.rowGap),
                             Expanded(
@@ -146,44 +145,6 @@ class _ColorBand extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _AvatarRing extends StatelessWidget {
-  const _AvatarRing({
-    required this.tokens,
-    required this.avatarSlug,
-  });
-
-  final ChildCardColorTokens tokens;
-  final ChildAvatarSlug avatarSlug;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: ParentChildCardMetrics.avatarRingSize,
-      height: ParentChildCardMetrics.avatarRingSize,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: tokens.soft,
-        border: Border.all(color: ParentColors.surface, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: tokens.tag,
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: tokens.tagDeep,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      alignment: Alignment.center,
-      child: ChildAvatar(
-        slug: avatarSlug,
-        size: ParentChildCardMetrics.avatarImageSize,
       ),
     );
   }

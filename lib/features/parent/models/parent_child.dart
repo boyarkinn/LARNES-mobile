@@ -1,4 +1,3 @@
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
 class ParentChild {
@@ -6,7 +5,6 @@ class ParentChild {
     required this.id,
     required this.firstName,
     required this.cardColor,
-    required this.avatarSlug,
     this.lastName,
     this.patronymic,
     this.dateOfBirth,
@@ -19,7 +17,6 @@ class ParentChild {
       id: json['id'] as String,
       firstName: json['firstName'] as String,
       cardColor: childCardColorFromString(json['cardColor'] as String?),
-      avatarSlug: childAvatarSlugFromString(json['avatarSlug'] as String?),
       lastName: json['lastName'] as String?,
       patronymic: json['patronymic'] as String?,
       dateOfBirth: json['dateOfBirth'] as String?,
@@ -31,7 +28,6 @@ class ParentChild {
   final String id;
   final String firstName;
   final ChildCardColor cardColor;
-  final ChildAvatarSlug avatarSlug;
   final String? lastName;
   final String? patronymic;
   final String? dateOfBirth;
@@ -182,7 +178,6 @@ class CreateChildPayload {
     required this.dateOfBirth,
     required this.gender,
     required this.cardColor,
-    required this.avatarSlug,
     this.patronymic,
   });
 
@@ -191,7 +186,6 @@ class CreateChildPayload {
   final String dateOfBirth;
   final String gender;
   final ChildCardColor cardColor;
-  final ChildAvatarSlug avatarSlug;
   final String? patronymic;
 
   Map<String, dynamic> toJson(String locale) => {
@@ -200,7 +194,6 @@ class CreateChildPayload {
         'dateOfBirth': dateOfBirth,
         'gender': gender,
         'cardColor': cardColor.name,
-        'avatarSlug': avatarSlug.name,
         'locale': locale,
         if (patronymic != null && patronymic!.isNotEmpty) 'patronymic': patronymic,
       };

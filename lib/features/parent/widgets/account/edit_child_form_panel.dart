@@ -10,11 +10,9 @@ import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
-import 'package:larnes_mobile/features/parent/widgets/child_avatar.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -45,7 +43,6 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
 
   String? _gender;
   ChildCardColor _cardColor = defaultChildCardColor;
-  ChildAvatarSlug _avatarSlug = defaultChildAvatarSlug;
 
   Timer? _debounce;
   bool _hydrating = true;
@@ -83,7 +80,6 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
     _dateOfBirthController.text = isoDateToDisplay(child.dateOfBirth);
     _gender = child.gender;
     _cardColor = child.cardColor;
-    _avatarSlug = child.avatarSlug;
   }
 
   void _scheduleAutosave() {
@@ -133,7 +129,6 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
           dateOfBirth: dateOfBirth,
           gender: _gender!,
           cardColor: _cardColor,
-          avatarSlug: _avatarSlug,
         ),
         locale: locale,
       );
@@ -213,7 +208,7 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
               padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
               child: Column(
                 children: [
-                  ChildAvatar(slug: _avatarSlug, size: 44),
+                  ChildCardColorRing(tokens: tokens, size: 44),
                   const SizedBox(height: 10),
                   Text(
                     _headlineName(),
@@ -287,13 +282,8 @@ class _EditChildFormPanelState extends State<EditChildFormPanel> {
                   const SizedBox(height: 16),
                   ChildProfileAppearanceFields(
                     cardColor: _cardColor,
-                    avatarSlug: _avatarSlug,
                     onCardColorChanged: (color) {
                       setState(() => _cardColor = color);
-                      _scheduleAutosave();
-                    },
-                    onAvatarSlugChanged: (slug) {
-                      setState(() => _avatarSlug = slug);
                       _scheduleAutosave();
                     },
                   ),

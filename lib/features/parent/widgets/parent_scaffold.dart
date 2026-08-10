@@ -10,6 +10,7 @@ class ParentScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.showBack,
+    this.onBackPressed,
     this.subBar,
   });
 
@@ -18,6 +19,9 @@ class ParentScaffold extends StatelessWidget {
 
   /// When null, back chevron follows [GoRouter.canPop] on the current branch.
   final bool? showBack;
+
+  /// Custom back action (e.g. account hub → child picker). Shows chevron even when stack cannot pop.
+  final VoidCallback? onBackPressed;
 
   /// Optional strip under the header (e.g. homework filter tabs).
   final Widget? subBar;
@@ -29,7 +33,11 @@ class ParentScaffold extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ParentHeader(title: title, showBack: showBack),
+          ParentHeader(
+            title: title,
+            showBack: showBack,
+            onBackPressed: onBackPressed,
+          ),
           if (subBar != null) ParentSubBar(child: subBar!),
           Expanded(child: body),
         ],

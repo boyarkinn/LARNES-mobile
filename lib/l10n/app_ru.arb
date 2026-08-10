@@ -176,11 +176,11 @@
   "parentChildLegalBasisParent": "Родитель",
   "parentChildLegalBasisAdoptiveParent": "Усыновитель",
   "parentChildLegalBasisGuardian": "Назначенный опекун",
-  "parentChildLegalAuthority": "Я подтверждаю, что являюсь выбранным законным представителем этого ребёнка, мои полномочия не прекращены и не ограничены, конфликта интересов не установлено. Я сообщу LARNES, если полномочия изменятся.",
-  "parentChildLegalConsent": "Я даю согласие на обработку персональных данных этого ребёнка.",
+  "parentChildLegalAuthority": "Я законный представитель ребёнка",
+  "parentChildLegalConsent": "Даю согласие на обработку данных ребёнка",
   "parentChildLegalDocumentLink": "Согласие на обработку данных ребёнка",
   "parentChildLegalRequired": "Подтвердите полномочия и примите согласие на обработку данных ребёнка.",
-  "parentChildFormSubmit": "Создать профиль",
+  "parentChildFormSubmit": "Создать ребёнка",
   "parentChildFormAutosaveSaved": "Сохранено",
   "parentChildFormAutosaveFailed": "Не удалось сохранить",
   "parentClassroomQrTitle": "QR для класса",
@@ -205,7 +205,7 @@
   "parentCreateChildFailed": "Не удалось создать профиль.",
   "parentHomeworkSoon": "Список ДЗ — в следующем шаге.",
   "parentHomeworkLoadFailed": "Не удалось загрузить домашние задания.",
-  "parentHomeworkListTitle": "ДЗ — {name}",
+  "parentHomeworkListTitle": "ДЗ {name}",
   "@parentHomeworkListTitle": {
     "placeholders": {
       "name": {"type": "String"}

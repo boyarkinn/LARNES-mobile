@@ -4,8 +4,10 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
+import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/features/parent/widgets/study_hub_card.dart';
@@ -23,6 +25,7 @@ class StudyHubScreen extends StatefulWidget {
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   bool _hasPublishedCourses = false;
+  String _childFirstName = '';
   bool _wasInactive = false;
 
   static const _activityKinds = ActivityHubKind.values;
@@ -70,14 +73,17 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final hasPublishedCourses = await AuthScope.of(context).parentApi.hasPublishedLarnesCourses(
-        locale: locale,
-      );
+      final parentApi = AuthScope.of(context).parentApi;
+      final results = await Future.wait<Object?>([
+        parentApi.hasPublishedLarnesCourses(locale: locale),
+        parentApi.fetchChild(widget.childId, locale: locale),
+      ]);
       if (!mounted) {
         return;
       }
       setState(() {
-        _hasPublishedCourses = hasPublishedCourses;
+        _hasPublishedCourses = results[0]! as bool;
+        _childFirstName = childHubHeaderTitle((results[1]! as ParentChildDetail).child);
         _isLoading = false;
       });
     } on ParentApiException catch (_) {
@@ -99,10 +105,8 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
     return ParentScaffold(
-      title: l10n.parentStudyTitle,
+      title: _childFirstName,
       body: _buildBody(),
     );
   }

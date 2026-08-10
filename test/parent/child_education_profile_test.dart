@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/child_education_profile.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -14,7 +13,6 @@ ParentChild _child() {
     firstName: 'Иван',
     lastName: 'Иванов',
     cardColor: ChildCardColor.emerald,
-    avatarSlug: ChildAvatarSlug.owl,
   );
 }
 

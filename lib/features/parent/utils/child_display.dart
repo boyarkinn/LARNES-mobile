@@ -20,6 +20,8 @@ String formatChildAgeYears(int age, String localeCode) {
   return '$age лет';
 }
 
+String childHubHeaderTitle(ParentChild child) => child.firstName;
+
 ({String givenName, String lastName}) childDisplayNameLines(ParentChild child) {
   final givenParts = [child.firstName, child.patronymic]
       .whereType<String>()

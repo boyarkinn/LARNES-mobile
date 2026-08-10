@@ -4,15 +4,15 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/widgets/add_child_card.dart';
-import 'package:larnes_mobile/features/parent/widgets/child_avatar.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_gender_silhouette.dart';
+import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
 
 ParentChild _sampleChild({
   ChildCardColor cardColor = ChildCardColor.violet,
-  ChildAvatarSlug avatarSlug = ChildAvatarSlug.owl,
+  String gender = 'female',
 }) {
   return ParentChild(
     id: 'c1',
@@ -20,7 +20,7 @@ ParentChild _sampleChild({
     lastName: 'Иванова',
     patronymic: 'Петровна',
     cardColor: cardColor,
-    avatarSlug: avatarSlug,
+    gender: gender,
     ageYears: 7,
   );
 }
@@ -42,7 +42,7 @@ void main() {
   }
 
   group('ChildProfileCard', () {
-    testWidgets('shows avatar, names and age pill', (tester) async {
+    testWidgets('shows color ring, names and age pill', (tester) async {
       await tester.pumpWidget(
         wrap(
           ChildProfileCard(
@@ -56,7 +56,25 @@ void main() {
       expect(find.text('Иванова'), findsOneWidget);
       expect(find.text('Анна Петровна'), findsOneWidget);
       expect(find.textContaining('7'), findsOneWidget);
-      expect(find.byType(ChildAvatar), findsOneWidget);
+      expect(find.byType(ChildCardColorRing), findsOneWidget);
+      expect(find.byType(ChildGenderSilhouette), findsOneWidget);
+    });
+
+    testWidgets('shows boy silhouette for male gender', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          ChildProfileCard(
+            child: _sampleChild(gender: 'male'),
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final silhouette = tester.widget<ChildGenderSilhouette>(
+        find.byType(ChildGenderSilhouette),
+      );
+      expect(silhouette.gender, 'male');
     });
 
     testWidgets('uses card color band', (tester) async {

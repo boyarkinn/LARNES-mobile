@@ -218,11 +218,11 @@
   "parentChildLegalBasisParent": "Parent",
   "parentChildLegalBasisAdoptiveParent": "Adoptive parent",
   "parentChildLegalBasisGuardian": "Appointed guardian",
-  "parentChildLegalAuthority": "I confirm that I am the selected legal representative of this child, my authority has not ended or been restricted, and no conflict of interest has been established. I will notify LARNES if my authority changes.",
-  "parentChildLegalConsent": "I consent to the processing of this child's personal data.",
+  "parentChildLegalAuthority": "I am the child's legal representative",
+  "parentChildLegalConsent": "I consent to the processing of the child's data",
   "parentChildLegalDocumentLink": "Child Data Processing Consent",
   "parentChildLegalRequired": "Confirm your authority and accept the child data consent.",
-  "parentChildFormSubmit": "Create profile",
+  "parentChildFormSubmit": "Create child",
   "parentChildFormAutosaveSaved": "Saved",
   "parentChildFormAutosaveFailed": "Could not save",
   "parentClassroomQrTitle": "Classroom QR",
@@ -247,7 +247,7 @@
   "parentCreateChildFailed": "Could not create profile.",
   "parentHomeworkSoon": "Homework list — coming in the next step.",
   "parentHomeworkLoadFailed": "Could not load homework.",
-  "parentHomeworkListTitle": "Homework — {name}",
+  "parentHomeworkListTitle": "Homework {name}",
   "@parentHomeworkListTitle": {
     "placeholders": {
       "name": {"type": "String"}

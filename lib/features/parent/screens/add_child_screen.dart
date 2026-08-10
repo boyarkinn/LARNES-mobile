@@ -12,9 +12,9 @@ import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/desk_text_field.dart';
 import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
-import 'package:larnes_mobile/features/parent/theme/child_avatar_catalog.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 import 'package:larnes_mobile/features/parent/widgets/child_profile_appearance_fields.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:share_plus/share_plus.dart';
@@ -43,7 +43,6 @@ class _AddChildScreenState extends State<AddChildScreen> {
   String? _gender;
   String _authorityBasis = 'parent';
   ChildCardColor _cardColor = defaultChildCardColor;
-  ChildAvatarSlug _avatarSlug = defaultChildAvatarSlug;
   final String _childId = _childConsentUuid();
   final String _idempotencyKey = _childConsentUuid();
   MobileConfig? _config;
@@ -126,7 +125,6 @@ class _AddChildScreenState extends State<AddChildScreen> {
           dateOfBirth: dateOfBirth,
           gender: gender,
           cardColor: _cardColor,
-          avatarSlug: _avatarSlug,
         ),
         locale: locale,
       );
@@ -150,7 +148,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
     final l10n = context.l10n;
 
     return ParentScaffold(
-      title: l10n.parentChildFormTitle,
+      title: l10n.parentAddChild,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Column(
@@ -203,16 +201,14 @@ class _AddChildScreenState extends State<AddChildScreen> {
             const SizedBox(height: 16),
             ChildProfileAppearanceFields(
               cardColor: _cardColor,
-              avatarSlug: _avatarSlug,
               onCardColorChanged: (color) => setState(() => _cardColor = color),
-              onAvatarSlugChanged: (slug) => setState(() => _avatarSlug = slug),
             ),
             const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
+            Semantics(
+              label: l10n.parentChildLegalBasisLabel,
+              child: DropdownButtonFormField<String>(
               initialValue: _authorityBasis,
-              decoration: InputDecoration(
-                labelText: l10n.parentChildLegalBasisLabel,
-              ),
+              decoration: const InputDecoration(),
               items: [
                 DropdownMenuItem(
                   value: 'parent',
@@ -231,6 +227,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                 if (value != null) setState(() => _authorityBasis = value);
               },
             ),
+            ),
             CheckboxListTile(
               contentPadding: EdgeInsets.zero,
               controlAffinity: ListTileControlAffinity.leading,
@@ -248,6 +245,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
               title: Text(l10n.parentChildLegalConsent),
             ),
             TextButton(
+              style: TextButton.styleFrom(foregroundColor: ParentColors.shell),
               onPressed: _config?.childConsentPath.isNotEmpty == true
                   ? () {
                       final base = AppConfig.apiBaseUrl.replaceFirst(RegExp(r'/$'), '');
@@ -260,6 +258,10 @@ class _AddChildScreenState extends State<AddChildScreen> {
             ),
             const SizedBox(height: 24),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: ParentColors.shell,
+                minimumSize: const Size.fromHeight(48),
+              ),
               onPressed: _isSubmitting || _isLoadingLegal ? null : _submit,
               child: _isSubmitting
                   ? const SizedBox(

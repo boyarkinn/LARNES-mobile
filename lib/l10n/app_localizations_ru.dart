@@ -528,11 +528,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentChildLegalAuthority =>
-      'Я подтверждаю, что являюсь выбранным законным представителем этого ребёнка, мои полномочия не прекращены и не ограничены, конфликта интересов не установлено. Я сообщу LARNES, если полномочия изменятся.';
+      'Я законный представитель ребёнка';
 
   @override
   String get parentChildLegalConsent =>
-      'Я даю согласие на обработку персональных данных этого ребёнка.';
+      'Даю согласие на обработку данных ребёнка';
 
   @override
   String get parentChildLegalDocumentLink =>
@@ -543,7 +543,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Подтвердите полномочия и примите согласие на обработку данных ребёнка.';
 
   @override
-  String get parentChildFormSubmit => 'Создать профиль';
+  String get parentChildFormSubmit => 'Создать ребёнка';
 
   @override
   String get parentChildFormAutosaveSaved => 'Сохранено';
@@ -610,7 +610,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String parentHomeworkListTitle(String name) {
-    return 'ДЗ — $name';
+    return 'ДЗ $name';
   }
 
   @override

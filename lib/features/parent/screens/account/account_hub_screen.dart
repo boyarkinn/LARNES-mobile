@@ -306,6 +306,7 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
 
     return ParentScaffold(
       title: l10n.parentAccountTitle,
+      onBackPressed: () => context.go('/parent'),
       body: _buildBody(l10n),
     );
   }

@@ -3,7 +3,7 @@
 const signModes = ['mix', 'add', 'sub'];
 const amountScopes = ['topic', 'withLower'];
 
-const ACTION_COUNT_MIN = 3;
+const ACTION_COUNT_MIN = 2;
 const ACTION_COUNT_MAX = 20;
 
 typedef SignMode = String;

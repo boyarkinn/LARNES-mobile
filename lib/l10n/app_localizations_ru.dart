@@ -1206,7 +1206,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentFamilySetupGateLead =>
-      'Если кто-то из вашей семьи уже пользуется платформой, попросите его принять вас. Иначе создайте свою семью и добавьте детей.';
+      'Если кто-то из вашей семьи уже пользуется платформой, попросите его принять вас. Или создайте свою семью и добавьте детей.';
 
   @override
   String get parentFamilySetupAnswerNo => 'Нет, создать свою семью';
@@ -1219,13 +1219,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentFamilySetupWaitingLead =>
-      'Отправьте ссылку родственнику — любой опекун вашей семьи в LARNES сможет принять запрос.';
+      'Отправьте ссылку члену вашей семьи, который использует LARNES.';
 
   @override
   String get parentFamilySetupShareLinkLabel => 'Ссылка для родственника';
 
   @override
   String get parentFamilySetupCopyLink => 'Скопировать ссылку';
+
+  @override
+  String get parentFamilySetupShowLink => 'Показать ссылку';
+
+  @override
+  String get parentFamilySetupHideLink => 'Скрыть ссылку';
 
   @override
   String get parentFamilySetupCopySuccess => 'Ссылка скопирована';
@@ -1238,6 +1244,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentFamilySetupCancelJoin => 'Я ошибся — создать свою семью';
+
+  @override
+  String get parentFamilySetupDisplayNameLabel => 'Название семьи';
+
+  @override
+  String get parentFamilySetupDisplayNameHint =>
+      'Так семью увидит школа. Например: Ивановы.';
+
+  @override
+  String get parentFamilySetupDisplayNamePlaceholder => 'Ивановы';
+
+  @override
+  String get parentFamilySetupDisplayNameRequired => 'Укажите название семьи';
+
+  @override
+  String get parentFamilySetupSoloNameTitle => 'Как назвать семью?';
+
+  @override
+  String get parentFamilySetupCreateSolo => 'Создать семью';
+
+  @override
+  String get parentFamilySetupBack => 'Назад';
 
   @override
   String get parentFamilySetupResolveProfiles => 'Уточнить профили детей';

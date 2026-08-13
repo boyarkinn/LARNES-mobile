@@ -87,13 +87,18 @@ class FamilySetupApi {
 
   Future<FamilySetupSnapshot> answer({
     required String answer,
+    String? displayName,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/parent/family-setup',
-        data: {'answer': answer, 'locale': locale},
+        data: {
+          'answer': answer,
+          'locale': locale,
+          if (displayName != null) 'displayName': displayName,
+        },
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
@@ -115,12 +120,18 @@ class FamilySetupApi {
     }
   }
 
-  Future<FamilySetupSnapshot> cancelJoin({String locale = 'ru'}) async {
+  Future<FamilySetupSnapshot> cancelJoin({
+    String? displayName,
+    String locale = 'ru',
+  }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/parent/family-setup/cancel-join',
-        data: {'locale': locale},
+        data: {
+          'locale': locale,
+          if (displayName != null) 'displayName': displayName,
+        },
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {

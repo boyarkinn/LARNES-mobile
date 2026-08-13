@@ -121,6 +121,7 @@ TopicChainValidator _createFriendBrotherChainValidator(
     }
 
     if (requireFocusOnOnesAndHigher &&
+        shouldEnforceFocusOnOnesAndHigher(steps.length) &&
         !chainHasFocusOnOnesAndHigherPlaces(
           steps,
           intermediates,

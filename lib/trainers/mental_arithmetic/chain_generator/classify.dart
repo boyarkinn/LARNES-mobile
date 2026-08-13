@@ -217,6 +217,11 @@ bool chainHasFocusTechniqueOnExactPlace(
   return false;
 }
 
+/// ones+higher обычно нужны ≥2 focus-слота (len~/2 ≥ 2 → len≥4).
+bool shouldEnforceFocusOnOnesAndHigher(int stepCount) {
+  return stepCount ~/ 2 >= 2;
+}
+
 /// Focus и на единицах (закрепление), и на старших разрядах.
 bool chainHasFocusOnOnesAndHigherPlaces(
   List<ChainStep> steps,

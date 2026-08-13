@@ -2285,7 +2285,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilySetupGateLead.
   ///
   /// In en, this message translates to:
-  /// **'If someone in your family already uses the platform, ask them to accept you. Otherwise create your own family and add children.'**
+  /// **'If someone in your family already uses the platform, ask them to accept you. Or create your own family and add children.'**
   String get parentFamilySetupGateLead;
 
   /// No description provided for @parentFamilySetupAnswerNo.
@@ -2324,6 +2324,18 @@ abstract class AppLocalizations {
   /// **'Copy link'**
   String get parentFamilySetupCopyLink;
 
+  /// No description provided for @parentFamilySetupShowLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Show link'**
+  String get parentFamilySetupShowLink;
+
+  /// No description provided for @parentFamilySetupHideLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide link'**
+  String get parentFamilySetupHideLink;
+
   /// No description provided for @parentFamilySetupCopySuccess.
   ///
   /// In en, this message translates to:
@@ -2347,6 +2359,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I made a mistake — create my family'**
   String get parentFamilySetupCancelJoin;
+
+  /// No description provided for @parentFamilySetupDisplayNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Family name'**
+  String get parentFamilySetupDisplayNameLabel;
+
+  /// No description provided for @parentFamilySetupDisplayNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Schools will see this name. Example: The Ivanovs.'**
+  String get parentFamilySetupDisplayNameHint;
+
+  /// No description provided for @parentFamilySetupDisplayNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'The Ivanovs'**
+  String get parentFamilySetupDisplayNamePlaceholder;
+
+  /// No description provided for @parentFamilySetupDisplayNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a family name'**
+  String get parentFamilySetupDisplayNameRequired;
+
+  /// No description provided for @parentFamilySetupSoloNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What should we call your family?'**
+  String get parentFamilySetupSoloNameTitle;
+
+  /// No description provided for @parentFamilySetupCreateSolo.
+  ///
+  /// In en, this message translates to:
+  /// **'Create family'**
+  String get parentFamilySetupCreateSolo;
+
+  /// No description provided for @parentFamilySetupBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get parentFamilySetupBack;
 
   /// No description provided for @parentFamilySetupResolveProfiles.
   ///

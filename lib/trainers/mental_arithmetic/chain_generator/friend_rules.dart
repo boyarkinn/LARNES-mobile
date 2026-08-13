@@ -193,6 +193,7 @@ TopicChainValidator _createFriendChainValidator(
     }
 
     if (requireFocusOnOnesAndHigher &&
+        shouldEnforceFocusOnOnesAndHigher(steps.length) &&
         !chainHasFocusOnOnesAndHigherPlaces(
           steps,
           intermediates,

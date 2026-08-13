@@ -32,6 +32,19 @@ Dio _familySetupDio({required String status}) {
           return;
         }
 
+        if (options.path.contains('/family-join-dedup') && options.method == 'GET') {
+          handler.resolve(
+            Response(
+              requestOptions: options,
+              data: {
+                'status': 'success',
+                'context': null,
+              },
+            ),
+          );
+          return;
+        }
+
         handler.reject(
           DioException(
             requestOptions: options,
@@ -63,7 +76,7 @@ Widget _wrap({
 }
 
 void main() {
-  testWidgets('family setup gate shows waiting state', (tester) async {
+  testWidgets('family setup waiting hides link until reveal', (tester) async {
     final authSession = AuthSession(
       apiClient: ApiClient(dio: _familySetupDio(status: 'pending_join')),
     );
@@ -76,12 +89,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Ждём подтверждения'), findsOneWidget);
-    expect(find.text('https://example.com/join'), findsOneWidget);
+    expect(find.text('Ждём подтверждения'), findsWidgets);
+    expect(find.text('https://example.com/join'), findsNothing);
+    expect(find.text('Показать ссылку'), findsOneWidget);
     expect(find.text('Я ошибся — создать свою семью'), findsOneWidget);
+
+    await tester.tap(find.text('Показать ссылку'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('https://example.com/join'), findsOneWidget);
+    expect(find.text('Скрыть ссылку'), findsOneWidget);
   });
 
-  testWidgets('family setup gate shows solo/join choices', (tester) async {
+  testWidgets('family setup gate opens naming step like web', (tester) async {
     final authSession = AuthSession(
       apiClient: ApiClient(dio: _familySetupDio(status: 'unset')),
     );
@@ -96,5 +116,13 @@ void main() {
 
     expect(find.text('Нет, создать свою семью'), findsOneWidget);
     expect(find.text('Да, семья уже есть'), findsOneWidget);
+
+    await tester.tap(find.text('Нет, создать свою семью'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Как назвать семью?'), findsWidgets);
+    expect(find.text('Создать семью'), findsOneWidget);
+    expect(find.text('Назад'), findsOneWidget);
+    expect(find.text('Да, семья уже есть'), findsNothing);
   });
 }

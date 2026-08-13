@@ -9,7 +9,6 @@ import 'package:larnes_mobile/features/parent/utils/child_display.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/child_classroom_qr_card.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/child_education_profile.dart';
-import 'package:larnes_mobile/features/parent/widgets/account/delete_child_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/edit_child_form_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -163,11 +162,6 @@ class _ChildProfileScreenState extends State<ChildProfileScreen> {
           childId: widget.childId,
           childName: _childDisplayName(child),
           tokens: tokens,
-        ),
-        DeleteChildPanel(
-          childId: widget.childId,
-          tokens: tokens,
-          hasActiveNetworkEnrollment: detail.hasActiveNetworkEnrollment,
         ),
       ],
     );

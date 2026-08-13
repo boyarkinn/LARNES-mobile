@@ -62,6 +62,8 @@ void main() {
       );
 
       await tester.pump();
+      // countdown 3→2→1→Старт (4×750ms) + flash steps
+      await tester.pump(const Duration(milliseconds: 3000));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Повторить'), findsNothing);

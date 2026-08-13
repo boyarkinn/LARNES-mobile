@@ -1193,26 +1193,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentFamilySetupGateLead =>
-      'If someone in your family already uses the platform, ask them to accept you. Otherwise create your own family and add children.';
+      'If a family member already uses the platform, ask them to accept you. Or create your family and add children.';
 
   @override
   String get parentFamilySetupAnswerNo => 'No, create my family';
 
   @override
-  String get parentFamilySetupAnswerYes => 'Yes, our family is here';
+  String get parentFamilySetupAnswerYes => 'Yes, family is already here';
 
   @override
   String get parentFamilySetupWaitingTitle => 'Waiting for confirmation';
 
   @override
   String get parentFamilySetupWaitingLead =>
-      'Send the link to a relative — any guardian of your family on LARNES can accept the request.';
+      'Send the link to a family member who already uses LARNES.';
 
   @override
   String get parentFamilySetupShareLinkLabel => 'Link for your relative';
 
   @override
   String get parentFamilySetupCopyLink => 'Copy link';
+
+  @override
+  String get parentFamilySetupShowLink => 'Show link';
+
+  @override
+  String get parentFamilySetupHideLink => 'Hide link';
 
   @override
   String get parentFamilySetupCopySuccess => 'Link copied';
@@ -1225,19 +1231,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentFamilySetupCancelJoin =>
-      'I made a mistake — create my family';
+      'I was wrong — create my family';
+
+  @override
+  String get parentFamilySetupDisplayNameLabel => 'Family name';
+
+  @override
+  String get parentFamilySetupDisplayNameHint =>
+      'Schools will see this name. Example: The Ivanovs.';
+
+  @override
+  String get parentFamilySetupDisplayNamePlaceholder => 'The Ivanovs';
+
+  @override
+  String get parentFamilySetupDisplayNameRequired => 'Enter a family name';
+
+  @override
+  String get parentFamilySetupSoloNameTitle => 'What should we call your family?';
+
+  @override
+  String get parentFamilySetupCreateSolo => 'Create family';
+
+  @override
+  String get parentFamilySetupBack => 'Back';
 
   @override
   String get parentFamilySetupResolveProfiles => 'Resolve child profiles';
 
   @override
   String parentFamilyJoinDedupChoiceTitle(String name) {
-    return 'Children named “$name”';
+    return 'Children named «$name»';
   }
 
   @override
   String get parentFamilyJoinDedupChoiceLead =>
-      'If this is one child, pick the profile to keep. The other will be removed from the family account.';
+      'If this is the same child, pick one profile to keep. The other will be removed from the family cabinet.';
 
   @override
   String get parentFamilyJoinDedupDifferentChildren => 'Different children';
@@ -1250,7 +1278,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentFamilyJoinDedupPickLead =>
-      'Which profile should we keep? The other will be removed from the family account.';
+      'Which profile should stay? The other will be removed from the cabinet.';
 
   @override
   String get parentFamilyJoinDedupRegisteredLabel => 'Registered';
@@ -1272,7 +1300,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentFamilyJoinDedupInvalidLead =>
-      'This link is outdated or profiles are already aligned.';
+      'The link expired or profiles were already reconciled.';
 
   @override
   String get parentGuardiansTitle => 'Guardians';

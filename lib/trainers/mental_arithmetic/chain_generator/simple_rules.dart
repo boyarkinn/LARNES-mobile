@@ -56,9 +56,16 @@ bool chainHasThreeAndTwoDigitWidths(List<ChainStep> steps) {
 }
 
 bool chainHasThreeTwoAndOneDigitWidths(List<ChainStep> steps) {
-  return steps.any((step) => isThreeDigitAmount(step.amount)) &&
-      steps.any((step) => isTwoDigitAmount(step.amount)) &&
-      steps.any((step) => isOneDigitAmount(step.amount));
+  final has3 = steps.any((step) => isThreeDigitAmount(step.amount));
+  final has2 = steps.any((step) => isTwoDigitAmount(step.amount));
+  final has1 = steps.any((step) => isOneDigitAmount(step.amount));
+
+  // Три ширины нельзя уложить в <3 шагов — на коротких: 3-значный + ещё одна ширина.
+  if (steps.length < 3) {
+    return has3 && (has1 || has2);
+  }
+
+  return has3 && has2 && has1;
 }
 
 /// Суффикс ширины трёхзначных тем (longest-first).

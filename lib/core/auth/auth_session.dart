@@ -5,6 +5,8 @@ import 'package:larnes_mobile/core/api/admin_trainers_api.dart';
 import 'package:larnes_mobile/core/api/admin_account_api.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
+import 'package:larnes_mobile/core/api/confirm_family_children_api.dart';
+import 'package:larnes_mobile/core/api/family_adult_claim_api.dart';
 import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
 import 'package:larnes_mobile/core/api/family_setup_api.dart';
@@ -15,6 +17,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 
 class AuthSession extends ChangeNotifier {
@@ -65,11 +68,19 @@ class AuthSession extends ChangeNotifier {
 
   FamilyInvitesApi get familyInvitesApi => _client.familyInvitesApi;
 
+  FamilyAdultClaimApi get familyAdultClaimApi => _client.familyAdultClaimApi;
+
+  ConfirmFamilyChildrenApi get confirmFamilyChildrenApi =>
+      _client.confirmFamilyChildrenApi;
+
   FamilyJoinDedupApi get familyJoinDedupApi => _client.familyJoinDedupApi;
 
   NetworkApi get networkApi => _client.networkApi;
 
   PlacesApi get placesApi => _client.placesApi;
+
+  RegisterSchoolOffersApi get registerSchoolOffersApi =>
+      _client.registerSchoolOffersApi;
 
   int _parentDataRevision = 0;
 

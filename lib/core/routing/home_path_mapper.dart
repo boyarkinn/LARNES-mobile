@@ -61,8 +61,18 @@ bool isFamilyInviteRoute(String path) {
   final base = path.split('?').first;
   return base == '/invite/family-join-request' ||
       base == '/invite/family-guardian' ||
+      base == '/invite/family-adult-claim' ||
+      base == '/invite/preaccount-claim' ||
       base.startsWith('/invite/family-join-request') ||
-      base.startsWith('/invite/family-guardian');
+      base.startsWith('/invite/family-guardian') ||
+      base.startsWith('/invite/family-adult-claim') ||
+      base.startsWith('/invite/preaccount-claim');
+}
+
+bool isConfirmFamilyChildrenRoute(String path) {
+  final base = path.split('?').first;
+  return base == '/parent/family/confirm-children' ||
+      base.startsWith('/parent/family/confirm-children');
 }
 
 bool isAuthRoute(String path) =>
@@ -86,7 +96,8 @@ bool isParentChildrenRoute(String path) {
   }
   if (isParentAccountRoute(path) ||
       isFamilySetupRoute(path) ||
-      isFamilyJoinDedupRoute(path)) {
+      isFamilyJoinDedupRoute(path) ||
+      isConfirmFamilyChildrenRoute(path)) {
     return false;
   }
   return true;

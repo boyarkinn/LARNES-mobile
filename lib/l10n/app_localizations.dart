@@ -3918,6 +3918,46 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Consent could not be withdrawn. No data was erased.'**
   String get voluntaryConsentRevokeFailed;
+
+  String inviteFamilyAdultClaimTitle(String school);
+  String get inviteFamilyAdultClaimTitleShort;
+  String get inviteFamilyAdultClaimSubtitle;
+  String get inviteFamilyAdultClaimAccept;
+  String get inviteFamilyAdultClaimDecline;
+  String get inviteFamilyAdultClaimWrongAccountTitle;
+  String get inviteFamilyAdultClaimWrongAccountSubtitle;
+  String get inviteFamilyAdultClaimContactLabel;
+  String get inviteFamilyAdultClaimContactNotVerified;
+  String get inviteFamilyAdultClaimOtpTitle;
+  String get inviteFamilyAdultClaimOtpSentTo;
+  String get inviteFamilyAdultClaimOtpSubmit;
+  String get inviteFamilyAdultClaimOtpResend;
+  String inviteFamilyAdultClaimOtpResendIn(int seconds);
+  String get inviteFamilyAdultClaimProfileTitle;
+  String get inviteFamilyAdultClaimProfileHint;
+  String get inviteFamilyAdultClaimProfileSubmit;
+  String get inviteFamilyAdultClaimLoggedInTitle;
+  String get inviteFamilyAdultClaimLoggedInSubtitle;
+  String get inviteFamilyAdultClaimLoggedInSubmit;
+  String get parentConfirmFamilyChildrenTitle;
+  String parentConfirmFamilyChildrenSubtitle(String family);
+  String get parentConfirmFamilyChildrenNoChildren;
+  String get parentConfirmFamilyChildrenSubmit;
+  String get parentConfirmFamilyChildrenGender;
+  String get parentConfirmFamilyChildrenGenderMale;
+  String get parentConfirmFamilyChildrenGenderFemale;
+  String get parentConfirmFamilyChildrenAuthority;
+  String get parentConfirmFamilyChildrenAuthorityParent;
+  String get parentConfirmFamilyChildrenAuthorityAdoptive;
+  String get parentConfirmFamilyChildrenAuthorityGuardian;
+  String get parentConfirmFamilyChildrenAuthorityDeclared;
+  String get parentConfirmFamilyChildrenConsentAccepted;
+  String get parentConfirmFamilyChildrenConsentRequired;
+  String get registerSchoolOffersTitle;
+  String get registerSchoolOffersLead;
+  String get registerSchoolOffersContinue;
+  String get registerSchoolOffersSkip;
+  String get registerSchoolOffersSelectOne;
 }
 
 class _AppLocalizationsDelegate

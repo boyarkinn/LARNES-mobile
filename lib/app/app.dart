@@ -6,6 +6,7 @@ import 'package:larnes_mobile/app/router.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/deep_links/invite_deep_link.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
@@ -72,13 +73,16 @@ class _LarnesAppState extends State<LarnesApp> {
       ],
       routerConfig: _router,
       builder: (context, child) {
-        return LocaleScope(
-          localeController: _localeController,
-          child: AuthScope(
-            authSession: _authSession,
-            child: KioskScope(
-              kioskRouteState: _kioskRouteState,
-              child: child ?? const SizedBox.shrink(),
+        return InviteDeepLinkBinder(
+          router: _router,
+          child: LocaleScope(
+            localeController: _localeController,
+            child: AuthScope(
+              authSession: _authSession,
+              child: KioskScope(
+                kioskRouteState: _kioskRouteState,
+                child: child ?? const SizedBox.shrink(),
+              ),
             ),
           ),
         );

@@ -6,6 +6,7 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
@@ -57,12 +58,30 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   final String _idempotencyKey = _registrationUuid();
   String? _error;
 
+  bool _authorityDeclared = false;
+  bool _consentAccepted = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.flow.accountType == RegisterAccountType.networkOwner &&
         widget.flow.channel == RegisterContactChannel.email) {
       _emailController.text = widget.flow.contact;
+    }
+    if (widget.flow.hasSchoolOffers && widget.flow.schoolOffers.isNotEmpty) {
+      final offer = widget.flow.schoolOffers.firstWhere(
+        (item) => item.childId == widget.flow.primarySchoolOfferChildId,
+        orElse: () => widget.flow.schoolOffers.first,
+      );
+      _firstNameController.text = offer.parentFirstName;
+      _lastNameController.text = offer.parentLastName;
+      _patronymicController.text = offer.parentPatronymic;
+      if (offer.parentDateOfBirth.contains('-')) {
+        final parts = offer.parentDateOfBirth.split('-');
+        if (parts.length == 3) {
+          _dateOfBirthController.text = '${parts[2]}.${parts[1]}.${parts[0]}';
+        }
+      }
     }
     _loadConfig();
   }
@@ -177,7 +196,84 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
 
     try {
       final locale = LocaleScope.of(context).localeCode;
-      final result = await AuthScope.of(context).registerApi.register(
+      final auth = AuthScope.of(context);
+
+      if (widget.flow.hasSchoolOffers) {
+        if (!_authorityDeclared || !_consentAccepted) {
+          setState(() {
+            _error = l10n.parentConfirmFamilyChildrenConsentRequired;
+            _isSubmitting = false;
+          });
+          return;
+        }
+        final primary = widget.flow.schoolOffers.firstWhere(
+          (item) => item.childId == widget.flow.primarySchoolOfferChildId,
+          orElse: () => widget.flow.schoolOffers.first,
+        );
+        final dob = displayDateToIso(_dateOfBirthController.text.trim());
+        if (dob == null || _citySelection == null) {
+          setState(() {
+            _error = l10n.invalidDateOfBirth;
+            _isSubmitting = false;
+          });
+          return;
+        }
+        final result = await auth.registerSchoolOffersApi.complete(
+          payload: {
+            'channel': widget.flow.channel == RegisterContactChannel.email ? 'email' : 'sms',
+            'contact': widget.flow.contact,
+            'verificationToken': widget.flow.verificationToken,
+            'firstName': _firstNameController.text.trim(),
+            'lastName': _lastNameController.text.trim(),
+            'patronymic': _patronymicController.text.trim(),
+            'dateOfBirth': dob,
+            'password': _passwordController.text,
+            'confirmPassword': _passwordRepeatController.text,
+            'placeMapboxId': _citySelection!.mapboxId,
+            'termsAccepted': _termsAccepted,
+            'termsVersionId': _config!.termsVersionId,
+            'idempotencyKey': _idempotencyKey,
+            'childIds': widget.flow.selectedSchoolOfferChildIds,
+            'primaryChildId': widget.flow.primarySchoolOfferChildId ?? primary.childId,
+            'childFirstName': primary.childFirstName,
+            'childLastName': primary.childLastName ?? '',
+            'childPatronymic': primary.childPatronymic ?? '',
+            'childDateOfBirth': primary.childDateOfBirth ?? '',
+            'childGender': primary.childGender ?? 'male',
+            'authorityBasis': 'parent',
+            'authorityDeclared': true,
+            'consentAccepted': true,
+            'documentVersionId': _config!.childConsentVersionId,
+            'childIdempotencyKey': _idempotencyKey,
+          },
+          locale: locale,
+        );
+        if (!mounted) {
+          return;
+        }
+        final homePath = await auth.completeRegistration(result);
+        if (!mounted) {
+          return;
+        }
+        final pending = await auth.confirmFamilyChildrenApi.fetchPending(locale: locale);
+        if (!mounted) {
+          return;
+        }
+        if (pending != null) {
+          context.go('/parent/family/confirm-children');
+          return;
+        }
+        context.go(
+          resolvePostAuthDestination(
+            accountType: auth.user?.accountType,
+            homePath: homePath,
+            familySetupComplete: auth.familySetupComplete,
+          ),
+        );
+        return;
+      }
+
+      final result = await auth.registerApi.register(
         flow: widget.flow,
         verificationToken: widget.flow.verificationToken,
         profile: _buildProfilePayload(),
@@ -188,7 +284,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       if (!mounted) {
         return;
       }
-      final homePath = await AuthScope.of(context).completeRegistration(result);
+      final homePath = await auth.completeRegistration(result);
       if (!mounted) {
         return;
       }
@@ -200,6 +296,8 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
         ),
       );
     } on RegisterApiException catch (error) {
+      setState(() => _error = error.message);
+    } on RegisterSchoolOffersApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {
       setState(() => _error = l10n.createAccountFailed);
@@ -279,6 +377,50 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   List<Widget> _buildFields(AppLocalizations l10n) {
     switch (widget.flow.accountType) {
       case RegisterAccountType.parent:
+        if (widget.flow.hasSchoolOffers) {
+          return [
+            AuthTextField(
+              controller: _lastNameController,
+              label: l10n.lastNameLabel,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            AuthTextField(
+              controller: _firstNameController,
+              label: l10n.firstNameLabel,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            AuthTextField(
+              controller: _patronymicController,
+              label: l10n.patronymicLabel,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            DateOfBirthTextField(
+              controller: _dateOfBirthController,
+              label: l10n.dateOfBirthLabel,
+            ),
+            const SizedBox(height: 12),
+            _cityField(l10n),
+            const SizedBox(height: 12),
+            _passwordFields(l10n),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _authorityDeclared,
+              onChanged: (v) => setState(() => _authorityDeclared = v ?? false),
+              title: Text(l10n.parentConfirmFamilyChildrenAuthorityDeclared),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _consentAccepted,
+              onChanged: (v) => setState(() => _consentAccepted = v ?? false),
+              title: Text(l10n.parentConfirmFamilyChildrenConsentAccepted),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+          ];
+        }
         return [
           AuthTextField(
             controller: _firstNameController,

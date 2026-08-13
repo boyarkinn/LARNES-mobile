@@ -22,6 +22,7 @@ import 'package:larnes_mobile/features/auth/screens/password_reset_password_scre
 import 'package:larnes_mobile/features/auth/screens/register_contact_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_otp_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart';
+import 'package:larnes_mobile/features/auth/screens/register_school_offers_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_enroll_screen.dart';
@@ -38,9 +39,11 @@ import 'package:larnes_mobile/features/parent/screens/account/account_relationsh
 import 'package:larnes_mobile/features/parent/screens/account/account_city_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_date_of_birth_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_edit_child_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/family_adult_claim_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_guardian_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_join_request_invite_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/confirm_family_children_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/family_join_dedup_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/family_setup_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_login_screen.dart';
@@ -151,6 +154,16 @@ GoRouter createAppRouter({
                 return const RegisterTypeScreen();
               }
               return RegisterOtpScreen(flow: flow);
+            },
+          ),
+          GoRoute(
+            path: 'parent/school-offers',
+            builder: (context, state) {
+              final flow = state.extra;
+              if (flow is! RegisterFlowData) {
+                return const RegisterTypeScreen();
+              }
+              return RegisterSchoolOffersScreen(flow: flow);
             },
           ),
           GoRoute(
@@ -278,6 +291,10 @@ GoRouter createAppRouter({
                     builder: (context, state) => const FamilySetupScreen(),
                   ),
                   GoRoute(
+                    path: 'family/confirm-children',
+                    builder: (context, state) => const ConfirmFamilyChildrenScreen(),
+                  ),
+                  GoRoute(
                     path: 'family-join-dedup',
                     builder: (context, state) {
                       final token = state.uri.queryParameters['token'] ?? '';
@@ -291,6 +308,9 @@ GoRouter createAppRouter({
                       final childId = state.pathParameters['childId'];
                       if (childId == 'family-setup') {
                         return '/parent/family-setup';
+                      }
+                      if (childId == 'family' || childId == 'confirm-children') {
+                        return '/parent/family/confirm-children';
                       }
                       if (childId == 'family-join-dedup') {
                         final query = state.uri.query;
@@ -594,6 +614,21 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final token = state.uri.queryParameters['token'] ?? '';
           return FamilyGuardianInviteScreen(token: token);
+        },
+      ),
+      GoRoute(
+        path: '/invite/family-adult-claim',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return FamilyAdultClaimInviteScreen(token: token);
+        },
+      ),
+      GoRoute(
+        path: '/invite/preaccount-claim',
+        redirect: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          final query = token.isEmpty ? '' : '?token=${Uri.encodeComponent(token)}';
+          return '/invite/family-adult-claim$query';
         },
       ),
       GoRoute(

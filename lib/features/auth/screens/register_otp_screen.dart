@@ -86,10 +86,18 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
         return;
       }
 
-      context.push(
-        '/register/${widget.flow.accountType.routeSlug}/profile',
-        extra: widget.flow.copyWith(verificationToken: verificationToken),
-      );
+      final nextFlow = widget.flow.copyWith(verificationToken: verificationToken);
+      if (widget.flow.accountType == RegisterAccountType.parent) {
+        context.push(
+          '/register/parent/school-offers',
+          extra: nextFlow,
+        );
+      } else {
+        context.push(
+          '/register/${widget.flow.accountType.routeSlug}/profile',
+          extra: nextFlow,
+        );
+      }
     } on RegisterApiException catch (error) {
       setState(() => _error = error.message);
     } catch (_) {

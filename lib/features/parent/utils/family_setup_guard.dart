@@ -7,7 +7,13 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 export 'package:larnes_mobile/core/api/parent_panel_error.dart' show isFamilySetupRequiredCode;
 
 /// Зарезервированные сегменты — не id ребёнка; иначе ловим gate как :childId.
-const reservedParentChildRouteIds = {'family-setup', 'family-join-dedup', 'children'};
+const reservedParentChildRouteIds = {
+  'family-setup',
+  'family-join-dedup',
+  'family',
+  'confirm-children',
+  'children',
+};
 
 bool isReservedParentChildRouteId(String? childId) =>
     childId != null && reservedParentChildRouteIds.contains(childId);

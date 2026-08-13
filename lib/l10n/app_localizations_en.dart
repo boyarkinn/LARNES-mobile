@@ -2100,4 +2100,134 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get voluntaryConsentRevokeFailed =>
       'Consent could not be withdrawn. No data was erased.';
+
+  @override
+  String inviteFamilyAdultClaimTitle(String school) =>
+      'School «$school» invites you to the LARNES ecosystem';
+
+  @override
+  String get inviteFamilyAdultClaimTitleShort => 'School invitation';
+
+  @override
+  String get inviteFamilyAdultClaimSubtitle =>
+      'Accept the invitation, confirm your identity, then fill in the required details';
+
+  @override
+  String get inviteFamilyAdultClaimAccept => 'Accept invitation';
+
+  @override
+  String get inviteFamilyAdultClaimDecline => 'Decline';
+
+  @override
+  String get inviteFamilyAdultClaimWrongAccountTitle => 'Wrong account';
+
+  @override
+  String get inviteFamilyAdultClaimWrongAccountSubtitle =>
+      'Sign in with the same phone or email as in the invitation, or sign out and register.';
+
+  @override
+  String get inviteFamilyAdultClaimContactLabel => 'Contact';
+
+  @override
+  String get inviteFamilyAdultClaimContactNotVerified =>
+      'Confirm the contact with the code first';
+
+  @override
+  String get inviteFamilyAdultClaimOtpTitle => 'Confirm your identity';
+
+  @override
+  String get inviteFamilyAdultClaimOtpSentTo => 'Enter the code we sent to';
+
+  @override
+  String get inviteFamilyAdultClaimOtpSubmit => 'Confirm';
+
+  @override
+  String get inviteFamilyAdultClaimOtpResend => 'Send code again';
+
+  @override
+  String inviteFamilyAdultClaimOtpResendIn(int seconds) =>
+      'Resend available in ${seconds}s';
+
+  @override
+  String get inviteFamilyAdultClaimProfileTitle => 'Parent details';
+
+  @override
+  String get inviteFamilyAdultClaimProfileHint =>
+      'Check the details and set a password. You will confirm children on the next step.';
+
+  @override
+  String get inviteFamilyAdultClaimProfileSubmit => 'Create account';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInTitle => 'Accept with this account';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInSubtitle =>
+      'The contact matches your account. After accepting you will confirm the children’s details.';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInSubmit => 'Accept family';
+
+  @override
+  String get parentConfirmFamilyChildrenTitle => 'Confirm children';
+
+  @override
+  String parentConfirmFamilyChildrenSubtitle(String family) =>
+      'Family «$family». The school shared profiles — confirm the details.';
+
+  @override
+  String get parentConfirmFamilyChildrenNoChildren =>
+      'There are no children in the family yet. You can finish confirmation.';
+
+  @override
+  String get parentConfirmFamilyChildrenSubmit => 'Confirm';
+
+  @override
+  String get parentConfirmFamilyChildrenGender => 'Gender';
+
+  @override
+  String get parentConfirmFamilyChildrenGenderMale => 'Boy';
+
+  @override
+  String get parentConfirmFamilyChildrenGenderFemale => 'Girl';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthority => 'Authority basis';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityParent => 'Parent';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityAdoptive => 'Adoptive parent';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityGuardian => 'Guardian';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityDeclared =>
+      'I confirm my authority as representative';
+
+  @override
+  String get parentConfirmFamilyChildrenConsentAccepted =>
+      'I consent to processing children’s data';
+
+  @override
+  String get parentConfirmFamilyChildrenConsentRequired =>
+      'Confirm authority and consent for the children';
+
+  @override
+  String get registerSchoolOffersTitle => 'School invitations';
+
+  @override
+  String get registerSchoolOffersLead =>
+      'We found school families for your contact. Select whom to accept, or skip.';
+
+  @override
+  String get registerSchoolOffersContinue => 'Continue with selected';
+
+  @override
+  String get registerSchoolOffersSkip => 'Skip';
+
+  @override
+  String get registerSchoolOffersSelectOne => 'Select at least one child';
 }

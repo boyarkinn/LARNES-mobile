@@ -43,7 +43,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       if (_redirectIfFamilySetupRequired()) {
         return;
       }
-      _load();
+      _redirectIfConfirmChildrenRequired();
     });
   }
 
@@ -54,6 +54,27 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
     redirectToFamilySetupIfRequired(context, code: kFamilySetupRequiredCode);
     return true;
+  }
+
+  Future<void> _redirectIfConfirmChildrenRequired() async {
+    try {
+      final locale = LocaleScope.read(context).localeCode;
+      final pending = await AuthScope.of(context).confirmFamilyChildrenApi.fetchPending(
+            locale: locale,
+          );
+      if (!mounted) {
+        return;
+      }
+      if (pending != null) {
+        context.go('/parent/family/confirm-children');
+        return;
+      }
+    } catch (_) {
+      // ignore gate fetch errors — picker still loads
+    }
+    if (mounted) {
+      _load();
+    }
   }
 
   @override

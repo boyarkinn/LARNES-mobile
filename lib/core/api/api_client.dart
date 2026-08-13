@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/api_error_body.dart';
 import 'package:larnes_mobile/core/api/admin_trainers_api.dart';
 import 'package:larnes_mobile/core/api/admin_account_api.dart';
+import 'package:larnes_mobile/core/api/confirm_family_children_api.dart';
+import 'package:larnes_mobile/core/api/family_adult_claim_api.dart';
 import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
 import 'package:larnes_mobile/core/api/family_setup_api.dart';
@@ -13,6 +15,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
 
@@ -62,9 +65,12 @@ class ApiClient {
   FamilySetupApi? _familySetupApi;
   GuardiansApi? _guardiansApi;
   FamilyInvitesApi? _familyInvitesApi;
+  FamilyAdultClaimApi? _familyAdultClaimApi;
+  ConfirmFamilyChildrenApi? _confirmFamilyChildrenApi;
   FamilyJoinDedupApi? _familyJoinDedupApi;
   NetworkApi? _networkApi;
   PlacesApi? _placesApi;
+  RegisterSchoolOffersApi? _registerSchoolOffersApi;
 
   Dio get dio => _dio;
 
@@ -89,10 +95,19 @@ class ApiClient {
 
   FamilyInvitesApi get familyInvitesApi => _familyInvitesApi ??= FamilyInvitesApi(this);
 
+  FamilyAdultClaimApi get familyAdultClaimApi =>
+      _familyAdultClaimApi ??= FamilyAdultClaimApi(this);
+
+  ConfirmFamilyChildrenApi get confirmFamilyChildrenApi =>
+      _confirmFamilyChildrenApi ??= ConfirmFamilyChildrenApi(this);
+
   FamilyJoinDedupApi get familyJoinDedupApi =>
       _familyJoinDedupApi ??= FamilyJoinDedupApi(this);
 
   NetworkApi get networkApi => _networkApi ??= NetworkApi(this);
 
   PlacesApi get placesApi => _placesApi ??= PlacesApi(this);
+
+  RegisterSchoolOffersApi get registerSchoolOffersApi =>
+      _registerSchoolOffersApi ??= RegisterSchoolOffersApi(this);
 }

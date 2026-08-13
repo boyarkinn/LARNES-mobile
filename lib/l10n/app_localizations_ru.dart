@@ -2123,4 +2123,134 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get voluntaryConsentRevokeFailed =>
       'Не удалось отозвать согласие. Данные не удалены.';
+
+  @override
+  String inviteFamilyAdultClaimTitle(String school) =>
+      'Школа «$school» приглашает вас в экосистему LARNES';
+
+  @override
+  String get inviteFamilyAdultClaimTitleShort => 'Приглашение школы';
+
+  @override
+  String get inviteFamilyAdultClaimSubtitle =>
+      'Примите приглашение, подтвердите личность, затем заполните необходимые данные';
+
+  @override
+  String get inviteFamilyAdultClaimAccept => 'Принять приглашение';
+
+  @override
+  String get inviteFamilyAdultClaimDecline => 'Отклонить';
+
+  @override
+  String get inviteFamilyAdultClaimWrongAccountTitle => 'Нужен другой аккаунт';
+
+  @override
+  String get inviteFamilyAdultClaimWrongAccountSubtitle =>
+      'Войдите аккаунтом с тем же телефоном или email, что в приглашении, либо выйдите и зарегистрируйтесь.';
+
+  @override
+  String get inviteFamilyAdultClaimContactLabel => 'Контакт';
+
+  @override
+  String get inviteFamilyAdultClaimContactNotVerified =>
+      'Сначала подтвердите контакт кодом';
+
+  @override
+  String get inviteFamilyAdultClaimOtpTitle => 'Подтвердите личность';
+
+  @override
+  String get inviteFamilyAdultClaimOtpSentTo => 'Введите код, мы отправили его на';
+
+  @override
+  String get inviteFamilyAdultClaimOtpSubmit => 'Подтвердить';
+
+  @override
+  String get inviteFamilyAdultClaimOtpResend => 'Отправить код снова';
+
+  @override
+  String inviteFamilyAdultClaimOtpResendIn(int seconds) =>
+      'Повторная отправка через $seconds с';
+
+  @override
+  String get inviteFamilyAdultClaimProfileTitle => 'Представитель';
+
+  @override
+  String get inviteFamilyAdultClaimProfileHint =>
+      'Проверьте данные и задайте пароль. Детей проверите на следующем шаге.';
+
+  @override
+  String get inviteFamilyAdultClaimProfileSubmit => 'Создать аккаунт';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInTitle => 'Принять в текущий аккаунт';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInSubtitle =>
+      'Контакт совпал с вашим аккаунтом. После принятия проверите данные детей.';
+
+  @override
+  String get inviteFamilyAdultClaimLoggedInSubmit => 'Принять семью';
+
+  @override
+  String get parentConfirmFamilyChildrenTitle => 'Проверьте детей';
+
+  @override
+  String parentConfirmFamilyChildrenSubtitle(String family) =>
+      'Семья «$family». Школа передала карточки — подтвердите данные.';
+
+  @override
+  String get parentConfirmFamilyChildrenNoChildren =>
+      'В семье пока нет детей. Можно завершить проверку.';
+
+  @override
+  String get parentConfirmFamilyChildrenSubmit => 'Подтвердить';
+
+  @override
+  String get parentConfirmFamilyChildrenGender => 'Пол';
+
+  @override
+  String get parentConfirmFamilyChildrenGenderMale => 'Мальчик';
+
+  @override
+  String get parentConfirmFamilyChildrenGenderFemale => 'Девочка';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthority => 'Основание полномочий';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityParent => 'Родитель';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityAdoptive => 'Усыновитель';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityGuardian => 'Опекун';
+
+  @override
+  String get parentConfirmFamilyChildrenAuthorityDeclared =>
+      'Подтверждаю полномочия представителя';
+
+  @override
+  String get parentConfirmFamilyChildrenConsentAccepted =>
+      'Согласен на обработку данных детей';
+
+  @override
+  String get parentConfirmFamilyChildrenConsentRequired =>
+      'Подтвердите полномочия и согласие по детям';
+
+  @override
+  String get registerSchoolOffersTitle => 'Приглашения от школ';
+
+  @override
+  String get registerSchoolOffersLead =>
+      'По вашему контакту нашлись семьи в школах. Выберите, кого принять, или пропустите.';
+
+  @override
+  String get registerSchoolOffersContinue => 'Продолжить с выбранными';
+
+  @override
+  String get registerSchoolOffersSkip => 'Пропустить';
+
+  @override
+  String get registerSchoolOffersSelectOne => 'Выберите хотя бы одного ребёнка';
 }

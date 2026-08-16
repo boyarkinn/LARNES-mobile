@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
+import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
@@ -44,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final locale = LocaleScope.of(context).localeCode;
-      final homePath = await widget.authSession.login(
+      final outcome = await widget.authSession.login(
         login: _loginController.text.trim(),
         password: _passwordController.text,
         locale: locale,
@@ -52,11 +53,25 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) {
         return;
       }
+
+      if (outcome is DeviceEnrollmentLoginOutcome) {
+        if (widget.authSession.isAuthenticated) {
+          await widget.authSession.logout();
+        }
+        await KioskScope.of(context).persistDeviceToken(outcome.deviceToken);
+        if (!mounted) {
+          return;
+        }
+        context.go('/kiosk');
+        return;
+      }
+
+      final userOutcome = outcome as UserLoginOutcome;
       final redirect = widget.redirectPath?.trim();
       context.go(
         resolvePostAuthDestination(
           accountType: widget.authSession.user?.accountType,
-          homePath: homePath,
+          homePath: userOutcome.homePath,
           familySetupComplete: widget.authSession.familySetupComplete,
           redirectPath: redirect,
         ),

@@ -2,10 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
-import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_controller.dart';
@@ -30,6 +28,7 @@ InterceptorsWrapper _deviceMeInterceptor() {
               'deviceId': _deviceId,
               'kind': 'phone',
               'centerName': 'Center A',
+              'classroomId': '44444444-4444-4444-8444-444444444444',
               'classroomTitle': 'Room 1',
               'slotLabel': 'M1',
               'lesson': null,
@@ -43,13 +42,13 @@ InterceptorsWrapper _deviceMeInterceptor() {
   );
 }
 
-InterceptorsWrapper _unbindInterceptor({
-  void Function(RequestOptions options)? onUnbind,
+InterceptorsWrapper _kioskExitInterceptor({
+  void Function(RequestOptions options)? onExit,
 }) {
   return InterceptorsWrapper(
     onRequest: (options, handler) {
-      if (options.path.endsWith('/devices/unbind')) {
-        onUnbind?.call(options);
+      if (options.path.endsWith('/kiosk/exit')) {
+        onExit?.call(options);
         handler.resolve(
           Response(
             requestOptions: options,
@@ -57,6 +56,15 @@ InterceptorsWrapper _unbindInterceptor({
               'status': 'success',
               'ok': true,
             },
+          ),
+        );
+        return;
+      }
+      if (options.path.endsWith('/child-logout')) {
+        handler.resolve(
+          Response(
+            requestOptions: options,
+            data: {'ok': true},
           ),
         );
         return;
@@ -91,15 +99,7 @@ void main() {
 
   group('KioskSettingsScreen', () {
     testWidgets('shows placement and device id', (tester) async {
-      final networkDio = Dio(BaseOptions(baseUrl: 'https://example.com'));
-      final authSession = AuthSession(apiClient: ApiClient(dio: networkDio));
-      authSession.applyUser(
-        const AuthUser(
-          id: '22222222-2222-4222-8222-222222222222',
-          accountType: 'network_owner',
-        ),
-      );
-
+      final authSession = AuthSession();
       final tokenStorage = MemoryDeviceTokenStorage();
       final kioskRouteState = KioskRouteState(deviceTokenStorage: tokenStorage);
       kioskRouteState.kioskApiClient.dio.interceptors.add(_deviceMeInterceptor());
@@ -129,31 +129,23 @@ void main() {
       expect(find.textContaining('Center A'), findsOneWidget);
       expect(find.textContaining('Слот M1'), findsOneWidget);
       expect(find.text(_deviceId), findsOneWidget);
-      expect(find.text('Отвязать и выйти из kiosk'), findsOneWidget);
+      expect(find.byType(FilledButton), findsOneWidget);
     });
 
-    testWidgets('unbind clears tokens and navigates to enroll', (tester) async {
-      RequestOptions? unbindRequest;
+    testWidgets('exit clears tokens and navigates to enroll without user session',
+        (tester) async {
+      RequestOptions? exitRequest;
 
-      final networkDio = Dio(BaseOptions(baseUrl: 'https://example.com'));
-      networkDio.interceptors.add(
-        _unbindInterceptor(onUnbind: (options) => unbindRequest = options),
-      );
-
-      final authSession = AuthSession(apiClient: ApiClient(dio: networkDio));
-      authSession.applyUser(
-        const AuthUser(
-          id: '22222222-2222-4222-8222-222222222222',
-          accountType: 'network_owner',
-        ),
-      );
-
+      final authSession = AuthSession();
       final tokenStorage = MemoryDeviceTokenStorage();
       final childStorage = MemoryChildSessionTokenStorage();
       await childStorage.writeToken('child-jwt-token');
 
       final kioskRouteState = KioskRouteState(deviceTokenStorage: tokenStorage);
       kioskRouteState.kioskApiClient.dio.interceptors.add(_deviceMeInterceptor());
+      kioskRouteState.kioskApiClient.dio.interceptors.add(
+        _kioskExitInterceptor(onExit: (options) => exitRequest = options),
+      );
 
       await kioskRouteState.persistDeviceToken('device-jwt-token');
 
@@ -161,9 +153,9 @@ void main() {
         initialLocation: '/kiosk/settings',
         routes: [
           GoRoute(
-            path: '/kiosk/enroll',
+            path: '/login',
             builder: (context, state) => const Scaffold(
-              body: Center(child: Text('Enroll placeholder')),
+              body: Center(child: Text('Login placeholder')),
             ),
           ),
           GoRoute(
@@ -184,58 +176,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Отвязать и выйти из kiosk'));
+      await tester.tap(find.byType(FilledButton));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Отвязать'));
+      await tester.tap(find.text('Выйти').last);
       await tester.pumpAndSettle();
 
-      expect(unbindRequest?.path, '/api/mobile/network/devices/unbind');
-      expect(unbindRequest?.data, {
-        'deviceId': _deviceId,
-        'locale': 'ru',
-      });
+      expect(exitRequest?.path, '/api/mobile/kiosk/exit');
+      expect(exitRequest?.data, {'locale': 'ru'});
       expect(await tokenStorage.hasToken(), isFalse);
       expect(await childStorage.hasToken(), isFalse);
-      expect(find.text('Enroll placeholder'), findsOneWidget);
-    });
-
-    testWidgets('shows login prompt when user session missing', (tester) async {
-      final networkDio = Dio(BaseOptions(baseUrl: 'https://example.com'));
-      final authSession = AuthSession(apiClient: ApiClient(dio: networkDio));
-
-      final tokenStorage = MemoryDeviceTokenStorage();
-      final kioskRouteState = KioskRouteState(deviceTokenStorage: tokenStorage);
-      kioskRouteState.kioskApiClient.dio.interceptors.add(_deviceMeInterceptor());
-
-      await kioskRouteState.persistDeviceToken('device-jwt-token');
-
-      final router = GoRouter(
-        initialLocation: '/kiosk/settings',
-        routes: [
-          GoRoute(
-            path: '/kiosk/settings',
-            builder: (context, state) => const KioskSettingsScreen(),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        wrap(
-          authSession: authSession,
-          kioskRouteState: kioskRouteState,
-          router: router,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Войдите снова, чтобы отвязать устройство.'),
-        findsOneWidget,
-      );
-      expect(find.text('Отвязать и выйти из kiosk'), findsOneWidget);
-      final button = tester.widget<FilledButton>(find.byType(FilledButton));
-      expect(button.onPressed, isNull);
+      expect(find.text('Login placeholder'), findsOneWidget);
     });
   });
 }

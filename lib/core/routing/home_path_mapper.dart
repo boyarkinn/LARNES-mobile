@@ -49,6 +49,8 @@ bool isKioskEnrollRoute(String path) => path == '/kiosk/enroll';
 
 bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/');
 
+const kioskLoginRedirect = '/login?from=%2Fkiosk';
+
 bool isFamilySetupRoute(String path) =>
     path == '/parent/family-setup' || path.startsWith('/parent/family-setup');
 
@@ -119,18 +121,12 @@ String? resolveAppRedirect({
     if (hasDeviceToken) {
       return '/kiosk';
     }
-    if (!isLoading && !isAuthenticated) {
-      return '/login';
-    }
-    if (isAuthenticated && !isNetworkPanelAccount(accountType)) {
-      return '/home';
-    }
-    return null;
+    return kioskLoginRedirect;
   }
 
   if (isKioskRoute(path)) {
     if (!hasDeviceToken) {
-      return '/kiosk/enroll';
+      return kioskLoginRedirect;
     }
     return null;
   }

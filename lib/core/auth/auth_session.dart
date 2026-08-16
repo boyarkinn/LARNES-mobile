@@ -142,7 +142,7 @@ class AuthSession extends ChangeNotifier {
     });
   }
 
-  Future<String> completeRegistration(LoginResult result) async {
+  Future<String> completeRegistration(UserLoginOutcome result) async {
     _user = result.user;
     await refreshFamilySetup();
     _notifySafely();
@@ -172,20 +172,24 @@ class AuthSession extends ChangeNotifier {
     }
   }
 
-  Future<String> login({
+  Future<LoginOutcome> login({
     required String login,
     required String password,
     String locale = 'ru',
   }) async {
-    final result = await _authApi.login(
+    final outcome = await _authApi.login(
       login: login,
       password: password,
       locale: locale,
     );
-    _user = result.user;
-    await refreshFamilySetup(locale: locale);
-    _notifySafely();
-    return result.homePath;
+
+    if (outcome is UserLoginOutcome) {
+      _user = outcome.user;
+      await refreshFamilySetup(locale: locale);
+      _notifySafely();
+    }
+
+    return outcome;
   }
 
   Future<void> logout() async {

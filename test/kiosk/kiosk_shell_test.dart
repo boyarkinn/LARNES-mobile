@@ -85,6 +85,7 @@ void main() {
   KioskRouteState kioskRouteStateWithMock({
     Map<String, dynamic>? deviceMeData,
     Map<String, dynamic>? scanData,
+    Map<String, dynamic> Function()? deviceMeProvider,
   }) {
     final tokenStorage = MemoryDeviceTokenStorage();
     final kioskRouteState = KioskRouteState(deviceTokenStorage: tokenStorage);
@@ -97,11 +98,13 @@ void main() {
             handler.resolve(
               Response(
                 requestOptions: options,
-                data: deviceMeData ??
+                data: deviceMeProvider?.call() ??
+                    deviceMeData ??
                     {
                       'deviceId': '55555555-5555-4555-8555-555555555555',
                       'kind': 'phone',
                       'centerName': 'Center A',
+                      'classroomId': '44444444-4444-4444-8444-444444444444',
                       'classroomTitle': 'Room 1',
                       'slotLabel': 'M1',
                       'lesson': null,
@@ -191,6 +194,99 @@ void main() {
   }
 
   group('KioskShell', () {
+    testWidgets('shows unplaced screen without scan UI', (tester) async {
+      final kioskRouteState = kioskRouteStateWithMock(
+        deviceMeData: {
+          'deviceId': '55555555-5555-4555-8555-555555555555',
+          'kind': 'phone',
+          'centerName': null,
+          'classroomId': null,
+          'classroomTitle': null,
+          'slotLabel': null,
+          'lesson': null,
+        },
+      );
+      await kioskRouteState.persistDeviceToken('device-jwt-token');
+
+      final router = GoRouter(
+        initialLocation: '/kiosk',
+        routes: [
+          GoRoute(
+            path: '/kiosk',
+            builder: (context, state) => const KioskShell(
+              syncInterval: Duration(days: 1),
+              placementPollInterval: Duration(days: 1),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        wrap(kioskRouteState: kioskRouteState, router: router),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Место не назначено'), findsOneWidget);
+      expect(find.text('Занятие не начато'), findsNothing);
+      expect(find.text('Поднесите QR'), findsNothing);
+      expect(find.text('Настройки устройства'), findsOneWidget);
+    });
+
+    testWidgets('transitions to idle after seat assignment', (tester) async {
+      var placed = false;
+
+      final kioskRouteState = kioskRouteStateWithMock(
+        deviceMeProvider: () {
+          if (placed) {
+            return {
+              'deviceId': '55555555-5555-4555-8555-555555555555',
+              'kind': 'phone',
+              'centerName': 'Center A',
+              'classroomId': '44444444-4444-4444-8444-444444444444',
+              'classroomTitle': 'Room 1',
+              'slotLabel': 'M1',
+              'lesson': null,
+            };
+          }
+          return {
+            'deviceId': '55555555-5555-4555-8555-555555555555',
+            'kind': 'phone',
+            'classroomId': null,
+            'slotLabel': null,
+            'lesson': null,
+          };
+        },
+      );
+      await kioskRouteState.persistDeviceToken('device-jwt-token');
+
+      final router = GoRouter(
+        initialLocation: '/kiosk',
+        routes: [
+          GoRoute(
+            path: '/kiosk',
+            builder: (context, state) => KioskShell(
+              syncInterval: Duration(days: 1),
+              placementPollInterval: const Duration(milliseconds: 100),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        wrap(kioskRouteState: kioskRouteState, router: router),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Место не назначено'), findsOneWidget);
+
+      placed = true;
+      await tester.pump(const Duration(milliseconds: 150));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Место не назначено'), findsNothing);
+      expect(find.text('Занятие не начато'), findsOneWidget);
+    });
+
     testWidgets('shows idle placement after load', (tester) async {
       final kioskRouteState = kioskRouteStateWithMock();
       await kioskRouteState.persistDeviceToken('device-jwt-token');
@@ -269,6 +365,7 @@ void main() {
           'deviceId': '55555555-5555-4555-8555-555555555555',
           'kind': 'phone',
           'centerName': 'Center A',
+          'classroomId': '44444444-4444-4444-8444-444444444444',
           'classroomTitle': 'Room 1',
           'slotLabel': 'M1',
           'lesson': {
@@ -311,6 +408,7 @@ void main() {
           'deviceId': '55555555-5555-4555-8555-555555555555',
           'kind': 'phone',
           'centerName': 'Center A',
+          'classroomId': '44444444-4444-4444-8444-444444444444',
           'classroomTitle': 'Room 1',
           'slotLabel': 'M1',
           'lesson': {
@@ -360,6 +458,7 @@ void main() {
           'deviceId': '55555555-5555-4555-8555-555555555555',
           'kind': 'phone',
           'centerName': 'Center A',
+          'classroomId': '44444444-4444-4444-8444-444444444444',
           'classroomTitle': 'Room 1',
           'slotLabel': 'M1',
           'lesson': {

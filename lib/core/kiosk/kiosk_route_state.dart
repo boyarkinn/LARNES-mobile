@@ -9,11 +9,15 @@ class KioskRouteState extends ChangeNotifier {
     required this.kioskApiClient,
   });
 
-  factory KioskRouteState({DeviceTokenStorage? deviceTokenStorage}) {
+  factory KioskRouteState({
+    DeviceTokenStorage? deviceTokenStorage,
+    KioskApiClient? kioskApiClient,
+  }) {
     final storage = deviceTokenStorage ?? DeviceTokenStorage();
     return KioskRouteState._(
       deviceTokenStorage: storage,
-      kioskApiClient: KioskApiClient(deviceTokenStorage: storage),
+      kioskApiClient:
+          kioskApiClient ?? KioskApiClient(deviceTokenStorage: storage),
     );
   }
 

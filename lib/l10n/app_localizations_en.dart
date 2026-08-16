@@ -1910,6 +1910,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskIdleSettings => 'Settings';
 
   @override
+  String get kioskUnplacedTitle => 'No seat assigned';
+
+  @override
+  String get kioskUnplacedSubtitle =>
+      'An administrator must assign this device to a seat in a classroom. QR and lessons unlock after placement.';
+
+  @override
+  String get kioskUnplacedSettings => 'Device settings';
+
+  @override
   String get kioskScanTitle => 'Show your QR code';
 
   @override
@@ -1990,6 +2000,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'No program is available for this child yet.';
 
   @override
+  String get kioskTrainerCompletedTitle => 'Activity complete';
+
+  @override
+  String get kioskTrainerCompletedBack => 'Back to lesson';
+
+  @override
+  String get kioskTrainerProcessing => 'Starting trainer…';
+
+  @override
   String get kioskSettingsTitle => 'Device settings';
 
   @override
@@ -2002,30 +2021,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskSettingsDeviceId => 'Device ID';
 
   @override
-  String get kioskSettingsUnbindTitle => 'Unbind device';
+  String get kioskSettingsUnbindTitle => 'Sign out device';
 
   @override
   String get kioskSettingsUnbindHint =>
-      'The device will disappear from the network list. To use kiosk again, enroll it once more.';
+      'The device will be removed from the network. To use it again, register with a new access code from the network panel.';
 
   @override
-  String get kioskSettingsUnbindSubmit => 'Unbind and leave kiosk';
+  String get kioskSettingsUnbindSubmit => 'Sign out';
 
   @override
-  String get kioskSettingsUnbinding => 'Unbinding…';
+  String get kioskSettingsUnbinding => 'Signing out…';
 
   @override
-  String get kioskSettingsUnbindConfirmTitle => 'Unbind this device?';
+  String get kioskSettingsUnbindConfirmTitle =>
+      'Sign out and remove this device from the network?';
 
   @override
   String get kioskSettingsUnbindConfirmMessage =>
-      'Kiosk mode on this phone will be turned off.';
+      'The device will disappear from the network list. Get a new access code in the network panel to use kiosk again.';
 
   @override
   String get kioskSettingsUnbindCancel => 'Cancel';
 
   @override
-  String get kioskSettingsUnbindConfirm => 'Unbind';
+  String get kioskSettingsUnbindConfirm => 'Sign out';
 
   @override
   String get kioskSettingsLoginRequired =>
@@ -2035,49 +2055,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get networkAddDevice => 'Add device';
 
   @override
-  String get kioskEnrollTitle => 'Device setup';
+  String get kioskEnrollTitle => 'Device enrollment';
 
   @override
   String get kioskEnrollSubtitle =>
-      'Choose where this device belongs in your network.';
+      'Enter the access code and password from the network panel.';
 
   @override
-  String get kioskEnrollCenter => 'Center';
+  String get kioskEnrollAccessCodeLabel => 'Access code';
 
   @override
-  String get kioskEnrollClassroom => 'Classroom';
-
-  @override
-  String get kioskEnrollClassroomPlaceholder => 'Select a classroom';
-
-  @override
-  String get kioskEnrollSlot => 'Desk / slot';
-
-  @override
-  String get kioskEnrollSlotPlaceholder => 'For example, 1';
-
-  @override
-  String get kioskEnrollSlotRequired => 'Enter a slot label';
-
-  @override
-  String get kioskEnrollKind => 'Device type';
+  String get kioskEnrollFailed =>
+      'Could not enroll this device. Check the access code and password.';
 
   @override
   String get kioskEnrollSubmit => 'Enroll device';
 
   @override
   String get kioskEnrollSubmitting => 'Enrolling…';
-
-  @override
-  String get kioskEnrollNoCenters =>
-      'Create a center in the network panel first.';
-
-  @override
-  String get kioskEnrollNoClassrooms => 'Add classrooms in the center first.';
-
-  @override
-  String get kioskEnrollNoClassroomsForCenter =>
-      'This center has no classrooms yet.';
 
   @override
   String get optionalPatronymicLabel => 'Patronymic (optional)';

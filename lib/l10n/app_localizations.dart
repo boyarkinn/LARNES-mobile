@@ -3577,6 +3577,24 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get kioskIdleSettings;
 
+  /// No description provided for @kioskUnplacedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No seat assigned'**
+  String get kioskUnplacedTitle;
+
+  /// No description provided for @kioskUnplacedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator must assign this device to a seat in a classroom. QR and lessons unlock after placement.'**
+  String get kioskUnplacedSubtitle;
+
+  /// No description provided for @kioskUnplacedSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Device settings'**
+  String get kioskUnplacedSettings;
+
   /// No description provided for @kioskScanTitle.
   ///
   /// In en, this message translates to:
@@ -3715,6 +3733,24 @@ abstract class AppLocalizations {
   /// **'No program is available for this child yet.'**
   String get kioskResultNoProgram;
 
+  /// No description provided for @kioskTrainerCompletedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity complete'**
+  String get kioskTrainerCompletedTitle;
+
+  /// No description provided for @kioskTrainerCompletedBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to lesson'**
+  String get kioskTrainerCompletedBack;
+
+  /// No description provided for @kioskTrainerProcessing.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting trainer…'**
+  String get kioskTrainerProcessing;
+
   /// No description provided for @kioskSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -3742,37 +3778,37 @@ abstract class AppLocalizations {
   /// No description provided for @kioskSettingsUnbindTitle.
   ///
   /// In en, this message translates to:
-  /// **'Unbind device'**
+  /// **'Sign out device'**
   String get kioskSettingsUnbindTitle;
 
   /// No description provided for @kioskSettingsUnbindHint.
   ///
   /// In en, this message translates to:
-  /// **'The device will disappear from the network list. To use kiosk again, enroll it once more.'**
+  /// **'The device will be removed from the network. To use it again, register with a new access code from the network panel.'**
   String get kioskSettingsUnbindHint;
 
   /// No description provided for @kioskSettingsUnbindSubmit.
   ///
   /// In en, this message translates to:
-  /// **'Unbind and leave kiosk'**
+  /// **'Sign out'**
   String get kioskSettingsUnbindSubmit;
 
   /// No description provided for @kioskSettingsUnbinding.
   ///
   /// In en, this message translates to:
-  /// **'Unbinding…'**
+  /// **'Signing out…'**
   String get kioskSettingsUnbinding;
 
   /// No description provided for @kioskSettingsUnbindConfirmTitle.
   ///
   /// In en, this message translates to:
-  /// **'Unbind this device?'**
+  /// **'Sign out and remove this device from the network?'**
   String get kioskSettingsUnbindConfirmTitle;
 
   /// No description provided for @kioskSettingsUnbindConfirmMessage.
   ///
   /// In en, this message translates to:
-  /// **'Kiosk mode on this phone will be turned off.'**
+  /// **'The device will disappear from the network list. Get a new access code in the network panel to use kiosk again.'**
   String get kioskSettingsUnbindConfirmMessage;
 
   /// No description provided for @kioskSettingsUnbindCancel.
@@ -3784,7 +3820,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskSettingsUnbindConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Unbind'**
+  /// **'Sign out'**
   String get kioskSettingsUnbindConfirm;
 
   /// No description provided for @kioskSettingsLoginRequired.
@@ -3802,56 +3838,26 @@ abstract class AppLocalizations {
   /// No description provided for @kioskEnrollTitle.
   ///
   /// In en, this message translates to:
-  /// **'Device setup'**
+  /// **'Device enrollment'**
   String get kioskEnrollTitle;
 
   /// No description provided for @kioskEnrollSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose where this device belongs in your network.'**
+  /// **'Enter the access code and password from the network panel.'**
   String get kioskEnrollSubtitle;
 
-  /// No description provided for @kioskEnrollCenter.
+  /// No description provided for @kioskEnrollAccessCodeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Center'**
-  String get kioskEnrollCenter;
+  /// **'Access code'**
+  String get kioskEnrollAccessCodeLabel;
 
-  /// No description provided for @kioskEnrollClassroom.
+  /// No description provided for @kioskEnrollFailed.
   ///
   /// In en, this message translates to:
-  /// **'Classroom'**
-  String get kioskEnrollClassroom;
-
-  /// No description provided for @kioskEnrollClassroomPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a classroom'**
-  String get kioskEnrollClassroomPlaceholder;
-
-  /// No description provided for @kioskEnrollSlot.
-  ///
-  /// In en, this message translates to:
-  /// **'Desk / slot'**
-  String get kioskEnrollSlot;
-
-  /// No description provided for @kioskEnrollSlotPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'For example, 1'**
-  String get kioskEnrollSlotPlaceholder;
-
-  /// No description provided for @kioskEnrollSlotRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a slot label'**
-  String get kioskEnrollSlotRequired;
-
-  /// No description provided for @kioskEnrollKind.
-  ///
-  /// In en, this message translates to:
-  /// **'Device type'**
-  String get kioskEnrollKind;
+  /// **'Could not enroll this device. Check the access code and password.'**
+  String get kioskEnrollFailed;
 
   /// No description provided for @kioskEnrollSubmit.
   ///
@@ -3864,24 +3870,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enrolling…'**
   String get kioskEnrollSubmitting;
-
-  /// No description provided for @kioskEnrollNoCenters.
-  ///
-  /// In en, this message translates to:
-  /// **'Create a center in the network panel first.'**
-  String get kioskEnrollNoCenters;
-
-  /// No description provided for @kioskEnrollNoClassrooms.
-  ///
-  /// In en, this message translates to:
-  /// **'Add classrooms in the center first.'**
-  String get kioskEnrollNoClassrooms;
-
-  /// No description provided for @kioskEnrollNoClassroomsForCenter.
-  ///
-  /// In en, this message translates to:
-  /// **'This center has no classrooms yet.'**
-  String get kioskEnrollNoClassroomsForCenter;
 
   /// No description provided for @optionalPatronymicLabel.
   ///

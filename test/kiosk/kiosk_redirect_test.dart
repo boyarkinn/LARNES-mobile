@@ -17,7 +17,7 @@ void main() {
   });
 
   group('resolveAppRedirect kiosk', () {
-    test('redirects /kiosk without device token to enroll', () {
+    test('redirects /kiosk without device token to login with from=kiosk', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -26,7 +26,7 @@ void main() {
           accountType: 'network_owner',
           hasDeviceToken: false,
         ),
-        '/kiosk/enroll',
+        kioskLoginRedirect,
       );
     });
 
@@ -43,7 +43,7 @@ void main() {
       );
     });
 
-    test('redirects enrolled device away from enroll screen', () {
+    test('redirects enrolled device away from legacy enroll route', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -56,7 +56,7 @@ void main() {
       );
     });
 
-    test('redirects guest from enroll to login', () {
+    test('redirects legacy enroll route to login when no device token', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -65,33 +65,7 @@ void main() {
           accountType: null,
           hasDeviceToken: false,
         ),
-        '/login',
-      );
-    });
-
-    test('redirects parent away from enroll screen', () {
-      expect(
-        resolveAppRedirect(
-          isLoading: false,
-          isAuthenticated: true,
-          path: '/kiosk/enroll',
-          accountType: 'parent',
-          hasDeviceToken: false,
-        ),
-        '/home',
-      );
-    });
-
-    test('allows network owner on enroll screen', () {
-      expect(
-        resolveAppRedirect(
-          isLoading: false,
-          isAuthenticated: true,
-          path: '/kiosk/enroll',
-          accountType: 'network_owner',
-          hasDeviceToken: false,
-        ),
-        isNull,
+        kioskLoginRedirect,
       );
     });
   });

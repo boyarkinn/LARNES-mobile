@@ -14,6 +14,7 @@ class TrainerPlayShell extends StatefulWidget {
     required this.menuExitLabel,
     required this.onExit,
     this.theme = TrainerPlayTheme.parent,
+    this.edgeToEdge = false,
   });
 
   final Widget child;
@@ -23,6 +24,8 @@ class TrainerPlayShell extends StatefulWidget {
   final String menuExitLabel;
   final VoidCallback onExit;
   final TrainerPlayTheme theme;
+  /// Kiosk / program play: full-bleed stage padding (safe area only), same parchment as homework.
+  final bool edgeToEdge;
 
   @override
   State<TrainerPlayShell> createState() => _TrainerPlayShellState();
@@ -49,24 +52,31 @@ class _TrainerPlayShellState extends State<TrainerPlayShell> {
     final hudTop = trainerPlayHudTopInset(context);
     final sideInset = MediaQuery.paddingOf(context).horizontal / 2;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final stagePadding = widget.edgeToEdge
+        ? EdgeInsets.only(
+            top: hudTop,
+            bottom: bottomInset,
+            left: sideInset,
+            right: sideInset,
+          )
+        : EdgeInsets.fromLTRB(
+            sideInset > 16 ? sideInset : 16,
+            hudTop,
+            sideInset > 16 ? sideInset : 16,
+            bottomInset > 16 ? bottomInset : 16,
+          );
 
-    return ParentParchmentBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  sideInset > 16 ? sideInset : 16,
-                  hudTop,
-                  sideInset > 16 ? sideInset : 16,
-                  bottomInset > 16 ? bottomInset : 16,
-                ),
-                child: widget.child,
-              ),
+    final scaffold = Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: stagePadding,
+              child: widget.child,
             ),
+          ),
             Positioned(
               top: 0,
               left: 0,
@@ -118,9 +128,10 @@ class _TrainerPlayShellState extends State<TrainerPlayShell> {
                   widget.onExit();
                 },
               ),
-          ],
-        ),
+        ],
       ),
     );
+
+    return ParentParchmentBackground(child: scaffold);
   }
 }

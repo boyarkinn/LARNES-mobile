@@ -4,11 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_session_api.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 
 const kioskSyncInterval = Duration(milliseconds: 3000);
+const kioskActiveChildSyncInterval = Duration(milliseconds: 1000);
 
 class KioskSessionController extends ChangeNotifier {
   KioskSessionController({
@@ -42,6 +44,7 @@ class KioskSessionController extends ChangeNotifier {
 
   int _since;
   int? _pendingAck;
+  int _trainerReloadToken = 0;
   Timer? _timer;
   bool _disposed = false;
   bool _paused = false;
@@ -53,6 +56,29 @@ class KioskSessionController extends ChangeNotifier {
   String? get scanError => _scanError;
   String? get scanErrorCode => _scanErrorCode;
   String? get activeProgramId => _scanResult?.programId;
+  int get trainerReloadToken => _trainerReloadToken;
+
+  Duration get _effectiveSyncInterval {
+    if (_mode == KioskSessionMode.result ||
+        _mode == KioskSessionMode.scan ||
+        _scanResult != null) {
+      return kioskActiveChildSyncInterval;
+    }
+    return _syncInterval;
+  }
+
+  void exitTrainer() {
+    if (_mode != KioskSessionMode.trainer) {
+      return;
+    }
+
+    if (_scanResult != null) {
+      _mode = modeFromScanOutcome(_scanResult!.outcome);
+    } else {
+      _mode = resolveInitialModeFromLesson(_deviceContext.lesson);
+    }
+    notifyListeners();
+  }
 
   void updateDeviceContext(KioskDeviceContext deviceContext) {
     _deviceContext = deviceContext;
@@ -78,7 +104,12 @@ class KioskSessionController extends ChangeNotifier {
     }
 
     unawaited(_syncSession());
-    _timer = Timer.periodic(_syncInterval, (_) {
+    _restartSyncTimer();
+  }
+
+  void _restartSyncTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_effectiveSyncInterval, (_) {
       unawaited(_syncSession());
     });
   }
@@ -102,6 +133,7 @@ class KioskSessionController extends ChangeNotifier {
       }
 
       notifyListeners();
+      _restartSyncTimer();
     } on KioskApiException catch (error) {
       if (error.statusCode == 401) {
         _onDeviceUnauthorized();
@@ -119,40 +151,59 @@ class KioskSessionController extends ChangeNotifier {
     }
 
     _syncInFlight = true;
+    var ackAlreadySent = false;
     try {
       final payload = await _kioskApi.pollCommands(since: _since);
       var commandProcessed = false;
 
       if (payload.commands.isNotEmpty) {
         final latest = payload.commands.last;
-        final nextMode = modeFromCommand(latest.command);
         final previousMode = _mode;
-
-        await _kioskApi.childLogout();
-        await _childSessionTokenStorage.clearToken();
-
-        if (nextMode != previousMode) {
-          _scanError = null;
-          _scanErrorCode = null;
-        }
-
-        _scanResult = null;
-        _mode = nextMode;
-        _since = payload.commandSeq;
-        _pendingAck = payload.commandSeq;
         commandProcessed = true;
-        notifyListeners();
+
+        if (latest.command == KioskDeviceCommandKind.playTrainer) {
+          commandProcessed = true;
+          await _activatePlayTrainer(payload.commandSeq);
+          ackAlreadySent = true;
+        } else {
+          final nextMode = modeFromCommand(latest.command);
+
+          await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
+          ackAlreadySent = true;
+          _since = payload.commandSeq;
+
+          await _kioskApi.childLogout();
+          await _childSessionTokenStorage.clearToken();
+
+          if (nextMode != previousMode) {
+            _scanError = null;
+            _scanErrorCode = null;
+          }
+
+          _scanResult = null;
+          _mode = nextMode;
+          _restartSyncTimer();
+          notifyListeners();
+        }
       } else if (payload.commandSeq > _since) {
         _since = payload.commandSeq;
       }
 
       if (!commandProcessed &&
           _mode != KioskSessionMode.play &&
-          _mode != KioskSessionMode.result) {
-        await _refreshDeviceContextAndReconcileMode();
+          _mode != KioskSessionMode.trainer) {
+        final skipRefreshInResult =
+            _mode == KioskSessionMode.result && _scanResult != null;
+        if (skipRefreshInResult) {
+          ackAlreadySent = await _reconcilePendingPlayTrainerFromDevice();
+        } else {
+          ackAlreadySent = await _refreshDeviceContextAndReconcileMode();
+        }
       }
 
-      await _kioskApi.heartbeat(ackSeq: _pendingAck);
+      if (!ackAlreadySent) {
+        await _kioskApi.heartbeat(ackSeq: _pendingAck);
+      }
       _pendingAck = null;
     } on KioskApiException catch (error) {
       if (error.statusCode == 401) {
@@ -165,18 +216,59 @@ class KioskSessionController extends ChangeNotifier {
     }
   }
 
-  Future<void> _refreshDeviceContextAndReconcileMode() async {
+  Future<void> _activatePlayTrainer(int commandSeq) async {
+    await _kioskApi.heartbeat(ackSeq: commandSeq);
+    _since = commandSeq;
+    _trainerReloadToken += 1;
+    _mode = KioskSessionMode.trainer;
+    _scanError = null;
+    _scanErrorCode = null;
+    _restartSyncTimer();
+    notifyListeners();
+  }
+
+  Future<bool> _reconcilePendingPlayTrainerFromDevice() async {
     final device = await _kioskApi.getDeviceMe();
     _deviceContext = device;
 
     final lesson = device.lesson;
-    if (lesson != null && lesson.commandSeq > _since) {
+    if (lesson != null &&
+        lesson.pendingCommand == 'play_trainer' &&
+        (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer)) {
+      await _activatePlayTrainer(lesson.commandSeq);
+      return true;
+    }
+
+    return false;
+  }
+
+  Future<bool> _refreshDeviceContextAndReconcileMode() async {
+    final device = await _kioskApi.getDeviceMe();
+    _deviceContext = device;
+
+    final lesson = device.lesson;
+    if (lesson != null &&
+        lesson.pendingCommand == 'play_trainer' &&
+        (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer)) {
+      await _activatePlayTrainer(lesson.commandSeq);
+      return true;
+    }
+
+    if (lesson != null && lesson.commandSeq > _since && lesson.pendingCommand == null) {
       _since = lesson.commandSeq;
     }
 
     final resolved = resolveInitialModeFromLesson(lesson);
     if (resolved == _mode) {
-      return;
+      return false;
+    }
+
+    if (resolved == KioskSessionMode.trainer) {
+      _trainerReloadToken += 1;
+      _mode = KioskSessionMode.trainer;
+      _restartSyncTimer();
+      notifyListeners();
+      return false;
     }
 
     if (resolved == KioskSessionMode.idle) {
@@ -185,7 +277,7 @@ class KioskSessionController extends ChangeNotifier {
       _scanResult = null;
       _scanError = null;
       _scanErrorCode = null;
-    } else if (resolved == KioskSessionMode.scan) {
+    } else if (resolved == KioskSessionMode.scan && _scanResult == null) {
       _scanError = null;
       _scanErrorCode = null;
       _scanResult = null;
@@ -193,6 +285,7 @@ class KioskSessionController extends ChangeNotifier {
 
     _mode = resolved;
     notifyListeners();
+    return false;
   }
 
   @override

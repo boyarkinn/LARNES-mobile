@@ -1930,6 +1930,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskIdleSettings => 'Настройки';
 
   @override
+  String get kioskUnplacedTitle => 'Место не назначено';
+
+  @override
+  String get kioskUnplacedSubtitle =>
+      'Администратор должен назначить это устройство на место в кабинете. QR и занятие будут доступны после назначения.';
+
+  @override
+  String get kioskUnplacedSettings => 'Настройки устройства';
+
+  @override
   String get kioskScanTitle => 'Поднесите QR';
 
   @override
@@ -2010,6 +2020,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskResultNoProgram => 'Пока нет программы для этого ребёнка.';
 
   @override
+  String get kioskTrainerCompletedTitle => 'Задание завершено';
+
+  @override
+  String get kioskTrainerCompletedBack => 'Вернуться на занятие';
+
+  @override
+  String get kioskTrainerProcessing => 'Запускаем тренажёр…';
+
+  @override
   String get kioskSettingsTitle => 'Настройки устройства';
 
   @override
@@ -2022,30 +2041,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskSettingsDeviceId => 'ID устройства';
 
   @override
-  String get kioskSettingsUnbindTitle => 'Отвязать устройство';
+  String get kioskSettingsUnbindTitle => 'Выйти';
 
   @override
   String get kioskSettingsUnbindHint =>
-      'Устройство исчезнет из списка сети. Чтобы снова использовать kiosk, пройдите привязку заново.';
+      'Устройство будет исключено из сети. Для повторного использования нужна новая регистрация с кодом доступа из панели сети.';
 
   @override
-  String get kioskSettingsUnbindSubmit => 'Отвязать и выйти из kiosk';
+  String get kioskSettingsUnbindSubmit => 'Выйти';
 
   @override
-  String get kioskSettingsUnbinding => 'Отвязка…';
+  String get kioskSettingsUnbinding => 'Выход…';
 
   @override
-  String get kioskSettingsUnbindConfirmTitle => 'Отвязать устройство?';
+  String get kioskSettingsUnbindConfirmTitle =>
+      'Выйти и исключить это устройство из сети?';
 
   @override
   String get kioskSettingsUnbindConfirmMessage =>
-      'Kiosk-режим на этом телефоне будет отключён.';
+      'Устройство исчезнет из списка сети. Чтобы снова использовать kiosk, получите новый код доступа в панели сети.';
 
   @override
   String get kioskSettingsUnbindCancel => 'Отмена';
 
   @override
-  String get kioskSettingsUnbindConfirm => 'Отвязать';
+  String get kioskSettingsUnbindConfirm => 'Выйти';
 
   @override
   String get kioskSettingsLoginRequired =>
@@ -2055,48 +2075,24 @@ class AppLocalizationsRu extends AppLocalizations {
   String get networkAddDevice => 'Добавить устройство';
 
   @override
-  String get kioskEnrollTitle => 'Настройка устройства';
+  String get kioskEnrollTitle => 'Привязка устройства';
 
   @override
   String get kioskEnrollSubtitle =>
-      'Укажите, где стоит это устройство в вашей сети.';
+      'Введите код доступа и пароль из панели сети.';
 
   @override
-  String get kioskEnrollCenter => 'Центр';
+  String get kioskEnrollAccessCodeLabel => 'Код доступа';
 
   @override
-  String get kioskEnrollClassroom => 'Класс';
-
-  @override
-  String get kioskEnrollClassroomPlaceholder => 'Выберите класс';
-
-  @override
-  String get kioskEnrollSlot => 'Парта / слот';
-
-  @override
-  String get kioskEnrollSlotPlaceholder => 'Например, 1';
-
-  @override
-  String get kioskEnrollSlotRequired => 'Укажите слот';
-
-  @override
-  String get kioskEnrollKind => 'Тип устройства';
+  String get kioskEnrollFailed =>
+      'Не удалось привязать устройство. Проверьте код и пароль.';
 
   @override
   String get kioskEnrollSubmit => 'Привязать устройство';
 
   @override
   String get kioskEnrollSubmitting => 'Привязка…';
-
-  @override
-  String get kioskEnrollNoCenters => 'Сначала создайте центр в панели сети.';
-
-  @override
-  String get kioskEnrollNoClassrooms => 'Сначала добавьте классы в центре.';
-
-  @override
-  String get kioskEnrollNoClassroomsForCenter =>
-      'В этом центре пока нет классов.';
 
   @override
   String get optionalPatronymicLabel => 'Отчество (необязательно)';

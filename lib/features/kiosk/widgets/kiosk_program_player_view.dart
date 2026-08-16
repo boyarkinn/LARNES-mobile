@@ -202,6 +202,7 @@ class _KioskProgramPlayerViewState extends State<KioskProgramPlayerView> {
       totalSteps: totalSteps,
       menuContinueLabel: l10n.parentProgramPlayMenuContinue,
       menuExitLabel: l10n.parentProgramPlayExit,
+      edgeToEdge: true,
       onExit: _handleExit,
       child: TrainerPlayer(
         key: ValueKey(step.id),

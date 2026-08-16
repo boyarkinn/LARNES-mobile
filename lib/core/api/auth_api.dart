@@ -69,8 +69,12 @@ class AuthUser {
   }
 }
 
-class LoginResult {
-  const LoginResult({
+sealed class LoginOutcome {
+  const LoginOutcome();
+}
+
+class UserLoginOutcome extends LoginOutcome {
+  const UserLoginOutcome({
     required this.token,
     required this.accountType,
     required this.homePath,
@@ -83,12 +87,28 @@ class LoginResult {
   final AuthUser user;
 }
 
+class DeviceEnrollmentLoginOutcome extends LoginOutcome {
+  const DeviceEnrollmentLoginOutcome({
+    required this.deviceToken,
+    required this.deviceId,
+    required this.deviceKind,
+    required this.expiresAt,
+  });
+
+  final String deviceToken;
+  final String deviceId;
+  final String deviceKind;
+  final String expiresAt;
+}
+
+typedef LoginResult = UserLoginOutcome;
+
 class AuthApi {
   AuthApi(this._client);
 
   final ApiClient _client;
 
-  Future<LoginResult> login({
+  Future<LoginOutcome> login({
     required String login,
     required String password,
     String locale = 'ru',
@@ -103,12 +123,27 @@ class AuthApi {
       if (data == null || data['status'] != 'success') {
         throw AuthApiException(_messageFromBody(data, l10n));
       }
+
+      if (data['kind'] == 'device_enrollment') {
+        final deviceToken = data['deviceToken'] as String?;
+        if (deviceToken == null || deviceToken.isEmpty) {
+          throw AuthApiException(l10n.tokenFetchFailed);
+        }
+
+        return DeviceEnrollmentLoginOutcome(
+          deviceToken: deviceToken,
+          deviceId: data['deviceId'] as String,
+          deviceKind: data['deviceKind'] as String,
+          expiresAt: data['expiresAt'] as String,
+        );
+      }
+
       final token = data['token'] as String?;
       if (token == null || token.isEmpty) {
         throw AuthApiException(l10n.tokenFetchFailed);
       }
       await _client.tokenStorage.writeToken(token);
-      return LoginResult(
+      return UserLoginOutcome(
         token: token,
         accountType: data['accountType'] as String,
         homePath: data['homePath'] as String? ?? '/parent',

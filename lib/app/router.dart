@@ -25,7 +25,6 @@ import 'package:larnes_mobile/features/auth/screens/register_profile_screen.dart
 import 'package:larnes_mobile/features/auth/screens/register_school_offers_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/register_type_screen.dart';
 import 'package:larnes_mobile/features/auth/screens/splash_screen.dart';
-import 'package:larnes_mobile/features/kiosk/screens/kiosk_enroll_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_settings_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
 import 'package:larnes_mobile/features/network/screens/network_centers_screen.dart';
@@ -668,7 +667,7 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         path: '/kiosk/enroll',
-        builder: (context, state) => const KioskEnrollScreen(),
+        redirect: (context, state) => kioskLoginRedirect,
       ),
       GoRoute(
         path: '/kiosk',

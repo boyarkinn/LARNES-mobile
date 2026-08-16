@@ -20,21 +20,25 @@ void main() {
       );
     });
 
-    test('returns scan for waiting_scan status', () {
+    test('returns scan for waiting_scan and offline statuses', () {
       expect(
         resolveInitialMode(pendingCommand: null, status: 'waiting_scan'),
         KioskSessionMode.scan,
       );
+      expect(
+        resolveInitialMode(pendingCommand: null, status: 'offline'),
+        KioskSessionMode.scan,
+      );
     });
 
-    test('returns scan for child_active and no_program statuses', () {
+    test('returns result for child_active and no_program statuses', () {
       expect(
         resolveInitialMode(pendingCommand: null, status: 'child_active'),
-        KioskSessionMode.scan,
+        KioskSessionMode.result,
       );
       expect(
         resolveInitialMode(pendingCommand: null, status: 'no_program'),
-        KioskSessionMode.scan,
+        KioskSessionMode.result,
       );
     });
 
@@ -62,6 +66,20 @@ void main() {
           ),
         ),
         5,
+      );
+    });
+
+    test('returns commandSeq minus one when a command is still pending', () {
+      expect(
+        resolveInitialCommandSeq(
+          const KioskDeviceLessonBinding(
+            commandSeq: 5,
+            lessonSessionId: 'lesson-id',
+            pendingCommand: 'play_trainer',
+            status: 'no_program',
+          ),
+        ),
+        4,
       );
     });
   });

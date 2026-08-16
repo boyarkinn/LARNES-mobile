@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/features/network/models/enroll_device_result.dart';
 import 'package:larnes_mobile/features/network/models/network_center.dart';
-import 'package:larnes_mobile/features/network/models/network_classroom.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
 
 void main() {
@@ -64,34 +62,6 @@ void main() {
 
       expect(device.kind, NetworkDeviceKind.tablet);
       expect(device.isOnline, isFalse);
-    });
-  });
-
-  group('NetworkClassroom.fromJson', () {
-    test('parses classroom payload', () {
-      final classroom = NetworkClassroom.fromJson({
-        'id': '44444444-4444-4444-8444-444444444444',
-        'centerId': '11111111-1111-4111-8111-111111111111',
-        'centerName': 'Center A',
-        'title': 'Room 1',
-      });
-
-      expect(classroom.title, 'Room 1');
-      expect(classroom.centerName, 'Center A');
-      expect(classroom.centerId, '11111111-1111-4111-8111-111111111111');
-    });
-  });
-
-  group('EnrollDeviceResult.fromJson', () {
-    test('parses enroll success payload', () {
-      final result = EnrollDeviceResult.fromJson({
-        'deviceId': '55555555-5555-4555-8555-555555555555',
-        'deviceToken': 'device-jwt-token',
-        'status': 'success',
-      });
-
-      expect(result.deviceId, '55555555-5555-4555-8555-555555555555');
-      expect(result.deviceToken, 'device-jwt-token');
     });
   });
 }

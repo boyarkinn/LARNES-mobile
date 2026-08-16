@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
-import 'package:larnes_mobile/core/api/network_api.dart';
-import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
@@ -29,10 +28,9 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
       widget.childSessionTokenStorage ?? ChildSessionTokenStorage();
 
   bool _isLoading = true;
-  bool _isUnbinding = false;
+  bool _isExiting = false;
   String? _loadError;
-  String? _unbindError;
-  bool _needsLogin = false;
+  String? _exitError;
   KioskDeviceContext? _device;
 
   @override
@@ -88,11 +86,11 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
   Future<void> _handleDeviceUnauthorized(KioskRouteState kioskScope) async {
     await kioskScope.clearDeviceToken();
     if (mounted) {
-      context.go('/kiosk/enroll');
+      context.go(kioskLoginRedirect);
     }
   }
 
-  Future<void> _confirmUnbind(AppLocalizations l10n) async {
+  Future<void> _confirmExit(AppLocalizations l10n) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -112,37 +110,32 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
     );
 
     if (confirmed == true && mounted) {
-      await _unbind();
+      await _exitDevice();
     }
   }
 
-  Future<void> _unbind() async {
-    final device = _device;
-    if (device == null || _isUnbinding) {
-      return;
-    }
-
-    final authSession = AuthScope.of(context);
-    if (!authSession.isAuthenticated) {
-      setState(() => _needsLogin = true);
+  Future<void> _exitDevice() async {
+    if (_device == null || _isExiting) {
       return;
     }
 
     setState(() {
-      _isUnbinding = true;
-      _unbindError = null;
-      _needsLogin = false;
+      _isExiting = true;
+      _exitError = null;
     });
 
     final kioskScope = KioskScope.of(context);
+    final kioskApi = kioskScope.kioskApiClient.kioskApi;
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      await authSession.networkApi.unbindDevice(
-        deviceId: device.deviceId,
-        locale: locale,
-      );
+      try {
+        await kioskApi.childLogout(locale: locale);
+      } catch (_) {
+        // best effort before device exit
+      }
 
+      await kioskApi.exitDevice(locale: locale);
       await kioskScope.clearDeviceToken();
       await _childSessionTokenStorage.clearToken();
 
@@ -150,25 +143,19 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
         return;
       }
 
-      context.go('/kiosk/enroll');
-    } on NetworkApiException catch (error) {
-      await authSession.refreshUser();
-      if (!mounted) {
-        return;
+      context.go(kioskLoginRedirect);
+    } on KioskApiException catch (error) {
+      if (mounted) {
+        setState(() {
+          _isExiting = false;
+          _exitError = error.message;
+        });
       }
-      setState(() {
-        _isUnbinding = false;
-        if (!authSession.isAuthenticated) {
-          _needsLogin = true;
-        } else {
-          _unbindError = error.message;
-        }
-      });
     } catch (_) {
       if (mounted) {
         setState(() {
-          _isUnbinding = false;
-          _unbindError = context.l10n.requestFailed;
+          _isExiting = false;
+          _exitError = context.l10n.requestFailed;
         });
       }
     }
@@ -177,7 +164,6 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final authSession = AuthScope.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -186,11 +172,11 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
         ),
         title: Text(l10n.kioskSettingsTitle),
       ),
-      body: _buildBody(l10n, authSession.isAuthenticated),
+      body: _buildBody(l10n),
     );
   }
 
-  Widget _buildBody(AppLocalizations l10n, bool isAuthenticated) {
+  Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -276,32 +262,18 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                if (_needsLogin || !isAuthenticated) ...[
+                if (_exitError != null) ...[
                   const SizedBox(height: 16),
                   Text(
-                    l10n.kioskSettingsLoginRequired,
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => context.push('/login'),
-                    child: Text(l10n.signInButton),
-                  ),
-                ],
-                if (_unbindError != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _unbindError!,
+                    _exitError!,
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ],
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: _isUnbinding || !isAuthenticated
-                      ? null
-                      : () => _confirmUnbind(l10n),
+                  onPressed: _isExiting ? null : () => _confirmExit(l10n),
                   child: Text(
-                    _isUnbinding
+                    _isExiting
                         ? l10n.kioskSettingsUnbinding
                         : l10n.kioskSettingsUnbindSubmit,
                   ),

@@ -73,7 +73,6 @@ class KioskApi implements KioskSessionApi {
 
   final KioskApiClient _client;
 
-  @override
   Future<KioskDeviceContext> getDeviceMe({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
@@ -159,6 +158,22 @@ class KioskApi implements KioskSessionApi {
       }
 
       return KioskScanResult.fromJson(data);
+    } on DioException catch (error) {
+      throw _apiExceptionFromDio(error, l10n);
+    }
+  }
+
+  Future<void> exitDevice({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/kiosk/exit',
+        data: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
     } on DioException catch (error) {
       throw _apiExceptionFromDio(error, l10n);
     }

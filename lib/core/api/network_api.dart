@@ -1,9 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
-import 'package:larnes_mobile/features/network/models/enroll_device_result.dart';
 import 'package:larnes_mobile/features/network/models/network_center.dart';
-import 'package:larnes_mobile/features/network/models/network_classroom.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
@@ -94,64 +92,6 @@ class NetworkApi {
             ),
           )
           .toList(growable: false);
-    } on DioException catch (error) {
-      throw _apiExceptionFromBody(
-        error.response?.data,
-        l10n,
-        fallback: _networkMessage(error, l10n),
-      );
-    }
-  }
-
-  Future<List<NetworkClassroom>> listClassrooms({String locale = 'ru'}) async {
-    final l10n = lookupAppLocalizations(Locale(locale));
-    try {
-      final response = await _client.dio.get('/api/mobile/network/classrooms');
-      final data = _asJsonMap(response.data);
-      if (data == null || data['status'] != 'success') {
-        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
-      }
-
-      final classrooms = data['classrooms'] as List<dynamic>? ?? const [];
-      return classrooms
-          .map(
-            (item) => NetworkClassroom.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ),
-          )
-          .toList(growable: false);
-    } on DioException catch (error) {
-      throw _apiExceptionFromBody(
-        error.response?.data,
-        l10n,
-        fallback: _networkMessage(error, l10n),
-      );
-    }
-  }
-
-  Future<EnrollDeviceResult> enrollDevice({
-    required String classroomId,
-    required String slotLabel,
-    required NetworkDeviceKind kind,
-    String locale = 'ru',
-  }) async {
-    final l10n = lookupAppLocalizations(Locale(locale));
-    try {
-      final response = await _client.dio.post(
-        '/api/mobile/network/devices/enroll',
-        data: {
-          'classroomId': classroomId,
-          'slotLabel': slotLabel,
-          'kind': networkDeviceKindToApiValue(kind),
-          'locale': locale,
-        },
-      );
-      final data = _asJsonMap(response.data);
-      if (data == null || data['status'] != 'success') {
-        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
-      }
-
-      return EnrollDeviceResult.fromJson(data);
     } on DioException catch (error) {
       throw _apiExceptionFromBody(
         error.response?.data,

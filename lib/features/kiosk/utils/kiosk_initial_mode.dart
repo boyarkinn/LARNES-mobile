@@ -7,6 +7,7 @@ enum KioskSessionMode {
   scan,
   result,
   play,
+  trainer,
 }
 
 KioskSessionMode modeFromScanOutcome(KioskScanOutcome outcome) {
@@ -23,6 +24,8 @@ KioskSessionMode modeFromCommand(KioskDeviceCommandKind command) {
     case KioskDeviceCommandKind.openScan:
     case KioskDeviceCommandKind.resetChild:
       return KioskSessionMode.scan;
+    case KioskDeviceCommandKind.playTrainer:
+      return KioskSessionMode.trainer;
     case KioskDeviceCommandKind.idle:
       return KioskSessionMode.idle;
   }
@@ -32,14 +35,20 @@ KioskSessionMode resolveInitialMode({
   String? pendingCommand,
   String? status,
 }) {
+  if (pendingCommand == 'play_trainer') {
+    return KioskSessionMode.trainer;
+  }
+
   if (pendingCommand == 'open_scan' || pendingCommand == 'reset_child') {
     return KioskSessionMode.scan;
   }
 
-  if (status == 'waiting_scan' ||
-      status == 'child_active' ||
-      status == 'no_program') {
+  if (status == 'waiting_scan' || status == 'offline') {
     return KioskSessionMode.scan;
+  }
+
+  if (status == 'child_active' || status == 'no_program') {
+    return KioskSessionMode.result;
   }
 
   return KioskSessionMode.idle;
@@ -57,5 +66,13 @@ KioskSessionMode resolveInitialModeFromLesson(KioskDeviceLessonBinding? lesson) 
 }
 
 int resolveInitialCommandSeq(KioskDeviceLessonBinding? lesson) {
-  return lesson?.commandSeq ?? 0;
+  if (lesson == null) {
+    return 0;
+  }
+
+  if (lesson.pendingCommand != null && lesson.commandSeq > 0) {
+    return lesson.commandSeq - 1;
+  }
+
+  return lesson.commandSeq;
 }

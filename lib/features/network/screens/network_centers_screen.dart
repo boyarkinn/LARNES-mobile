@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/widgets/language_switcher.dart';
 import 'package:larnes_mobile/features/network/models/network_center.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
@@ -211,7 +212,7 @@ class _NetworkCentersScreenState extends State<NetworkCentersScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: FilledButton(
-              onPressed: () => context.push('/kiosk/enroll'),
+              onPressed: () => context.push(kioskLoginRedirect),
               child: Text(l10n.networkAddDevice),
             ),
           ),

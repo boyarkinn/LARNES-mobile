@@ -2,6 +2,7 @@ enum KioskDeviceCommandKind {
   idle,
   openScan,
   resetChild,
+  playTrainer,
 }
 
 KioskDeviceCommandKind kioskDeviceCommandKindFromString(String? value) {
@@ -10,6 +11,8 @@ KioskDeviceCommandKind kioskDeviceCommandKindFromString(String? value) {
       return KioskDeviceCommandKind.openScan;
     case 'reset_child':
       return KioskDeviceCommandKind.resetChild;
+    case 'play_trainer':
+      return KioskDeviceCommandKind.playTrainer;
     case 'idle':
     default:
       return KioskDeviceCommandKind.idle;
@@ -22,8 +25,21 @@ String kioskDeviceCommandKindToApiValue(KioskDeviceCommandKind kind) {
       return 'open_scan';
     case KioskDeviceCommandKind.resetChild:
       return 'reset_child';
+    case KioskDeviceCommandKind.playTrainer:
+      return 'play_trainer';
     case KioskDeviceCommandKind.idle:
       return 'idle';
+  }
+}
+
+bool kioskDeviceCommandClearsChildSession(KioskDeviceCommandKind kind) {
+  switch (kind) {
+    case KioskDeviceCommandKind.openScan:
+    case KioskDeviceCommandKind.resetChild:
+    case KioskDeviceCommandKind.idle:
+      return true;
+    case KioskDeviceCommandKind.playTrainer:
+      return false;
   }
 }
 

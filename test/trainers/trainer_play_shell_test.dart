@@ -90,6 +90,26 @@ void main() {
       );
       expect(progressFill, isNotEmpty);
     });
+
+    testWidgets('edgeToEdge keeps parchment stage background', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          TrainerPlayShell(
+            currentStep: 1,
+            totalSteps: 1,
+            edgeToEdge: true,
+            menuContinueLabel: 'Продолжить',
+            menuExitLabel: 'Выйти',
+            onExit: () {},
+            child: const Center(child: Text('stage')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ParentParchmentBackground), findsOneWidget);
+      expect(find.text('stage'), findsOneWidget);
+    });
   });
 
   group('TrainerPlayShell admin theme', () {

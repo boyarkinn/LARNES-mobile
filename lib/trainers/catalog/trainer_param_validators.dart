@@ -311,9 +311,12 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
     return _fail('Некорректные параметры.');
   }
 
+  final solveMode = raw['solveMode'] == 'mental' ? 'mental' : 'abacus';
+
   return ValidateTrainerParamsResult.success({
     'actionCount': actionCount,
     'exampleCount': exampleCount,
+    'solveMode': solveMode,
     'stepPauseSec': stepPauseSec,
     'topicId': topicId,
   });

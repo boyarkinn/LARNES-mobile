@@ -159,11 +159,13 @@ void main() {
       final payload = buildPlayParamsPayload(config, {
         'chainTopicId': 'friend-9-1digit',
         'actionCount': '5',
+        'solveMode': 'mental',
         'stepPauseSec': '0.5',
       });
 
       expect(payload['topicId'], 'friend-9-1digit');
       expect(payload['actionCount'], 5);
+      expect(payload['solveMode'], 'mental');
       expect(payload['stepPauseSec'], 0.5);
       expect(payload.containsKey('chainTopicId'), isFalse);
       expect(payload.containsKey('amountScope'), isFalse);

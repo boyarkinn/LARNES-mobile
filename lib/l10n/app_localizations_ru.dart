@@ -292,6 +292,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentStudyCoursesCard => 'Курсы LARNES';
 
   @override
+  String get parentStudyRewardsCard => 'Награды';
+
+  @override
+  String get parentRewardsTitle => 'Награды';
+
+  @override
+  String get parentRewardsEmptyShops => 'Пока нет живых витрин.';
+
+  @override
+  String get parentRewardsEmptyItems =>
+      'На этой витрине сейчас нечего получить.';
+
+  @override
+  String parentRewardsBalance(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ларкоинов',
+      many: '$count ларкоинов',
+      few: '$count ларкоина',
+      one: '$count ларкоин',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentRewardsCost => 'ларкоинов';
+
+  @override
+  String get parentRewardsGet => 'Получить';
+
+  @override
+  String get parentRewardsGetting => 'Отправляем…';
+
+  @override
+  String get parentRewardsNotEnough => 'Пока не хватает';
+
+  @override
+  String get parentRewardsPending => 'Ждёт выдачи';
+
+  @override
+  String get parentRewardsHandedOver => 'Выдано';
+
+  @override
+  String get parentRewardsCancelled => 'Отменено';
+
+  @override
+  String get parentRewardsClaimsTitle => 'Заявки';
+
+  @override
+  String get parentRewardsClaimed => 'Заявка отправлена — выдадут на занятии.';
+
+  @override
+  String get parentRewardsNoPhoto => 'Без фото';
+
+  @override
+  String get parentRewardsLoadFailed => 'Не удалось загрузить награды.';
+
+  @override
   String get parentCoursesTitle => 'Курсы';
 
   @override
@@ -1000,6 +1059,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminTrainerPlayChainTopicIdLabel => 'Тема цепочки';
+
+  @override
+  String get adminTrainerPlaySolveModeLabel => 'Режим решения';
+
+  @override
+  String get adminTrainerPlaySolveModeAbacus => 'На абакусе';
+
+  @override
+  String get adminTrainerPlaySolveModeMental => 'В уме';
 
   @override
   String get adminTrainerPlayActionCountLabel => 'Количество действий';
@@ -2125,8 +2193,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось отозвать согласие. Данные не удалены.';
 
   @override
-  String inviteFamilyAdultClaimTitle(String school) =>
-      'Школа «$school» приглашает вас в экосистему LARNES';
+  String inviteFamilyAdultClaimTitle(String school) {
+    return 'Школа «$school» приглашает вас в экосистему LARNES';
+  }
 
   @override
   String get inviteFamilyAdultClaimTitleShort => 'Приглашение школы';
@@ -2159,7 +2228,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inviteFamilyAdultClaimOtpTitle => 'Подтвердите личность';
 
   @override
-  String get inviteFamilyAdultClaimOtpSentTo => 'Введите код, мы отправили его на';
+  String get inviteFamilyAdultClaimOtpSentTo =>
+      'Введите код, мы отправили его на';
 
   @override
   String get inviteFamilyAdultClaimOtpSubmit => 'Подтвердить';
@@ -2168,8 +2238,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inviteFamilyAdultClaimOtpResend => 'Отправить код снова';
 
   @override
-  String inviteFamilyAdultClaimOtpResendIn(int seconds) =>
-      'Повторная отправка через $seconds с';
+  String inviteFamilyAdultClaimOtpResendIn(int seconds) {
+    return 'Повторная отправка через $seconds с';
+  }
 
   @override
   String get inviteFamilyAdultClaimProfileTitle => 'Представитель';
@@ -2195,8 +2266,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentConfirmFamilyChildrenTitle => 'Проверьте детей';
 
   @override
-  String parentConfirmFamilyChildrenSubtitle(String family) =>
-      'Семья «$family». Школа передала карточки — подтвердите данные.';
+  String parentConfirmFamilyChildrenSubtitle(String family) {
+    return 'Семья «$family». Школа передала карточки — подтвердите данные.';
+  }
 
   @override
   String get parentConfirmFamilyChildrenNoChildren =>

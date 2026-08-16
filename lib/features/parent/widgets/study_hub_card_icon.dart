@@ -73,6 +73,9 @@ String _svgForKind(HubCardIconKind kind) {
 <rect x="4" y="7" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.75" fill="none"/>
 <path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h5A1.5 1.5 0 0 1 16 5.5V7M4 11h16" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
 ''',
+    HubCardIconKind.rewards => '''
+<path d="M4.5 8.5h15v3.2a3.8 3.8 0 0 1-3.8 3.8H8.3A3.8 3.8 0 0 1 4.5 11.7V8.5Zm2-3.2h11l1.4 3.2H5.1L6.5 5.3ZM12 8.5v10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
+''',
   };
 
   return '<svg $xmlns viewBox="0 0 24 24" fill="none">$body</svg>';

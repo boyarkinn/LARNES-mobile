@@ -626,6 +626,102 @@ abstract class AppLocalizations {
   /// **'LARNES courses'**
   String get parentStudyCoursesCard;
 
+  /// No description provided for @parentStudyRewardsCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewards'**
+  String get parentStudyRewardsCard;
+
+  /// No description provided for @parentRewardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewards'**
+  String get parentRewardsTitle;
+
+  /// No description provided for @parentRewardsEmptyShops.
+  ///
+  /// In en, this message translates to:
+  /// **'No live shelves yet.'**
+  String get parentRewardsEmptyShops;
+
+  /// No description provided for @parentRewardsEmptyItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to get on this shelf right now.'**
+  String get parentRewardsEmptyItems;
+
+  /// No description provided for @parentRewardsBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one {{count} larcoin} other {{count} larcoins}}'**
+  String parentRewardsBalance(int count);
+
+  /// No description provided for @parentRewardsCost.
+  ///
+  /// In en, this message translates to:
+  /// **'larcoins'**
+  String get parentRewardsCost;
+
+  /// No description provided for @parentRewardsGet.
+  ///
+  /// In en, this message translates to:
+  /// **'Get'**
+  String get parentRewardsGet;
+
+  /// No description provided for @parentRewardsGetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get parentRewardsGetting;
+
+  /// No description provided for @parentRewardsNotEnough.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough yet'**
+  String get parentRewardsNotEnough;
+
+  /// No description provided for @parentRewardsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be handed over'**
+  String get parentRewardsPending;
+
+  /// No description provided for @parentRewardsHandedOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed over'**
+  String get parentRewardsHandedOver;
+
+  /// No description provided for @parentRewardsCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get parentRewardsCancelled;
+
+  /// No description provided for @parentRewardsClaimsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get parentRewardsClaimsTitle;
+
+  /// No description provided for @parentRewardsClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Request sent — they will hand it over at class.'**
+  String get parentRewardsClaimed;
+
+  /// No description provided for @parentRewardsNoPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo'**
+  String get parentRewardsNoPhoto;
+
+  /// No description provided for @parentRewardsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load rewards.'**
+  String get parentRewardsLoadFailed;
+
   /// No description provided for @parentCoursesTitle.
   ///
   /// In en, this message translates to:
@@ -1880,6 +1976,24 @@ abstract class AppLocalizations {
   /// **'Chain topic'**
   String get adminTrainerPlayChainTopicIdLabel;
 
+  /// No description provided for @adminTrainerPlaySolveModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Solve mode'**
+  String get adminTrainerPlaySolveModeLabel;
+
+  /// No description provided for @adminTrainerPlaySolveModeAbacus.
+  ///
+  /// In en, this message translates to:
+  /// **'On abacus'**
+  String get adminTrainerPlaySolveModeAbacus;
+
+  /// No description provided for @adminTrainerPlaySolveModeMental.
+  ///
+  /// In en, this message translates to:
+  /// **'Mentally'**
+  String get adminTrainerPlaySolveModeMental;
+
   /// No description provided for @adminTrainerPlayActionCountLabel.
   ///
   /// In en, this message translates to:
@@ -2285,7 +2399,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilySetupGateLead.
   ///
   /// In en, this message translates to:
-  /// **'If someone in your family already uses the platform, ask them to accept you. Or create your own family and add children.'**
+  /// **'If a family member already uses the platform, ask them to accept you. Or create your family and add children.'**
   String get parentFamilySetupGateLead;
 
   /// No description provided for @parentFamilySetupAnswerNo.
@@ -2297,7 +2411,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilySetupAnswerYes.
   ///
   /// In en, this message translates to:
-  /// **'Yes, our family is here'**
+  /// **'Yes, family is already here'**
   String get parentFamilySetupAnswerYes;
 
   /// No description provided for @parentFamilySetupWaitingTitle.
@@ -2309,7 +2423,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilySetupWaitingLead.
   ///
   /// In en, this message translates to:
-  /// **'Send the link to a relative — any guardian of your family on LARNES can accept the request.'**
+  /// **'Send the link to a family member who already uses LARNES.'**
   String get parentFamilySetupWaitingLead;
 
   /// No description provided for @parentFamilySetupShareLinkLabel.
@@ -2357,7 +2471,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilySetupCancelJoin.
   ///
   /// In en, this message translates to:
-  /// **'I made a mistake — create my family'**
+  /// **'I was wrong — create my family'**
   String get parentFamilySetupCancelJoin;
 
   /// No description provided for @parentFamilySetupDisplayNameLabel.
@@ -2411,13 +2525,13 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilyJoinDedupChoiceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Children named “{name}”'**
+  /// **'Children named «{name}»'**
   String parentFamilyJoinDedupChoiceTitle(String name);
 
   /// No description provided for @parentFamilyJoinDedupChoiceLead.
   ///
   /// In en, this message translates to:
-  /// **'If this is one child, pick the profile to keep. The other will be removed from the family account.'**
+  /// **'If this is the same child, pick one profile to keep. The other will be removed from the family cabinet.'**
   String get parentFamilyJoinDedupChoiceLead;
 
   /// No description provided for @parentFamilyJoinDedupDifferentChildren.
@@ -2441,7 +2555,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilyJoinDedupPickLead.
   ///
   /// In en, this message translates to:
-  /// **'Which profile should we keep? The other will be removed from the family account.'**
+  /// **'Which profile should stay? The other will be removed from the cabinet.'**
   String get parentFamilyJoinDedupPickLead;
 
   /// No description provided for @parentFamilyJoinDedupRegisteredLabel.
@@ -2483,7 +2597,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentFamilyJoinDedupInvalidLead.
   ///
   /// In en, this message translates to:
-  /// **'This link is outdated or profiles are already aligned.'**
+  /// **'The link expired or profiles were already reconciled.'**
   String get parentFamilyJoinDedupInvalidLead;
 
   /// No description provided for @parentGuardiansTitle.
@@ -3919,44 +4033,238 @@ abstract class AppLocalizations {
   /// **'Consent could not be withdrawn. No data was erased.'**
   String get voluntaryConsentRevokeFailed;
 
+  /// No description provided for @inviteFamilyAdultClaimTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'School «{school}» invites you to the LARNES ecosystem'**
   String inviteFamilyAdultClaimTitle(String school);
+
+  /// No description provided for @inviteFamilyAdultClaimTitleShort.
+  ///
+  /// In en, this message translates to:
+  /// **'School invitation'**
   String get inviteFamilyAdultClaimTitleShort;
+
+  /// No description provided for @inviteFamilyAdultClaimSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the invitation, confirm your identity, then fill in the required details'**
   String get inviteFamilyAdultClaimSubtitle;
+
+  /// No description provided for @inviteFamilyAdultClaimAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept invitation'**
   String get inviteFamilyAdultClaimAccept;
+
+  /// No description provided for @inviteFamilyAdultClaimDecline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
   String get inviteFamilyAdultClaimDecline;
+
+  /// No description provided for @inviteFamilyAdultClaimWrongAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong account'**
   String get inviteFamilyAdultClaimWrongAccountTitle;
+
+  /// No description provided for @inviteFamilyAdultClaimWrongAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the same phone or email as in the invitation, or sign out and register.'**
   String get inviteFamilyAdultClaimWrongAccountSubtitle;
+
+  /// No description provided for @inviteFamilyAdultClaimContactLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
   String get inviteFamilyAdultClaimContactLabel;
+
+  /// No description provided for @inviteFamilyAdultClaimContactNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the contact with the code first'**
   String get inviteFamilyAdultClaimContactNotVerified;
+
+  /// No description provided for @inviteFamilyAdultClaimOtpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your identity'**
   String get inviteFamilyAdultClaimOtpTitle;
+
+  /// No description provided for @inviteFamilyAdultClaimOtpSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent to'**
   String get inviteFamilyAdultClaimOtpSentTo;
+
+  /// No description provided for @inviteFamilyAdultClaimOtpSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
   String get inviteFamilyAdultClaimOtpSubmit;
+
+  /// No description provided for @inviteFamilyAdultClaimOtpResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code again'**
   String get inviteFamilyAdultClaimOtpResend;
+
+  /// No description provided for @inviteFamilyAdultClaimOtpResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend available in {seconds}s'**
   String inviteFamilyAdultClaimOtpResendIn(int seconds);
+
+  /// No description provided for @inviteFamilyAdultClaimProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent details'**
   String get inviteFamilyAdultClaimProfileTitle;
+
+  /// No description provided for @inviteFamilyAdultClaimProfileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the details and set a password. You will confirm children on the next step.'**
   String get inviteFamilyAdultClaimProfileHint;
+
+  /// No description provided for @inviteFamilyAdultClaimProfileSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
   String get inviteFamilyAdultClaimProfileSubmit;
+
+  /// No description provided for @inviteFamilyAdultClaimLoggedInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept with this account'**
   String get inviteFamilyAdultClaimLoggedInTitle;
+
+  /// No description provided for @inviteFamilyAdultClaimLoggedInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact matches your account. After accepting you will confirm the children’s details.'**
   String get inviteFamilyAdultClaimLoggedInSubtitle;
+
+  /// No description provided for @inviteFamilyAdultClaimLoggedInSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept family'**
   String get inviteFamilyAdultClaimLoggedInSubmit;
+
+  /// No description provided for @parentConfirmFamilyChildrenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm children'**
   String get parentConfirmFamilyChildrenTitle;
+
+  /// No description provided for @parentConfirmFamilyChildrenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Family «{family}». The school shared profiles — confirm the details.'**
   String parentConfirmFamilyChildrenSubtitle(String family);
+
+  /// No description provided for @parentConfirmFamilyChildrenNoChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no children in the family yet. You can finish confirmation.'**
   String get parentConfirmFamilyChildrenNoChildren;
+
+  /// No description provided for @parentConfirmFamilyChildrenSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
   String get parentConfirmFamilyChildrenSubmit;
+
+  /// No description provided for @parentConfirmFamilyChildrenGender.
+  ///
+  /// In en, this message translates to:
+  /// **'Gender'**
   String get parentConfirmFamilyChildrenGender;
+
+  /// No description provided for @parentConfirmFamilyChildrenGenderMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Boy'**
   String get parentConfirmFamilyChildrenGenderMale;
+
+  /// No description provided for @parentConfirmFamilyChildrenGenderFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Girl'**
   String get parentConfirmFamilyChildrenGenderFemale;
+
+  /// No description provided for @parentConfirmFamilyChildrenAuthority.
+  ///
+  /// In en, this message translates to:
+  /// **'Authority basis'**
   String get parentConfirmFamilyChildrenAuthority;
+
+  /// No description provided for @parentConfirmFamilyChildrenAuthorityParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent'**
   String get parentConfirmFamilyChildrenAuthorityParent;
+
+  /// No description provided for @parentConfirmFamilyChildrenAuthorityAdoptive.
+  ///
+  /// In en, this message translates to:
+  /// **'Adoptive parent'**
   String get parentConfirmFamilyChildrenAuthorityAdoptive;
+
+  /// No description provided for @parentConfirmFamilyChildrenAuthorityGuardian.
+  ///
+  /// In en, this message translates to:
+  /// **'Guardian'**
   String get parentConfirmFamilyChildrenAuthorityGuardian;
+
+  /// No description provided for @parentConfirmFamilyChildrenAuthorityDeclared.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm my authority as representative'**
   String get parentConfirmFamilyChildrenAuthorityDeclared;
+
+  /// No description provided for @parentConfirmFamilyChildrenConsentAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'I consent to processing children’s data'**
   String get parentConfirmFamilyChildrenConsentAccepted;
+
+  /// No description provided for @parentConfirmFamilyChildrenConsentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm authority and consent for the children'**
   String get parentConfirmFamilyChildrenConsentRequired;
+
+  /// No description provided for @registerSchoolOffersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'School invitations'**
   String get registerSchoolOffersTitle;
+
+  /// No description provided for @registerSchoolOffersLead.
+  ///
+  /// In en, this message translates to:
+  /// **'We found school families for your contact. Select whom to accept, or skip.'**
   String get registerSchoolOffersLead;
+
+  /// No description provided for @registerSchoolOffersContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with selected'**
   String get registerSchoolOffersContinue;
+
+  /// No description provided for @registerSchoolOffersSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
   String get registerSchoolOffersSkip;
+
+  /// No description provided for @registerSchoolOffersSelectOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one child'**
   String get registerSchoolOffersSelectOne;
 }
 

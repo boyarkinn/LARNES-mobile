@@ -7,6 +7,7 @@ import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
+import 'package:larnes_mobile/features/parent/models/parent_reward.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
@@ -849,6 +850,89 @@ class ParentApi {
           status: row['status'] as String? ?? 'received',
         );
       }).where((item) => item.caseNumber.isNotEmpty).toList();
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentRewardShopsPage> fetchRewardShops(
+    String childId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/rewards',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] == 'error') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentRewardsLoadFailed),
+        );
+      }
+      return ParentRewardShopsPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentRewardShopDetail> fetchRewardShop(
+    String childId,
+    String shopId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/rewards/$shopId',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] == 'error' || data['shopId'] == null) {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentRewardsLoadFailed),
+        );
+      }
+      return ParentRewardShopDetail.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> claimRewardItem({
+    required String childId,
+    required String shopId,
+    required String itemId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/rewards/$shopId/claim',
+        data: {
+          'itemId': itemId,
+          'locale': locale,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentRewardsLoadFailed),
+        );
+      }
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

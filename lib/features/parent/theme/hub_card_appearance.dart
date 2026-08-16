@@ -13,6 +13,7 @@ enum HubCardIconKind {
   attendance,
   schedule,
   payments,
+  rewards,
 }
 
 enum ActivityHubKind {
@@ -34,6 +35,10 @@ ChildCardColorTokens homeworkHubCardTokens() {
 
 ChildCardColorTokens coursesHubCardTokens() {
   return childCardColorTokens(ChildCardColor.violet);
+}
+
+ChildCardColorTokens rewardsHubCardTokens() {
+  return childCardColorTokens(ChildCardColor.rose);
 }
 
 ChildCardColorTokens activityHubCardTokens(ActivityHubKind kind) {

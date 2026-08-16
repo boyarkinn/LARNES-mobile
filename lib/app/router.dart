@@ -58,6 +58,8 @@ import 'package:larnes_mobile/features/parent/screens/homework_player_screen.dar
 import 'package:larnes_mobile/features/parent/screens/program_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/courses_directions_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/reward_shop_detail_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/rewards_shops_screen.dart';
 import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
 import 'package:larnes_mobile/features/parent/screens/activity/parent_attendance_classes_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/activity/parent_attendance_calendar_screen.dart';
@@ -379,6 +381,35 @@ GoRouter createAppRouter({
                           }
                           return CoursesDirectionsScreen(childId: childId);
                         },
+                      ),
+                      GoRoute(
+                        path: 'rewards',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return RewardsShopsScreen(childId: childId);
+                        },
+                        routes: [
+                          GoRoute(
+                            path: ':shopId',
+                            builder: (context, state) {
+                              final childId = state.pathParameters['childId'];
+                              final shopId = state.pathParameters['shopId'];
+                              if (childId == null ||
+                                  childId.isEmpty ||
+                                  shopId == null ||
+                                  shopId.isEmpty) {
+                                return const ChildPickerScreen();
+                              }
+                              return RewardShopDetailScreen(
+                                childId: childId,
+                                shopId: shopId,
+                              );
+                            },
+                          ),
+                        ],
                       ),
                       GoRoute(
                         path: 'activity/attendance',

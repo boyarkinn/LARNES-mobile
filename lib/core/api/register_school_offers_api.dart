@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/auth_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
+import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {

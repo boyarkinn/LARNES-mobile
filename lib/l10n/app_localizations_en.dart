@@ -291,6 +291,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentStudyCoursesCard => 'LARNES courses';
 
   @override
+  String get parentStudyRewardsCard => 'Rewards';
+
+  @override
+  String get parentRewardsTitle => 'Rewards';
+
+  @override
+  String get parentRewardsEmptyShops => 'No live shelves yet.';
+
+  @override
+  String get parentRewardsEmptyItems =>
+      'Nothing to get on this shelf right now.';
+
+  @override
+  String parentRewardsBalance(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count larcoins',
+      one: '$count larcoin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get parentRewardsCost => 'larcoins';
+
+  @override
+  String get parentRewardsGet => 'Get';
+
+  @override
+  String get parentRewardsGetting => 'Sending…';
+
+  @override
+  String get parentRewardsNotEnough => 'Not enough yet';
+
+  @override
+  String get parentRewardsPending => 'Waiting to be handed over';
+
+  @override
+  String get parentRewardsHandedOver => 'Handed over';
+
+  @override
+  String get parentRewardsCancelled => 'Cancelled';
+
+  @override
+  String get parentRewardsClaimsTitle => 'Requests';
+
+  @override
+  String get parentRewardsClaimed =>
+      'Request sent — they will hand it over at class.';
+
+  @override
+  String get parentRewardsNoPhoto => 'No photo';
+
+  @override
+  String get parentRewardsLoadFailed => 'Could not load rewards.';
+
+  @override
   String get parentCoursesTitle => 'Courses';
 
   @override
@@ -989,6 +1047,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayChainTopicIdLabel => 'Chain topic';
 
   @override
+  String get adminTrainerPlaySolveModeLabel => 'Solve mode';
+
+  @override
+  String get adminTrainerPlaySolveModeAbacus => 'On abacus';
+
+  @override
+  String get adminTrainerPlaySolveModeMental => 'Mentally';
+
+  @override
   String get adminTrainerPlayActionCountLabel => 'Number of actions';
 
   @override
@@ -1230,8 +1297,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentFamilySetupShare => 'Share';
 
   @override
-  String get parentFamilySetupCancelJoin =>
-      'I was wrong — create my family';
+  String get parentFamilySetupCancelJoin => 'I was wrong — create my family';
 
   @override
   String get parentFamilySetupDisplayNameLabel => 'Family name';
@@ -1247,7 +1313,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentFamilySetupDisplayNameRequired => 'Enter a family name';
 
   @override
-  String get parentFamilySetupSoloNameTitle => 'What should we call your family?';
+  String get parentFamilySetupSoloNameTitle =>
+      'What should we call your family?';
 
   @override
   String get parentFamilySetupCreateSolo => 'Create family';
@@ -2102,8 +2169,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Consent could not be withdrawn. No data was erased.';
 
   @override
-  String inviteFamilyAdultClaimTitle(String school) =>
-      'School «$school» invites you to the LARNES ecosystem';
+  String inviteFamilyAdultClaimTitle(String school) {
+    return 'School «$school» invites you to the LARNES ecosystem';
+  }
 
   @override
   String get inviteFamilyAdultClaimTitleShort => 'School invitation';
@@ -2145,8 +2213,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteFamilyAdultClaimOtpResend => 'Send code again';
 
   @override
-  String inviteFamilyAdultClaimOtpResendIn(int seconds) =>
-      'Resend available in ${seconds}s';
+  String inviteFamilyAdultClaimOtpResendIn(int seconds) {
+    return 'Resend available in ${seconds}s';
+  }
 
   @override
   String get inviteFamilyAdultClaimProfileTitle => 'Parent details';
@@ -2172,8 +2241,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentConfirmFamilyChildrenTitle => 'Confirm children';
 
   @override
-  String parentConfirmFamilyChildrenSubtitle(String family) =>
-      'Family «$family». The school shared profiles — confirm the details.';
+  String parentConfirmFamilyChildrenSubtitle(String family) {
+    return 'Family «$family». The school shared profiles — confirm the details.';
+  }
 
   @override
   String get parentConfirmFamilyChildrenNoChildren =>

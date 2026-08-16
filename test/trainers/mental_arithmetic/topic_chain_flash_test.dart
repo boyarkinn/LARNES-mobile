@@ -22,15 +22,18 @@ void main() {
       });
       expect(ok.ok, isTrue);
       expect(ok.params?['exampleCount'], 1);
+      expect(ok.params?['solveMode'], 'abacus');
 
       final withExamples = validateTrainerParams('topic-chain-flash', {
         'topicId': 'simple-1',
         'actionCount': 5,
         'exampleCount': 3,
+        'solveMode': 'mental',
         'stepPauseSec': 1,
       });
       expect(withExamples.ok, isTrue);
       expect(withExamples.params?['exampleCount'], 3);
+      expect(withExamples.params?['solveMode'], 'mental');
 
       final bad = validateTrainerParams('topic-chain-flash', {
         'topicId': 'nope',
@@ -62,7 +65,8 @@ void main() {
       );
 
       await tester.pump();
-      // countdown 3→2→1→Старт (4×750ms) + flash steps
+      // instruction silent (~1800) + countdown 3→2→1→Старт (4×750ms) + flash steps
+      await tester.pump(const Duration(milliseconds: 1800));
       await tester.pump(const Duration(milliseconds: 3000));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TextField), findsOneWidget);

@@ -25,6 +25,7 @@ class StudyHubScreen extends StatefulWidget {
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   bool _hasPublishedCourses = false;
+  bool _hasLiveRewards = false;
   String _childFirstName = '';
   bool _wasInactive = false;
 
@@ -64,6 +65,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
     super.deactivate();
   }
 
+  Future<bool> _liveRewardsVisible(ParentApi parentApi, String locale) async {
+    try {
+      return (await parentApi.fetchRewardShops(widget.childId, locale: locale)).visible;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _load({bool refreshing = false}) async {
     if (!refreshing) {
       setState(() {
@@ -77,6 +86,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       final results = await Future.wait<Object?>([
         parentApi.hasPublishedLarnesCourses(locale: locale),
         parentApi.fetchChild(widget.childId, locale: locale),
+        _liveRewardsVisible(parentApi, locale),
       ]);
       if (!mounted) {
         return;
@@ -84,12 +94,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       setState(() {
         _hasPublishedCourses = results[0]! as bool;
         _childFirstName = childHubHeaderTitle((results[1]! as ParentChildDetail).child);
+        _hasLiveRewards = results[2]! as bool;
         _isLoading = false;
       });
     } on ParentApiException catch (_) {
       if (mounted) {
         setState(() {
           _hasPublishedCourses = false;
+          _hasLiveRewards = false;
           _isLoading = false;
         });
       }
@@ -97,6 +109,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       if (mounted) {
         setState(() {
           _hasPublishedCourses = false;
+          _hasLiveRewards = false;
           _isLoading = false;
         });
       }
@@ -156,6 +169,19 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                       context,
                       childId: widget.childId,
                       segment: 'courses',
+                    ),
+                  ),
+                ],
+                if (_hasLiveRewards) ...[
+                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  StudyHubCard(
+                    title: l10n.parentStudyRewardsCard,
+                    tokens: rewardsHubCardTokens(),
+                    icon: HubCardIconKind.rewards,
+                    onTap: () => ParentChildRoutes.pushForChild(
+                      context,
+                      childId: widget.childId,
+                      segment: 'rewards',
                     ),
                   ),
                 ],

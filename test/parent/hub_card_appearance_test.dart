@@ -10,6 +10,13 @@ void main() {
     });
   });
 
+  group('rewardsHubCardTokens', () {
+    test('uses rose tokens', () {
+      final tokens = rewardsHubCardTokens();
+      expect(tokens.tag, childCardColorTokens(ChildCardColor.rose).tag);
+    });
+  });
+
   group('activityHubCardTokens', () {
     test('maps kinds to web palette', () {
       expect(

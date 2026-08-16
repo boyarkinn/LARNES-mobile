@@ -133,6 +133,29 @@
   "parentStudyTitle": "What are we studying today?",
   "parentStudyProfileCard": "Profile",
   "parentStudyCoursesCard": "LARNES courses",
+  "parentStudyRewardsCard": "Rewards",
+  "parentRewardsTitle": "Rewards",
+  "parentRewardsEmptyShops": "No live shelves yet.",
+  "parentRewardsEmptyItems": "Nothing to get on this shelf right now.",
+  "parentRewardsBalance": "{count, plural, one {{count} larcoin} other {{count} larcoins}}",
+  "@parentRewardsBalance": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parentRewardsCost": "larcoins",
+  "parentRewardsGet": "Get",
+  "parentRewardsGetting": "Sending…",
+  "parentRewardsNotEnough": "Not enough yet",
+  "parentRewardsPending": "Waiting to be handed over",
+  "parentRewardsHandedOver": "Handed over",
+  "parentRewardsCancelled": "Cancelled",
+  "parentRewardsClaimsTitle": "Requests",
+  "parentRewardsClaimed": "Request sent — they will hand it over at class.",
+  "parentRewardsNoPhoto": "No photo",
+  "parentRewardsLoadFailed": "Could not load rewards.",
   "parentCoursesTitle": "Courses",
   "parentCoursesEmpty": "No published courses yet.",
   "parentActivityAttendance": "Attendance",
@@ -408,6 +431,9 @@
   "adminTrainerPlayStepPauseSecLabel": "Pause (sec)",
   "adminTrainerPlayExampleStringLabel": "Example",
   "adminTrainerPlayChainTopicIdLabel": "Chain topic",
+  "adminTrainerPlaySolveModeLabel": "Solve mode",
+  "adminTrainerPlaySolveModeAbacus": "On abacus",
+  "adminTrainerPlaySolveModeMental": "Mentally",
   "adminTrainerPlayActionCountLabel": "Number of actions",
   "adminTrainerPlayExampleCountLabel": "Number of examples",
   "adminTrainerPlaySignModeLabel": "Signs",

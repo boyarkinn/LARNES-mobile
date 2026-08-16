@@ -75,6 +75,8 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayExampleStringLabel;
     case 'chainTopicIdLabel':
       return l10n.adminTrainerPlayChainTopicIdLabel;
+    case 'solveModeLabel':
+      return l10n.adminTrainerPlaySolveModeLabel;
     case 'actionCountLabel':
       return l10n.adminTrainerPlayActionCountLabel;
     case 'exampleCountLabel':
@@ -128,6 +130,10 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
       return l10n.adminTrainerPlaySpeedMedium;
     case 'speedFast':
       return l10n.adminTrainerPlaySpeedFast;
+    case 'solveModeAbacus':
+      return l10n.adminTrainerPlaySolveModeAbacus;
+    case 'solveModeMental':
+      return l10n.adminTrainerPlaySolveModeMental;
     default:
       return option.value;
   }

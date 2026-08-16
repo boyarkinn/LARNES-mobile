@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/instruction_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/play_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generate.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
@@ -24,7 +26,7 @@ class TopicChainFlashTrainer extends StatefulWidget {
   State<TopicChainFlashTrainer> createState() => _TopicChainFlashTrainerState();
 }
 
-enum _Phase { boot, countdown, flash, answer, error }
+enum _Phase { boot, instruction, countdown, flash, answer, error }
 
 class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     with SingleTickerProviderStateMixin {
@@ -58,6 +60,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   Object _runToken = Object();
   Timer? _flashTimer;
   Timer? _countdownTimer;
+  Timer? _instructionTimer;
   Timer? _wrongTimer;
   Timer? _completeTimer;
   final _inputController = TextEditingController();
@@ -100,6 +103,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   void dispose() {
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
+    _instructionTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
@@ -112,17 +116,81 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   bool _semanticParamsChanged(Map<String, dynamic> a, Map<String, dynamic> b) {
     return a['topicId'] != b['topicId'] ||
         a['actionCount'] != b['actionCount'] ||
-        a['exampleCount'] != b['exampleCount'];
+        a['exampleCount'] != b['exampleCount'] ||
+        a['solveMode'] != b['solveMode'] ||
+        a['stepPauseSec'] != b['stepPauseSec'];
   }
 
   void _startSession() {
     _completeCalled = false;
+    final runToken = Object();
+    _runToken = runToken;
+    unawaited(_runInstruction(runToken));
+  }
+
+  Future<void> _runInstruction(Object runToken) async {
+    _flashTimer?.cancel();
+    _countdownTimer?.cancel();
+    _instructionTimer?.cancel();
+    _wrongTimer?.cancel();
+    _completeTimer?.cancel();
+    unawaited(cancelStepAudio());
+
+    final solveMode = normalizeSolveMode(widget.params['solveMode']);
+    final stepPauseSec =
+        (widget.params['stepPauseSec'] as num?)?.toDouble() ??
+        double.tryParse('${widget.params['stepPauseSec'] ?? ''}') ??
+        1;
+
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    setState(() {
+      _chain = null;
+      _exampleIndex = 0;
+      _flashLabel = solveModeInstructionLabel(solveMode);
+      _errorMessage = null;
+      _phase = _Phase.instruction;
+      _answerDraft = '';
+      _isWrong = false;
+      _isCorrect = false;
+      _hasFailedAttempt = false;
+      _isSubmitting = false;
+    });
+
+    if (shouldPlayFlashAudio(stepPauseSec)) {
+      await getSharedClipPlayer().play(
+        [getInstructionAudioAsset(solveMode)],
+        playbackRate: kInstructionPlaybackRate,
+      );
+      if (!mounted || !identical(runToken, _runToken)) {
+        return;
+      }
+      _startExample(0, resetCompleteFlag: true);
+      return;
+    }
+
+    final done = Completer<void>();
+    _instructionTimer = Timer(
+      const Duration(milliseconds: kInstructionSilentMs),
+      () {
+        if (!done.isCompleted) {
+          done.complete();
+        }
+      },
+    );
+    await done.future;
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
     _startExample(0, resetCompleteFlag: true);
   }
 
   void _startExample(int nextIndex, {bool resetCompleteFlag = false}) {
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
+    _instructionTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
@@ -293,6 +361,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
 
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
+    _instructionTimer?.cancel();
     _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
@@ -441,17 +510,22 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                 ),
               ),
               _Phase.boot ||
+              _Phase.instruction ||
               _Phase.countdown ||
               _Phase.flash => AnimatedOpacity(
                 opacity: _flashLabel == null ? 0 : 1,
                 duration: const Duration(milliseconds: 150),
                 child: Text(
                   _flashLabel ?? ' ',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
+                    fontSize: MediaQuery.sizeOf(context).shortestSide *
+                        (_phase == _Phase.instruction ? 0.12 : 0.26),
                     height: 1,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontFeatures: _phase == _Phase.instruction
+                        ? null
+                        : const [FontFeature.tabularFigures()],
                     color: _phase == _Phase.countdown
                         ? _countdownColor
                         : _flashColor,

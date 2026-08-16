@@ -71,6 +71,7 @@ flutter:
     - assets/audio/ru/mental-arithmetic/operations/
     - assets/audio/ru/mental-arithmetic/numbers/
     - assets/audio/ru/mental-arithmetic/hundreds/
+    - assets/audio/ru/mental-arithmetic/instructions/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -817,16 +817,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainersDirectionReading => 'Чтение';
 
   @override
-  String get adminTrainersPlatformWeb => 'Web';
+  String get adminTrainersPublicationInDevelopment => 'В разработке';
 
   @override
-  String get adminTrainersPlatformMobile => 'Mobile';
+  String get adminTrainersPublicationReadyToPublish => 'Готов к публикации';
 
   @override
-  String get adminTrainersStatusInDevelopment => 'В разработке';
-
-  @override
-  String get adminTrainersStatusReadyForRelease => 'Готов к релизу';
+  String get adminTrainersPublicationPublished => 'Опубликован';
 
   @override
   String adminTrainersGroupCount(int count) {
@@ -840,105 +837,6 @@ class AppLocalizationsRu extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String adminTrainersCatalogInProgress(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '# в работе',
-      many: '# в работе',
-      few: '# в работе',
-      one: '# в работе',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get adminTrainersDetailPlaceholder =>
-      'Экран тренажёра (Play и Workflow) появится в следующих фазах.';
-
-  @override
-  String get adminTrainerWorkflowTabWorkflow => 'Workflow';
-
-  @override
-  String get adminTrainerWorkflowTabPlay => 'Play';
-
-  @override
-  String get adminTrainerWorkflowPlayPlaceholder =>
-      'Запуск тренажёра (Play) появится в следующей фазе.';
-
-  @override
-  String get adminTrainerWorkflowLoadFailed => 'Не удалось загрузить тренажёр.';
-
-  @override
-  String get adminTrainerWorkflowSectionFunnel => 'Воронка';
-
-  @override
-  String get adminTrainerWorkflowSectionTeam => 'Команда';
-
-  @override
-  String get adminTrainerWorkflowSectionFeed => 'Лента';
-
-  @override
-  String adminTrainerWorkflowInProgressCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '# комментария в работе',
-      many: '# комментариев в работе',
-      few: '# комментария в работе',
-      one: '# комментарий в работе',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get adminTrainerWorkflowFeedEmpty => 'Комментариев пока нет.';
-
-  @override
-  String get adminTrainerWorkflowCommentAddTitle => 'Добавить комментарий';
-
-  @override
-  String get adminTrainerWorkflowCommentBodyPlaceholder =>
-      'Опишите замечание или задачу';
-
-  @override
-  String get adminTrainerWorkflowCommentAddSubmit => 'Добавить';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusInProgress => 'В работе';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusImplemented => 'Сделано';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusRejected => 'Отклонено';
-
-  @override
-  String get adminTrainerWorkflowCommentActionInProgress => 'В работе';
-
-  @override
-  String get adminTrainerWorkflowCommentActionImplemented => 'Сделано';
-
-  @override
-  String get adminTrainerWorkflowCommentActionRejected => 'Отклонить';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusUnset => 'Не выбрано';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusNeedsFixes => 'Нужны правки';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusReadyForRelease =>
-      'Готов к релизу';
-
-  @override
-  String get adminTrainerWorkflowSignoffActionNeedsFixes => 'Нужны правки';
-
-  @override
-  String get adminTrainerWorkflowSignoffActionReadyForRelease => 'Готов';
 
   @override
   String get adminTrainerPlayLoadFailed => 'Не удалось загрузить параметры.';

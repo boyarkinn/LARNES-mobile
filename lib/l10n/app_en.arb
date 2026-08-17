@@ -347,51 +347,15 @@
   "adminTrainersDirectionMental": "Mental arithmetic",
   "adminTrainersDirectionMath": "Math",
   "adminTrainersDirectionReading": "Reading",
-  "adminTrainersPlatformWeb": "Web",
-  "adminTrainersPlatformMobile": "Mobile",
-  "adminTrainersStatusInDevelopment": "In development",
-  "adminTrainersStatusReadyForRelease": "Ready for release",
+  "adminTrainersPublicationInDevelopment": "In development",
+  "adminTrainersPublicationReadyToPublish": "Ready to publish",
+  "adminTrainersPublicationPublished": "Published",
   "adminTrainersGroupCount": "{count, plural, one{# trainer} other{# trainers}}",
   "@adminTrainersGroupCount": {
     "placeholders": {
       "count": {"type": "int"}
     }
   },
-  "adminTrainersCatalogInProgress": "{count, plural, one{# in progress} other{# in progress}}",
-  "@adminTrainersCatalogInProgress": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "adminTrainersDetailPlaceholder": "Trainer screen (Play and Workflow) will appear in the next phases.",
-  "adminTrainerWorkflowTabWorkflow": "Workflow",
-  "adminTrainerWorkflowTabPlay": "Play",
-  "adminTrainerWorkflowPlayPlaceholder": "Trainer play mode will appear in the next phase.",
-  "adminTrainerWorkflowLoadFailed": "Could not load trainer.",
-  "adminTrainerWorkflowSectionFunnel": "Funnel",
-  "adminTrainerWorkflowSectionTeam": "Team",
-  "adminTrainerWorkflowSectionFeed": "Feed",
-  "adminTrainerWorkflowInProgressCount": "{count, plural, one{# comment in progress} other{# comments in progress}}",
-  "@adminTrainerWorkflowInProgressCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "adminTrainerWorkflowFeedEmpty": "No comments yet.",
-  "adminTrainerWorkflowCommentAddTitle": "Add comment",
-  "adminTrainerWorkflowCommentBodyPlaceholder": "Describe an issue or task",
-  "adminTrainerWorkflowCommentAddSubmit": "Add",
-  "adminTrainerWorkflowCommentStatusInProgress": "In progress",
-  "adminTrainerWorkflowCommentStatusImplemented": "Done",
-  "adminTrainerWorkflowCommentStatusRejected": "Rejected",
-  "adminTrainerWorkflowCommentActionInProgress": "In progress",
-  "adminTrainerWorkflowCommentActionImplemented": "Done",
-  "adminTrainerWorkflowCommentActionRejected": "Reject",
-  "adminTrainerWorkflowSignoffStatusUnset": "Not set",
-  "adminTrainerWorkflowSignoffStatusNeedsFixes": "Needs fixes",
-  "adminTrainerWorkflowSignoffStatusReadyForRelease": "Ready for release",
-  "adminTrainerWorkflowSignoffActionNeedsFixes": "Needs fixes",
-  "adminTrainerWorkflowSignoffActionReadyForRelease": "Ready",
   "adminTrainerPlayLoadFailed": "Could not load parameters.",
   "adminTrainerPlayLaunch": "LAUNCH",
   "adminTrainerPlayInteractiveHint": "Interactive trainers finish when the child completes the task.",

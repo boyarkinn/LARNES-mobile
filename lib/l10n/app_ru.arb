@@ -298,51 +298,15 @@
   "adminTrainersDirectionMental": "Ментальная арифметика",
   "adminTrainersDirectionMath": "Математика",
   "adminTrainersDirectionReading": "Чтение",
-  "adminTrainersPlatformWeb": "Web",
-  "adminTrainersPlatformMobile": "Mobile",
-  "adminTrainersStatusInDevelopment": "В разработке",
-  "adminTrainersStatusReadyForRelease": "Готов к релизу",
+  "adminTrainersPublicationInDevelopment": "В разработке",
+  "adminTrainersPublicationReadyToPublish": "Готов к публикации",
+  "adminTrainersPublicationPublished": "Опубликован",
   "adminTrainersGroupCount": "{count, plural, one{# тренажёр} few{# тренажёра} many{# тренажёров} other{# тренажёра}}",
   "@adminTrainersGroupCount": {
     "placeholders": {
       "count": {"type": "int"}
     }
   },
-  "adminTrainersCatalogInProgress": "{count, plural, one{# в работе} few{# в работе} many{# в работе} other{# в работе}}",
-  "@adminTrainersCatalogInProgress": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "adminTrainersDetailPlaceholder": "Экран тренажёра (Play и Workflow) появится в следующих фазах.",
-  "adminTrainerWorkflowTabWorkflow": "Workflow",
-  "adminTrainerWorkflowTabPlay": "Play",
-  "adminTrainerWorkflowPlayPlaceholder": "Запуск тренажёра (Play) появится в следующей фазе.",
-  "adminTrainerWorkflowLoadFailed": "Не удалось загрузить тренажёр.",
-  "adminTrainerWorkflowSectionFunnel": "Воронка",
-  "adminTrainerWorkflowSectionTeam": "Команда",
-  "adminTrainerWorkflowSectionFeed": "Лента",
-  "adminTrainerWorkflowInProgressCount": "{count, plural, one{# комментарий в работе} few{# комментария в работе} many{# комментариев в работе} other{# комментария в работе}}",
-  "@adminTrainerWorkflowInProgressCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "adminTrainerWorkflowFeedEmpty": "Комментариев пока нет.",
-  "adminTrainerWorkflowCommentAddTitle": "Добавить комментарий",
-  "adminTrainerWorkflowCommentBodyPlaceholder": "Опишите замечание или задачу",
-  "adminTrainerWorkflowCommentAddSubmit": "Добавить",
-  "adminTrainerWorkflowCommentStatusInProgress": "В работе",
-  "adminTrainerWorkflowCommentStatusImplemented": "Сделано",
-  "adminTrainerWorkflowCommentStatusRejected": "Отклонено",
-  "adminTrainerWorkflowCommentActionInProgress": "В работе",
-  "adminTrainerWorkflowCommentActionImplemented": "Сделано",
-  "adminTrainerWorkflowCommentActionRejected": "Отклонить",
-  "adminTrainerWorkflowSignoffStatusUnset": "Не выбрано",
-  "adminTrainerWorkflowSignoffStatusNeedsFixes": "Нужны правки",
-  "adminTrainerWorkflowSignoffStatusReadyForRelease": "Готов к релизу",
-  "adminTrainerWorkflowSignoffActionNeedsFixes": "Нужны правки",
-  "adminTrainerWorkflowSignoffActionReadyForRelease": "Готов",
   "adminTrainerPlayLoadFailed": "Не удалось загрузить параметры.",
   "adminTrainerPlayLaunch": "ЗАПУСТИТЬ",
   "adminTrainerPlayInteractiveHint": "Интерактивный тренажёр завершится действием ребёнка.",

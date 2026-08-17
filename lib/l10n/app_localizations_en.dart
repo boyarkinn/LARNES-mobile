@@ -811,16 +811,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainersDirectionReading => 'Reading';
 
   @override
-  String get adminTrainersPlatformWeb => 'Web';
+  String get adminTrainersPublicationInDevelopment => 'In development';
 
   @override
-  String get adminTrainersPlatformMobile => 'Mobile';
+  String get adminTrainersPublicationReadyToPublish => 'Ready to publish';
 
   @override
-  String get adminTrainersStatusInDevelopment => 'In development';
-
-  @override
-  String get adminTrainersStatusReadyForRelease => 'Ready for release';
+  String get adminTrainersPublicationPublished => 'Published';
 
   @override
   String adminTrainersGroupCount(int count) {
@@ -832,101 +829,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String adminTrainersCatalogInProgress(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '# in progress',
-      one: '# in progress',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get adminTrainersDetailPlaceholder =>
-      'Trainer screen (Play and Workflow) will appear in the next phases.';
-
-  @override
-  String get adminTrainerWorkflowTabWorkflow => 'Workflow';
-
-  @override
-  String get adminTrainerWorkflowTabPlay => 'Play';
-
-  @override
-  String get adminTrainerWorkflowPlayPlaceholder =>
-      'Trainer play mode will appear in the next phase.';
-
-  @override
-  String get adminTrainerWorkflowLoadFailed => 'Could not load trainer.';
-
-  @override
-  String get adminTrainerWorkflowSectionFunnel => 'Funnel';
-
-  @override
-  String get adminTrainerWorkflowSectionTeam => 'Team';
-
-  @override
-  String get adminTrainerWorkflowSectionFeed => 'Feed';
-
-  @override
-  String adminTrainerWorkflowInProgressCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '# comments in progress',
-      one: '# comment in progress',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get adminTrainerWorkflowFeedEmpty => 'No comments yet.';
-
-  @override
-  String get adminTrainerWorkflowCommentAddTitle => 'Add comment';
-
-  @override
-  String get adminTrainerWorkflowCommentBodyPlaceholder =>
-      'Describe an issue or task';
-
-  @override
-  String get adminTrainerWorkflowCommentAddSubmit => 'Add';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusInProgress => 'In progress';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusImplemented => 'Done';
-
-  @override
-  String get adminTrainerWorkflowCommentStatusRejected => 'Rejected';
-
-  @override
-  String get adminTrainerWorkflowCommentActionInProgress => 'In progress';
-
-  @override
-  String get adminTrainerWorkflowCommentActionImplemented => 'Done';
-
-  @override
-  String get adminTrainerWorkflowCommentActionRejected => 'Reject';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusUnset => 'Not set';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusNeedsFixes => 'Needs fixes';
-
-  @override
-  String get adminTrainerWorkflowSignoffStatusReadyForRelease =>
-      'Ready for release';
-
-  @override
-  String get adminTrainerWorkflowSignoffActionNeedsFixes => 'Needs fixes';
-
-  @override
-  String get adminTrainerWorkflowSignoffActionReadyForRelease => 'Ready';
 
   @override
   String get adminTrainerPlayLoadFailed => 'Could not load parameters.';

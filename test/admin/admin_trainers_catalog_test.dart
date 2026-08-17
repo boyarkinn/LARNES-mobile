@@ -3,7 +3,7 @@ import 'package:larnes_mobile/features/admin/models/trainer_catalog.dart';
 
 void main() {
   group('TrainerCatalogSnapshot.fromJson', () {
-    test('parses grouped catalog payload', () {
+    test('parses grouped catalog payload with publicationStatus', () {
       final snapshot = TrainerCatalogSnapshot.fromJson({
         'status': 'success',
         'groups': [
@@ -13,9 +13,7 @@ void main() {
               {
                 'key': 'flashcard-digit-match',
                 'title': 'Flashcards',
-                'webStatus': 'in_development',
-                'mobileStatus': 'ready_for_release',
-                'inProgressCommentCount': 2,
+                'publicationStatus': 'ready_to_publish',
               },
             ],
           },
@@ -29,22 +27,17 @@ void main() {
       final trainer = snapshot.groups.first.trainers.first;
       expect(trainer.key, 'flashcard-digit-match');
       expect(trainer.title, 'Flashcards');
-      expect(trainer.webStatus, TrainerReleaseStatus.inDevelopment);
-      expect(trainer.mobileStatus, TrainerReleaseStatus.readyForRelease);
-      expect(trainer.inProgressCommentCount, 2);
+      expect(trainer.publicationStatus, TrainerPublicationStatus.readyToPublish);
     });
 
-    test('normalizes unknown status to in development', () {
+    test('normalizes unknown publication status to in development', () {
       final item = TrainerCatalogItem.fromJson({
         'key': 'demo',
         'title': 'Demo',
-        'webStatus': 'not_ported',
-        'mobileStatus': null,
-        'inProgressCommentCount': 0,
+        'publicationStatus': 'unknown',
       });
 
-      expect(item.webStatus, TrainerReleaseStatus.inDevelopment);
-      expect(item.mobileStatus, TrainerReleaseStatus.inDevelopment);
+      expect(item.publicationStatus, TrainerPublicationStatus.inDevelopment);
     });
   });
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/admin_theme.dart';
 import 'package:larnes_mobile/features/admin/models/trainer_catalog.dart';
-import 'package:larnes_mobile/features/admin/widgets/trainer_release_status_badge.dart';
+import 'package:larnes_mobile/features/admin/widgets/trainer_publication_status_badge.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 class TrainerCatalogCard extends StatelessWidget {
@@ -51,41 +51,9 @@ class TrainerCatalogCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    TrainerReleaseStatusBadge(
-                      platformLabel: l10n.adminTrainersPlatformWeb,
-                      status: trainer.webStatus,
-                      l10n: l10n,
-                    ),
-                    const SizedBox(height: 4),
-                    TrainerReleaseStatusBadge(
-                      platformLabel: l10n.adminTrainersPlatformMobile,
-                      status: trainer.mobileStatus,
-                      l10n: l10n,
-                    ),
-                    if (trainer.inProgressCommentCount > 0) ...[
-                      const SizedBox(height: 4),
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFFBEB),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          child: Text(
-                            l10n.adminTrainersCatalogInProgress(trainer.inProgressCommentCount),
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF92400E),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                TrainerPublicationStatusBadge(
+                  status: trainer.publicationStatus,
+                  l10n: l10n,
                 ),
               ],
             ),

@@ -1,37 +1,36 @@
 enum TrainerCatalogDirection { mental, math, reading }
 
-enum TrainerReleaseStatus { inDevelopment, readyForRelease }
+enum TrainerPublicationStatus { inDevelopment, readyToPublish, published }
 
 class TrainerCatalogItem {
   const TrainerCatalogItem({
     required this.key,
     required this.title,
-    required this.webStatus,
-    required this.mobileStatus,
-    required this.inProgressCommentCount,
+    required this.publicationStatus,
   });
 
   factory TrainerCatalogItem.fromJson(Map<String, dynamic> json) {
     return TrainerCatalogItem(
       key: json['key'] as String,
       title: json['title'] as String,
-      webStatus: _parseStatus(json['webStatus'] as String?),
-      mobileStatus: _parseStatus(json['mobileStatus'] as String?),
-      inProgressCommentCount: json['inProgressCommentCount'] as int? ?? 0,
+      publicationStatus: _parsePublicationStatus(json['publicationStatus'] as String?),
     );
   }
 
   final String key;
   final String title;
-  final TrainerReleaseStatus webStatus;
-  final TrainerReleaseStatus mobileStatus;
-  final int inProgressCommentCount;
+  final TrainerPublicationStatus publicationStatus;
 
-  static TrainerReleaseStatus _parseStatus(String? raw) {
-    if (raw == 'ready_for_release') {
-      return TrainerReleaseStatus.readyForRelease;
+  static TrainerPublicationStatus _parsePublicationStatus(String? raw) {
+    switch (raw) {
+      case 'ready_to_publish':
+        return TrainerPublicationStatus.readyToPublish;
+      case 'published':
+        return TrainerPublicationStatus.published;
+      case 'in_development':
+      default:
+        return TrainerPublicationStatus.inDevelopment;
     }
-    return TrainerReleaseStatus.inDevelopment;
   }
 }
 

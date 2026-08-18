@@ -86,7 +86,7 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
   Future<void> _handleDeviceUnauthorized(KioskRouteState kioskScope) async {
     await kioskScope.clearDeviceToken();
     if (mounted) {
-      context.go(kioskLoginRedirect);
+      context.go(defaultLoginRoute);
     }
   }
 
@@ -143,7 +143,7 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
         return;
       }
 
-      context.go(kioskLoginRedirect);
+      context.go(defaultLoginRoute);
     } on KioskApiException catch (error) {
       if (mounted) {
         setState(() {

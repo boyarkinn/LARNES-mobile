@@ -252,7 +252,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     _controller = null;
     await kioskScope.clearDeviceToken();
     if (mounted) {
-      context.go(kioskLoginRedirect);
+      context.go(defaultLoginRoute);
     }
   }
 

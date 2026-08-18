@@ -51,6 +51,9 @@ bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/')
 
 const kioskLoginRedirect = '/login?from=%2Fkiosk';
 
+/// Normal login after kiosk device session was cleared (unbind / revoked).
+const defaultLoginRoute = '/login';
+
 bool isFamilySetupRoute(String path) =>
     path == '/parent/family-setup' || path.startsWith('/parent/family-setup');
 

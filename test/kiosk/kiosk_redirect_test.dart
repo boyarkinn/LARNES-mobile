@@ -103,5 +103,9 @@ void main() {
         '/login',
       );
     });
+
+    test('plain login route for cleared device session', () {
+      expect(defaultLoginRoute, '/login');
+    });
   });
 }

@@ -20,12 +20,14 @@ class KioskSessionController extends ChangeNotifier {
     required VoidCallback onDeviceUnauthorized,
     KioskSessionMode? initialMode,
     int? initialCommandSeq,
+    KioskScanResult? initialScanResult,
     Duration syncInterval = kioskSyncInterval,
   })  : _kioskApi = kioskApi,
         _childSessionTokenStorage = childSessionTokenStorage,
         _deviceContext = deviceContext,
         _onDeviceUnauthorized = onDeviceUnauthorized,
         _syncInterval = syncInterval,
+        _scanResult = initialScanResult,
         _mode = initialMode ??
             resolveInitialModeFromLesson(deviceContext.lesson),
         _since = initialCommandSeq ??
@@ -72,8 +74,20 @@ class KioskSessionController extends ChangeNotifier {
       return;
     }
 
+    _exitRuntimePlayer();
+  }
+
+  void exitProgram() {
+    if (_mode != KioskSessionMode.play) {
+      return;
+    }
+
+    _exitRuntimePlayer();
+  }
+
+  void _exitRuntimePlayer() {
     if (_scanResult != null) {
-      _mode = modeFromScanOutcome(_scanResult!.outcome);
+      _mode = KioskSessionMode.result;
     } else {
       _mode = resolveInitialModeFromLesson(_deviceContext.lesson);
     }
@@ -189,15 +203,21 @@ class KioskSessionController extends ChangeNotifier {
         _since = payload.commandSeq;
       }
 
-      if (!commandProcessed &&
-          _mode != KioskSessionMode.play &&
-          _mode != KioskSessionMode.trainer) {
-        final skipRefreshInResult =
-            _mode == KioskSessionMode.result && _scanResult != null;
-        if (skipRefreshInResult) {
-          ackAlreadySent = await _reconcilePendingPlayTrainerFromDevice();
-        } else {
-          ackAlreadySent = await _refreshDeviceContextAndReconcileMode();
+      if (!commandProcessed) {
+        if (await _reconcileLessonEndedDuringRuntime()) {
+          // Lesson ended while child was in program or trainer player.
+        } else if (_mode == KioskSessionMode.scan &&
+            await _reconcileTeacherAssignedChild()) {
+          // Teacher assigned a child while the tablet was waiting for QR.
+        } else if (_mode != KioskSessionMode.play &&
+            _mode != KioskSessionMode.trainer) {
+          final skipRefreshInResult =
+              _mode == KioskSessionMode.result && _scanResult != null;
+          if (skipRefreshInResult) {
+            ackAlreadySent = await _reconcilePendingPlayTrainerFromDevice();
+          } else {
+            ackAlreadySent = await _refreshDeviceContextAndReconcileMode();
+          }
         }
       }
 
@@ -240,6 +260,77 @@ class KioskSessionController extends ChangeNotifier {
     }
 
     return false;
+  }
+
+  Future<bool> _reconcileLessonEndedDuringRuntime() async {
+    if (_mode != KioskSessionMode.play && _mode != KioskSessionMode.trainer) {
+      return false;
+    }
+
+    final device = await _kioskApi.getDeviceMe();
+    _deviceContext = device;
+
+    if (device.lesson != null) {
+      return false;
+    }
+
+    await _kioskApi.childLogout();
+    await _childSessionTokenStorage.clearToken();
+    _scanResult = null;
+    _scanError = null;
+    _scanErrorCode = null;
+    _mode = KioskSessionMode.idle;
+    _restartSyncTimer();
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> _reconcileTeacherAssignedChild() async {
+    if (_mode != KioskSessionMode.scan || _scanResult != null) {
+      return false;
+    }
+
+    final device = await _kioskApi.getDeviceMe();
+    _deviceContext = device;
+
+    final activeChild = device.activeChild;
+    final lesson = device.lesson;
+    if (activeChild == null || lesson == null) {
+      return false;
+    }
+
+    if (lesson.pendingCommand == 'open_scan' ||
+        lesson.pendingCommand == 'reset_child') {
+      return false;
+    }
+
+    if (lesson.status != 'no_program' && lesson.status != 'child_active') {
+      return false;
+    }
+
+    try {
+      final resumed = await _kioskApi.resumeChildSession();
+      await _childSessionTokenStorage.writeToken(resumed.childSessionToken);
+      _scanResult = resumed;
+      _scanError = null;
+      _scanErrorCode = null;
+      _mode = modeFromScanOutcome(resumed.outcome);
+
+      if (_mode == KioskSessionMode.play &&
+          (resumed.programId == null || resumed.programId!.isEmpty)) {
+        _mode = KioskSessionMode.result;
+        _scanError = 'Missing programId';
+      }
+
+      _restartSyncTimer();
+      notifyListeners();
+      return true;
+    } on KioskApiException catch (error) {
+      if (error.statusCode == 401) {
+        _onDeviceUnauthorized();
+      }
+      return false;
+    }
   }
 
   Future<bool> _refreshDeviceContextAndReconcileMode() async {

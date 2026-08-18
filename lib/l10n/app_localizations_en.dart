@@ -916,6 +916,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayGridSizeLabel => 'Grid size';
 
   @override
+  String get adminTrainerPlayStepCountLabel => 'Number of steps';
+
+  @override
   String get adminTrainerPlayFilledCountLabel => 'Filled cells';
 
   @override
@@ -1802,7 +1805,31 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get kioskRegistrationTitle => 'Device not registered';
+
+  @override
+  String get kioskRegistrationEyebrow => 'Connect this tablet';
+
+  @override
+  String get kioskRegistrationSubtitle =>
+      'Sign in with the one-time access from the network panel.';
+
+  @override
+  String get kioskRegistrationSignIn => 'Sign in';
+
+  @override
+  String get kioskRegistrationStep1 =>
+      'In the network panel → Devices, issue one-time access.';
+
+  @override
+  String get kioskRegistrationStep2 =>
+      'On the sign-in screen, enter the dev-* login and password from the panel.';
+
+  @override
   String get kioskIdleTitle => 'Lesson not started';
+
+  @override
+  String get kioskIdleEyebrow => 'Tablet ready';
 
   @override
   String get kioskIdleSubtitle =>
@@ -1812,14 +1839,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskIdleSettings => 'Settings';
 
   @override
+  String get kioskIdlePlacementLabel => 'Placement';
+
+  @override
+  String get kioskIdleWaiting => 'Waiting for the lesson to start';
+
+  @override
   String get kioskUnplacedTitle => 'No seat assigned';
 
   @override
-  String get kioskUnplacedSubtitle =>
-      'An administrator must assign this device to a seat in a classroom. QR and lessons unlock after placement.';
+  String get kioskUnplacedEyebrow => 'Tablet setup';
 
   @override
-  String get kioskUnplacedSettings => 'Device settings';
+  String get kioskUnplacedSubtitle =>
+      'Assign this device to a seat in a classroom — then QR scanning will unlock.';
+
+  @override
+  String get kioskUnplacedStep1 => 'Open the network panel → Devices.';
+
+  @override
+  String get kioskUnplacedStep2 =>
+      'Select this tablet and choose a classroom seat.';
+
+  @override
+  String get kioskUnplacedStep3 =>
+      'This screen refreshes automatically — QR and lessons will unlock.';
+
+  @override
+  String get kioskUnplacedWaiting => 'Waiting for assignment';
+
+  @override
+  String get kioskUnplacedSettings => 'Settings';
 
   @override
   String get kioskScanTitle => 'Show your QR code';

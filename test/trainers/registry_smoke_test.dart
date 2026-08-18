@@ -5,19 +5,20 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
   group('trainer registry', () {
-    test('registers all 33 web trainer keys', () {
-      expect(TrainerKey.values.length, 33);
-      expect(trainerDefinitions.length, 33);
+    test('registers all 34 web trainer keys', () {
+      expect(TrainerKey.values.length, 34);
+      expect(trainerDefinitions.length, 34);
       expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(isTrainerKey('example-visualization'), isTrue);
       expect(isTrainerKey('static-example-show'), isTrue);
       expect(isTrainerKey('topic-chain-flash'), isTrue);
       expect(isTrainerKey('topic-chain-table'), isTrue);
+      expect(isTrainerKey('fly-track'), isTrue);
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 33);
+      expect(trainerBuilders.length, 34);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -47,6 +48,15 @@ void main() {
       expect(getTrainerDefinition('flashcard-digit-match')?.isInteractive, isTrue);
       expect(getTrainerDefinition('topic-chain-flash')?.isInteractive, isTrue);
       expect(getTrainerDefinition('topic-chain-table')?.isInteractive, isFalse);
+    });
+
+    test('fly-track is intel and interactive in catalog', () {
+      final definition = getTrainerDefinition('fly-track');
+
+      expect(definition?.title, 'Муха');
+      expect(definition?.direction, TrainerDirection.intel);
+      expect(definition?.isInteractive, isTrue);
+      expect(hasTrainerBuilder('fly-track'), isTrue);
     });
   });
 }

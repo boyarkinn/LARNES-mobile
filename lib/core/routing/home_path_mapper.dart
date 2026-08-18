@@ -124,12 +124,15 @@ String? resolveAppRedirect({
     if (hasDeviceToken) {
       return '/kiosk';
     }
-    return kioskLoginRedirect;
+    return '/kiosk';
   }
 
   if (isKioskRoute(path)) {
     if (!hasDeviceToken) {
-      return kioskLoginRedirect;
+      if (path == '/kiosk') {
+        return null;
+      }
+      return '/kiosk';
     }
     return null;
   }

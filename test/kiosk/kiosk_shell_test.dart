@@ -12,7 +12,9 @@ import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_settings_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 
 import 'memory_child_session_token_storage.dart';
 import 'memory_device_token_storage.dart';
@@ -43,8 +45,8 @@ ChildSessionApiClient createMockChildSessionApiClient({
                   'steps': [
                     {
                       'id': 'step-1',
-                      'trainerKey': 'unknown-trainer',
-                      'params': {},
+                      'trainerKey': 'number-row-show',
+                      'params': {'digit': 5},
                       'topicOrdinal': 1,
                       'lessonOrdinal': 1,
                       'isLastInLesson': true,
@@ -194,6 +196,31 @@ void main() {
   }
 
   group('KioskShell', () {
+    testWidgets('shows registration screen without device token', (tester) async {
+      final kioskRouteState = KioskRouteState();
+
+      final router = GoRouter(
+        initialLocation: '/kiosk',
+        routes: [
+          GoRoute(
+            path: '/kiosk',
+            builder: (context, state) => const KioskShell(
+              syncInterval: Duration(days: 1),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        wrap(kioskRouteState: kioskRouteState, router: router),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Устройство не зарегистрировано'), findsOneWidget);
+      expect(find.text('Войти'), findsOneWidget);
+      expect(find.text('В панели сети → Устройства выдайте одноразовый доступ.'), findsOneWidget);
+    });
+
     testWidgets('shows unplaced screen without scan UI', (tester) async {
       final kioskRouteState = kioskRouteStateWithMock(
         deviceMeData: {
@@ -229,7 +256,9 @@ void main() {
       expect(find.text('Место не назначено'), findsOneWidget);
       expect(find.text('Занятие не начато'), findsNothing);
       expect(find.text('Поднесите QR'), findsNothing);
-      expect(find.text('Настройки устройства'), findsOneWidget);
+      expect(find.text('Настройки'), findsOneWidget);
+      expect(find.text('Ожидаем назначения'), findsOneWidget);
+      expect(find.text('Откройте панель сети → Устройства.'), findsOneWidget);
     });
 
     testWidgets('transitions to idle after seat assignment', (tester) async {
@@ -312,6 +341,7 @@ void main() {
       expect(find.textContaining('Center A'), findsOneWidget);
       expect(find.textContaining('Слот M1'), findsOneWidget);
       expect(find.text('Настройки'), findsOneWidget);
+      expect(find.text('Ожидаем начала занятия'), findsOneWidget);
     });
 
     testWidgets('settings button opens settings route', (tester) async {
@@ -396,8 +426,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Поднесите QR'), findsOneWidget);
+      expect(find.text('Поднесите QR'), findsNothing);
       expect(find.textContaining('Center A'), findsOneWidget);
+      expect(find.text('Включить камеру'), findsOneWidget);
     });
 
     testWidgets('opens program player after mock scan success', (tester) async {
@@ -442,10 +473,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Включить камеру'));
+      await tester.pump();
       await tester.pumpAndSettle();
 
-      expect(find.text('Program A'), findsOneWidget);
-      expect(find.text('АННА ПЕТРОВА'), findsOneWidget);
+      expect(find.byType(TrainerPlayShell), findsOneWidget);
       expect(find.text('Программа назначена'), findsNothing);
       expect(find.text('Настройки'), findsNothing);
     });
@@ -472,7 +503,11 @@ void main() {
           'ok': true,
           'outcome': 'no_program',
           'childId': '88888888-8888-4888-8888-888888888888',
-          'childDisplayName': 'Анна Петрова',
+          'childDisplayName': 'Петрова Анна Сергеевна',
+          'childCardColor': 'violet',
+          'childGender': 'female',
+          'childGivenName': 'Анна Сергеевна',
+          'childLastName': 'Петрова',
           'childSessionToken': 'child-jwt-token',
         },
       );
@@ -501,9 +536,11 @@ void main() {
       await tester.tap(find.text('Включить камеру'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ребёнок на занятии'), findsOneWidget);
-      expect(find.text('Анна Петрова'), findsOneWidget);
-      expect(find.text('Пока нет программы для этого ребёнка.'), findsOneWidget);
+      expect(find.byType(KioskChildBoundView), findsOneWidget);
+      expect(find.text('Петрова'), findsOneWidget);
+      expect(find.text('Анна Сергеевна'), findsOneWidget);
+      expect(find.text('Ребёнок на занятии'), findsNothing);
+      expect(find.text('Пока нет программы для этого ребёнка.'), findsNothing);
     });
   });
 }

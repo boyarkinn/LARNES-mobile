@@ -1754,6 +1754,12 @@ abstract class AppLocalizations {
   /// **'Grid size'**
   String get adminTrainerPlayGridSizeLabel;
 
+  /// No description provided for @adminTrainerPlayStepCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of steps'**
+  String get adminTrainerPlayStepCountLabel;
+
   /// No description provided for @adminTrainerPlayFilledCountLabel.
   ///
   /// In en, this message translates to:
@@ -3403,11 +3409,53 @@ abstract class AppLocalizations {
   /// **'Slot {slot}'**
   String networkDeviceSlotValue(String slot);
 
+  /// No description provided for @kioskRegistrationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Device not registered'**
+  String get kioskRegistrationTitle;
+
+  /// No description provided for @kioskRegistrationEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect this tablet'**
+  String get kioskRegistrationEyebrow;
+
+  /// No description provided for @kioskRegistrationSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the one-time access from the network panel.'**
+  String get kioskRegistrationSubtitle;
+
+  /// No description provided for @kioskRegistrationSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get kioskRegistrationSignIn;
+
+  /// No description provided for @kioskRegistrationStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'In the network panel → Devices, issue one-time access.'**
+  String get kioskRegistrationStep1;
+
+  /// No description provided for @kioskRegistrationStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'On the sign-in screen, enter the dev-* login and password from the panel.'**
+  String get kioskRegistrationStep2;
+
   /// No description provided for @kioskIdleTitle.
   ///
   /// In en, this message translates to:
   /// **'Lesson not started'**
   String get kioskIdleTitle;
+
+  /// No description provided for @kioskIdleEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet ready'**
+  String get kioskIdleEyebrow;
 
   /// No description provided for @kioskIdleSubtitle.
   ///
@@ -3421,22 +3469,64 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get kioskIdleSettings;
 
+  /// No description provided for @kioskIdlePlacementLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Placement'**
+  String get kioskIdlePlacementLabel;
+
+  /// No description provided for @kioskIdleWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the lesson to start'**
+  String get kioskIdleWaiting;
+
   /// No description provided for @kioskUnplacedTitle.
   ///
   /// In en, this message translates to:
   /// **'No seat assigned'**
   String get kioskUnplacedTitle;
 
+  /// No description provided for @kioskUnplacedEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet setup'**
+  String get kioskUnplacedEyebrow;
+
   /// No description provided for @kioskUnplacedSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'An administrator must assign this device to a seat in a classroom. QR and lessons unlock after placement.'**
+  /// **'Assign this device to a seat in a classroom — then QR scanning will unlock.'**
   String get kioskUnplacedSubtitle;
+
+  /// No description provided for @kioskUnplacedStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the network panel → Devices.'**
+  String get kioskUnplacedStep1;
+
+  /// No description provided for @kioskUnplacedStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Select this tablet and choose a classroom seat.'**
+  String get kioskUnplacedStep2;
+
+  /// No description provided for @kioskUnplacedStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'This screen refreshes automatically — QR and lessons will unlock.'**
+  String get kioskUnplacedStep3;
+
+  /// No description provided for @kioskUnplacedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for assignment'**
+  String get kioskUnplacedWaiting;
 
   /// No description provided for @kioskUnplacedSettings.
   ///
   /// In en, this message translates to:
-  /// **'Device settings'**
+  /// **'Settings'**
   String get kioskUnplacedSettings;
 
   /// No description provided for @kioskScanTitle.

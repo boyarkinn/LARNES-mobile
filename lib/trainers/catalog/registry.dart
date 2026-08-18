@@ -37,6 +37,7 @@ import 'package:larnes_mobile/trainers/reading/letter_place_in_word/letter_place
 import 'package:larnes_mobile/trainers/reading/letter_connect_dots/letter_connect_dots_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/letter_orientation_pick_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_trace/letter_trace_trainer.dart';
+import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
 
 typedef TrainerWidgetBuilder = Widget Function({
   required Map<String, dynamic> params,
@@ -72,6 +73,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       TopicChainFlashTrainer(params: params, onComplete: onComplete),
   TrainerKey.topicChainTable: ({required params, onComplete}) =>
       TopicChainTableTrainer(params: params),
+  TrainerKey.flyTrack: ({required params, onComplete}) =>
+      FlyTrackTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindTap: ({required params, onComplete}) =>
       LetterFindTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterFindBySound: ({required params, onComplete}) =>
@@ -336,6 +339,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     title: 'Таблица цепочек',
     direction: TrainerDirection.mental,
     validate: validateTopicChainTableParams,
+  ),
+  TrainerKey.flyTrack: TrainerDefinition(
+    key: TrainerKey.flyTrack,
+    title: 'Муха',
+    direction: TrainerDirection.intel,
+    isInteractive: true,
+    validate: validateFlyTrackParams,
   ),
 };
 

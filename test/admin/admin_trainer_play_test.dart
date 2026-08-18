@@ -6,7 +6,8 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('mobile play gate', () {
     test('all registered trainers have native builders', () {
-      expect(trainerBuilders.length, 33);
+      expect(trainerBuilders.length, 34);
+      expect(trainerDefinitions.length, 34);
 
       for (final key in TrainerKey.values) {
         expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);
@@ -227,6 +228,36 @@ void main() {
 
       expect(payload['totalRods'], 1);
       expect(payload['values'], [0, 1, 2]);
+    });
+
+    test('maps fly-track digit to gridSize for native player', () {
+      final config = TrainerPlayConfig.fromJson({
+        'status': 'success',
+        'trainerKey': 'fly-track',
+        'title': 'Муха',
+        'direction': 'intel',
+        'isInteractive': true,
+        'defaultParams': {
+          'digit': 4,
+          'rounds': 1,
+          'stepCount': 5,
+          'stepPauseSec': 1.5,
+        },
+        'fields': [],
+      });
+
+      final payload = buildPlayParamsPayload(config, {
+        'digit': '5',
+        'rounds': '2',
+        'stepCount': '6',
+        'stepPauseSec': '1.5',
+      });
+
+      expect(payload['gridSize'], 5);
+      expect(payload['rounds'], 2);
+      expect(payload['stepCount'], 6);
+      expect(payload['stepPauseSec'], 1.5);
+      expect(payload.containsKey('digit'), isFalse);
     });
   });
 }

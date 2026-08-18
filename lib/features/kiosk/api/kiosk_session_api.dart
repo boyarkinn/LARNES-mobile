@@ -21,4 +21,6 @@ abstract class KioskSessionApi {
     required String token,
     String locale = 'ru',
   });
+
+  Future<KioskScanResult> resumeChildSession({String locale = 'ru'});
 }

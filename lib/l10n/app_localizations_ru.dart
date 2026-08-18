@@ -926,6 +926,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayGridSizeLabel => 'Размер сетки';
 
   @override
+  String get adminTrainerPlayStepCountLabel => 'Количество шагов';
+
+  @override
   String get adminTrainerPlayFilledCountLabel => 'Заполненных ячеек';
 
   @override
@@ -1818,7 +1821,31 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get kioskRegistrationTitle => 'Устройство не зарегистрировано';
+
+  @override
+  String get kioskRegistrationEyebrow => 'Подключение планшета';
+
+  @override
+  String get kioskRegistrationSubtitle =>
+      'Войдите одноразовым доступом из панели сети.';
+
+  @override
+  String get kioskRegistrationSignIn => 'Войти';
+
+  @override
+  String get kioskRegistrationStep1 =>
+      'В панели сети → Устройства выдайте одноразовый доступ.';
+
+  @override
+  String get kioskRegistrationStep2 =>
+      'На экране входа укажите логин dev-* и пароль из панели.';
+
+  @override
   String get kioskIdleTitle => 'Занятие не начато';
+
+  @override
+  String get kioskIdleEyebrow => 'Планшет на месте';
 
   @override
   String get kioskIdleSubtitle =>
@@ -1828,14 +1855,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskIdleSettings => 'Настройки';
 
   @override
+  String get kioskIdlePlacementLabel => 'Размещение';
+
+  @override
+  String get kioskIdleWaiting => 'Ожидаем начала занятия';
+
+  @override
   String get kioskUnplacedTitle => 'Место не назначено';
 
   @override
-  String get kioskUnplacedSubtitle =>
-      'Администратор должен назначить это устройство на место в кабинете. QR и занятие будут доступны после назначения.';
+  String get kioskUnplacedEyebrow => 'Настройка планшета';
 
   @override
-  String get kioskUnplacedSettings => 'Настройки устройства';
+  String get kioskUnplacedSubtitle =>
+      'Назначьте это устройство на место в кабинете — тогда откроется сканирование QR.';
+
+  @override
+  String get kioskUnplacedStep1 => 'Откройте панель сети → Устройства.';
+
+  @override
+  String get kioskUnplacedStep2 =>
+      'Выберите этот планшет и укажите кабинет с местом.';
+
+  @override
+  String get kioskUnplacedStep3 =>
+      'Экран обновится сам — QR и занятие станут доступны.';
+
+  @override
+  String get kioskUnplacedWaiting => 'Ожидаем назначения';
+
+  @override
+  String get kioskUnplacedSettings => 'Настройки';
 
   @override
   String get kioskScanTitle => 'Поднесите QR';

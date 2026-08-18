@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 /// Result screen after a successful classroom QR scan (v1 — no program player).
@@ -17,14 +18,16 @@ class KioskScanResultView extends StatelessWidget {
     final theme = Theme.of(context);
     final isPlay = result.outcome == KioskScanOutcome.play;
 
+    if (!isPlay) {
+      return KioskChildBoundView(result: result);
+    }
+
     return Column(
       children: [
         Icon(
-          isPlay ? Icons.check_circle_outline : Icons.info_outline,
+          Icons.check_circle_outline,
           size: 64,
-          color: isPlay
-              ? theme.colorScheme.primary
-              : theme.colorScheme.onSurfaceVariant,
+          color: theme.colorScheme.primary,
         ),
         const SizedBox(height: 16),
         Text(
@@ -34,7 +37,7 @@ class KioskScanResultView extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          isPlay ? l10n.kioskResultProgramAssigned : l10n.kioskResultNoProgram,
+          l10n.kioskResultProgramAssigned,
           style: theme.textTheme.bodyLarge?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

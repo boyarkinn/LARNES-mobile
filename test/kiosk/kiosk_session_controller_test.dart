@@ -83,6 +83,14 @@ class FakeKioskSessionApi implements KioskSessionApi {
     }
     return scanResult!;
   }
+
+  @override
+  Future<KioskScanResult> resumeChildSession({String locale = 'ru'}) async {
+    if (scanResult == null) {
+      throw KioskApiException('resume failed');
+    }
+    return scanResult!;
+  }
 }
 
 KioskDeviceContext _deviceContext({KioskDeviceLessonBinding? lesson}) {
@@ -525,6 +533,53 @@ void main() {
       expect(controller.mode, KioskSessionMode.trainer);
       expect(api.getDeviceMeCalls, 1);
       expect(api.lastHeartbeatAck, 5);
+
+      controller.dispose();
+    });
+
+    test('sync cycle resets play mode when lesson ended on server', () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [
+          const KioskCommandsResponse(
+            since: 2,
+            commandSeq: 2,
+            commands: [],
+          ),
+        ],
+        scanResult: const KioskScanResult(
+          outcome: KioskScanOutcome.play,
+          childId: '88888888-8888-4888-8888-888888888888',
+          childDisplayName: 'Anna',
+          childSessionToken: 'child-jwt-token',
+          programId: '77777777-7777-4777-8777-777777777777',
+        ),
+        deviceMeResponse: _deviceContext(),
+      );
+      final childStorage = MemoryChildSessionTokenStorage();
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: childStorage,
+        deviceContext: _deviceContext(
+          lesson: const KioskDeviceLessonBinding(
+            commandSeq: 2,
+            lessonSessionId: 'lesson-id',
+            status: 'child_active',
+          ),
+        ),
+        initialMode: KioskSessionMode.play,
+        initialCommandSeq: 2,
+        onDeviceUnauthorized: () {},
+      );
+      await childStorage.writeToken('child-jwt-token');
+
+      await controller.runSyncCycle();
+
+      expect(controller.mode, KioskSessionMode.idle);
+      expect(controller.scanResult, isNull);
+      expect(await childStorage.hasToken(), isFalse);
+      expect(api.childLogoutCalls, 1);
+      expect(api.getDeviceMeCalls, 1);
 
       controller.dispose();
     });

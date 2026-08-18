@@ -17,7 +17,7 @@ void main() {
   });
 
   group('resolveAppRedirect kiosk', () {
-    test('redirects /kiosk without device token to login with from=kiosk', () {
+    test('allows /kiosk without device token for registration screen', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -26,7 +26,20 @@ void main() {
           accountType: 'network_owner',
           hasDeviceToken: false,
         ),
-        kioskLoginRedirect,
+        isNull,
+      );
+    });
+
+    test('redirects /kiosk/settings without device token to /kiosk', () {
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: false,
+          path: '/kiosk/settings',
+          accountType: null,
+          hasDeviceToken: false,
+        ),
+        '/kiosk',
       );
     });
 
@@ -56,7 +69,7 @@ void main() {
       );
     });
 
-    test('redirects legacy enroll route to login when no device token', () {
+    test('redirects legacy enroll route to kiosk registration when no device token', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
@@ -65,7 +78,7 @@ void main() {
           accountType: null,
           hasDeviceToken: false,
         ),
-        kioskLoginRedirect,
+        '/kiosk',
       );
     });
   });

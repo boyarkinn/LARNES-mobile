@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
+import 'package:larnes_mobile/trainers/intel/fly_track/definition.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
@@ -373,5 +374,34 @@ ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynami
   return ValidateTrainerParamsResult.success({
     'totalRods': totalRods,
     'values': values,
+  });
+}
+
+ValidateTrainerParamsResult validateFlyTrackParams(Map<String, dynamic> raw) {
+  final gridSize = coerceInt(raw['gridSize']) ?? kFlyTrackGridSizeDefault;
+  final rounds = coerceInt(raw['rounds']) ?? kFlyTrackRoundsDefault;
+  final stepCount = coerceInt(raw['stepCount']) ?? kFlyTrackStepCountDefault;
+  final stepPauseSec =
+      coerceDouble(raw['stepPauseSec']) ?? kFlyTrackStepPauseSecDefault;
+
+  if (gridSize < kFlyTrackGridSizeMin || gridSize > kFlyTrackGridSizeMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (rounds < kFlyTrackRoundsMin || rounds > kFlyTrackRoundsMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (stepCount < kFlyTrackStepCountMin || stepCount > kFlyTrackStepCountMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (stepPauseSec < kFlyTrackStepPauseSecMin ||
+      stepPauseSec > kFlyTrackStepPauseSecMax) {
+    return _fail('Некорректные параметры.');
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'gridSize': gridSize,
+    'rounds': rounds,
+    'stepCount': stepCount,
+    'stepPauseSec': stepPauseSec,
   });
 }

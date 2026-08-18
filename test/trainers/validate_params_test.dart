@@ -66,5 +66,15 @@ void main() {
         'values': [3, 7],
       });
     });
+
+    test('accepts fly-track params with defaults', () {
+      final result = validateTrainerParams('fly-track', {});
+
+      expect(result.ok, isTrue);
+      expect(result.params?['gridSize'], 4);
+      expect(result.params?['rounds'], 1);
+      expect(result.params?['stepCount'], 5);
+      expect(result.params?['stepPauseSec'], 1.5);
+    });
   });
 }

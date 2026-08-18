@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
 
 class KioskDeviceLessonBinding {
@@ -27,6 +28,7 @@ class KioskDeviceContext {
   const KioskDeviceContext({
     required this.deviceId,
     required this.kind,
+    this.activeChild,
     this.centerName,
     this.classroomId,
     this.classroomTitle,
@@ -36,9 +38,13 @@ class KioskDeviceContext {
 
   factory KioskDeviceContext.fromJson(Map<String, dynamic> json) {
     final rawLesson = json['lesson'];
+    final rawActiveChild = json['activeChild'];
     return KioskDeviceContext(
       deviceId: json['deviceId'] as String,
       kind: networkDeviceKindFromString(json['kind'] as String?),
+      activeChild: rawActiveChild is Map
+          ? KioskActiveChild.fromJson(Map<String, dynamic>.from(rawActiveChild))
+          : null,
       centerName: json['centerName'] as String?,
       classroomId: json['classroomId'] as String?,
       classroomTitle: json['classroomTitle'] as String?,
@@ -53,6 +59,7 @@ class KioskDeviceContext {
 
   final String deviceId;
   final NetworkDeviceKind kind;
+  final KioskActiveChild? activeChild;
   final String? centerName;
   final String? classroomId;
   final String? classroomTitle;

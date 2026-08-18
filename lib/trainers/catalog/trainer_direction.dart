@@ -1,7 +1,8 @@
 enum TrainerDirection {
   math,
   mental,
-  reading;
+  reading,
+  intel;
 
   static TrainerDirection? tryParse(String? value) {
     if (value == null) {

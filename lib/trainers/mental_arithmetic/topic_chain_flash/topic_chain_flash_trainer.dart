@@ -251,6 +251,19 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     }
   }
 
+  void _focusAnswerInput() {
+    if (!mounted) {
+      return;
+    }
+
+    _inputFocus.requestFocus();
+    Future<void>.delayed(const Duration(milliseconds: 120), () {
+      if (mounted && _phase == _Phase.answer && !_isSubmitting) {
+        _inputFocus.requestFocus();
+      }
+    });
+  }
+
   void _runCountdown(Object runToken, Chain chain) {
     const step = Duration(milliseconds: _countdownStepMs);
     var index = 0;
@@ -297,7 +310,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && identical(runToken, _runToken)) {
-          _inputFocus.requestFocus();
+          _focusAnswerInput();
         }
       });
     }
@@ -417,7 +430,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
           _answerDraft = '';
           _inputController.clear();
         });
-        _inputFocus.requestFocus();
+        _focusAnswerInput();
       });
       return;
     }

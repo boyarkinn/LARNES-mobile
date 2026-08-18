@@ -10,13 +10,18 @@ import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
+import 'package:larnes_mobile/features/kiosk/utils/kiosk_child_bound_restore.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_placement.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_scan_error_message.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_trainer_player_view.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_scan_result_view.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_registration_screen.dart';
+import 'package:larnes_mobile/features/kiosk/widgets/kiosk_idle_screen.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_unplaced_screen.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -57,6 +62,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
           );
 
   bool _isLoading = true;
+  bool _needsRegistration = false;
   bool _isUnplaced = false;
   bool _unplacedPaused = false;
   String? _error;
@@ -107,6 +113,17 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     });
 
     final kioskScope = KioskScope.of(context);
+
+    if (!kioskScope.hasDeviceToken) {
+      setState(() {
+        _needsRegistration = true;
+        _isUnplaced = false;
+        _isLoading = false;
+        _error = null;
+      });
+      return;
+    }
+
     final kioskApi = kioskScope.kioskApiClient.kioskApi;
 
     try {
@@ -137,7 +154,13 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
         return;
       }
       if (error.statusCode == 401) {
-        await _handleDeviceUnauthorized(kioskScope);
+        await kioskScope.clearDeviceToken();
+        setState(() {
+          _needsRegistration = true;
+          _isUnplaced = false;
+          _isLoading = false;
+          _error = null;
+        });
         return;
       }
       setState(() {
@@ -164,10 +187,17 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     _stopUnplacedTimers();
     _controller?.dispose();
 
+    final initialScanResult = await restoreKioskChildBoundSnapshot(
+      device: device,
+      kioskApi: kioskApi,
+      childSessionTokenStorage: _childSessionTokenStorage,
+    );
+
     final controller = KioskSessionController(
       kioskApi: kioskApi,
       childSessionTokenStorage: _childSessionTokenStorage,
       deviceContext: device,
+      initialScanResult: initialScanResult,
       syncInterval: widget.syncInterval,
       onDeviceUnauthorized: () {
         if (!mounted) {
@@ -180,6 +210,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     setState(() {
       _controller = controller;
       _isUnplaced = false;
+      _needsRegistration = false;
       _isLoading = false;
       _error = null;
     });
@@ -275,27 +306,46 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
 
   Widget _buildScaffold(BuildContext context) {
     final controller = _controller;
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
     final fullscreenPlayer = _isFullscreenPlayerMode(controller?.mode);
-    final hideSettings = _isLoading ||
-        _error != null ||
-        _isUnplaced ||
-        fullscreenPlayer;
+    final isScanMode = controller?.mode == KioskSessionMode.scan;
+    final hideSettings =
+        _isLoading || _error != null || _needsRegistration || fullscreenPlayer;
 
     final body = Stack(
       children: [
         Positioned.fill(
           child: Padding(
-            padding: EdgeInsets.all(fullscreenPlayer ? 0 : 24),
+            padding: EdgeInsets.all(fullscreenPlayer ? 0 : (isScanMode ? 12 : 24)),
             child: _buildBody(context),
           ),
         ),
-        if (!hideSettings && controller != null)
+        if (isScanMode && controller != null)
+          Positioned(
+            top: 4,
+            left: 12,
+            right: 96,
+            child: IgnorePointer(
+              child: Text(
+                kioskDevicePlacementLine(controller.deviceContext, l10n),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.1,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        if (!hideSettings)
           Positioned(
             top: 8,
             right: 8,
             child: TextButton(
               onPressed: () => context.push('/kiosk/settings'),
-              child: Text(context.l10n.kioskIdleSettings),
+              child: Text(l10n.kioskIdleSettings),
             ),
           ),
       ],
@@ -330,10 +380,12 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       );
     }
 
+    if (_needsRegistration) {
+      return const KioskRegistrationScreen();
+    }
+
     if (_isUnplaced) {
-      return KioskUnplacedScreen(
-        onOpenSettings: () => context.push('/kiosk/settings'),
-      );
+      return const KioskUnplacedScreen();
     }
 
     final controller = _controller;
@@ -366,29 +418,30 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
   ) {
     switch (controller.mode) {
       case KioskSessionMode.idle:
-        return _KioskModeLayout(
-          title: l10n.kioskIdleTitle,
-          subtitle: l10n.kioskIdleSubtitle,
+        return KioskIdleScreen(
           placement: kioskDevicePlacementLine(controller.deviceContext, l10n),
-          child: const SizedBox.shrink(),
         );
       case KioskSessionMode.scan:
-        return _KioskModeLayout(
-          title: l10n.kioskScanTitle,
-          subtitle: l10n.kioskScanSubtitle,
-          placement: kioskDevicePlacementLine(controller.deviceContext, l10n),
-          child: KioskQrScanner(
-            mockScanEnabled: widget.mockScanner,
-            externalError: controller.scanErrorCode != null
-                ? kioskScanErrorMessageFromApiCode(
-                    l10n,
-                    controller.scanErrorCode,
-                  ) ?? controller.scanError
-                : controller.scanError,
-            onScan: (token) async {
-              controller.clearScanError();
-              await controller.submitScan(token);
-            },
+        final viewportSide =
+            (MediaQuery.sizeOf(context).shortestSide * 0.72).clamp(240.0, 520.0);
+
+        return Center(
+          child: SizedBox(
+            width: viewportSide,
+            height: viewportSide,
+            child: KioskQrScanner(
+              mockScanEnabled: widget.mockScanner,
+              externalError: controller.scanErrorCode != null
+                  ? kioskScanErrorMessageFromApiCode(
+                      l10n,
+                      controller.scanErrorCode,
+                    ) ?? controller.scanError
+                  : controller.scanError,
+              onScan: (token) async {
+                controller.clearScanError();
+                await controller.submitScan(token);
+              },
+            ),
           ),
         );
       case KioskSessionMode.play:
@@ -402,6 +455,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
           programApi: _childSessionApiClient.kioskProgramApi,
           childDisplayName: controller.scanResult?.childDisplayName,
           locale: Localizations.localeOf(context).languageCode,
+          onExit: controller.exitProgram,
         );
       case KioskSessionMode.trainer:
         final kioskScope = KioskScope.of(context);
@@ -413,6 +467,10 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
         );
       case KioskSessionMode.result:
         final result = controller.scanResult;
+        if (result != null) {
+          return KioskChildBoundView(result: result);
+        }
+
         return _KioskModeLayout(
           title: l10n.kioskResultTitle,
           subtitle: null,

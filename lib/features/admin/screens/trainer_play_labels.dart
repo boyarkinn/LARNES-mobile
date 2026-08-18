@@ -53,6 +53,10 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayDisplaySecondsLabel;
     case 'gridSizeLabel':
       return l10n.adminTrainerPlayGridSizeLabel;
+    case 'flyGridSizeLabel':
+      return l10n.adminTrainerPlayGridSizeLabel;
+    case 'stepCountLabel':
+      return l10n.adminTrainerPlayStepCountLabel;
     case 'filledCountLabel':
       return l10n.adminTrainerPlayFilledCountLabel;
     case 'wordSlugLabel':

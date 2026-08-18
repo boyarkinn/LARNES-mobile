@@ -231,6 +231,15 @@ Map<String, dynamic> buildPlayParamsPayload(
     };
   }
 
+  if (config.trainerKey == 'fly-track') {
+    return {
+      'gridSize': coerceInt(values['digit']) ?? coerceInt(values['gridSize']) ?? 4,
+      'rounds': coerceInt(values['rounds']) ?? 1,
+      'stepCount': coerceInt(values['stepCount']) ?? 5,
+      'stepPauseSec': coerceDouble(values['stepPauseSec']) ?? 1.5,
+    };
+  }
+
   final payload = <String, dynamic>{};
   for (final field in config.fields) {
     if (!field.isVisible(values)) {

@@ -163,6 +163,23 @@ class KioskApi implements KioskSessionApi {
     }
   }
 
+  Future<KioskScanResult> resumeChildSession({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/classroom/devices/me/resume-child-session',
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['ok'] != true) {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
+
+      return KioskScanResult.fromJson(data);
+    } on DioException catch (error) {
+      throw _apiExceptionFromDio(error, l10n);
+    }
+  }
+
   Future<void> exitDevice({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {

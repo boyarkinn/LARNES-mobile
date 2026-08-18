@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 void main() {
+  test('kiosk scanner prefers front camera with back fallback', () {
+    expect(kioskPreferredCameraFacing, CameraFacing.front);
+    expect(kioskFallbackCameraFacing, CameraFacing.back);
+  });
+
   testWidgets('mock scanner invokes onScan with token', (tester) async {
     String? scannedToken;
 

@@ -4,6 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+/// Front camera first — child holds QR toward the tablet screen.
+@visibleForTesting
+const kioskPreferredCameraFacing = CameraFacing.front;
+
+/// Used when the device has no front camera.
+@visibleForTesting
+const kioskFallbackCameraFacing = CameraFacing.back;
+
 /// QR scanner for kiosk scan mode. Calls [onScan] with decoded token payload.
 class KioskQrScanner extends StatefulWidget {
   const KioskQrScanner({
@@ -36,6 +44,7 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
   bool _handling = false;
   bool _processing = false;
   bool _permissionDenied = false;
+  bool _frontFallbackAttempted = false;
 
   @override
   void initState() {
@@ -48,7 +57,7 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
     // attach before start(); release builds are stricter about that ordering.
     _controller = MobileScannerController(
       detectionSpeed: DetectionSpeed.noDuplicates,
-      facing: CameraFacing.back,
+      facing: kioskPreferredCameraFacing,
     );
   }
 
@@ -86,7 +95,7 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
         });
 
         if (!widget.mockScanEnabled && controller != null) {
-          await controller.start();
+          await _startPreferredCamera();
         }
       }
     }
@@ -101,16 +110,19 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
     await controller.switchCamera();
   }
 
-  Future<void> _retryCamera() async {
+  Future<void> _startBackCameraFallback() async {
     final controller = _controller;
-    if (controller == null) {
+    if (controller == null || !mounted || _frontFallbackAttempted) {
       return;
     }
 
-    setState(() => _permissionDenied = false);
+    _frontFallbackAttempted = true;
 
     try {
-      await controller.start();
+      if (controller.value.isRunning) {
+        await controller.stop();
+      }
+      await controller.start(cameraDirection: kioskFallbackCameraFacing);
     } on MobileScannerException catch (error) {
       if (!mounted) {
         return;
@@ -119,6 +131,67 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
       if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
         setState(() => _permissionDenied = true);
       }
+    }
+  }
+
+  Future<void> _startPreferredCamera({bool allowBackFallback = true}) async {
+    final controller = _controller;
+    if (controller == null || !mounted) {
+      return;
+    }
+
+    try {
+      await controller.start(cameraDirection: kioskPreferredCameraFacing);
+      if (mounted) {
+        setState(() {
+          _permissionDenied = false;
+          _frontFallbackAttempted = false;
+        });
+      }
+    } on MobileScannerException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
+        setState(() => _permissionDenied = true);
+        return;
+      }
+
+      if (allowBackFallback) {
+        await _startBackCameraFallback();
+      }
+    }
+  }
+
+  Future<void> _retryCamera() async {
+    if (_controller == null) {
+      return;
+    }
+
+    setState(() {
+      _permissionDenied = false;
+      _frontFallbackAttempted = false;
+    });
+
+    await _startPreferredCamera();
+  }
+
+  void _handleScannerError(MobileScannerException error) {
+    if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
+      if (mounted) {
+        setState(() => _permissionDenied = true);
+      }
+      return;
+    }
+
+    final controller = _controller;
+    final onFrontCamera =
+        controller?.value.cameraDirection == kioskPreferredCameraFacing ||
+        controller?.facing == kioskPreferredCameraFacing;
+
+    if (!_frontFallbackAttempted && onFrontCamera) {
+      unawaited(_startBackCameraFallback());
     }
   }
 
@@ -132,8 +205,8 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
           OutlinedButton(
             onPressed: _handling
                 ? null
-                : () {
-                    _handleToken(widget.mockScanToken);
+                : () async {
+                    await _handleToken(widget.mockScanToken);
                   },
             child: Text(l10n.kioskScanEnableCamera),
           ),
@@ -187,19 +260,17 @@ class _KioskQrScannerState extends State<KioskQrScanner> {
                         }
                       },
                       errorBuilder: (context, error) {
-                        if (error.errorCode == MobileScannerErrorCode.permissionDenied) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (mounted) {
-                              setState(() => _permissionDenied = true);
-                            }
-                          });
-                        }
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _handleScannerError(error);
+                        });
 
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Text(
-                              l10n.kioskScanErrorCamera,
+                              _frontFallbackAttempted
+                                  ? l10n.kioskScanErrorCamera
+                                  : l10n.kioskScanStartingCamera,
                               textAlign: TextAlign.center,
                             ),
                           ),

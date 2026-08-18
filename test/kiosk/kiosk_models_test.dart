@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_commands_response.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
 import 'memory_child_session_token_storage.dart';
 
@@ -41,6 +43,27 @@ void main() {
     });
   });
 
+  group('KioskDeviceContext.fromJson', () {
+    test('parses activeChild payload', () {
+      final device = KioskDeviceContext.fromJson({
+        'deviceId': '55555555-5555-4555-8555-555555555555',
+        'kind': 'phone',
+        'activeChild': {
+          'childId': '88888888-8888-4888-8888-888888888888',
+          'childDisplayName': 'Петрова Анна',
+          'childCardColor': 'emerald',
+          'childGender': 'female',
+          'childGivenName': 'Анна',
+          'childLastName': 'Петрова',
+          'lessonSessionId': '66666666-6666-4666-8666-666666666666',
+        },
+      });
+
+      expect(device.activeChild?.childLastName, 'Петрова');
+      expect(device.activeChild?.childCardColor, ChildCardColor.emerald);
+    });
+  });
+
   group('KioskScanResult.fromJson', () {
     test('parses play outcome', () {
       final result = KioskScanResult.fromJson({
@@ -58,17 +81,23 @@ void main() {
       expect(result.childSessionToken, 'child-jwt-token');
     });
 
-    test('parses no_program outcome', () {
+    test('parses no_program outcome with child appearance', () {
       final result = KioskScanResult.fromJson({
         'ok': true,
         'outcome': 'no_program',
         'childId': '88888888-8888-4888-8888-888888888888',
-        'childDisplayName': 'Anna',
+        'childDisplayName': 'Сидоров Иван',
+        'childCardColor': 'emerald',
+        'childGender': 'male',
+        'childGivenName': 'Иван',
+        'childLastName': 'Сидоров',
         'childSessionToken': 'child-jwt-token',
       });
 
       expect(result.outcome, KioskScanOutcome.noProgram);
       expect(result.programId, isNull);
+      expect(result.childCardColor.name, 'emerald');
+      expect(result.childLastName, 'Сидоров');
     });
   });
 

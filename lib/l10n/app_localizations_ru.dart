@@ -15,10 +15,40 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginTitle => 'Вход';
 
   @override
+  String get loginEyebrow => 'Вход';
+
+  @override
+  String get loginPending => 'Входим…';
+
+  @override
+  String get loginNoAccount => 'Нет аккаунта?';
+
+  @override
+  String get loginRegisterLink => 'Регистрация';
+
+  @override
+  String get authHeaderRegister => 'Регистрация';
+
+  @override
+  String get authHeaderLogin => 'Войти';
+
+  @override
+  String get authLegalLink => 'Правовая информация';
+
+  @override
+  String get passwordShow => 'Показать пароль';
+
+  @override
+  String get passwordHide => 'Скрыть пароль';
+
+  @override
+  String get passwordCapsLock => 'Включён Caps Lock';
+
+  @override
   String get loginSubtitle => 'Телефон, email или логин и пароль';
 
   @override
-  String get loginFieldLabel => 'Телефон, email или логин';
+  String get loginFieldLabel => 'Email или телефон';
 
   @override
   String get passwordLabel => 'Пароль';
@@ -92,6 +122,75 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get registerTitle => 'Регистрация';
+
+  @override
+  String get registerHubEyebrow => 'Регистрация';
+
+  @override
+  String get registerHubParent => 'Я родитель / опекун';
+
+  @override
+  String get registerHubTeacher => 'Я учитель / репетитор';
+
+  @override
+  String get registerHubNetworkOwner => 'Я представляю школу / сеть центров';
+
+  @override
+  String get registerHasAccount => 'Уже есть аккаунт?';
+
+  @override
+  String get registerLoginLink => 'Войти';
+
+  @override
+  String get registerWizardStepContact => 'Контакт';
+
+  @override
+  String get registerWizardStepOtp => 'Код';
+
+  @override
+  String get registerWizardStepProfile => 'Профиль';
+
+  @override
+  String get registerContactStepTitle => 'Контакт';
+
+  @override
+  String get registerOtpStepTitle => 'Код';
+
+  @override
+  String get registerProfileParentTitle => 'Регистрация родителя';
+
+  @override
+  String get registerProfileTeacherTitle => 'Регистрация учителя';
+
+  @override
+  String get registerProfileNetworkTitle => 'Регистрация владельца сети';
+
+  @override
+  String get registerWizardContactChannelLabel => 'Способ подтверждения';
+
+  @override
+  String get registerWizardOtpSubmit => 'Подтвердить';
+
+  @override
+  String get registerWizardOtpBack => 'Изменить контакт';
+
+  @override
+  String get passwordResetWizardStepContact => 'Контакт';
+
+  @override
+  String get passwordResetWizardStepOtp => 'Код';
+
+  @override
+  String get passwordResetWizardStepPassword => 'Новый пароль';
+
+  @override
+  String get passwordResetContactStepTitle => 'Контакт';
+
+  @override
+  String get passwordResetOtpStepTitle => 'Код';
+
+  @override
+  String get passwordResetPasswordStepTitle => 'Новый пароль';
 
   @override
   String get registerSubtitle => 'Выберите тип аккаунта';
@@ -1781,7 +1880,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get networkDevicesHint =>
-      'Планшеты и другие клиенты сети. Класс и слот — текущее размещение.';
+      'Устройства сети. Класс и слот — текущее размещение.';
 
   @override
   String get networkCentersEmptyTitle => 'У вас пока нет центров';
@@ -1792,7 +1891,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get networkDevicesEmpty =>
-      'Пока нет устройств. Они появятся после привязки планшета.';
+      'Пока нет устройств. Они появятся после регистрации устройства.';
 
   @override
   String get networkLoadFailed => 'Не удалось загрузить данные сети.';
@@ -1824,7 +1923,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskRegistrationTitle => 'Устройство не зарегистрировано';
 
   @override
-  String get kioskRegistrationEyebrow => 'Подключение планшета';
+  String get kioskRegistrationEyebrow => 'Подключение устройства';
 
   @override
   String get kioskRegistrationSubtitle =>
@@ -1845,7 +1944,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskIdleTitle => 'Занятие не начато';
 
   @override
-  String get kioskIdleEyebrow => 'Планшет на месте';
+  String get kioskIdleEyebrow => 'Устройство на месте';
 
   @override
   String get kioskIdleSubtitle =>
@@ -1864,7 +1963,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kioskUnplacedTitle => 'Место не назначено';
 
   @override
-  String get kioskUnplacedEyebrow => 'Настройка планшета';
+  String get kioskUnplacedEyebrow => 'Настройка устройства';
 
   @override
   String get kioskUnplacedSubtitle =>
@@ -1875,7 +1974,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get kioskUnplacedStep2 =>
-      'Выберите этот планшет и укажите кабинет с местом.';
+      'Выберите это устройство и укажите кабинет с местом.';
 
   @override
   String get kioskUnplacedStep3 =>

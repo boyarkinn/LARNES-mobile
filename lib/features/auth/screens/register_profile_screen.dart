@@ -8,11 +8,13 @@ import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/auth/auth_flow_labels.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
-import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_header.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_web_flow_shell.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
@@ -312,18 +314,14 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return AuthScaffold(
-      title: l10n.profileTitle,
-      showBackButton: true,
+    return AuthWebFlowShell(
       onBack: () => context.pop(),
+      stepLabels: registerWizardStepLabels(context),
+      currentStep: 3,
+      stepTitle: registerProfileStepTitle(context, widget.flow.accountType),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(
-            subtitle: l10n.registerStep3Subtitle(
-              widget.flow.accountType.label(context),
-            ),
-          ),
           if (_error != null) AuthErrorBanner(message: _error!),
           ..._buildFields(l10n),
           const SizedBox(height: 12),
@@ -356,6 +354,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
           AuthPrimaryButton(
             label: l10n.createAccountButton,
             isLoading: _isSubmitting,
+            useWebAuthStyle: true,
             onPressed: _isSubmitting || _isLoadingConfig ? null : _submit,
           ),
         ],
@@ -379,19 +378,19 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
       case RegisterAccountType.parent:
         if (widget.flow.hasSchoolOffers) {
           return [
-            AuthTextField(
+            AuthInput(
               controller: _lastNameController,
               label: l10n.lastNameLabel,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            AuthInput(
               controller: _firstNameController,
               label: l10n.firstNameLabel,
               textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 12),
-            AuthTextField(
+            AuthInput(
               controller: _patronymicController,
               label: l10n.patronymicLabel,
               textInputAction: TextInputAction.next,
@@ -422,7 +421,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
           ];
         }
         return [
-          AuthTextField(
+          AuthInput(
             controller: _firstNameController,
             label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
@@ -456,19 +455,19 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
         ];
       case RegisterAccountType.teacher:
         return [
-          AuthTextField(
+          AuthInput(
             controller: _lastNameController,
             label: l10n.lastNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          AuthInput(
             controller: _firstNameController,
             label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          AuthInput(
             controller: _patronymicController,
             label: l10n.optionalPatronymicLabel,
             textInputAction: TextInputAction.next,
@@ -486,25 +485,25 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
         ];
       case RegisterAccountType.networkOwner:
         return [
-          AuthTextField(
+          AuthInput(
             controller: _networkNameController,
             label: l10n.networkNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          AuthInput(
             controller: _firstNameController,
             label: l10n.firstNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          AuthInput(
             controller: _lastNameController,
             label: l10n.lastNameLabel,
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
-          AuthTextField(
+          AuthInput(
             controller: _patronymicController,
             label: l10n.optionalPatronymicLabel,
             textInputAction: TextInputAction.next,
@@ -513,7 +512,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
           _cityField(l10n),
           const SizedBox(height: 12),
           if (widget.flow.channel == RegisterContactChannel.email)
-            AuthTextField(
+            AuthInput(
               controller: _emailController,
               label: l10n.emailLabel,
               readOnly: true,
@@ -522,7 +521,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AuthTextField(
+                AuthInput(
                   controller: _emailController,
                   label: l10n.emailLabel,
                   keyboardType: TextInputType.emailAddress,
@@ -560,17 +559,19 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   Widget _passwordFields(AppLocalizations l10n) {
     return Column(
       children: [
-        AuthTextField(
+        AuthInput(
           controller: _passwordController,
           label: l10n.passwordLabel,
           obscureText: true,
+          enablePasswordToggle: true,
           textInputAction: TextInputAction.next,
         ),
         const SizedBox(height: 12),
-        AuthTextField(
+        AuthInput(
           controller: _passwordRepeatController,
           label: l10n.repeatPasswordLabel,
           obscureText: true,
+          enablePasswordToggle: true,
           textInputAction: TextInputAction.done,
         ),
       ],

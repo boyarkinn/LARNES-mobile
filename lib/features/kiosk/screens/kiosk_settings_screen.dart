@@ -7,6 +7,7 @@ import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
+import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -91,22 +92,12 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
   }
 
   Future<void> _confirmExit(AppLocalizations l10n) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showKioskConfirmDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.kioskSettingsUnbindConfirmTitle),
-        content: Text(l10n.kioskSettingsUnbindConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.kioskSettingsUnbindCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.kioskSettingsUnbindConfirm),
-          ),
-        ],
-      ),
+      title: l10n.kioskSettingsUnbindConfirmTitle,
+      message: l10n.kioskSettingsUnbindConfirmMessage,
+      cancelLabel: l10n.kioskSettingsUnbindCancel,
+      confirmLabel: l10n.kioskSettingsUnbindConfirm,
     );
 
     if (confirmed == true && mounted) {
@@ -165,36 +156,58 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () => context.pop(),
+    return KioskHeroBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            KioskPageHeader(title: l10n.kioskSettingsTitle),
+            Expanded(child: _buildBody(l10n)),
+          ],
         ),
-        title: Text(l10n.kioskSettingsTitle),
       ),
-      body: _buildBody(l10n),
     );
   }
 
   Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: KioskColors.blue),
+      );
     }
 
     if (_loadError != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_loadError!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _load,
-                child: Text(l10n.continueButton),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: DecoratedBox(
+              decoration: kioskPaperPanelDecoration(),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _loadError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: KioskColors.ink,
+                        fontSize: 15,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    KioskPrimaryButton(
+                      label: l10n.continueButton,
+                      onPressed: _load,
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -205,77 +218,103 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
       return const SizedBox.shrink();
     }
 
-    final theme = Theme.of(context);
-
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       children: [
-        Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.kioskSettingsPlacement,
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  kioskDevicePlacementLine(device, l10n),
-                  style: theme.textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.kioskSettingsDeviceId,
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                SelectableText(
-                  device.deviceId,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-        Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  l10n.kioskSettingsUnbindTitle,
-                  style: theme.textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.kioskSettingsUnbindHint,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                DecoratedBox(
+                  decoration: kioskPaperPanelDecoration(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.kioskSettingsPlacement,
+                          style: kioskSectionLabelStyle(),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          kioskDevicePlacementLine(device, l10n),
+                          style: const TextStyle(
+                            color: KioskColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            height: 1.45,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          l10n.kioskSettingsDeviceId,
+                          style: kioskSectionLabelStyle(),
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          device.deviceId,
+                          style: const TextStyle(
+                            color: KioskColors.muted,
+                            fontFamily: 'monospace',
+                            fontSize: 13,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                if (_exitError != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _exitError!,
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                ],
                 const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: _isExiting ? null : () => _confirmExit(l10n),
-                  child: Text(
-                    _isExiting
-                        ? l10n.kioskSettingsUnbinding
-                        : l10n.kioskSettingsUnbindSubmit,
+                DecoratedBox(
+                  decoration: kioskPaperPanelDecoration(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 20, 18, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          l10n.kioskSettingsUnbindTitle,
+                          style: const TextStyle(
+                            color: KioskColors.ink,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.kioskSettingsUnbindHint,
+                          style: const TextStyle(
+                            color: KioskColors.muted,
+                            fontSize: 15,
+                            height: 1.45,
+                          ),
+                        ),
+                        if (_exitError != null) ...[
+                          const SizedBox(height: 14),
+                          Text(
+                            _exitError!,
+                            style: const TextStyle(
+                              color: Color(0xFFB42318),
+                              fontSize: 14,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        KioskSecondaryButton(
+                          key: const Key('kiosk-settings-exit'),
+                          label: _isExiting
+                              ? l10n.kioskSettingsUnbinding
+                              : l10n.kioskSettingsUnbindSubmit,
+                          isLoading: _isExiting,
+                          onPressed:
+                              _isExiting ? null : () => _confirmExit(l10n),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

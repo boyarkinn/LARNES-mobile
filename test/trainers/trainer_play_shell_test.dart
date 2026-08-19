@@ -91,6 +91,30 @@ void main() {
       expect(progressFill, isNotEmpty);
     });
 
+    testWidgets('stage extends under menu HUD overlay', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          TrainerPlayShell(
+            currentStep: 1,
+            totalSteps: 3,
+            menuContinueLabel: 'Продолжить занятие',
+            menuExitLabel: 'Выйти',
+            onExit: () {},
+            child: const ColoredBox(
+              key: Key('trainer-stage'),
+              color: Color(0xFFE4DDD2),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final stageRect = tester.getRect(find.byKey(const Key('trainer-stage')));
+      final menuRect = tester.getRect(find.bySemanticsLabel('Меню'));
+
+      expect(stageRect.top, lessThan(menuRect.bottom));
+    });
+
     testWidgets('edgeToEdge keeps parchment stage background', (tester) async {
       await tester.pumpWidget(
         wrap(

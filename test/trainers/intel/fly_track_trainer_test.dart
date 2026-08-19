@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_grid.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
+import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_phase.dart';
+import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 void main() {
@@ -33,6 +35,44 @@ void main() {
       expect(find.byType(FlyTrackGrid), findsNothing);
       expect(find.text('3'), findsNothing);
       expect(find.text('СТАРТ'), findsNothing);
+    });
+
+    testWidgets('bottom row cells stay inside the square field', (tester) async {
+      const fieldKey = Key('fly-track-grid-field');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 360,
+              height: 640,
+              child: FlyTrackGrid(
+                fireworksKey: 0,
+                gridSize: 3,
+                onCellSelect: (_) {},
+                phase: FlyTrackPhase.answer,
+                round: generateFlyTrackRound(
+                  GenerateFlyTrackRoundInput(
+                    gridSize: 3,
+                    stepCount: 2,
+                    random: seededRandom(1),
+                  ),
+                ),
+                selectedCell: null,
+                visibleCell: const FlyCell(row: 1, column: 1),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final fieldRect = tester.getRect(find.byKey(fieldKey));
+      final bottomLeftCell = tester.getRect(find.byKey(const ValueKey('2:0')));
+
+      expect(fieldRect.bottom, greaterThanOrEqualTo(bottomLeftCell.bottom));
+      expect(fieldRect.left, lessThanOrEqualTo(bottomLeftCell.left));
+      expect(fieldRect.right, greaterThanOrEqualTo(bottomLeftCell.right));
     });
 
     testWidgets('fills bounded stage', (tester) async {

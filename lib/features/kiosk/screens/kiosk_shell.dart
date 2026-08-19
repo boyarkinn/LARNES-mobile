@@ -18,6 +18,7 @@ import 'package:larnes_mobile/features/kiosk/utils/kiosk_scan_error_message.dart
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_trainer_player_view.dart';
+import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_scan_result_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_registration_screen.dart';
@@ -304,20 +305,59 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     return mode == KioskSessionMode.play || mode == KioskSessionMode.trainer;
   }
 
+  bool _usesFullBleedLayout(KioskSessionController? controller) {
+    if (_isLoading || _error != null || _needsRegistration || _isUnplaced) {
+      return true;
+    }
+
+    if (controller == null) {
+      return false;
+    }
+
+    return controller.mode == KioskSessionMode.idle ||
+        controller.mode == KioskSessionMode.result;
+  }
+
+  Color _scaffoldBackgroundColor(
+    ThemeData theme,
+    KioskSessionController? controller,
+  ) {
+    if (controller?.mode == KioskSessionMode.result) {
+      return Colors.transparent;
+    }
+
+    if (_usesFullBleedLayout(controller)) {
+      return KioskColors.porcelain;
+    }
+
+    return theme.scaffoldBackgroundColor;
+  }
+
   Widget _buildScaffold(BuildContext context) {
     final controller = _controller;
     final l10n = context.l10n;
     final theme = Theme.of(context);
     final fullscreenPlayer = _isFullscreenPlayerMode(controller?.mode);
     final isScanMode = controller?.mode == KioskSessionMode.scan;
+    final fullBleed = _usesFullBleedLayout(controller);
     final hideSettings =
-        _isLoading || _error != null || _needsRegistration || fullscreenPlayer;
+        _isLoading ||
+        _error != null ||
+        _needsRegistration ||
+        fullscreenPlayer ||
+        controller?.mode == KioskSessionMode.result;
+
+    final bodyPadding = fullscreenPlayer || fullBleed
+        ? 0.0
+        : isScanMode
+            ? 12.0
+            : 0.0;
 
     final body = Stack(
       children: [
         Positioned.fill(
           child: Padding(
-            padding: EdgeInsets.all(fullscreenPlayer ? 0 : (isScanMode ? 12 : 24)),
+            padding: EdgeInsets.all(bodyPadding),
             child: _buildBody(context),
           ),
         ),
@@ -341,17 +381,18 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
           ),
         if (!hideSettings)
           Positioned(
-            top: 8,
-            right: 8,
-            child: TextButton(
+            top: 4,
+            right: 12,
+            child: KioskStandbySettingsButton(
+              label: l10n.kioskIdleSettings,
               onPressed: () => context.push('/kiosk/settings'),
-              child: Text(l10n.kioskIdleSettings),
             ),
           ),
       ],
     );
 
     return Scaffold(
+      backgroundColor: _scaffoldBackgroundColor(theme, controller),
       body: fullscreenPlayer ? body : SafeArea(child: body),
     );
   }

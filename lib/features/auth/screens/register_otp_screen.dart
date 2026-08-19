@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/auth/auth_flow_labels.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_header.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_web_flow_shell.dart';
 import 'package:larnes_mobile/features/auth/widgets/otp_input.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
@@ -160,30 +164,55 @@ class _RegisterOtpScreenState extends State<RegisterOtpScreen> {
     final l10n = context.l10n;
     final canResend = _secondsLeft == 0 && !_isResending;
 
-    return AuthScaffold(
-      title: l10n.otpTitle,
-      showBackButton: true,
+    return AuthWebFlowShell(
       onBack: () => context.pop(),
+      stepLabels: registerWizardStepLabels(context),
+      currentStep: 2,
+      stepTitle: l10n.registerOtpStepTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(subtitle: l10n.otpSentTo(_maskContact(widget.flow.contact))),
+          Text(
+            l10n.otpSentTo(_maskContact(widget.flow.contact)),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 1.45,
+              color: AuthColors.muted,
+            ),
+          ),
+          const SizedBox(height: AuthMetrics.formGap),
           if (_error != null) AuthErrorBanner(message: _error!),
           if (_successMessage != null) AuthSuccessBanner(message: _successMessage!),
-          OtpInput(controller: _otpController),
+          OtpInput(controller: _otpController, useWebAuthStyle: true),
           const SizedBox(height: 12),
           if (canResend)
             AuthTextLink(
               label: l10n.resendCode,
+              useWebAuthStyle: true,
               onPressed: _resend,
             )
           else
-            AuthMutedText(text: l10n.resendCooldown(_secondsLeft)),
-          const SizedBox(height: 16),
+            Text(
+              l10n.resendCooldown(_secondsLeft),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AuthColors.muted,
+              ),
+            ),
+          const SizedBox(height: AuthMetrics.formGap),
           AuthPrimaryButton(
-            label: l10n.continueButton,
+            label: l10n.registerWizardOtpSubmit,
             isLoading: _isSubmitting,
+            useWebAuthStyle: true,
             onPressed: _isSubmitting ? null : _continue,
+          ),
+          const SizedBox(height: 8),
+          AuthTextLink(
+            label: l10n.registerWizardOtpBack,
+            useWebAuthStyle: true,
+            onPressed: () => context.pop(),
           ),
         ],
       ),

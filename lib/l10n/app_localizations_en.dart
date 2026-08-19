@@ -15,10 +15,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginTitle => 'Sign in';
 
   @override
+  String get loginEyebrow => 'Sign in';
+
+  @override
+  String get loginPending => 'Signing in…';
+
+  @override
+  String get loginNoAccount => 'No account?';
+
+  @override
+  String get loginRegisterLink => 'Register';
+
+  @override
+  String get authHeaderRegister => 'Register';
+
+  @override
+  String get authHeaderLogin => 'Sign in';
+
+  @override
+  String get authLegalLink => 'Legal information';
+
+  @override
+  String get passwordShow => 'Show password';
+
+  @override
+  String get passwordHide => 'Hide password';
+
+  @override
+  String get passwordCapsLock => 'Caps Lock is on';
+
+  @override
   String get loginSubtitle => 'Phone, email or username and password';
 
   @override
-  String get loginFieldLabel => 'Phone, email or username';
+  String get loginFieldLabel => 'Email or phone';
 
   @override
   String get passwordLabel => 'Password';
@@ -92,6 +122,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerTitle => 'Register';
+
+  @override
+  String get registerHubEyebrow => 'Sign up';
+
+  @override
+  String get registerHubParent => 'I\'m a parent / guardian';
+
+  @override
+  String get registerHubTeacher => 'I\'m a teacher / tutor';
+
+  @override
+  String get registerHubNetworkOwner => 'I represent a school / center network';
+
+  @override
+  String get registerHasAccount => 'Already have an account?';
+
+  @override
+  String get registerLoginLink => 'Log in';
+
+  @override
+  String get registerWizardStepContact => 'Contact';
+
+  @override
+  String get registerWizardStepOtp => 'Code';
+
+  @override
+  String get registerWizardStepProfile => 'Profile';
+
+  @override
+  String get registerContactStepTitle => 'Contact';
+
+  @override
+  String get registerOtpStepTitle => 'Code';
+
+  @override
+  String get registerProfileParentTitle => 'Parent registration';
+
+  @override
+  String get registerProfileTeacherTitle => 'Teacher registration';
+
+  @override
+  String get registerProfileNetworkTitle => 'Network owner registration';
+
+  @override
+  String get registerWizardContactChannelLabel => 'Verification method';
+
+  @override
+  String get registerWizardOtpSubmit => 'Confirm';
+
+  @override
+  String get registerWizardOtpBack => 'Change contact';
+
+  @override
+  String get passwordResetWizardStepContact => 'Contact';
+
+  @override
+  String get passwordResetWizardStepOtp => 'Code';
+
+  @override
+  String get passwordResetWizardStepPassword => 'New password';
+
+  @override
+  String get passwordResetContactStepTitle => 'Contact';
+
+  @override
+  String get passwordResetOtpStepTitle => 'Code';
+
+  @override
+  String get passwordResetPasswordStepTitle => 'New password';
 
   @override
   String get registerSubtitle => 'Choose account type';
@@ -1765,7 +1864,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get networkDevicesHint =>
-      'Tablets and other clients in your network. Classroom and slot show current placement.';
+      'Network devices. Classroom and slot show current placement.';
 
   @override
   String get networkCentersEmptyTitle => 'You do not have any centers yet';
@@ -1776,7 +1875,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get networkDevicesEmpty =>
-      'No devices yet. They appear after enrolling a tablet.';
+      'No devices yet. They appear after enrolling a device.';
 
   @override
   String get networkLoadFailed => 'Could not load network data.';
@@ -1808,7 +1907,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskRegistrationTitle => 'Device not registered';
 
   @override
-  String get kioskRegistrationEyebrow => 'Connect this tablet';
+  String get kioskRegistrationEyebrow => 'Connect this device';
 
   @override
   String get kioskRegistrationSubtitle =>
@@ -1829,7 +1928,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskIdleTitle => 'Lesson not started';
 
   @override
-  String get kioskIdleEyebrow => 'Tablet ready';
+  String get kioskIdleEyebrow => 'Device ready';
 
   @override
   String get kioskIdleSubtitle =>
@@ -1848,7 +1947,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kioskUnplacedTitle => 'No seat assigned';
 
   @override
-  String get kioskUnplacedEyebrow => 'Tablet setup';
+  String get kioskUnplacedEyebrow => 'Device setup';
 
   @override
   String get kioskUnplacedSubtitle =>
@@ -1859,7 +1958,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kioskUnplacedStep2 =>
-      'Select this tablet and choose a classroom seat.';
+      'Select this device and choose a classroom seat.';
 
   @override
   String get kioskUnplacedStep3 =>

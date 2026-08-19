@@ -82,15 +82,22 @@ class _FlyTrackGridState extends State<FlyTrackGrid> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final pulse = _pulseController;
-    final grid = LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth.clamp(0.0, 540.0);
 
-        return Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: width),
-            child: AspectRatio(
-              aspectRatio: 1,
+    return AnswerFireworksBurst(
+      burstKey: widget.fireworksKey,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side = [
+            constraints.maxWidth,
+            constraints.maxHeight,
+          ].reduce((a, b) => a < b ? a : b).clamp(0.0, 540.0);
+
+          return Align(
+            alignment: Alignment.center,
+            child: SizedBox(
+              key: const Key('fly-track-grid-field'),
+              width: side,
+              height: side,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: const Color(0x2601344E),
@@ -105,45 +112,92 @@ class _FlyTrackGridState extends State<FlyTrackGrid> with TickerProviderStateMix
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
-                  child: GridView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: widget.gridSize,
-                      crossAxisSpacing: 4,
-                      mainAxisSpacing: 4,
-                    ),
-                    itemCount: widget.gridSize * widget.gridSize,
-                    itemBuilder: (context, index) {
-                      final cell = FlyCell(
-                        row: index ~/ widget.gridSize,
-                        column: index % widget.gridSize,
-                      );
-
-                      return _FlyTrackCell(
-                        key: ValueKey('${cell.row}:${cell.column}'),
-                        cell: cell,
-                        hasFly: _sameCell(cell, widget.visibleCell),
-                        isSelected: _sameCell(cell, widget.selectedCell),
-                        isFinish: _sameCell(cell, widget.round.finish),
-                        canAnswer: _canAnswer,
-                        isFeedback: _isFeedback,
-                        isCorrect: _isCorrect,
-                        pulse: pulse,
-                        onTap: () => widget.onCellSelect(cell),
-                      );
-                    },
+                  child: _FlyTrackGridCells(
+                    gridSize: widget.gridSize,
+                    pulse: pulse,
+                    canAnswer: _canAnswer,
+                    isFeedback: _isFeedback,
+                    isCorrect: _isCorrect,
+                    round: widget.round,
+                    selectedCell: widget.selectedCell,
+                    visibleCell: widget.visibleCell,
+                    onCellSelect: widget.onCellSelect,
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
+  }
+}
 
-    return AnswerFireworksBurst(
-      burstKey: widget.fireworksKey,
-      child: grid,
+class _FlyTrackGridCells extends StatelessWidget {
+  const _FlyTrackGridCells({
+    required this.gridSize,
+    required this.pulse,
+    required this.canAnswer,
+    required this.isFeedback,
+    required this.isCorrect,
+    required this.round,
+    required this.selectedCell,
+    required this.visibleCell,
+    required this.onCellSelect,
+  });
+
+  static const _gap = 4.0;
+
+  final int gridSize;
+  final AnimationController? pulse;
+  final bool canAnswer;
+  final bool isFeedback;
+  final bool isCorrect;
+  final FlyTrackRound round;
+  final FlyCell? selectedCell;
+  final FlyCell visibleCell;
+  final ValueChanged<FlyCell> onCellSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var row = 0; row < gridSize; row++) ...[
+          if (row > 0) const SizedBox(height: _gap),
+          Expanded(
+            child: Row(
+              children: [
+                for (var column = 0; column < gridSize; column++) ...[
+                  if (column > 0) const SizedBox(width: _gap),
+                  Expanded(
+                    child: _FlyTrackCell(
+                      key: ValueKey('$row:$column'),
+                      cell: FlyCell(row: row, column: column),
+                      hasFly: _sameCell(
+                        FlyCell(row: row, column: column),
+                        visibleCell,
+                      ),
+                      isSelected: _sameCell(
+                        FlyCell(row: row, column: column),
+                        selectedCell,
+                      ),
+                      isFinish: _sameCell(
+                        FlyCell(row: row, column: column),
+                        round.finish,
+                      ),
+                      canAnswer: canAnswer,
+                      isFeedback: isFeedback,
+                      isCorrect: isCorrect,
+                      pulse: pulse,
+                      onTap: () => onCellSelect(FlyCell(row: row, column: column)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -360,7 +414,7 @@ class _FlyTrackCellState extends State<_FlyTrackCell>
       child: InkWell(
         borderRadius: BorderRadius.circular(13),
         onTap: widget.canAnswer ? widget.onTap : null,
-        child: cell,
+        child: SizedBox.expand(child: cell),
       ),
     );
   }

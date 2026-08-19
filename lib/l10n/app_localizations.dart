@@ -110,6 +110,66 @@ abstract class AppLocalizations {
   /// **'Sign in'**
   String get loginTitle;
 
+  /// No description provided for @loginEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get loginEyebrow;
+
+  /// No description provided for @loginPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in…'**
+  String get loginPending;
+
+  /// No description provided for @loginNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'No account?'**
+  String get loginNoAccount;
+
+  /// No description provided for @loginRegisterLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get loginRegisterLink;
+
+  /// No description provided for @authHeaderRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get authHeaderRegister;
+
+  /// No description provided for @authHeaderLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authHeaderLogin;
+
+  /// No description provided for @authLegalLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal information'**
+  String get authLegalLink;
+
+  /// No description provided for @passwordShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show password'**
+  String get passwordShow;
+
+  /// No description provided for @passwordHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide password'**
+  String get passwordHide;
+
+  /// No description provided for @passwordCapsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Caps Lock is on'**
+  String get passwordCapsLock;
+
   /// No description provided for @loginSubtitle.
   ///
   /// In en, this message translates to:
@@ -119,7 +179,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginFieldLabel.
   ///
   /// In en, this message translates to:
-  /// **'Phone, email or username'**
+  /// **'Email or phone'**
   String get loginFieldLabel;
 
   /// No description provided for @passwordLabel.
@@ -253,6 +313,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Register'**
   String get registerTitle;
+
+  /// No description provided for @registerHubEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get registerHubEyebrow;
+
+  /// No description provided for @registerHubParent.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m a parent / guardian'**
+  String get registerHubParent;
+
+  /// No description provided for @registerHubTeacher.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m a teacher / tutor'**
+  String get registerHubTeacher;
+
+  /// No description provided for @registerHubNetworkOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'I represent a school / center network'**
+  String get registerHubNetworkOwner;
+
+  /// No description provided for @registerHasAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get registerHasAccount;
+
+  /// No description provided for @registerLoginLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get registerLoginLink;
+
+  /// No description provided for @registerWizardStepContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get registerWizardStepContact;
+
+  /// No description provided for @registerWizardStepOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get registerWizardStepOtp;
+
+  /// No description provided for @registerWizardStepProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get registerWizardStepProfile;
+
+  /// No description provided for @registerContactStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get registerContactStepTitle;
+
+  /// No description provided for @registerOtpStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get registerOtpStepTitle;
+
+  /// No description provided for @registerProfileParentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent registration'**
+  String get registerProfileParentTitle;
+
+  /// No description provided for @registerProfileTeacherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher registration'**
+  String get registerProfileTeacherTitle;
+
+  /// No description provided for @registerProfileNetworkTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Network owner registration'**
+  String get registerProfileNetworkTitle;
+
+  /// No description provided for @registerWizardContactChannelLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification method'**
+  String get registerWizardContactChannelLabel;
+
+  /// No description provided for @registerWizardOtpSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get registerWizardOtpSubmit;
+
+  /// No description provided for @registerWizardOtpBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Change contact'**
+  String get registerWizardOtpBack;
+
+  /// No description provided for @passwordResetWizardStepContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get passwordResetWizardStepContact;
+
+  /// No description provided for @passwordResetWizardStepOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get passwordResetWizardStepOtp;
+
+  /// No description provided for @passwordResetWizardStepPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get passwordResetWizardStepPassword;
+
+  /// No description provided for @passwordResetContactStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact'**
+  String get passwordResetContactStepTitle;
+
+  /// No description provided for @passwordResetOtpStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get passwordResetOtpStepTitle;
+
+  /// No description provided for @passwordResetPasswordStepTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get passwordResetPasswordStepTitle;
 
   /// No description provided for @registerSubtitle.
   ///
@@ -3340,7 +3538,7 @@ abstract class AppLocalizations {
   /// No description provided for @networkDevicesHint.
   ///
   /// In en, this message translates to:
-  /// **'Tablets and other clients in your network. Classroom and slot show current placement.'**
+  /// **'Network devices. Classroom and slot show current placement.'**
   String get networkDevicesHint;
 
   /// No description provided for @networkCentersEmptyTitle.
@@ -3358,7 +3556,7 @@ abstract class AppLocalizations {
   /// No description provided for @networkDevicesEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No devices yet. They appear after enrolling a tablet.'**
+  /// **'No devices yet. They appear after enrolling a device.'**
   String get networkDevicesEmpty;
 
   /// No description provided for @networkLoadFailed.
@@ -3418,7 +3616,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskRegistrationEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Connect this tablet'**
+  /// **'Connect this device'**
   String get kioskRegistrationEyebrow;
 
   /// No description provided for @kioskRegistrationSubtitle.
@@ -3454,7 +3652,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskIdleEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Tablet ready'**
+  /// **'Device ready'**
   String get kioskIdleEyebrow;
 
   /// No description provided for @kioskIdleSubtitle.
@@ -3490,7 +3688,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskUnplacedEyebrow.
   ///
   /// In en, this message translates to:
-  /// **'Tablet setup'**
+  /// **'Device setup'**
   String get kioskUnplacedEyebrow;
 
   /// No description provided for @kioskUnplacedSubtitle.
@@ -3508,7 +3706,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskUnplacedStep2.
   ///
   /// In en, this message translates to:
-  /// **'Select this tablet and choose a classroom seat.'**
+  /// **'Select this device and choose a classroom seat.'**
   String get kioskUnplacedStep2;
 
   /// No description provided for @kioskUnplacedStep3.

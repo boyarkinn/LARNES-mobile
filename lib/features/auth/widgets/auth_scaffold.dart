@@ -4,31 +4,99 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_text_theme.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_background.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_header.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_language_picker.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_legal_footer.dart';
 import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
-/// Morning Desk v4 shell for unauthenticated flows (login, register, reset).
+enum AuthScaffoldVariant { web, legacy }
+
+/// Auth page shell — [AuthScaffoldVariant.web] matches web `auth.css` @760px.
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
     super.key,
-    required this.title,
     required this.child,
+    this.variant = AuthScaffoldVariant.legacy,
+    this.title,
     this.showBackButton = false,
     this.onBack,
     this.centerContent = false,
   });
 
-  final String title;
   final Widget child;
+  final AuthScaffoldVariant variant;
+  final String? title;
   final bool showBackButton;
   final VoidCallback? onBack;
-
-  /// Vertically centers [child] — login screen only.
   final bool centerContent;
 
   @override
   Widget build(BuildContext context) {
+    if (variant == AuthScaffoldVariant.web) {
+      return Theme(
+        data: Theme.of(context).copyWith(textTheme: buildAuthTextTheme()),
+        child: AuthBackground(
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AuthPublicHeader(
+                  showBackButton: showBackButton,
+                  onBack: onBack,
+                ),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      const padding = EdgeInsets.fromLTRB(
+                        AuthMetrics.horizontalPadding,
+                        24,
+                        AuthMetrics.horizontalPadding,
+                        16,
+                      );
+                      final content = ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: AuthMetrics.formMaxWidth,
+                        ),
+                        child: child,
+                      );
+
+                      return SingleChildScrollView(
+                        padding: padding,
+                        child: centerContent
+                            ? ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight - padding.vertical,
+                                ),
+                                child: Center(child: content),
+                              )
+                            : Align(alignment: Alignment.topCenter, child: content),
+                      );
+                    },
+                  ),
+                ),
+                SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.only(bottom: 4),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Center(child: AuthLanguageFooterLink()),
+                      AuthLegalFooter(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Theme(
       data: Theme.of(context).copyWith(textTheme: buildParentTextTheme()),
       child: ParentParchmentBackground(
@@ -37,8 +105,8 @@ class AuthScaffold extends StatelessWidget {
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _AuthPageHeader(
-                title: title,
+              _LegacyAuthPageHeader(
+                title: title ?? '',
                 showBack: showBackButton,
                 onBack: onBack,
               ),
@@ -58,8 +126,7 @@ class AuthScaffold extends StatelessWidget {
                       child: centerContent
                           ? ConstrainedBox(
                               constraints: BoxConstraints(
-                                minHeight:
-                                    constraints.maxHeight - padding.vertical,
+                                minHeight: constraints.maxHeight - padding.vertical,
                               ),
                               child: Center(child: content),
                             )
@@ -81,8 +148,8 @@ class AuthScaffold extends StatelessWidget {
   }
 }
 
-class _AuthPageHeader extends StatelessWidget {
-  const _AuthPageHeader({
+class _LegacyAuthPageHeader extends StatelessWidget {
+  const _LegacyAuthPageHeader({
     required this.title,
     required this.showBack,
     this.onBack,
@@ -114,7 +181,7 @@ class _AuthPageHeader extends StatelessWidget {
                 alignment: Alignment.center,
                 children: [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: sideInset),
+                    padding: const EdgeInsets.symmetric(horizontal: sideInset),
                     child: Text(
                       title,
                       overflow: TextOverflow.ellipsis,
@@ -130,10 +197,9 @@ class _AuthPageHeader extends StatelessWidget {
                   if (showBack)
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: _AuthHeaderBackButton(
+                      child: _LegacyAuthHeaderBackButton(
                         semanticsLabel: context.l10n.parentBack,
-                        onPressed:
-                            onBack ?? () => Navigator.of(context).maybePop(),
+                        onPressed: onBack ?? () => Navigator.of(context).maybePop(),
                       ),
                     )
                   else
@@ -156,8 +222,8 @@ class _AuthPageHeader extends StatelessWidget {
   }
 }
 
-class _AuthHeaderBackButton extends StatefulWidget {
-  const _AuthHeaderBackButton({
+class _LegacyAuthHeaderBackButton extends StatefulWidget {
+  const _LegacyAuthHeaderBackButton({
     required this.semanticsLabel,
     required this.onPressed,
   });
@@ -166,10 +232,11 @@ class _AuthHeaderBackButton extends StatefulWidget {
   final VoidCallback onPressed;
 
   @override
-  State<_AuthHeaderBackButton> createState() => _AuthHeaderBackButtonState();
+  State<_LegacyAuthHeaderBackButton> createState() =>
+      _LegacyAuthHeaderBackButtonState();
 }
 
-class _AuthHeaderBackButtonState extends State<_AuthHeaderBackButton> {
+class _LegacyAuthHeaderBackButtonState extends State<_LegacyAuthHeaderBackButton> {
   bool _pressed = false;
 
   @override
@@ -198,7 +265,7 @@ class _AuthHeaderBackButtonState extends State<_AuthHeaderBackButton> {
   }
 }
 
-/// Step hint / subtitle under the page title (title lives in [AuthScaffold]).
+/// Step hint / subtitle under the page title (legacy shell title lives in header).
 class AuthHeader extends StatelessWidget {
   const AuthHeader({super.key, this.subtitle});
 

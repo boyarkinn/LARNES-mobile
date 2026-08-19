@@ -57,10 +57,7 @@ class TrainerPlayer extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: trainerWidget,
-                ),
+                child: trainerWidget,
               ),
               if (stepChrome != null) TrainerStepChromeBar(chrome: stepChrome!),
             ],

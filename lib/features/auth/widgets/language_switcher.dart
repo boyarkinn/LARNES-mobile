@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
-enum LanguageSwitcherVariant { auth, parent }
+enum LanguageSwitcherVariant { auth, authWeb, parent }
 
 class LanguageSwitcher extends StatefulWidget {
   const LanguageSwitcher({
@@ -93,7 +94,12 @@ class _LanguageSwitcherState extends State<LanguageSwitcher> {
 
   @override
   Widget build(BuildContext context) {
-    return _DeskLanguageSwitcherButton(onTap: _openMenu, anchorKey: _anchorKey);
+    final useAuthWeb = widget.variant == LanguageSwitcherVariant.authWeb;
+    return _DeskLanguageSwitcherButton(
+      onTap: _openMenu,
+      anchorKey: _anchorKey,
+      useAuthWeb: useAuthWeb,
+    );
   }
 }
 
@@ -101,10 +107,12 @@ class _DeskLanguageSwitcherButton extends StatefulWidget {
   const _DeskLanguageSwitcherButton({
     required this.onTap,
     required this.anchorKey,
+    this.useAuthWeb = false,
   });
 
   final VoidCallback onTap;
   final GlobalKey anchorKey;
+  final bool useAuthWeb;
 
   @override
   State<_DeskLanguageSwitcherButton> createState() => _DeskLanguageSwitcherButtonState();
@@ -116,6 +124,12 @@ class _DeskLanguageSwitcherButtonState extends State<_DeskLanguageSwitcherButton
   @override
   Widget build(BuildContext context) {
     final current = LocaleScope.of(context).locale.languageCode.toUpperCase();
+    final borderColor = _pressed
+        ? (widget.useAuthWeb ? AuthColors.cobalt : ParentColors.shell)
+        : (widget.useAuthWeb ? AuthColors.line : ParentColors.line);
+    final labelColor = widget.useAuthWeb
+        ? AuthColors.cobaltDeep
+        : ParentColors.shellDeep;
 
     return GestureDetector(
       key: widget.anchorKey,
@@ -125,22 +139,13 @@ class _DeskLanguageSwitcherButtonState extends State<_DeskLanguageSwitcherButton
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _pressed ? 0.97 : 1,
-        duration: ParentMotion.tapDuration,
-        curve: ParentMotion.curve,
+        duration: widget.useAuthWeb ? AuthMotion.tapDuration : ParentMotion.tapDuration,
+        curve: widget.useAuthWeb ? AuthMotion.curve : ParentMotion.curve,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: ParentColors.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: _pressed ? ParentColors.shell : ParentColors.line,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: ParentColors.shadow,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
+            color: widget.useAuthWeb ? AuthColors.surfaceStrong : ParentColors.surface,
+            borderRadius: BorderRadius.circular(AuthRadii.headerControl),
+            border: Border.all(color: borderColor),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -149,10 +154,10 @@ class _DeskLanguageSwitcherButtonState extends State<_DeskLanguageSwitcherButton
               children: [
                 Text(
                   current,
-                  style: GoogleFonts.onest(
+                  style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: ParentColors.shellDeep,
+                    color: labelColor,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -160,7 +165,7 @@ class _DeskLanguageSwitcherButtonState extends State<_DeskLanguageSwitcherButton
                 Icon(
                   Icons.keyboard_arrow_down_rounded,
                   size: 16,
-                  color: ParentColors.shellDeep.withValues(alpha: 0.85),
+                  color: labelColor.withValues(alpha: 0.85),
                 ),
               ],
             ),

@@ -6,8 +6,10 @@ import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_header.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -92,46 +94,48 @@ class _LoginScreenState extends State<LoginScreen> {
     final l10n = context.l10n;
 
     return AuthScaffold(
-      title: l10n.loginTitle,
+      variant: AuthScaffoldVariant.web,
       centerContent: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AuthCompactKicker(text: l10n.loginEyebrow),
           if (_error != null) AuthErrorBanner(message: _error!),
-          AuthTextField(
+          AuthInput(
             controller: _loginController,
             label: l10n.loginFieldLabel,
-            labelAsPlaceholder: true,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.username],
           ),
-          const SizedBox(height: 12),
-          AuthTextField(
+          const SizedBox(height: AuthMetrics.formGap),
+          AuthInput(
             controller: _passwordController,
             label: l10n.passwordLabel,
-            labelAsPlaceholder: true,
             obscureText: true,
+            enablePasswordToggle: true,
             textInputAction: TextInputAction.done,
             autofillHints: const [AutofillHints.password],
+            onSubmitted: (_) => _isSubmitting ? null : _submit(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           AuthTextLink(
             label: l10n.forgotPassword,
             align: Alignment.centerRight,
+            useWebAuthStyle: true,
             onPressed: () => context.push('/password-reset'),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AuthMetrics.formGap),
           AuthPrimaryButton(
-            label: l10n.signInButton,
+            label: _isSubmitting ? l10n.loginPending : l10n.signInButton,
             isLoading: _isSubmitting,
+            useWebAuthStyle: true,
             onPressed: _isSubmitting ? null : _submit,
           ),
-          const SizedBox(height: 28),
-          AuthTextLink(
-            label: l10n.noAccountRegister,
-            align: Alignment.center,
-            onPressed: () => context.push('/register'),
+          AuthFormFoot(
+            leadText: l10n.loginNoAccount,
+            linkLabel: l10n.loginRegisterLink,
+            onLinkPressed: () => context.push('/register'),
           ),
         ],
       ),

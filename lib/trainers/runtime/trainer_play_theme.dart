@@ -48,11 +48,20 @@ class TrainerPlayTheme {
   }
 }
 
-/// Top inset so trainer content clears HUD (progress + menu).
-double trainerPlayHudTopInset(BuildContext context) {
-  final safeTop = MediaQuery.paddingOf(context).top;
-  const progressHeight = 7.0;
-  const menuGap = 12.0;
-  const menuButtonSize = 48.0;
-  return safeTop + progressHeight + menuGap + menuButtonSize;
+/// Stage padding: safe-area on sides/bottom only.
+/// Progress + menu HUD overlay the stage (web `.trainer-player__stage` + `.trainer-player__hud`).
+EdgeInsets trainerPlayStagePadding(BuildContext context) {
+  final padding = MediaQuery.paddingOf(context);
+
+  return EdgeInsets.only(
+    left: padding.left,
+    right: padding.right,
+    bottom: padding.bottom,
+  );
 }
+
+/// @deprecated Use [trainerPlayStagePadding].
+double trainerPlayStageTopInset(BuildContext context) => 0;
+
+/// @deprecated Use [trainerPlayStagePadding].
+double trainerPlayHudTopInset(BuildContext context) => 0;

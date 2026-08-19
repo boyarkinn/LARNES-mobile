@@ -405,20 +405,15 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       );
     }
 
-    return TrainerScene(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Center(
-          child: FlyTrackGrid(
-            fireworksKey: _fireworksKey,
-            gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
-            onCellSelect: _onCellSelect,
-            phase: _phase,
-            round: _round,
-            selectedCell: _selectedCell,
-            visibleCell: _visibleCell,
-          ),
-        ),
+    return TrainerSceneFill(
+      child: FlyTrackGrid(
+        fireworksKey: _fireworksKey,
+        gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
+        onCellSelect: _onCellSelect,
+        phase: _phase,
+        round: _round,
+        selectedCell: _selectedCell,
+        visibleCell: _visibleCell,
       ),
     );
   }

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/auth/auth_flow_labels.dart';
 import 'package:larnes_mobile/features/auth/models/register_flow.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_contact_tabs.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_header.dart';
 import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_web_flow_shell.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class RegisterContactScreen extends StatefulWidget {
@@ -80,20 +85,29 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
     final l10n = context.l10n;
     final isPhone = _channel == RegisterContactChannel.sms;
 
-    return AuthScaffold(
-      title: widget.accountType.label(context),
-      showBackButton: true,
+    return AuthWebFlowShell(
       onBack: () => context.pop(),
+      stepLabels: registerWizardStepLabels(context),
+      currentStep: 1,
+      stepTitle: l10n.registerContactStepTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthHeader(subtitle: l10n.registerStep1Subtitle),
           if (_error != null) AuthErrorBanner(message: _error!),
-          AuthSegmentToggle<RegisterContactChannel>(
+          Text(
+            l10n.registerWizardContactChannelLabel,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AuthColors.muted,
+            ),
+          ),
+          const SizedBox(height: 8),
+          AuthContactTabs<RegisterContactChannel>(
             value: _channel,
             options: [
-              AuthSegmentOption(value: RegisterContactChannel.sms, label: l10n.phoneChannel),
-              AuthSegmentOption(value: RegisterContactChannel.email, label: l10n.emailChannel),
+              AuthContactTabOption(value: RegisterContactChannel.sms, label: l10n.phoneChannel),
+              AuthContactTabOption(value: RegisterContactChannel.email, label: l10n.emailChannel),
             ],
             onChanged: (value) {
               setState(() {
@@ -102,17 +116,18 @@ class _RegisterContactScreenState extends State<RegisterContactScreen> {
               });
             },
           ),
-          const SizedBox(height: 16),
-          AuthTextField(
+          const SizedBox(height: AuthMetrics.formGap),
+          AuthInput(
             controller: _contactController,
             label: isPhone ? l10n.phoneLabel : l10n.emailLabel,
-            keyboardType:
-                isPhone ? TextInputType.phone : TextInputType.emailAddress,
+            keyboardType: isPhone ? TextInputType.phone : TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AuthMetrics.formGap),
           AuthPrimaryButton(
             label: l10n.getCodeButton,
             isLoading: _isSubmitting,
+            useWebAuthStyle: true,
             onPressed: _isSubmitting ? null : _continue,
           ),
         ],

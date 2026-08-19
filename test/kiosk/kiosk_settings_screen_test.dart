@@ -129,7 +129,7 @@ void main() {
       expect(find.textContaining('Center A'), findsOneWidget);
       expect(find.textContaining('Слот M1'), findsOneWidget);
       expect(find.text(_deviceId), findsOneWidget);
-      expect(find.byType(FilledButton), findsOneWidget);
+      expect(find.byKey(const Key('kiosk-settings-exit')), findsOneWidget);
     });
 
     testWidgets('exit clears tokens and navigates to enroll without user session',
@@ -176,7 +176,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(FilledButton));
+      await tester.tap(find.byKey(const Key('kiosk-settings-exit')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Выйти').last);

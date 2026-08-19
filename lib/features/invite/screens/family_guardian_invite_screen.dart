@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_buttons.dart';
-import 'package:larnes_mobile/features/auth/widgets/auth_scaffold.dart';
-import 'package:larnes_mobile/features/parent/widgets/account/account_widgets.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_invite_header.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_invite_widgets.dart';
+import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class FamilyGuardianInviteScreen extends StatefulWidget {
@@ -158,40 +156,29 @@ class _FamilyGuardianInviteScreenState extends State<FamilyGuardianInviteScreen>
     final redirectPath = '/invite/family-guardian?token=${Uri.encodeComponent(widget.token)}';
 
     if (_isLoading) {
-      return AuthScaffold(
+      return AuthInviteShell(
         title: l10n.inviteFamilyGuardianTitle,
         child: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_error != null && _invitation == null) {
-      return AuthScaffold(
+      return AuthInviteShell(
         title: l10n.inviteInvalidTitle,
-        child: Text(_error!, style: const TextStyle(color: ParentColors.inkMuted)),
+        child: AuthErrorBanner(message: _error!),
       );
     }
 
     if (!auth.isAuthenticated) {
-      return AuthScaffold(
+      return AuthInviteShell(
         title: l10n.inviteFamilyGuardianLoginTitle,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.inviteFamilyGuardianLoginSubtitle,
-              style: GoogleFonts.onest(fontSize: 14, color: ParentColors.inkMuted, height: 1.45),
-            ),
-            const SizedBox(height: 16),
-            AuthPrimaryButton(
-              label: l10n.loginTitle,
-              onPressed: () => context.go('/login?from=${Uri.encodeComponent(redirectPath)}'),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () => context.go('/register'),
-              child: Text(l10n.inviteFamilyGuardianRegister),
-            ),
-          ],
+        subtitle: l10n.inviteFamilyGuardianLoginSubtitle,
+        child: AuthInviteLoginGate(
+          loginLabel: l10n.signInButton,
+          onLogin: () => context.go('/login?from=${Uri.encodeComponent(redirectPath)}'),
+          registerLead: l10n.loginNoAccount,
+          registerLabel: l10n.inviteFamilyGuardianRegister,
+          onRegister: () => context.go('/register'),
         ),
       );
     }
@@ -199,60 +186,36 @@ class _FamilyGuardianInviteScreenState extends State<FamilyGuardianInviteScreen>
     final user = auth.user!;
 
     if (!isParentAccount(user.accountType)) {
-      return AuthScaffold(
+      return AuthInviteShell(
         title: l10n.inviteFamilyGuardianWrongAccountTitle,
-        child: Text(
-          l10n.inviteFamilyGuardianWrongAccountSubtitle,
-          style: GoogleFonts.onest(fontSize: 14, color: ParentColors.inkMuted, height: 1.45),
-        ),
+        subtitle: l10n.inviteFamilyGuardianWrongAccountSubtitle,
+        child: const SizedBox.shrink(),
       );
     }
 
     final invitation = _invitation!;
 
-    return AuthScaffold(
+    return AuthInviteShell(
       title: l10n.inviteFamilyGuardianTitle,
+      subtitle: l10n.inviteFamilyGuardianSubtitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.inviteFamilyGuardianSubtitle,
-            style: GoogleFonts.onest(fontSize: 14, color: ParentColors.inkMuted, height: 1.45),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: ParentColors.parchment,
-              borderRadius: BorderRadius.circular(ParentRadii.card),
-            ),
-            child: Text(
-              '${l10n.inviteFamilyGuardianInviterLabel}: ${invitation.inviter.fullName}',
-              style: GoogleFonts.onest(fontSize: 14, color: ParentColors.ink),
-            ),
+          AuthInviteContextCard(
+            label: l10n.inviteFamilyGuardianInviterLabel,
+            value: invitation.inviter.fullName,
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),
-            Text(_error!, style: const TextStyle(color: Color(0xFFB91C1C))),
+            AuthErrorBanner(message: _error!),
           ],
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isPending ? null : _decline,
-                  child: Text(l10n.inviteFamilyGuardianDecline),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: AccountPrimaryButton(
-                  label: l10n.inviteFamilyGuardianAccept,
-                  isLoading: _isPending,
-                  onPressed: _accept,
-                ),
-              ),
-            ],
+          AuthInviteActions(
+            declineLabel: l10n.inviteFamilyGuardianDecline,
+            acceptLabel: l10n.inviteFamilyGuardianAccept,
+            isLoading: _isPending,
+            onDecline: _isPending ? null : _decline,
+            onAccept: _isPending ? null : _accept,
           ),
         ],
       ),

@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 
 class OtpInput extends StatefulWidget {
   const OtpInput({
     super.key,
     required this.controller,
     this.length = 6,
+    this.useWebAuthStyle = false,
   });
 
   final TextEditingController controller;
   final int length;
+  final bool useWebAuthStyle;
 
   @override
   State<OtpInput> createState() => _OtpInputState();
@@ -21,8 +24,8 @@ class _OtpInputState extends State<OtpInput> {
   late final List<FocusNode> _nodes;
   late final List<TextEditingController> _cells;
 
-  static const _cellHeight = 56.0;
-  static const _cellRadius = 10.0;
+  static const _legacyCellHeight = 56.0;
+  static const _legacyCellRadius = 10.0;
 
   @override
   void initState() {
@@ -109,9 +112,28 @@ class _OtpInputState extends State<OtpInput> {
   }
 
   BoxDecoration _cellBoxDecoration(bool isFocused) {
+    if (widget.useWebAuthStyle) {
+      return BoxDecoration(
+        color: isFocused ? const Color(0xFFF8FAFF) : AuthColors.surfaceStrong,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isFocused ? AuthColors.cobalt : const Color.fromRGBO(26, 29, 46, 0.18),
+        ),
+        boxShadow: isFocused
+            ? const [
+                BoxShadow(
+                  color: Color.fromRGBO(52, 91, 255, 0.16),
+                  blurRadius: 0,
+                  spreadRadius: 3,
+                ),
+              ]
+            : null,
+      );
+    }
+
     return BoxDecoration(
       color: ParentColors.surface,
-      borderRadius: BorderRadius.circular(_cellRadius),
+      borderRadius: BorderRadius.circular(_legacyCellRadius),
       border: Border.all(
         color: isFocused ? ParentColors.shell : ParentColors.line,
         width: isFocused ? 1.5 : 1,
@@ -140,42 +162,65 @@ class _OtpInputState extends State<OtpInput> {
     contentPadding: EdgeInsets.zero,
   );
 
-  TextStyle get _digitStyle => GoogleFonts.onest(
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
+  TextStyle get _digitStyle {
+    if (widget.useWebAuthStyle) {
+      return GoogleFonts.inter(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
         height: 1,
-        color: ParentColors.ink,
+        color: AuthColors.ink,
+        fontFeatures: const [FontFeature.tabularFigures()],
       );
+    }
+
+    return GoogleFonts.onest(
+      fontSize: 22,
+      fontWeight: FontWeight.w600,
+      height: 1,
+      color: ParentColors.ink,
+    );
+  }
 
   Widget _buildCell(int index) {
     final isFocused = _nodes[index].hasFocus;
 
-    return Expanded(
-      child: SizedBox(
-        height: _cellHeight,
-        child: DecoratedBox(
-          decoration: _cellBoxDecoration(isFocused),
-          child: Center(
-            child: Focus(
-              onKeyEvent: (node, event) => _onCellKeyEvent(index, event),
-              child: TextField(
-              controller: _cells[index],
-              focusNode: _nodes[index],
-              textAlign: TextAlign.center,
-              textAlignVertical: TextAlignVertical.center,
-              style: _digitStyle,
-              keyboardType: TextInputType.number,
-              maxLength: 1,
-              decoration: _hiddenFieldDecoration,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                _OtpCellFormatter(onBackspaceWhenEmpty: () => _backspaceFrom(index)),
-              ],
-                onChanged: (value) => _onChanged(index, value),
-              ),
-            ),
+    final cell = DecoratedBox(
+      decoration: _cellBoxDecoration(isFocused),
+      child: Center(
+        child: Focus(
+          onKeyEvent: (node, event) => _onCellKeyEvent(index, event),
+          child: TextField(
+            controller: _cells[index],
+            focusNode: _nodes[index],
+            textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
+            style: _digitStyle,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            decoration: _hiddenFieldDecoration,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              _OtpCellFormatter(onBackspaceWhenEmpty: () => _backspaceFrom(index)),
+            ],
+            onChanged: (value) => _onChanged(index, value),
           ),
         ),
+      ),
+    );
+
+    if (widget.useWebAuthStyle) {
+      return Expanded(
+        child: AspectRatio(
+          aspectRatio: 1,
+          child: cell,
+        ),
+      );
+    }
+
+    return Expanded(
+      child: SizedBox(
+        height: _legacyCellHeight,
+        child: cell,
       ),
     );
   }
@@ -185,7 +230,7 @@ class _OtpInputState extends State<OtpInput> {
     return Row(
       children: [
         for (var index = 0; index < widget.length; index++) ...[
-          if (index > 0) const SizedBox(width: 8),
+          if (index > 0) SizedBox(width: widget.useWebAuthStyle ? 8 : 8),
           _buildCell(index),
         ],
       ],

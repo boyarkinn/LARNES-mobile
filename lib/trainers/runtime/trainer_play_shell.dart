@@ -49,22 +49,7 @@ class _TrainerPlayShellState extends State<TrainerPlayShell> {
     final progressMax = widget.totalSteps < 1 ? 1 : widget.totalSteps;
     final progressValue = widget.currentStep.clamp(0, progressMax);
     final progressPercent = progressValue / progressMax;
-    final hudTop = trainerPlayHudTopInset(context);
-    final sideInset = MediaQuery.paddingOf(context).horizontal / 2;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final stagePadding = widget.edgeToEdge
-        ? EdgeInsets.only(
-            top: hudTop,
-            bottom: bottomInset,
-            left: sideInset,
-            right: sideInset,
-          )
-        : EdgeInsets.fromLTRB(
-            sideInset > 16 ? sideInset : 16,
-            hudTop,
-            sideInset > 16 ? sideInset : 16,
-            bottomInset > 16 ? bottomInset : 16,
-          );
+    final stagePadding = trainerPlayStagePadding(context);
 
     final scaffold = Scaffold(
       backgroundColor: Colors.transparent,

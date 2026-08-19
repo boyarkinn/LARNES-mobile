@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class KioskRegistrationScreen extends StatelessWidget {
   const KioskRegistrationScreen({super.key});
 
-  static const _porcelain = Color(0xFFF5F7F2);
   static const _paper = Color(0xFFFFFEFA);
   static const _ink = Color(0xFF12262F);
   static const _muted = Color(0xFF62747A);
@@ -23,20 +23,7 @@ class KioskRegistrationScreen extends StatelessWidget {
       l10n.kioskRegistrationStep2,
     ];
 
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            Color(0x1A345BFF),
-            _porcelain,
-            Color(0x141D9B78),
-          ],
-          stops: [0.0, 0.45, 1.0],
-        ),
-        color: _porcelain,
-      ),
+    return KioskHeroBackground(
       child: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),

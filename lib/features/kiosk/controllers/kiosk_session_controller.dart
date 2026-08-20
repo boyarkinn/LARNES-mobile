@@ -4,7 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_session_api.dart';
-import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart'
+    show
+        KioskDeviceCommand,
+        KioskDeviceCommandKind,
+        kioskDeviceCommandClearsChildSession,
+        kioskDeviceCommandKindToApiValue;
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
@@ -46,6 +51,7 @@ class KioskSessionController extends ChangeNotifier {
 
   int _since;
   int? _pendingAck;
+  int? _appliedPlayTrainerSeq;
   int _trainerReloadToken = 0;
   Timer? _timer;
   bool _disposed = false;
@@ -179,12 +185,21 @@ class KioskSessionController extends ChangeNotifier {
           commandProcessed = true;
           await _activatePlayTrainer(payload.commandSeq);
           ackAlreadySent = true;
+        } else if (await _tryApplySupersededResetGuard(
+          latest,
+          payload.commandSeq,
+        )) {
+          commandProcessed = true;
+          ackAlreadySent = true;
+          _restartSyncTimer();
+          notifyListeners();
         } else {
           final nextMode = modeFromCommand(latest.command);
 
           await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
           ackAlreadySent = true;
           _since = payload.commandSeq;
+          _appliedPlayTrainerSeq = null;
 
           await _kioskApi.childLogout();
           await _childSessionTokenStorage.clearToken();
@@ -237,8 +252,16 @@ class KioskSessionController extends ChangeNotifier {
   }
 
   Future<void> _activatePlayTrainer(int commandSeq) async {
+    if (_mode == KioskSessionMode.trainer &&
+        _appliedPlayTrainerSeq == commandSeq) {
+      await _kioskApi.heartbeat(ackSeq: commandSeq);
+      _since = commandSeq;
+      return;
+    }
+
     await _kioskApi.heartbeat(ackSeq: commandSeq);
     _since = commandSeq;
+    _appliedPlayTrainerSeq = commandSeq;
     _trainerReloadToken += 1;
     _mode = KioskSessionMode.trainer;
     _scanError = null;
@@ -247,16 +270,54 @@ class KioskSessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Poll may return a reset command that the server already superseded (child
+  /// bound, trainer queued). Re-fetch before logout to avoid wiping runtime.
+  Future<bool> _tryApplySupersededResetGuard(
+    KioskDeviceCommand command,
+    int commandSeq,
+  ) async {
+    if (!kioskDeviceCommandClearsChildSession(command.command)) {
+      return false;
+    }
+
+    final device = await _kioskApi.getDeviceMe();
+    _deviceContext = device;
+
+    final lesson = device.lesson;
+    final pending = lesson?.pendingCommand;
+    final commandName = kioskDeviceCommandKindToApiValue(command.command);
+
+    if (pending == commandName) {
+      return false;
+    }
+
+    if (pending == 'play_trainer' && lesson != null) {
+      await _activatePlayTrainer(lesson.commandSeq);
+      return true;
+    }
+
+    await _kioskApi.heartbeat(ackSeq: commandSeq);
+    _since = commandSeq;
+    return true;
+  }
+
   Future<bool> _reconcilePendingPlayTrainerFromDevice() async {
     final device = await _kioskApi.getDeviceMe();
     _deviceContext = device;
 
     final lesson = device.lesson;
-    if (lesson != null &&
-        lesson.pendingCommand == 'play_trainer' &&
-        (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer)) {
-      await _activatePlayTrainer(lesson.commandSeq);
-      return true;
+    if (lesson != null && lesson.pendingCommand == 'play_trainer') {
+      if (_mode == KioskSessionMode.trainer &&
+          lesson.commandSeq <= _since &&
+          _appliedPlayTrainerSeq == lesson.commandSeq) {
+        await _kioskApi.heartbeat(ackSeq: lesson.commandSeq);
+        return true;
+      }
+
+      if (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer) {
+        await _activatePlayTrainer(lesson.commandSeq);
+        return true;
+      }
     }
 
     return false;
@@ -338,11 +399,18 @@ class KioskSessionController extends ChangeNotifier {
     _deviceContext = device;
 
     final lesson = device.lesson;
-    if (lesson != null &&
-        lesson.pendingCommand == 'play_trainer' &&
-        (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer)) {
-      await _activatePlayTrainer(lesson.commandSeq);
-      return true;
+    if (lesson != null && lesson.pendingCommand == 'play_trainer') {
+      if (_mode == KioskSessionMode.trainer &&
+          lesson.commandSeq <= _since &&
+          _appliedPlayTrainerSeq == lesson.commandSeq) {
+        await _kioskApi.heartbeat(ackSeq: lesson.commandSeq);
+        return true;
+      }
+
+      if (lesson.commandSeq > _since || _mode != KioskSessionMode.trainer) {
+        await _activatePlayTrainer(lesson.commandSeq);
+        return true;
+      }
     }
 
     if (lesson != null && lesson.commandSeq > _since && lesson.pendingCommand == null) {

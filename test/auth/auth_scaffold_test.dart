@@ -39,6 +39,31 @@ void main() {
     expect(find.text('Русский'), findsOneWidget);
   });
 
+  testWidgets('web AuthScaffold hides footer while keyboard is open', (tester) async {
+    final localeController = LocaleController();
+
+    await tester.pumpWidget(
+      LocaleScope(
+        localeController: localeController,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: MediaQuery(
+            data: const MediaQueryData(viewInsets: EdgeInsets.only(bottom: 320)),
+            child: AuthScaffold(
+              variant: AuthScaffoldVariant.web,
+              child: const AuthCompactKicker(text: 'Sign in'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AuthLegalFooter), findsNothing);
+    expect(find.byType(AuthLanguageFooterLink), findsNothing);
+  });
+
   testWidgets('legacy AuthScaffold keeps Morning Desk parchment', (tester) async {
     final localeController = LocaleController();
 

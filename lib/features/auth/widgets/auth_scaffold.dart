@@ -34,14 +34,25 @@ class AuthScaffold extends StatelessWidget {
   final VoidCallback? onBack;
   final bool centerContent;
 
+  static EdgeInsets _scrollPadding({
+    required EdgeInsets base,
+    required double keyboardInset,
+  }) {
+    return base.copyWith(bottom: base.bottom + keyboardInset);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+    final keyboardVisible = keyboardInset > 0;
+
     if (variant == AuthScaffoldVariant.web) {
       return Theme(
         data: Theme.of(context).copyWith(textTheme: buildAuthTextTheme()),
         child: AuthBackground(
           child: Scaffold(
             backgroundColor: Colors.transparent,
+            resizeToAvoidBottomInset: true,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -52,11 +63,15 @@ class AuthScaffold extends StatelessWidget {
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
-                      const padding = EdgeInsets.fromLTRB(
+                      const basePadding = EdgeInsets.fromLTRB(
                         AuthMetrics.horizontalPadding,
                         24,
                         AuthMetrics.horizontalPadding,
                         16,
+                      );
+                      final padding = _scrollPadding(
+                        base: basePadding,
+                        keyboardInset: keyboardInset,
                       );
                       final content = ConstrainedBox(
                         constraints: const BoxConstraints(
@@ -67,6 +82,8 @@ class AuthScaffold extends StatelessWidget {
 
                       return SingleChildScrollView(
                         padding: padding,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         child: centerContent
                             ? ConstrainedBox(
                                 constraints: BoxConstraints(
@@ -79,17 +96,18 @@ class AuthScaffold extends StatelessWidget {
                     },
                   ),
                 ),
-                SafeArea(
-                  top: false,
-                  minimum: const EdgeInsets.only(bottom: 4),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Center(child: AuthLanguageFooterLink()),
-                      AuthLegalFooter(),
-                    ],
+                if (!keyboardVisible)
+                  SafeArea(
+                    top: false,
+                    minimum: const EdgeInsets.only(bottom: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Center(child: AuthLanguageFooterLink()),
+                        AuthLegalFooter(),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -102,6 +120,7 @@ class AuthScaffold extends StatelessWidget {
       child: ParentParchmentBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: true,
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -113,7 +132,11 @@ class AuthScaffold extends StatelessWidget {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final padding = AccountDeskMetrics.shellPadding;
+                    final basePadding = AccountDeskMetrics.shellPadding;
+                    final padding = _scrollPadding(
+                      base: basePadding,
+                      keyboardInset: keyboardInset,
+                    );
                     final content = ConstrainedBox(
                       constraints: const BoxConstraints(
                         maxWidth: ParentChildCardMetrics.pickerMaxWidth,
@@ -123,6 +146,8 @@ class AuthScaffold extends StatelessWidget {
 
                     return SingleChildScrollView(
                       padding: padding,
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: centerContent
                           ? ConstrainedBox(
                               constraints: BoxConstraints(
@@ -135,11 +160,12 @@ class AuthScaffold extends StatelessWidget {
                   },
                 ),
               ),
-              SafeArea(
-                top: false,
-                minimum: const EdgeInsets.only(bottom: 8),
-                child: Center(child: AuthLanguageFooterLink()),
-              ),
+              if (!keyboardVisible)
+                SafeArea(
+                  top: false,
+                  minimum: const EdgeInsets.only(bottom: 8),
+                  child: Center(child: AuthLanguageFooterLink()),
+                ),
             ],
           ),
         ),

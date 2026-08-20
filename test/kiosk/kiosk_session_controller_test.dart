@@ -426,6 +426,108 @@ void main() {
       controller.dispose();
     });
 
+    test('duplicate play_trainer at same seq re-acks without reload', () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [
+          KioskCommandsResponse(
+            since: 4,
+            commandSeq: 5,
+            commands: const [
+              KioskDeviceCommand(
+                command: KioskDeviceCommandKind.playTrainer,
+                seq: 5,
+              ),
+            ],
+          ),
+          KioskCommandsResponse(
+            since: 5,
+            commandSeq: 5,
+            commands: const [
+              KioskDeviceCommand(
+                command: KioskDeviceCommandKind.playTrainer,
+                seq: 5,
+              ),
+            ],
+          ),
+        ],
+      );
+      final childStorage = MemoryChildSessionTokenStorage();
+      await childStorage.writeToken('child-jwt-token');
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: childStorage,
+        deviceContext: _deviceContext(),
+        initialMode: KioskSessionMode.result,
+        initialCommandSeq: 4,
+        onDeviceUnauthorized: () {},
+      );
+
+      await controller.runSyncCycle();
+      expect(controller.mode, KioskSessionMode.trainer);
+      expect(controller.trainerReloadToken, 1);
+
+      await controller.runSyncCycle();
+      expect(controller.mode, KioskSessionMode.trainer);
+      expect(controller.trainerReloadToken, 1);
+      expect(api.childLogoutCalls, 0);
+      expect(api.heartbeatCalls, 2);
+      expect(api.lastHeartbeatAck, 5);
+
+      controller.dispose();
+    });
+
+    test('stale open_scan is acked without logout when child already bound',
+        () async {
+      final api = FakeKioskSessionApi(
+        pollResponses: [
+          KioskCommandsResponse(
+            since: 0,
+            commandSeq: 1,
+            commands: const [
+              KioskDeviceCommand(
+                command: KioskDeviceCommandKind.openScan,
+                seq: 1,
+              ),
+            ],
+          ),
+        ],
+        scanResult: const KioskScanResult(
+          outcome: KioskScanOutcome.noProgram,
+          childId: '88888888-8888-4888-8888-888888888888',
+          childDisplayName: 'Anna',
+          childSessionToken: 'child-jwt-token',
+        ),
+        deviceMeResponse: _deviceContext(
+          lesson: const KioskDeviceLessonBinding(
+            commandSeq: 1,
+            lessonSessionId: 'lesson-id',
+            status: 'child_active',
+          ),
+        ),
+      );
+      final childStorage = MemoryChildSessionTokenStorage();
+      await childStorage.writeToken('child-jwt-token');
+
+      final controller = KioskSessionController(
+        kioskApi: api,
+        childSessionTokenStorage: childStorage,
+        deviceContext: _deviceContext(),
+        initialMode: KioskSessionMode.result,
+        onDeviceUnauthorized: () {},
+      );
+
+      await controller.runSyncCycle();
+
+      expect(controller.mode, KioskSessionMode.result);
+      expect(controller.scanResult?.childDisplayName, 'Anna');
+      expect(api.childLogoutCalls, 0);
+      expect(await childStorage.hasToken(), isTrue);
+      expect(api.lastHeartbeatAck, 1);
+
+      controller.dispose();
+    });
+
     test('second play_trainer reloads trainer without child logout', () async {
       final api = FakeKioskSessionApi(
         pollResponses: [

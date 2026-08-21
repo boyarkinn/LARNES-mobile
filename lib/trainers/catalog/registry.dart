@@ -30,6 +30,7 @@ import 'package:larnes_mobile/trainers/reading/letter_complete/letter_complete_t
 import 'package:larnes_mobile/trainers/reading/letter_draw_show/letter_draw_show_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_half_draw/letter_half_draw_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_name_aloud/letter_name_aloud_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_odd_one_out/letter_odd_one_out_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/letter_marquee_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/letter_word_link_trainer.dart';
@@ -109,6 +110,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       LetterPlaceInWordTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterNameAloud: ({required params, onComplete}) =>
       LetterNameAloudTrainer(params: params, onComplete: onComplete),
+  TrainerKey.stroopColors: ({required params, onComplete}) =>
+      StroopColorsTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterDrawShow: ({required params, onComplete}) =>
       LetterDrawShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterConnectDots: ({required params, onComplete}) =>
@@ -307,6 +310,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateLetterNameAloudParams,
+  ),
+  TrainerKey.stroopColors: TrainerDefinition(
+    key: TrainerKey.stroopColors,
+    title: 'Струп-тест',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateStroopColorsParams,
   ),
   TrainerKey.letterMarqueeTap: TrainerDefinition(
     key: TrainerKey.letterMarqueeTap,

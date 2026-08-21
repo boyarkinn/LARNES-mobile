@@ -1022,6 +1022,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayDisplaySecondsLabel => 'Секунд показа';
 
   @override
+  String get adminTrainerPlayStroopDisplaySecondsLabel => 'Секунд на слово';
+
+  @override
+  String get adminTrainerPlayWordCountLabel => 'Количество слов';
+
+  @override
   String get adminTrainerPlayGridSizeLabel => 'Размер сетки';
 
   @override

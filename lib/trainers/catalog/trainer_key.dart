@@ -22,6 +22,7 @@ enum TrainerKey {
   letterHalfDraw('letter-half-draw'),
   letterMarqueeTap('letter-marquee-tap'),
   letterNameAloud('letter-name-aloud'),
+  stroopColors('stroop-colors'),
   letterOddOneOut('letter-odd-one-out'),
   letterOrientationPick('letter-orientation-pick'),
   letterPlaceInWord('letter-place-in-word'),

@@ -2,6 +2,7 @@ import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.da
 import 'package:larnes_mobile/trainers/reading/letter_guide_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/stroop_colors/definition.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev_catalog.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 
@@ -411,5 +412,24 @@ ValidateTrainerParamsResult validateLetterMarqueeTapParams(Map<String, dynamic> 
     'practiceLetters': formatPracticeLetters(practiceLetters),
     'speed': speed,
     'targetCount': targetCount,
+  });
+}
+
+ValidateTrainerParamsResult validateStroopColorsParams(Map<String, dynamic> raw) {
+  final wordCount = coerceInt(raw['wordCount']) ?? kStroopWordCountDefault;
+  final displaySeconds =
+      coerceDouble(raw['displaySeconds']) ?? kStroopDisplaySecondsDefault;
+
+  if (wordCount < kStroopWordCountMin || wordCount > kStroopWordCountMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (displaySeconds < kStroopDisplaySecondsMin ||
+      displaySeconds > kStroopDisplaySecondsMax) {
+    return _fail('Некорректные параметры.');
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'displaySeconds': displaySeconds,
+    'wordCount': wordCount,
   });
 }

@@ -367,6 +367,8 @@
   "adminTrainerPlayDotModeLabel": "Режим точек",
   "adminTrainerPlayRoundsLabel": "Раундов",
   "adminTrainerPlayDisplaySecondsLabel": "Секунд показа",
+  "adminTrainerPlayStroopDisplaySecondsLabel": "Секунд на слово",
+  "adminTrainerPlayWordCountLabel": "Количество слов",
   "adminTrainerPlayGridSizeLabel": "Размер сетки",
   "adminTrainerPlayStepCountLabel": "Количество шагов",
   "adminTrainerPlayFilledCountLabel": "Заполненных ячеек",

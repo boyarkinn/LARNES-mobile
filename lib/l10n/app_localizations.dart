@@ -1946,6 +1946,18 @@ abstract class AppLocalizations {
   /// **'Display seconds'**
   String get adminTrainerPlayDisplaySecondsLabel;
 
+  /// No description provided for @adminTrainerPlayStroopDisplaySecondsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Seconds per word'**
+  String get adminTrainerPlayStroopDisplaySecondsLabel;
+
+  /// No description provided for @adminTrainerPlayWordCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word count'**
+  String get adminTrainerPlayWordCountLabel;
+
   /// No description provided for @adminTrainerPlayGridSizeLabel.
   ///
   /// In en, this message translates to:

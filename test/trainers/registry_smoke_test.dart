@@ -5,20 +5,21 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
   group('trainer registry', () {
-    test('registers all 34 web trainer keys', () {
-      expect(TrainerKey.values.length, 34);
-      expect(trainerDefinitions.length, 34);
+    test('registers all 35 web trainer keys', () {
+      expect(TrainerKey.values.length, 35);
+      expect(trainerDefinitions.length, 35);
       expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(isTrainerKey('example-visualization'), isTrue);
       expect(isTrainerKey('static-example-show'), isTrue);
       expect(isTrainerKey('topic-chain-flash'), isTrue);
       expect(isTrainerKey('topic-chain-table'), isTrue);
       expect(isTrainerKey('fly-track'), isTrue);
+      expect(isTrainerKey('stroop-colors'), isTrue);
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 34);
+      expect(trainerBuilders.length, 35);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -33,7 +34,7 @@ void main() {
       final readingDefinitions = trainerDefinitions.values
           .where((definition) => definition.direction == TrainerDirection.reading);
 
-      expect(readingDefinitions.length, 19);
+      expect(readingDefinitions.length, 20);
       for (final definition in readingDefinitions) {
         expect(definition.isInteractive, isTrue);
       }

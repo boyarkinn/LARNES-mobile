@@ -1012,6 +1012,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayDisplaySecondsLabel => 'Display seconds';
 
   @override
+  String get adminTrainerPlayStroopDisplaySecondsLabel => 'Seconds per word';
+
+  @override
+  String get adminTrainerPlayWordCountLabel => 'Word count';
+
+  @override
   String get adminTrainerPlayGridSizeLabel => 'Grid size';
 
   @override

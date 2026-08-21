@@ -416,6 +416,8 @@
   "adminTrainerPlayDotModeLabel": "Dot mode",
   "adminTrainerPlayRoundsLabel": "Rounds",
   "adminTrainerPlayDisplaySecondsLabel": "Display seconds",
+  "adminTrainerPlayStroopDisplaySecondsLabel": "Seconds per word",
+  "adminTrainerPlayWordCountLabel": "Word count",
   "adminTrainerPlayGridSizeLabel": "Grid size",
   "adminTrainerPlayStepCountLabel": "Number of steps",
   "adminTrainerPlayFilledCountLabel": "Filled cells",

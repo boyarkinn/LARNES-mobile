@@ -23,6 +23,8 @@ enum TrainerKey {
   letterMarqueeTap('letter-marquee-tap'),
   letterNameAloud('letter-name-aloud'),
   stroopColors('stroop-colors'),
+  schulteTable('schulte-table'),
+  wedgeTables('wedge-tables'),
   letterOddOneOut('letter-odd-one-out'),
   letterOrientationPick('letter-orientation-pick'),
   letterPlaceInWord('letter-place-in-word'),

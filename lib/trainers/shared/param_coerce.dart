@@ -11,6 +11,19 @@ int? coerceInt(dynamic value) {
   return null;
 }
 
+bool? coerceBool(dynamic value) {
+  if (value is bool) {
+    return value;
+  }
+  if (value == 1 || value == '1' || value == 'true' || value == 'yes') {
+    return true;
+  }
+  if (value == 0 || value == '0' || value == 'false' || value == 'no') {
+    return false;
+  }
+  return null;
+}
+
 double? coerceDouble(dynamic value) {
   if (value is double) {
     return value;

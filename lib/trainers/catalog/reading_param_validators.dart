@@ -2,7 +2,10 @@ import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.da
 import 'package:larnes_mobile/trainers/reading/letter_guide_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/schulte_table/definition.dart';
+import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/definition.dart';
+import 'package:larnes_mobile/trainers/reading/wedge_tables/definition.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev_catalog.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 
@@ -431,5 +434,108 @@ ValidateTrainerParamsResult validateStroopColorsParams(Map<String, dynamic> raw)
   return ValidateTrainerParamsResult.success({
     'displaySeconds': displaySeconds,
     'wordCount': wordCount,
+  });
+}
+
+String? _parseSchulteChoice(
+  dynamic value,
+  List<String> allowed,
+  String fallback,
+) {
+  if (value == null || '$value'.isEmpty) {
+    return fallback;
+  }
+  final text = '$value';
+  if (allowed.contains(text)) {
+    return text;
+  }
+  return null;
+}
+
+ValidateTrainerParamsResult validateSchulteTableParams(Map<String, dynamic> raw) {
+  final rounds = coerceInt(raw['rounds']) ?? kSchulteRoundsDefault;
+  final gridSize =
+      coerceInt(raw['gridSize']) ?? coerceInt(raw['digit']) ?? kSchulteGridSizeDefault;
+  final category = _parseSchulteChoice(
+    raw['category'] ?? raw['wordSlug'],
+    kSchulteCategoryValues,
+    kSchulteCategoryDefault,
+  );
+  final order = _parseSchulteChoice(
+    raw['order'] ?? raw['missingSegment'],
+    kSchulteOrderValues,
+    kSchulteOrderDefault,
+  );
+  final symbolOrientation = _parseSchulteChoice(
+    raw['symbolOrientation'] ?? raw['wordCase'],
+    kSchulteOrientationValues,
+    kSchulteOrientationDefault,
+  );
+  final centerDot = coerceBool(raw['centerDot'] ?? raw['value2']) ?? false;
+  final showFound = coerceBool(raw['showFound'] ?? raw['value3']) ?? false;
+
+  if (rounds < kSchulteRoundsMin || rounds > kSchulteRoundsMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (gridSize < kSchulteGridSizeMin || gridSize > kSchulteGridSizeMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (category == null || order == null || symbolOrientation == null) {
+    return _fail('Некорректные параметры.');
+  }
+  if (category == 'letters' && gridSize > kSchulteLettersGridSizeMax) {
+    return _fail(
+      'Для букв размер сетки не больше $kSchulteLettersGridSizeMax×$kSchulteLettersGridSizeMax.',
+    );
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'category': category,
+    'centerDot': centerDot,
+    'gridSize': gridSize,
+    'order': order,
+    'rounds': rounds,
+    'showFound': showFound,
+    'symbolOrientation': symbolOrientation,
+  });
+}
+
+ValidateTrainerParamsResult validateWedgeTablesParams(Map<String, dynamic> raw) {
+  final rounds = coerceInt(raw['rounds']) ?? kWedgeRoundsDefault;
+  final rowCount =
+      coerceInt(raw['rowCount']) ?? coerceInt(raw['digit']) ?? kWedgeRowCountDefault;
+  final displaySeconds =
+      coerceDouble(raw['displaySeconds']) ?? kWedgeDisplaySecondsDefault;
+  final category = _parseSchulteChoice(
+    raw['category'] ?? raw['wordSlug'],
+    kWedgeCategoryValues,
+    kWedgeCategoryDefault,
+  );
+  final orientation = _parseSchulteChoice(
+    raw['orientation'] ?? raw['missingSegment'],
+    kWedgeOrientationValues,
+    kWedgeOrientationDefault,
+  );
+
+  if (rounds < kWedgeRoundsMin || rounds > kWedgeRoundsMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (!kWedgeRowCounts.contains(rowCount)) {
+    return _fail('Число строк: 5, 10, … 50.');
+  }
+  if (displaySeconds < kWedgeDisplaySecondsMin ||
+      displaySeconds > kWedgeDisplaySecondsMax) {
+    return _fail('Некорректные параметры.');
+  }
+  if (category == null || orientation == null) {
+    return _fail('Некорректные параметры.');
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'category': category,
+    'displaySeconds': displaySeconds,
+    'orientation': orientation,
+    'rounds': rounds,
+    'rowCount': rowCount,
   });
 }

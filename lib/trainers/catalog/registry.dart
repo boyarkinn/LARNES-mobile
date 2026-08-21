@@ -31,6 +31,8 @@ import 'package:larnes_mobile/trainers/reading/letter_draw_show/letter_draw_show
 import 'package:larnes_mobile/trainers/reading/letter_half_draw/letter_half_draw_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_name_aloud/letter_name_aloud_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_odd_one_out/letter_odd_one_out_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/letter_marquee_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/letter_word_link_trainer.dart';
@@ -112,6 +114,10 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       LetterNameAloudTrainer(params: params, onComplete: onComplete),
   TrainerKey.stroopColors: ({required params, onComplete}) =>
       StroopColorsTrainer(params: params, onComplete: onComplete),
+  TrainerKey.schulteTable: ({required params, onComplete}) =>
+      SchulteTableTrainer(params: params, onComplete: onComplete),
+  TrainerKey.wedgeTables: ({required params, onComplete}) =>
+      WedgeTablesTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterDrawShow: ({required params, onComplete}) =>
       LetterDrawShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterConnectDots: ({required params, onComplete}) =>
@@ -317,6 +323,20 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateStroopColorsParams,
+  ),
+  TrainerKey.schulteTable: TrainerDefinition(
+    key: TrainerKey.schulteTable,
+    title: 'Таблица Шульте',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateSchulteTableParams,
+  ),
+  TrainerKey.wedgeTables: TrainerDefinition(
+    key: TrainerKey.wedgeTables,
+    title: 'Клиновидная таблица',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateWedgeTablesParams,
   ),
   TrainerKey.letterMarqueeTap: TrainerDefinition(
     key: TrainerKey.letterMarqueeTap,

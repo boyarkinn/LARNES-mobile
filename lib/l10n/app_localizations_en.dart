@@ -1018,6 +1018,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayWordCountLabel => 'Word count';
 
   @override
+  String get adminTrainerPlaySchulteGridSizeLabel => 'Table size';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryLabel => 'Digits or letters';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryDigits => 'Digits';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryLetters => 'Letters';
+
+  @override
+  String get adminTrainerPlaySchulteOrderLabel => 'Order';
+
+  @override
+  String get adminTrainerPlaySchulteOrderForward => 'Forward';
+
+  @override
+  String get adminTrainerPlaySchulteOrderBackward => 'Backward';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationLabel => 'Orientation';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationNormal => 'Normal';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationUpsideDown => 'Upside down';
+
+  @override
+  String get adminTrainerPlaySchulteCenterDotLabel => 'Center dot';
+
+  @override
+  String get adminTrainerPlaySchulteShowFoundLabel => 'Highlight found cells';
+
+  @override
+  String get adminTrainerPlaySchulteToggleNo => 'No';
+
+  @override
+  String get adminTrainerPlaySchulteToggleYes => 'Yes';
+
+  @override
   String get adminTrainerPlayGridSizeLabel => 'Grid size';
 
   @override

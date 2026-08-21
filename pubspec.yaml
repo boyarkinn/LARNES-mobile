@@ -74,6 +74,8 @@ flutter:
     - assets/audio/ru/mental-arithmetic/instructions/
     - assets/audio/ru/intel/fly-track/
     - assets/audio/ru/reading/stroop-colors/
+    - assets/audio/ru/reading/schulte-table/
+    - assets/audio/ru/reading/wedge-tables/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

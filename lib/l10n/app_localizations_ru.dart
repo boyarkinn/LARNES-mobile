@@ -1028,6 +1028,48 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayWordCountLabel => 'Количество слов';
 
   @override
+  String get adminTrainerPlaySchulteGridSizeLabel => 'Размер таблицы';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryLabel => 'Цифры или буквы';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryDigits => 'Цифры';
+
+  @override
+  String get adminTrainerPlaySchulteCategoryLetters => 'Буквы';
+
+  @override
+  String get adminTrainerPlaySchulteOrderLabel => 'Порядок';
+
+  @override
+  String get adminTrainerPlaySchulteOrderForward => 'Вперёд';
+
+  @override
+  String get adminTrainerPlaySchulteOrderBackward => 'Назад';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationLabel => 'Ориентация';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationNormal => 'Обычная';
+
+  @override
+  String get adminTrainerPlaySchulteOrientationUpsideDown => 'Вверх ногами';
+
+  @override
+  String get adminTrainerPlaySchulteCenterDotLabel => 'Точка в центре';
+
+  @override
+  String get adminTrainerPlaySchulteShowFoundLabel => 'Подсветка найденных';
+
+  @override
+  String get adminTrainerPlaySchulteToggleNo => 'Нет';
+
+  @override
+  String get adminTrainerPlaySchulteToggleYes => 'Да';
+
+  @override
   String get adminTrainerPlayGridSizeLabel => 'Размер сетки';
 
   @override

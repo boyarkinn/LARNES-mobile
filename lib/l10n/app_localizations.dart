@@ -1958,6 +1958,90 @@ abstract class AppLocalizations {
   /// **'Word count'**
   String get adminTrainerPlayWordCountLabel;
 
+  /// No description provided for @adminTrainerPlaySchulteGridSizeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Table size'**
+  String get adminTrainerPlaySchulteGridSizeLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits or letters'**
+  String get adminTrainerPlaySchulteCategoryLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteCategoryDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits'**
+  String get adminTrainerPlaySchulteCategoryDigits;
+
+  /// No description provided for @adminTrainerPlaySchulteCategoryLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters'**
+  String get adminTrainerPlaySchulteCategoryLetters;
+
+  /// No description provided for @adminTrainerPlaySchulteOrderLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get adminTrainerPlaySchulteOrderLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteOrderForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward'**
+  String get adminTrainerPlaySchulteOrderForward;
+
+  /// No description provided for @adminTrainerPlaySchulteOrderBackward.
+  ///
+  /// In en, this message translates to:
+  /// **'Backward'**
+  String get adminTrainerPlaySchulteOrderBackward;
+
+  /// No description provided for @adminTrainerPlaySchulteOrientationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Orientation'**
+  String get adminTrainerPlaySchulteOrientationLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteOrientationNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get adminTrainerPlaySchulteOrientationNormal;
+
+  /// No description provided for @adminTrainerPlaySchulteOrientationUpsideDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Upside down'**
+  String get adminTrainerPlaySchulteOrientationUpsideDown;
+
+  /// No description provided for @adminTrainerPlaySchulteCenterDotLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Center dot'**
+  String get adminTrainerPlaySchulteCenterDotLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteShowFoundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight found cells'**
+  String get adminTrainerPlaySchulteShowFoundLabel;
+
+  /// No description provided for @adminTrainerPlaySchulteToggleNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get adminTrainerPlaySchulteToggleNo;
+
+  /// No description provided for @adminTrainerPlaySchulteToggleYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get adminTrainerPlaySchulteToggleYes;
+
   /// No description provided for @adminTrainerPlayGridSizeLabel.
   ///
   /// In en, this message translates to:

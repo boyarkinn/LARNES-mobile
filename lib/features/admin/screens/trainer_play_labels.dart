@@ -55,6 +55,18 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayStroopDisplaySecondsLabel;
     case 'wordCountLabel':
       return l10n.adminTrainerPlayWordCountLabel;
+    case 'schulteGridSizeLabel':
+      return l10n.adminTrainerPlaySchulteGridSizeLabel;
+    case 'schulteCategoryLabel':
+      return l10n.adminTrainerPlaySchulteCategoryLabel;
+    case 'schulteOrderLabel':
+      return l10n.adminTrainerPlaySchulteOrderLabel;
+    case 'schulteOrientationLabel':
+      return l10n.adminTrainerPlaySchulteOrientationLabel;
+    case 'schulteCenterDotLabel':
+      return l10n.adminTrainerPlaySchulteCenterDotLabel;
+    case 'schulteShowFoundLabel':
+      return l10n.adminTrainerPlaySchulteShowFoundLabel;
     case 'gridSizeLabel':
       return l10n.adminTrainerPlayGridSizeLabel;
     case 'flyGridSizeLabel':
@@ -142,6 +154,22 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
       return l10n.adminTrainerPlaySolveModeAbacus;
     case 'solveModeMental':
       return l10n.adminTrainerPlaySolveModeMental;
+    case 'schulteCategoryDigits':
+      return l10n.adminTrainerPlaySchulteCategoryDigits;
+    case 'schulteCategoryLetters':
+      return l10n.adminTrainerPlaySchulteCategoryLetters;
+    case 'schulteOrderForward':
+      return l10n.adminTrainerPlaySchulteOrderForward;
+    case 'schulteOrderBackward':
+      return l10n.adminTrainerPlaySchulteOrderBackward;
+    case 'schulteOrientationNormal':
+      return l10n.adminTrainerPlaySchulteOrientationNormal;
+    case 'schulteOrientationUpsideDown':
+      return l10n.adminTrainerPlaySchulteOrientationUpsideDown;
+    case 'schulteToggleNo':
+      return l10n.adminTrainerPlaySchulteToggleNo;
+    case 'schulteToggleYes':
+      return l10n.adminTrainerPlaySchulteToggleYes;
     default:
       return option.value;
   }

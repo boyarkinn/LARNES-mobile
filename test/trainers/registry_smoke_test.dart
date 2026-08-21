@@ -5,9 +5,9 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
   group('trainer registry', () {
-    test('registers all 35 web trainer keys', () {
-      expect(TrainerKey.values.length, 35);
-      expect(trainerDefinitions.length, 35);
+    test('registers all 37 web trainer keys', () {
+      expect(TrainerKey.values.length, 37);
+      expect(trainerDefinitions.length, 37);
       expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(isTrainerKey('example-visualization'), isTrue);
       expect(isTrainerKey('static-example-show'), isTrue);
@@ -15,11 +15,13 @@ void main() {
       expect(isTrainerKey('topic-chain-table'), isTrue);
       expect(isTrainerKey('fly-track'), isTrue);
       expect(isTrainerKey('stroop-colors'), isTrue);
+      expect(isTrainerKey('schulte-table'), isTrue);
+      expect(isTrainerKey('wedge-tables'), isTrue);
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 35);
+      expect(trainerBuilders.length, 37);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -34,7 +36,7 @@ void main() {
       final readingDefinitions = trainerDefinitions.values
           .where((definition) => definition.direction == TrainerDirection.reading);
 
-      expect(readingDefinitions.length, 20);
+      expect(readingDefinitions.length, 22);
       for (final definition in readingDefinitions) {
         expect(definition.isInteractive, isTrue);
       }

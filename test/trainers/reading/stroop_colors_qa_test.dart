@@ -85,8 +85,8 @@ void main() {
       expect(isTrainerKey('stroop-colors'), isTrue);
     });
 
-    test('instruction clip is bundled at 1x', () {
-      expect(kStroopColorsInstructionPlaybackRate, 1);
+    test('instruction clip is bundled and plays at 1.5x', () {
+      expect(kStroopColorsInstructionPlaybackRate, 1.5);
       expect(
         getStroopColorsInstructionAudioAsset(),
         'audio/ru/reading/stroop-colors/instruction.mp3',

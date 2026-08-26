@@ -126,6 +126,13 @@ void main() {
 
       expect(trainerSource, contains('WedgePhase.instruction'));
       expect(trainerSource, contains('playWedgeTablesInstruction'));
+      expect(trainerSource, contains('TrainerInstructionScene'));
+      expect(
+        trainerSource,
+        contains(
+          'Смотри на зелёную точку в центре и старайся увидеть соседние символы, не отводя взгляд от точки',
+        ),
+      );
       expect(trainerSource, isNot(contains('Найди')));
       expect(trainerSource, isNot(contains('Молодец')));
       expect(trainerSource, isNot(contains('Готово')));

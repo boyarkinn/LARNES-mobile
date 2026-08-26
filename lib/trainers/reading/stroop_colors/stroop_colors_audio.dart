@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart'
 
 const kStroopColorsAudioAssetBase = 'audio/ru/reading/stroop-colors';
 const kStroopColorsInstructionPlaybackRate = 1.5;
+const kStroopColorsInstructionDurationFallbackMs = 1392;
 
 String getStroopColorsInstructionAudioAsset() =>
     '$kStroopColorsAudioAssetBase/instruction.mp3';

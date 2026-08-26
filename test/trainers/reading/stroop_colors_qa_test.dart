@@ -104,8 +104,9 @@ void main() {
 
       expect(trainerSource, contains('StroopPhase.instruction'));
       expect(trainerSource, contains('playStroopColorsInstruction'));
+      expect(trainerSource, contains('TrainerInstructionScene'));
+      expect(trainerSource, contains('Назови цвет слова'));
       expect(trainerSource, isNot(contains('Colors.white')));
-      expect(trainerSource, isNot(contains('Назови')));
       expect(trainerSource, isNot(contains('Молодец')));
       expect(trainerSource, isNot(contains('countdown')));
     });

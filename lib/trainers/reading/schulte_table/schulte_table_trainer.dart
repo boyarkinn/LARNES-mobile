@@ -6,10 +6,16 @@ import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_audio.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_scene.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_sizes.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 enum SchultePhase { instruction, play }
+
+const kSchulteTableInstructionText =
+    'Смотри в зелёную точку в центре, нажимай на все цифры в порядке возрастания, или буквы в алфавитном порядке, пока кнопки в таблице не заполнятся';
 
 /// Web: `platform/src/trainers/reading/schulte-table/component.tsx`
 class SchulteTableTrainer extends StatefulWidget {
@@ -33,6 +39,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
   late String _order;
 
   var _phase = SchultePhase.instruction;
+  var _instructionLength = 0;
   var _roundIndex = 0;
   var _foundValues = <String>{};
   String? _wrongCellId;
@@ -40,6 +47,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
   var _completeCalled = false;
   Object _runToken = Object();
 
+  final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _wrongTimer;
   Timer? _settleTimer;
 
@@ -59,6 +67,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
 
   @override
   void dispose() {
+    _instructionTypewriter.cancel();
     _wrongTimer?.cancel();
     _settleTimer?.cancel();
     unawaited(cancelSchulteTableAudio());
@@ -94,6 +103,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
   void _startSession() {
     final runToken = Object();
     _runToken = runToken;
+    _instructionTypewriter.cancel();
     _wrongTimer?.cancel();
     _settleTimer?.cancel();
     unawaited(cancelSchulteTableAudio());
@@ -105,6 +115,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     setState(() {
       _table = _generateTable();
       _phase = SchultePhase.instruction;
+      _instructionLength = 0;
       _roundIndex = 0;
       _foundValues = {};
       _wrongCellId = null;
@@ -126,12 +137,35 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
   }
 
   Future<void> _runInstruction(Object runToken) async {
+    final durationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getSchulteTableInstructionAudioAsset(),
+      playbackRate: kSchulteTableInstructionPlaybackRate,
+      fallbackMs: kSchulteTableInstructionDurationFallbackMs,
+    );
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    _instructionTypewriter.start(
+      text: kSchulteTableInstructionText,
+      durationMs: durationMs,
+      isCurrent: () => mounted && identical(runToken, _runToken),
+      onLength: (length) {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        setState(() => _instructionLength = length);
+      },
+    );
+
     await playSchulteTableInstruction();
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
+    _instructionTypewriter.cancel();
     setState(() {
+      _instructionLength = kSchulteTableInstructionText.length;
       _phase = SchultePhase.play;
     });
   }
@@ -194,22 +228,27 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_phase == SchultePhase.instruction) {
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: kSchulteTableInstructionText,
+      );
+    }
+
     return TrainerScene(
-      child: _phase == SchultePhase.play
-          ? SchulteTableScene(
-              disabled: _isSettling,
-              foundValues: _foundValues,
-              onCellTap: _handleCellTap,
-              showCenterDot: _readBoolParam('centerDot'),
-              showFound: _readBoolParam('showFound'),
-              symbolOrientation: _readStringParam(
-                'symbolOrientation',
-                kSchulteOrientationDefault,
-              ),
-              table: _table,
-              wrongCellId: _wrongCellId,
-            )
-          : const SizedBox.expand(),
+      child: SchulteTableScene(
+        disabled: _isSettling,
+        foundValues: _foundValues,
+        onCellTap: _handleCellTap,
+        showCenterDot: _readBoolParam('centerDot'),
+        showFound: _readBoolParam('showFound'),
+        symbolOrientation: _readStringParam(
+          'symbolOrientation',
+          kSchulteOrientationDefault,
+        ),
+        table: _table,
+        wrongCellId: _wrongCellId,
+      ),
     );
   }
 }

@@ -1,6 +1,5 @@
 /// Web: `platform/src/trainers/intel/fly-track/audio.ts`
 
-import 'package:just_audio/just_audio.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
@@ -56,21 +55,4 @@ Future<void> playFlyTrackAudio(
 
 Future<void> cancelFlyTrackAudio() {
   return getSharedClipPlayer().cancel();
-}
-
-Future<int> loadFlyTrackInstructionDurationMs() async {
-  final player = AudioPlayer();
-  try {
-    await player.setAsset('assets/${getFlyTrackInstructionAudioAsset()}');
-    final duration = player.duration;
-    if (duration != null && duration > Duration.zero) {
-      return (duration.inMilliseconds / kFlyTrackAudioPlaybackRate).round();
-    }
-  } catch (_) {
-    // Fall back to web constant when metadata is unavailable in tests.
-  } finally {
-    await player.dispose();
-  }
-
-  return kFlyTrackInstructionDurationFallbackMs;
 }

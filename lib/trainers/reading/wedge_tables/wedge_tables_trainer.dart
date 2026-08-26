@@ -6,10 +6,16 @@ import 'package:larnes_mobile/trainers/reading/wedge_tables/model.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_audio.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_scene.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_sizes.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 enum WedgePhase { instruction, play }
+
+const kWedgeTablesInstructionText =
+    'Смотри на зелёную точку в центре и старайся увидеть соседние символы, не отводя взгляд от точки';
 
 /// Web: `platform/src/trainers/reading/wedge-tables/component.tsx`
 class WedgeTablesTrainer extends StatefulWidget {
@@ -33,12 +39,14 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
   late int _rowCount;
 
   var _phase = WedgePhase.instruction;
+  var _instructionLength = 0;
   var _roundIndex = 0;
   var _rowIndex = 0;
   var _isFinished = false;
   var _completeCalled = false;
   Object _runToken = Object();
 
+  final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _slideTimer;
   Timer? _completeTimer;
 
@@ -58,6 +66,7 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
 
   @override
   void dispose() {
+    _instructionTypewriter.cancel();
     _slideTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelWedgeTablesAudio());
@@ -94,6 +103,7 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
   void _startSession() {
     final runToken = Object();
     _runToken = runToken;
+    _instructionTypewriter.cancel();
     _slideTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelWedgeTablesAudio());
@@ -116,6 +126,7 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
       );
       _displayMs = (displaySeconds * 1000).round();
       _phase = WedgePhase.instruction;
+      _instructionLength = 0;
       _roundIndex = 0;
       _rowIndex = 0;
       _isFinished = false;
@@ -126,12 +137,35 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
   }
 
   Future<void> _runInstruction(Object runToken) async {
+    final durationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getWedgeTablesInstructionAudioAsset(),
+      playbackRate: kWedgeTablesInstructionPlaybackRate,
+      fallbackMs: kWedgeTablesInstructionDurationFallbackMs,
+    );
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    _instructionTypewriter.start(
+      text: kWedgeTablesInstructionText,
+      durationMs: durationMs,
+      isCurrent: () => mounted && identical(runToken, _runToken),
+      onLength: (length) {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        setState(() => _instructionLength = length);
+      },
+    );
+
     await playWedgeTablesInstruction();
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
+    _instructionTypewriter.cancel();
     setState(() {
+      _instructionLength = kWedgeTablesInstructionText.length;
       _phase = WedgePhase.play;
     });
     _scheduleSlide();
@@ -195,12 +229,19 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_phase == WedgePhase.instruction) {
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: kWedgeTablesInstructionText,
+      );
+    }
+
     final current = _rounds.isEmpty || _rounds[_roundIndex].isEmpty
         ? null
         : _rounds[_roundIndex][_rowIndex];
 
     return TrainerScene(
-      child: _phase == WedgePhase.play && current != null
+      child: current != null
           ? WedgeTablesScene(
               left: current.left,
               orientation: _orientation,

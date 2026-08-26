@@ -6,6 +6,9 @@ import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_audio.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_grid.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_phase.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 /// Web: `platform/src/trainers/intel/fly-track/component.tsx`
@@ -30,7 +33,6 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   static const _countdownStepMs = 750;
   static const _feedbackMs = 1600;
   static const _countdownColor = Color(0xFFDC2626);
-  static const _instructionColor = Color(0xFF115E59);
 
   late List<FlyTrackRound> _rounds;
   FlyTrackPhase _phase = FlyTrackPhase.instruction;
@@ -44,7 +46,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   int? _feedbackRoundIndex;
   Object _runToken = Object();
 
-  Timer? _instructionTypewriterTimer;
+  final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _countdownTimer;
   Timer? _feedbackTimer;
 
@@ -75,7 +77,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
 
   @override
   void dispose() {
-    _instructionTypewriterTimer?.cancel();
+    _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
     _feedbackTimer?.cancel();
     unawaited(cancelFlyTrackAudio());
@@ -124,7 +126,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   void _startSession({required bool withInstruction}) {
     final runToken = Object();
     _runToken = runToken;
-    _instructionTypewriterTimer?.cancel();
+    _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
     _feedbackTimer?.cancel();
     unawaited(cancelFlyTrackAudio());
@@ -152,52 +154,38 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   }
 
   Future<void> _runInstruction(Object runToken) async {
-    final durationMs = await loadFlyTrackInstructionDurationMs();
+    final durationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getFlyTrackInstructionAudioAsset(),
+      playbackRate: kFlyTrackAudioPlaybackRate,
+      fallbackMs: kFlyTrackInstructionDurationFallbackMs,
+    );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
-    setState(() {
-      _instructionLength = 0;
-    });
-
-    _startInstructionTypewriter(runToken, durationMs);
+    _instructionTypewriter.start(
+      text: _instructionText,
+      durationMs: durationMs,
+      isCurrent: () => mounted && identical(runToken, _runToken),
+      onLength: (length) {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        setState(() => _instructionLength = length);
+      },
+    );
 
     await playFlyTrackAudio([getFlyTrackInstructionAudioAsset()]);
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
-    _instructionTypewriterTimer?.cancel();
+    _instructionTypewriter.cancel();
     setState(() {
       _instructionLength = _instructionText.length;
       _phase = FlyTrackPhase.countdown;
     });
     _runCountdown(runToken);
-  }
-
-  void _startInstructionTypewriter(Object runToken, int durationMs) {
-    _instructionTypewriterTimer?.cancel();
-    if (_instructionText.isEmpty) {
-      return;
-    }
-
-    final characterDelayMs = durationMs / _instructionText.length;
-    _instructionTypewriterTimer = Timer.periodic(
-      Duration(milliseconds: characterDelayMs.round().clamp(1, 1000000)),
-      (_) {
-        if (!mounted || !identical(runToken, _runToken)) {
-          return;
-        }
-
-        if (_instructionLength >= _instructionText.length) {
-          _instructionTypewriterTimer?.cancel();
-          return;
-        }
-
-        setState(() => _instructionLength += 1);
-      },
-    );
   }
 
   void _runCountdown(Object runToken) {
@@ -354,38 +342,9 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == FlyTrackPhase.instruction) {
-      final visibleText = _instructionText.substring(
-        0,
-        _instructionLength.clamp(0, _instructionText.length),
-      );
-
-      return TrainerScene(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Center(
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: visibleText,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      height: 1.15,
-                      color: _instructionColor,
-                    ),
-                  ),
-                  const WidgetSpan(
-                    alignment: PlaceholderAlignment.baseline,
-                    baseline: TextBaseline.alphabetic,
-                    child: _InstructionCursor(),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionText,
       );
     }
 
@@ -414,46 +373,6 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
         round: _round,
         selectedCell: _selectedCell,
         visibleCell: _visibleCell,
-      ),
-    );
-  }
-}
-
-class _InstructionCursor extends StatefulWidget {
-  const _InstructionCursor();
-
-  @override
-  State<_InstructionCursor> createState() => _InstructionCursorState();
-}
-
-class _InstructionCursorState extends State<_InstructionCursor>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _controller,
-      child: Container(
-        width: 3,
-        height: 28,
-        margin: const EdgeInsets.only(left: 4),
-        color: const Color(0xFF0F766E),
       ),
     );
   }

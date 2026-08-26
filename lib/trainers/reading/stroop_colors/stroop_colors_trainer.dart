@@ -6,9 +6,14 @@ import 'package:larnes_mobile/trainers/reading/stroop_colors/model.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_audio.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_scene.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_sizes.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 enum StroopPhase { instruction, play }
+
+const kStroopColorsInstructionText = 'Назови цвет слова';
 
 /// Web: `platform/src/trainers/reading/stroop-colors/component.tsx`
 class StroopColorsTrainer extends StatefulWidget {
@@ -30,11 +35,13 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   late int _displayMs;
 
   var _phase = StroopPhase.instruction;
+  var _instructionLength = 0;
   var _index = 0;
   var _isFinished = false;
   var _completeCalled = false;
   Object _runToken = Object();
 
+  final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _slideTimer;
   Timer? _completeTimer;
 
@@ -55,6 +62,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
 
   @override
   void dispose() {
+    _instructionTypewriter.cancel();
     _slideTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStroopColorsAudio());
@@ -86,6 +94,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   void _startSession() {
     final runToken = Object();
     _runToken = runToken;
+    _instructionTypewriter.cancel();
     _slideTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStroopColorsAudio());
@@ -100,6 +109,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       _items = generateStroopItems(GenerateStroopItemsInput(wordCount: wordCount));
       _displayMs = (displaySeconds * 1000).round();
       _phase = StroopPhase.instruction;
+      _instructionLength = 0;
       _index = 0;
       _isFinished = false;
       _completeCalled = false;
@@ -109,12 +119,35 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   }
 
   Future<void> _runInstruction(Object runToken) async {
+    final durationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getStroopColorsInstructionAudioAsset(),
+      playbackRate: kStroopColorsInstructionPlaybackRate,
+      fallbackMs: kStroopColorsInstructionDurationFallbackMs,
+    );
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    _instructionTypewriter.start(
+      text: kStroopColorsInstructionText,
+      durationMs: durationMs,
+      isCurrent: () => mounted && identical(runToken, _runToken),
+      onLength: (length) {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        setState(() => _instructionLength = length);
+      },
+    );
+
     await playStroopColorsInstruction();
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
+    _instructionTypewriter.cancel();
     setState(() {
+      _instructionLength = kStroopColorsInstructionText.length;
       _phase = StroopPhase.play;
     });
     _scheduleSlide();
@@ -162,10 +195,17 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
 
   @override
   Widget build(BuildContext context) {
+    if (_phase == StroopPhase.instruction) {
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: kStroopColorsInstructionText,
+      );
+    }
+
     final current = _items.isEmpty ? null : _items[_index];
 
     return TrainerScene(
-      child: _phase == StroopPhase.play && current != null
+      child: current != null
           ? StroopColorsScene(
               inkHex: stroopColors[current.ink]!.hex,
               word: stroopColors[current.word]!.label,

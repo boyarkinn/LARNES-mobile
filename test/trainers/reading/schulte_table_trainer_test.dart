@@ -3,12 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_scene.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_trainer.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
 void main() {
   group('SchulteTableTrainer', () {
-    testWidgets('uses a full-bleed scene without instruction text', (tester) async {
+    testWidgets('starts in instruction phase without the grid', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -30,6 +31,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TrainerScene), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
       expect(find.textContaining('Найди'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);

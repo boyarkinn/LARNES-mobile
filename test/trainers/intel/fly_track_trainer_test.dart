@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_grid.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_phase.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 void main() {
@@ -32,6 +33,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TrainerScene), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.byType(FlyTrackGrid), findsNothing);
       expect(find.text('3'), findsNothing);
       expect(find.text('СТАРТ'), findsNothing);
@@ -123,6 +125,8 @@ void main() {
       expect(trainerSource, contains('_feedbackMs = 1600'));
       expect(trainerSource, contains('includeFlyMoved: stepIndex == 0'));
       expect(trainerSource, contains('getFlyTrackReplayAudioAssets'));
+      expect(trainerSource, contains('TrainerInstructionScene'));
+      expect(trainerSource, contains('loadTrainerInstructionDurationMs'));
       expect(trainerSource, contains('_fireworksKey'));
       expect(gridSource, contains('AnswerFireworksBurst'));
       expect(gridSource, contains('FlyGlyph'));

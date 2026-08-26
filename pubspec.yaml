@@ -77,6 +77,7 @@ flutter:
     - assets/audio/ru/reading/schulte-table/
     - assets/audio/ru/reading/wedge-tables/
     - assets/audio/ru/reading/letter-find-by-sound/
+    - assets/audio/ru/reading/letter-first-by-sound/
     - assets/audio/ru/letters-syllables/1-10-А-Е/
     - assets/audio/ru/letters-syllables/11-Б/
     - assets/audio/ru/letters-syllables/12-П/
@@ -99,6 +100,66 @@ flutter:
     - assets/audio/ru/letters-syllables/29-Ц/
     - assets/audio/ru/letters-syllables/30-Ч/
     - assets/audio/ru/letters-syllables/31-Щ/
+    - assets/images/ru/first-words/1-А/
+    - assets/images/ru/first-words/2-О/
+    - assets/images/ru/first-words/3-У/
+    - assets/images/ru/first-words/5-Э/
+    - assets/images/ru/first-words/6-Я/
+    - assets/images/ru/first-words/7-Ё/
+    - assets/images/ru/first-words/8-Ю/
+    - assets/images/ru/first-words/9-И/
+    - assets/images/ru/first-words/10-Е/
+    - assets/images/ru/first-words/11-Б/
+    - assets/images/ru/first-words/12-П/
+    - assets/images/ru/first-words/13-В/
+    - assets/images/ru/first-words/14-Ф/
+    - assets/images/ru/first-words/15-Г/
+    - assets/images/ru/first-words/16-К/
+    - assets/images/ru/first-words/17-Д/
+    - assets/images/ru/first-words/18-Т/
+    - assets/images/ru/first-words/19-Ж/
+    - assets/images/ru/first-words/20-Ш/
+    - assets/images/ru/first-words/21-З/
+    - assets/images/ru/first-words/22-С/
+    - assets/images/ru/first-words/23-Л/
+    - assets/images/ru/first-words/24-М/
+    - assets/images/ru/first-words/25-Н/
+    - assets/images/ru/first-words/26-Р/
+    - assets/images/ru/first-words/27-Й/
+    - assets/images/ru/first-words/28-Х/
+    - assets/images/ru/first-words/29-Ц/
+    - assets/images/ru/first-words/30-Ч/
+    - assets/images/ru/first-words/31-Щ/
+    - assets/audio/ru/first-words/1-А/
+    - assets/audio/ru/first-words/2-О/
+    - assets/audio/ru/first-words/3-У/
+    - assets/audio/ru/first-words/5-Э/
+    - assets/audio/ru/first-words/6-Я/
+    - assets/audio/ru/first-words/7-Ё/
+    - assets/audio/ru/first-words/8-Ю/
+    - assets/audio/ru/first-words/9-И/
+    - assets/audio/ru/first-words/10-Е/
+    - assets/audio/ru/first-words/11-Б/
+    - assets/audio/ru/first-words/12-П/
+    - assets/audio/ru/first-words/13-В/
+    - assets/audio/ru/first-words/14-Ф/
+    - assets/audio/ru/first-words/15-Г/
+    - assets/audio/ru/first-words/16-К/
+    - assets/audio/ru/first-words/17-Д/
+    - assets/audio/ru/first-words/18-Т/
+    - assets/audio/ru/first-words/19-Ж/
+    - assets/audio/ru/first-words/20-Ш/
+    - assets/audio/ru/first-words/21-З/
+    - assets/audio/ru/first-words/22-С/
+    - assets/audio/ru/first-words/23-Л/
+    - assets/audio/ru/first-words/24-М/
+    - assets/audio/ru/first-words/25-Н/
+    - assets/audio/ru/first-words/26-Р/
+    - assets/audio/ru/first-words/27-Й/
+    - assets/audio/ru/first-words/28-Х/
+    - assets/audio/ru/first-words/29-Ц/
+    - assets/audio/ru/first-words/30-Ч/
+    - assets/audio/ru/first-words/31-Щ/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

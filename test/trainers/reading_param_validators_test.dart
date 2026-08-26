@@ -17,6 +17,36 @@ void main() {
       expect(result.params?['targetCount'], 3);
     });
 
+    test('accepts letter-first-by-sound defaults and teacher letter order', () {
+      final empty = validateTrainerParams('letter-first-by-sound', {});
+      expect(empty.ok, isTrue);
+      expect(empty.params?['practiceLetters'], 'А,Д,Н');
+      expect(empty.params?['rounds'], 6);
+      expect(empty.params?['distractorCount'], 3);
+      expect(empty.params?['letterCase'], 'upper');
+
+      final listed = validateTrainerParams('letter-first-by-sound', {
+        'practiceLetters': 'н, а, д',
+        'rounds': 4,
+        'distractorCount': 2,
+        'letterCase': 'lower',
+      });
+      expect(listed.ok, isTrue);
+      expect(listed.params?['practiceLetters'], 'Н,А,Д');
+      expect(listed.params?['rounds'], 4);
+
+      final missingBank = validateTrainerParams('letter-first-by-sound', {
+        'practiceLetters': 'Ъ',
+      });
+      expect(missingBank.ok, isFalse);
+
+      final tooManyButtons = validateTrainerParams('letter-first-by-sound', {
+        'distractorCount': 8,
+      });
+      expect(tooManyButtons.ok, isFalse);
+      expect(validateTrainerParams('letter-first-by-image', {}).ok, isFalse);
+    });
+
     test('accepts letter-find-by-sound practice letters and legacy letter', () {
       final listed = validateTrainerParams('letter-find-by-sound', {
         'practiceLetters': 'к, а, м',

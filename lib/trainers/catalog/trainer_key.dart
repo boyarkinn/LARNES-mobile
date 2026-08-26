@@ -17,7 +17,7 @@ enum TrainerKey {
   letterDrawShow('letter-draw-show'),
   letterFindBySound('letter-find-by-sound'),
   letterFindTap('letter-find-tap'),
-  letterFirstByImage('letter-first-by-image'),
+  letterFirstBySound('letter-first-by-sound'),
   letterGridMatch('letter-grid-match'),
   letterHalfDraw('letter-half-draw'),
   letterMarqueeTap('letter-marquee-tap'),

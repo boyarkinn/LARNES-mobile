@@ -1,4 +1,6 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
+import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_model.dart'
+    hide maxLetterChoices;
 import 'package:larnes_mobile/trainers/reading/letter_guide_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
@@ -234,24 +236,38 @@ ValidateTrainerParamsResult validateLetterOddOneOutParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterFirstByImageParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterFirstBySoundParams(Map<String, dynamic> raw) {
+  final practiceRaw = raw['practiceLetters']?.toString();
+  if (practiceRaw != null &&
+      practiceRaw.trim().isNotEmpty &&
+      !isValidFirstBySoundPracticeLetters(practiceRaw)) {
+    return _fail(
+      'Укажите русские буквы, для которых есть слова в банке, через запятую.',
+    );
+  }
+  final practiceLetters = resolveFirstBySoundPracticeLetters(practiceRaw);
+  if (practiceLetters.isEmpty ||
+      practiceLetters.length > maxFirstBySoundPracticeLetters ||
+      !hasFirstWordsForLetters(practiceLetters)) {
+    return _fail(
+      'Укажите русские буквы, для которых есть слова в банке, через запятую.',
+    );
+  }
   final distractorCount = coerceInt(raw['distractorCount']) ?? 3;
   if (distractorCount < 0 || distractorCount > 7) {
     return _fail('Некорректные параметры.');
   }
-  if (!canFitLetterChoices(distractorCount)) {
+  if (!canFitFirstBySoundChoices(distractorCount)) {
     return _fail('Слишком много кнопок с буквами (максимум $maxLetterChoices).');
   }
-  final letterCase = parseLetterCase(raw['letterCase']);
-  final wordCase = parseLetterCase(raw['wordCase']);
-  if (letterCase == null || wordCase == null) {
+  final rounds = coerceInt(raw['rounds']) ?? defaultFirstBySoundRounds;
+  if (rounds < minFirstBySoundRounds || rounds > maxFirstBySoundRounds) {
     return _fail('Некорректные параметры.');
   }
-  return ValidateTrainerParamsResult.success({
+  return _withLetterCase(raw, {
     'distractorCount': distractorCount,
-    'letterCase': letterCase,
-    'wordCase': wordCase,
-    'wordSlug': normalizeFirstByImageWordSlug(raw['wordSlug']?.toString() ?? 'stork'),
+    'practiceLetters': formatPracticeLetters(practiceLetters),
+    'rounds': rounds,
   });
 }
 

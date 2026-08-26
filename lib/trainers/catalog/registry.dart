@@ -25,7 +25,7 @@ import 'package:larnes_mobile/trainers/reading/letter_case_color/letter_case_col
 import 'package:larnes_mobile/trainers/reading/letter_build/letter_build_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_grid_match/letter_grid_match_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_case_match/letter_case_match_trainer.dart';
-import 'package:larnes_mobile/trainers/reading/letter_first_by_image/letter_first_by_image_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_complete/letter_complete_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_draw_show/letter_draw_show_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_half_draw/letter_half_draw_trainer.dart';
@@ -98,8 +98,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       LetterCaseMatchTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterOrientationPick: ({required params, onComplete}) =>
       LetterOrientationPickTrainer(params: params, onComplete: onComplete),
-  TrainerKey.letterFirstByImage: ({required params, onComplete}) =>
-      LetterFirstByImageTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterFirstBySound: ({required params, onComplete}) =>
+      LetterFirstBySoundTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterMarqueeTap: ({required params, onComplete}) =>
       LetterMarqueeTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterWordLink: ({required params, onComplete}) =>
@@ -275,12 +275,12 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     isInteractive: true,
     validate: validateLetterOddOneOutParams,
   ),
-  TrainerKey.letterFirstByImage: TrainerDefinition(
-    key: TrainerKey.letterFirstByImage,
-    title: 'Первая буква по изображению',
+  TrainerKey.letterFirstBySound: TrainerDefinition(
+    key: TrainerKey.letterFirstBySound,
+    title: 'Первая буква слова по звуку',
     direction: TrainerDirection.reading,
     isInteractive: true,
-    validate: validateLetterFirstByImageParams,
+    validate: validateLetterFirstBySoundParams,
   ),
   TrainerKey.letterWordLink: TrainerDefinition(
     key: TrainerKey.letterWordLink,

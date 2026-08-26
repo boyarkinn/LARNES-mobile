@@ -1,14 +1,17 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scene.dart';
 import 'package:larnes_mobile/trainers/reading/sound_play_button.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
 void main() {
   group('LetterFindBySoundTrainer', () {
-    testWidgets('uses TrainerScene full-bleed without legacy instruction text', (tester) async {
+    testWidgets('starts in instruction phase inside TrainerScene', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -28,10 +31,10 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(TrainerScene), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
-      expect(find.byType(SoundPlayButton), findsOneWidget);
-      expect(find.byType(LetterFieldScene), findsOneWidget);
+      expect(find.byType(SoundPlayButton), findsNothing);
+      expect(find.byType(LetterFieldScene), findsNothing);
       expect(find.textContaining('Послушай'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
 
@@ -63,8 +66,27 @@ void main() {
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 3));
+    });
+
+    test('keeps countdown and shared letter audio wiring', () {
+      final trainerSource = File(
+        'lib/trainers/reading/letter_find_by_sound/letter_find_by_sound_trainer.dart',
+      ).readAsStringSync();
+
+      expect(trainerSource, contains('LetterFindBySoundPhase.countdown'));
+      expect(trainerSource, contains("_countdownStepMs = 750"));
+      expect(trainerSource, contains('TrainerInstructionScene'));
+      expect(trainerSource, contains('Найди букву'));
+      expect(trainerSource, contains('playLetterSyllableAudio'));
+      expect(trainerSource, contains('playLetterFindBySoundInstruction'));
+      expect(trainerSource, contains('SoundPlayButtonVariant.chrome'));
+      expect(trainerSource, contains('Positioned'));
+      expect(trainerSource, contains('resolveSoundPracticeLetters'));
+      expect(trainerSource, contains('_roundIndex'));
+      expect(trainerSource, contains('_advanceRound'));
     });
   });
 }

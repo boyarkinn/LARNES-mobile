@@ -34,15 +34,28 @@ void main() {
     });
   });
 
+  group('resolveSoundPracticeLetters', () {
+    test('parses comma-separated letters and keeps teacher order', () {
+      expect(resolveSoundPracticeLetters('К, а, М'), ['К', 'А', 'М']);
+      expect(isValidSoundPracticeLetters('А,М,К'), isTrue);
+      expect(isValidSoundPracticeLetters(''), isFalse);
+    });
+
+    test('falls back to a legacy single letter', () {
+      expect(resolveSoundPracticeLetters(null, 'б'), ['Б']);
+    });
+  });
+
   group('buildSoundFindRoundSeed', () {
-    test('includes sound trainer key in hash', () {
+    test('includes sound trainer key and round in hash', () {
       final withKey = buildSoundFindRoundSeed(
         targetLetter: 'М',
         letterCase: 'upper',
         distractorCount: 5,
         layoutSalt: 42,
+        roundIndex: 0,
       );
-      final withoutKey = hashParamsSeed(['М', 'upper', 5, 42]);
+      final withoutKey = hashParamsSeed(['М', 'upper', 5, 42, 0]);
 
       expect(withKey, isNot(withoutKey));
       expect(
@@ -51,8 +64,19 @@ void main() {
           letterCase: 'upper',
           distractorCount: 5,
           layoutSalt: 42,
+          roundIndex: 0,
         ),
         withKey,
+      );
+      expect(
+        buildSoundFindRoundSeed(
+          targetLetter: 'М',
+          letterCase: 'upper',
+          distractorCount: 5,
+          layoutSalt: 42,
+          roundIndex: 1,
+        ),
+        isNot(withKey),
       );
     });
   });

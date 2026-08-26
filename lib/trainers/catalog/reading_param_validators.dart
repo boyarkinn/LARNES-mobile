@@ -70,9 +70,17 @@ ValidateTrainerParamsResult validateLetterFindTapParams(Map<String, dynamic> raw
 }
 
 ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic> raw) {
-  final letterResult = _validateSingleLetterField(raw);
-  if (!letterResult.ok) {
-    return letterResult;
+  final practiceRaw = raw['practiceLetters'];
+  final legacyLetter = raw['letter'];
+  final source = (practiceRaw is String && practiceRaw.trim().isNotEmpty)
+      ? practiceRaw
+      : (legacyLetter is String ? legacyLetter : '');
+  if (source.trim().isEmpty || source.trim().length > 64) {
+    return _fail('Некорректные параметры.');
+  }
+  final practiceLetters = parsePracticeLetters(source);
+  if (practiceLetters.isEmpty || practiceLetters.length > maxPracticeLettersNameAloud) {
+    return _fail(_practiceLettersMessage);
   }
   final distractorCount = coerceInt(raw['distractorCount']);
   if (distractorCount == null || distractorCount < 0 || distractorCount > 30) {
@@ -82,8 +90,8 @@ ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic>
     return _fail('Слишком много букв на экране (максимум $maxLetterFieldTokens).');
   }
   return _withLetterCase(raw, {
-    'letter': normalizeTargetLetter(raw['letter'] as String),
     'distractorCount': distractorCount,
+    'practiceLetters': formatPracticeLetters(practiceLetters),
   });
 }
 

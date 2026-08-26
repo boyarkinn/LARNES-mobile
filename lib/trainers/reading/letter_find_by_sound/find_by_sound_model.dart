@@ -34,17 +34,39 @@ String getSoundStubMessage(String displayLetter) {
   return 'Заглушка аудио: буква «$displayLetter»';
 }
 
+const maxSoundPracticeLetters = maxPracticeLettersNameAloud;
+
+List<String> resolveSoundPracticeLetters([
+  String? practiceLettersRaw,
+  String? legacyLetter,
+]) {
+  final raw = (practiceLettersRaw != null && practiceLettersRaw.trim().isNotEmpty)
+      ? practiceLettersRaw.trim()
+      : (legacyLetter?.trim() ?? '');
+  return parsePracticeLetters(raw);
+}
+
+bool isValidSoundPracticeLetters([
+  String? practiceLettersRaw,
+  String? legacyLetter,
+]) {
+  final letters = resolveSoundPracticeLetters(practiceLettersRaw, legacyLetter);
+  return letters.isNotEmpty && letters.length <= maxSoundPracticeLetters;
+}
+
 int buildSoundFindRoundSeed({
   required String targetLetter,
   required String letterCase,
   required int distractorCount,
   required int layoutSalt,
+  required int roundIndex,
 }) {
   return hashParamsSeed([
     targetLetter,
     letterCase,
     distractorCount,
     layoutSalt,
+    roundIndex,
     'sound',
   ]);
 }

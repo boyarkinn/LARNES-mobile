@@ -76,6 +76,29 @@ flutter:
     - assets/audio/ru/reading/stroop-colors/
     - assets/audio/ru/reading/schulte-table/
     - assets/audio/ru/reading/wedge-tables/
+    - assets/audio/ru/reading/letter-find-by-sound/
+    - assets/audio/ru/letters-syllables/1-10-А-Е/
+    - assets/audio/ru/letters-syllables/11-Б/
+    - assets/audio/ru/letters-syllables/12-П/
+    - assets/audio/ru/letters-syllables/13-В/
+    - assets/audio/ru/letters-syllables/14-Ф/
+    - assets/audio/ru/letters-syllables/15-Г/
+    - assets/audio/ru/letters-syllables/16-К/
+    - assets/audio/ru/letters-syllables/17-Д/
+    - assets/audio/ru/letters-syllables/18-Т/
+    - assets/audio/ru/letters-syllables/19-Ж/
+    - assets/audio/ru/letters-syllables/20-Ш/
+    - assets/audio/ru/letters-syllables/21-З/
+    - assets/audio/ru/letters-syllables/22-С/
+    - assets/audio/ru/letters-syllables/23-Л/
+    - assets/audio/ru/letters-syllables/24-М/
+    - assets/audio/ru/letters-syllables/25-Н/
+    - assets/audio/ru/letters-syllables/26-Р/
+    - assets/audio/ru/letters-syllables/27-Й/
+    - assets/audio/ru/letters-syllables/28-Х/
+    - assets/audio/ru/letters-syllables/29-Ц/
+    - assets/audio/ru/letters-syllables/30-Ч/
+    - assets/audio/ru/letters-syllables/31-Щ/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

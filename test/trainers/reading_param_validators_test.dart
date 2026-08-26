@@ -17,6 +17,27 @@ void main() {
       expect(result.params?['targetCount'], 3);
     });
 
+    test('accepts letter-find-by-sound practice letters and legacy letter', () {
+      final listed = validateTrainerParams('letter-find-by-sound', {
+        'practiceLetters': 'к, а, м',
+        'distractorCount': 5,
+        'letterCase': 'upper',
+      });
+
+      expect(listed.ok, isTrue);
+      expect(listed.params?['practiceLetters'], 'К,А,М');
+      expect(listed.params?.containsKey('letter'), isFalse);
+
+      final legacy = validateTrainerParams('letter-find-by-sound', {
+        'letter': 'б',
+        'distractorCount': 5,
+        'letterCase': 'lower',
+      });
+
+      expect(legacy.ok, isTrue);
+      expect(legacy.params?['practiceLetters'], 'Б');
+    });
+
     test('rejects letter-find-tap overflow field', () {
       final result = validateTrainerParams('letter-find-tap', {
         'letter': 'М',

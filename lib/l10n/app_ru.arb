@@ -262,8 +262,7 @@
   },
   "parentHomeworkBack": "Назад",
   "parentHomeworkSentAt": "Отправлено",
-  "parentHomeworkDeadline": "Дедлайн",
-  "parentHomeworkNoDeadline": "Не указан",
+  "parentHomeworkAvailableOn": "Дата ДЗ",
   "parentHomeworkProgress": "Прогресс",
   "parentHomeworkProgressValue": "{current} / {total}",
   "@parentHomeworkProgressValue": {
@@ -298,19 +297,14 @@
   "parentHomeworkPlayTrainerSoon": "Тренажёр — в следующем обновлении.",
   "parentHomeworkPlayInteractiveHint": "Выполните задание на экране",
   "parentHomeworkEmptyDue": "Нет заданий, которые нужно сделать сейчас.",
-  "parentHomeworkEmptyCompleted": "Пока нет выполненных заданий.",
-  "parentHomeworkEmptyOverdue": "Нет просроченных заданий.",
+  "parentHomeworkEmptyCompleted": "Пока нет завершённых заданий.",
   "parentHomeworkEmptyUpcoming": "Нет предстоящих заданий.",
   "parentHomeworkTabDue": "Сделать ({count})",
   "@parentHomeworkTabDue": {
     "placeholders": {"count": {"type": "int"}}
   },
-  "parentHomeworkTabCompleted": "Выполненные ({count})",
+  "parentHomeworkTabCompleted": "Завершённые ({count})",
   "@parentHomeworkTabCompleted": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "parentHomeworkTabOverdue": "Просроченные ({count})",
-  "@parentHomeworkTabOverdue": {
     "placeholders": {"count": {"type": "int"}}
   },
   "parentHomeworkTabUpcoming": "Предстоящие ({count})",
@@ -320,7 +314,9 @@
   "parentHomeworkStatusAssigned": "Не начато",
   "parentHomeworkStatusInProgress": "В процессе",
   "parentHomeworkStatusCompleted": "Выполнено",
-  "parentHomeworkStatusOverdue": "Просрочено",
+  "parentHomeworkStatusMissed": "Пропущено",
+  "parentHomeworkStatusCancelled": "Отменено",
+  "parentHomeworkStatusUpcoming": "Предстоящее",
   "parentAccountTitle": "Аккаунт",
   "adminNavTrainers": "Тренажёры",
   "adminNavAccount": "Аккаунт",

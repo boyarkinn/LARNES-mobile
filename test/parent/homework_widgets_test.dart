@@ -32,8 +32,7 @@ void main() {
             counts: const {
               ParentHomeworkTab.due: 2,
               ParentHomeworkTab.completed: 0,
-              ParentHomeworkTab.overdue: 1,
-              ParentHomeworkTab.upcoming: 0,
+              ParentHomeworkTab.upcoming: 1,
             },
             onTabSelected: (tab) => selected = tab,
           ),
@@ -49,9 +48,9 @@ void main() {
       });
       expect(activeDecorations.length, 1);
 
-      await tester.tap(find.textContaining('Просрочен'));
+      await tester.tap(find.textContaining('Предстоящ'));
       await tester.pumpAndSettle();
-      expect(selected, ParentHomeworkTab.overdue);
+      expect(selected, ParentHomeworkTab.upcoming);
     });
   });
 }

@@ -773,10 +773,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkSentAt => 'Sent';
 
   @override
-  String get parentHomeworkDeadline => 'Deadline';
-
-  @override
-  String get parentHomeworkNoDeadline => 'Not set';
+  String get parentHomeworkAvailableOn => 'Homework date';
 
   @override
   String get parentHomeworkProgress => 'Progress';
@@ -838,10 +835,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkEmptyDue => 'No assignments to do right now.';
 
   @override
-  String get parentHomeworkEmptyCompleted => 'No completed assignments yet.';
-
-  @override
-  String get parentHomeworkEmptyOverdue => 'No overdue assignments.';
+  String get parentHomeworkEmptyCompleted => 'No finished assignments yet.';
 
   @override
   String get parentHomeworkEmptyUpcoming => 'No upcoming assignments.';
@@ -853,12 +847,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String parentHomeworkTabCompleted(int count) {
-    return 'Completed ($count)';
-  }
-
-  @override
-  String parentHomeworkTabOverdue(int count) {
-    return 'Overdue ($count)';
+    return 'Finished ($count)';
   }
 
   @override
@@ -876,7 +865,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkStatusCompleted => 'Completed';
 
   @override
-  String get parentHomeworkStatusOverdue => 'Overdue';
+  String get parentHomeworkStatusMissed => 'Missed';
+
+  @override
+  String get parentHomeworkStatusCancelled => 'Cancelled';
+
+  @override
+  String get parentHomeworkStatusUpcoming => 'Upcoming';
 
   @override
   String get parentAccountTitle => 'Account';

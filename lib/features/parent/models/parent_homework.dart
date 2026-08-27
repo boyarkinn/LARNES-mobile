@@ -1,8 +1,7 @@
 enum ParentHomeworkTab {
   due,
-  completed,
-  overdue,
-  upcoming;
+  upcoming,
+  completed;
 
   static ParentHomeworkTab fromApiValue(String? value) {
     return ParentHomeworkTab.values.firstWhere(
@@ -22,7 +21,8 @@ class ParentHomeworkAssignment {
     required this.displayStatus,
     required this.status,
     required this.sentAt,
-    this.deadline,
+    required this.availableOn,
+    this.cancelledAt,
     this.completedAt,
     required this.currentStepIndex,
     required this.totalSteps,
@@ -36,7 +36,10 @@ class ParentHomeworkAssignment {
       displayStatus: json['displayStatus'] as String,
       status: json['status'] as String,
       sentAt: DateTime.parse(json['sentAt'] as String),
-      deadline: json['deadline'] as String?,
+      availableOn: json['availableOn'] as String,
+      cancelledAt: json['cancelledAt'] == null
+          ? null
+          : DateTime.parse(json['cancelledAt'] as String),
       completedAt: json['completedAt'] == null
           ? null
           : DateTime.parse(json['completedAt'] as String),
@@ -51,10 +54,16 @@ class ParentHomeworkAssignment {
   final String displayStatus;
   final String status;
   final DateTime sentAt;
-  final String? deadline;
+  final String availableOn;
+  final DateTime? cancelledAt;
   final DateTime? completedAt;
   final int currentStepIndex;
   final int totalSteps;
+
+  bool get canOpen =>
+      displayStatus == 'assigned' ||
+      displayStatus == 'in_progress' ||
+      displayStatus == 'completed';
 }
 
 class ParentHomeworkListPage {
@@ -124,6 +133,8 @@ class ParentHomeworkPlaySnapshot {
     required this.recipientId,
     required this.title,
     required this.status,
+    required this.availableOn,
+    this.cancelledAt,
     required this.currentStepIndex,
     required this.steps,
   });
@@ -143,6 +154,10 @@ class ParentHomeworkPlaySnapshot {
       recipientId: json['recipientId'] as String,
       title: json['title'] as String,
       status: json['status'] as String,
+      availableOn: json['availableOn'] as String,
+      cancelledAt: json['cancelledAt'] == null
+          ? null
+          : DateTime.parse(json['cancelledAt'] as String),
       currentStepIndex: json['currentStepIndex'] as int? ?? 0,
       steps: steps,
     );
@@ -153,6 +168,8 @@ class ParentHomeworkPlaySnapshot {
   final String recipientId;
   final String title;
   final String status;
+  final String availableOn;
+  final DateTime? cancelledAt;
   final int currentStepIndex;
   final List<ParentHomeworkPlayStep> steps;
 

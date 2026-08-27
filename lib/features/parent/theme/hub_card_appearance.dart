@@ -102,8 +102,12 @@ ChildCardColorTokens directionHubCardTokens(String directionSlug, {int sortOrder
 /// Эталон: platform/src/server/homework/homework-card-appearance.ts
 ChildCardColorTokens homeworkAssignmentCardTokens(String displayStatus) {
   switch (displayStatus) {
-    case 'overdue':
+    case 'missed':
       return childCardColorTokens(ChildCardColor.rose);
+    case 'cancelled':
+      return childCardColorTokens(ChildCardColor.violet);
+    case 'upcoming':
+      return childCardColorTokens(ChildCardColor.amber);
     case 'completed':
       return childCardColorTokens(ChildCardColor.emerald);
     case 'in_progress':

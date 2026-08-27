@@ -6,10 +6,7 @@ String formatHomeworkDate(DateTime date, String localeCode) {
   return DateFormat.yMd(localeCode).format(date.toLocal());
 }
 
-String formatHomeworkDeadline(String? isoDate, String localeCode) {
-  if (isoDate == null || isoDate.isEmpty) {
-    return '';
-  }
+String formatHomeworkAvailableOn(String isoDate, String localeCode) {
   final date = DateTime.tryParse('${isoDate}T00:00:00');
   if (date == null) {
     return isoDate;
@@ -23,8 +20,6 @@ String homeworkTabLabel(AppLocalizations l10n, ParentHomeworkTab tab, int count)
       return l10n.parentHomeworkTabDue(count);
     case ParentHomeworkTab.completed:
       return l10n.parentHomeworkTabCompleted(count);
-    case ParentHomeworkTab.overdue:
-      return l10n.parentHomeworkTabOverdue(count);
     case ParentHomeworkTab.upcoming:
       return l10n.parentHomeworkTabUpcoming(count);
   }
@@ -36,8 +31,6 @@ String homeworkEmptyMessage(AppLocalizations l10n, ParentHomeworkTab tab) {
       return l10n.parentHomeworkEmptyDue;
     case ParentHomeworkTab.completed:
       return l10n.parentHomeworkEmptyCompleted;
-    case ParentHomeworkTab.overdue:
-      return l10n.parentHomeworkEmptyOverdue;
     case ParentHomeworkTab.upcoming:
       return l10n.parentHomeworkEmptyUpcoming;
   }
@@ -49,10 +42,13 @@ String buildHomeworkCardSubtitle(
   String localeCode,
 ) {
   final statusLabel = homeworkStatusLabel(l10n, assignment.displayStatus);
-  final deadlineLabel = assignment.deadline == null
-      ? l10n.parentHomeworkNoDeadline
-      : formatHomeworkDeadline(assignment.deadline, localeCode);
-  final parts = <String>['$statusLabel · $deadlineLabel'];
+  final availableOn = formatHomeworkAvailableOn(
+    assignment.availableOn,
+    localeCode,
+  );
+  final parts = <String>[
+    '$statusLabel · ${l10n.parentHomeworkAvailableOn}: $availableOn',
+  ];
 
   if (assignment.totalSteps > 0) {
     parts.add(
@@ -74,8 +70,12 @@ String homeworkStatusLabel(AppLocalizations l10n, String displayStatus) {
       return l10n.parentHomeworkStatusInProgress;
     case 'completed':
       return l10n.parentHomeworkStatusCompleted;
-    case 'overdue':
-      return l10n.parentHomeworkStatusOverdue;
+    case 'missed':
+      return l10n.parentHomeworkStatusMissed;
+    case 'cancelled':
+      return l10n.parentHomeworkStatusCancelled;
+    case 'upcoming':
+      return l10n.parentHomeworkStatusUpcoming;
     default:
       return displayStatus;
   }

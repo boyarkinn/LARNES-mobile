@@ -197,7 +197,9 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
                       if (i > 0) const SizedBox(height: ParentChildCardMetrics.pickerListGap),
                       HomeworkAssignmentCard(
                         assignment: assignments[i],
-                        onTap: () => _openAssignment(assignments[i].assignmentId),
+                        onTap: assignments[i].canOpen
+                            ? () => _openAssignment(assignments[i].assignmentId)
+                            : null,
                       ),
                     ],
                   ],

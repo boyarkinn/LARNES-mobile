@@ -311,8 +311,7 @@
   },
   "parentHomeworkBack": "Back",
   "parentHomeworkSentAt": "Sent",
-  "parentHomeworkDeadline": "Deadline",
-  "parentHomeworkNoDeadline": "Not set",
+  "parentHomeworkAvailableOn": "Homework date",
   "parentHomeworkProgress": "Progress",
   "parentHomeworkProgressValue": "{current} / {total}",
   "@parentHomeworkProgressValue": {
@@ -347,19 +346,14 @@
   "parentHomeworkPlayTrainerSoon": "Trainer — coming in the next update.",
   "parentHomeworkPlayInteractiveHint": "Complete the task on screen",
   "parentHomeworkEmptyDue": "No assignments to do right now.",
-  "parentHomeworkEmptyCompleted": "No completed assignments yet.",
-  "parentHomeworkEmptyOverdue": "No overdue assignments.",
+  "parentHomeworkEmptyCompleted": "No finished assignments yet.",
   "parentHomeworkEmptyUpcoming": "No upcoming assignments.",
   "parentHomeworkTabDue": "Due ({count})",
   "@parentHomeworkTabDue": {
     "placeholders": {"count": {"type": "int"}}
   },
-  "parentHomeworkTabCompleted": "Completed ({count})",
+  "parentHomeworkTabCompleted": "Finished ({count})",
   "@parentHomeworkTabCompleted": {
-    "placeholders": {"count": {"type": "int"}}
-  },
-  "parentHomeworkTabOverdue": "Overdue ({count})",
-  "@parentHomeworkTabOverdue": {
     "placeholders": {"count": {"type": "int"}}
   },
   "parentHomeworkTabUpcoming": "Upcoming ({count})",
@@ -369,7 +363,9 @@
   "parentHomeworkStatusAssigned": "Not started",
   "parentHomeworkStatusInProgress": "In progress",
   "parentHomeworkStatusCompleted": "Completed",
-  "parentHomeworkStatusOverdue": "Overdue",
+  "parentHomeworkStatusMissed": "Missed",
+  "parentHomeworkStatusCancelled": "Cancelled",
+  "parentHomeworkStatusUpcoming": "Upcoming",
   "parentAccountTitle": "Account",
   "adminNavTrainers": "Trainers",
   "adminNavAccount": "Account",

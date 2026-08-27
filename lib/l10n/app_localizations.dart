@@ -1520,17 +1520,11 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get parentHomeworkSentAt;
 
-  /// No description provided for @parentHomeworkDeadline.
+  /// No description provided for @parentHomeworkAvailableOn.
   ///
   /// In en, this message translates to:
-  /// **'Deadline'**
-  String get parentHomeworkDeadline;
-
-  /// No description provided for @parentHomeworkNoDeadline.
-  ///
-  /// In en, this message translates to:
-  /// **'Not set'**
-  String get parentHomeworkNoDeadline;
+  /// **'Homework date'**
+  String get parentHomeworkAvailableOn;
 
   /// No description provided for @parentHomeworkProgress.
   ///
@@ -1637,14 +1631,8 @@ abstract class AppLocalizations {
   /// No description provided for @parentHomeworkEmptyCompleted.
   ///
   /// In en, this message translates to:
-  /// **'No completed assignments yet.'**
+  /// **'No finished assignments yet.'**
   String get parentHomeworkEmptyCompleted;
-
-  /// No description provided for @parentHomeworkEmptyOverdue.
-  ///
-  /// In en, this message translates to:
-  /// **'No overdue assignments.'**
-  String get parentHomeworkEmptyOverdue;
 
   /// No description provided for @parentHomeworkEmptyUpcoming.
   ///
@@ -1661,14 +1649,8 @@ abstract class AppLocalizations {
   /// No description provided for @parentHomeworkTabCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Completed ({count})'**
+  /// **'Finished ({count})'**
   String parentHomeworkTabCompleted(int count);
-
-  /// No description provided for @parentHomeworkTabOverdue.
-  ///
-  /// In en, this message translates to:
-  /// **'Overdue ({count})'**
-  String parentHomeworkTabOverdue(int count);
 
   /// No description provided for @parentHomeworkTabUpcoming.
   ///
@@ -1694,11 +1676,23 @@ abstract class AppLocalizations {
   /// **'Completed'**
   String get parentHomeworkStatusCompleted;
 
-  /// No description provided for @parentHomeworkStatusOverdue.
+  /// No description provided for @parentHomeworkStatusMissed.
   ///
   /// In en, this message translates to:
-  /// **'Overdue'**
-  String get parentHomeworkStatusOverdue;
+  /// **'Missed'**
+  String get parentHomeworkStatusMissed;
+
+  /// No description provided for @parentHomeworkStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get parentHomeworkStatusCancelled;
+
+  /// No description provided for @parentHomeworkStatusUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get parentHomeworkStatusUpcoming;
 
   /// No description provided for @parentAccountTitle.
   ///

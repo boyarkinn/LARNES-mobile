@@ -39,8 +39,12 @@ class HomeworkStatusBadge extends StatelessWidget {
         return (const Color(0xFFDCFCE7), const Color(0xFF15803D));
       case 'in_progress':
         return (const Color(0xFFDBEAFE), const Color(0xFF1D4ED8));
-      case 'overdue':
+      case 'missed':
         return (const Color(0xFFFEE2E2), const Color(0xFFB91C1C));
+      case 'cancelled':
+        return (const Color(0xFFEDE9FE), const Color(0xFF6D28D9));
+      case 'upcoming':
+        return (const Color(0xFFFEF3C7), const Color(0xFFB45309));
       case 'assigned':
         return (ParentColors.shellSoft, ParentColors.shellDeep);
       default:

@@ -777,10 +777,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentHomeworkSentAt => 'Отправлено';
 
   @override
-  String get parentHomeworkDeadline => 'Дедлайн';
-
-  @override
-  String get parentHomeworkNoDeadline => 'Не указан';
+  String get parentHomeworkAvailableOn => 'Дата ДЗ';
 
   @override
   String get parentHomeworkProgress => 'Прогресс';
@@ -844,10 +841,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Нет заданий, которые нужно сделать сейчас.';
 
   @override
-  String get parentHomeworkEmptyCompleted => 'Пока нет выполненных заданий.';
-
-  @override
-  String get parentHomeworkEmptyOverdue => 'Нет просроченных заданий.';
+  String get parentHomeworkEmptyCompleted => 'Пока нет завершённых заданий.';
 
   @override
   String get parentHomeworkEmptyUpcoming => 'Нет предстоящих заданий.';
@@ -859,12 +853,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String parentHomeworkTabCompleted(int count) {
-    return 'Выполненные ($count)';
-  }
-
-  @override
-  String parentHomeworkTabOverdue(int count) {
-    return 'Просроченные ($count)';
+    return 'Завершённые ($count)';
   }
 
   @override
@@ -882,7 +871,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentHomeworkStatusCompleted => 'Выполнено';
 
   @override
-  String get parentHomeworkStatusOverdue => 'Просрочено';
+  String get parentHomeworkStatusMissed => 'Пропущено';
+
+  @override
+  String get parentHomeworkStatusCancelled => 'Отменено';
+
+  @override
+  String get parentHomeworkStatusUpcoming => 'Предстоящее';
 
   @override
   String get parentAccountTitle => 'Аккаунт';

@@ -12,11 +12,11 @@ class HomeworkAssignmentCard extends StatelessWidget {
   const HomeworkAssignmentCard({
     super.key,
     required this.assignment,
-    required this.onTap,
+    this.onTap,
   });
 
   final ParentHomeworkAssignment assignment;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +29,7 @@ class HomeworkAssignmentCard extends StatelessWidget {
       tokens: homeworkAssignmentCardTokens(assignment.displayStatus),
       icon: HubCardIconKind.homework,
       onTap: onTap,
+      staticCard: onTap == null,
     );
   }
 }

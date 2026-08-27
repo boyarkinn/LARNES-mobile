@@ -110,9 +110,10 @@ GridRound buildGridRound({
   required int gridSize,
   required String letterCase,
   required List<String> practiceLetters,
-  required int seed,
+  double Function()? random,
+  int? seed,
 }) {
-  final rng = createSeededRng(seed);
+  final rng = random ?? createSeededRng(seed!);
   final cells = buildGridCells(gridSize);
   final practicePool = [
     for (final letter in practiceLetters)

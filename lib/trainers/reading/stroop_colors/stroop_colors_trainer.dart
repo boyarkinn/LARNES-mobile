@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/reading/stroop_colors/model.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_audio.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_scene.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_sizes.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -17,11 +18,7 @@ const kStroopColorsInstructionText = 'Назови цвет слова';
 
 /// Web: `platform/src/trainers/reading/stroop-colors/component.tsx`
 class StroopColorsTrainer extends StatefulWidget {
-  const StroopColorsTrainer({
-    super.key,
-    required this.params,
-    this.onComplete,
-  });
+  const StroopColorsTrainer({super.key, required this.params, this.onComplete});
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -55,7 +52,9 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   void didUpdateWidget(StroopColorsTrainer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.params['wordCount'] != widget.params['wordCount'] ||
-        oldWidget.params['displaySeconds'] != widget.params['displaySeconds']) {
+        oldWidget.params['displaySeconds'] != widget.params['displaySeconds'] ||
+        oldWidget.params['__runtimeSnapshot'] !=
+            widget.params['__runtimeSnapshot']) {
       _startSession();
     }
   }
@@ -104,9 +103,20 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       'displaySeconds',
       kStroopDisplaySecondsDefault,
     );
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'stroop-colors',
+      widget.params,
+    );
 
     setState(() {
-      _items = generateStroopItems(GenerateStroopItemsInput(wordCount: wordCount));
+      _items = generateStroopItems(
+        GenerateStroopItemsInput(
+          wordCount: wordCount,
+          random: snapshotSeed == null
+              ? null
+              : TrainerSnapshotRandom(snapshotSeed).nextDouble,
+        ),
+      );
       _displayMs = (displaySeconds * 1000).round();
       _phase = StroopPhase.instruction;
       _instructionLength = 0;

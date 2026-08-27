@@ -3,6 +3,7 @@ import 'package:larnes_mobile/trainers/reading/letter_colors.dart';
 import 'package:larnes_mobile/trainers/reading/letter_grid_match/grid_match_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_grid_match/grid_match_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
@@ -23,6 +24,7 @@ class LetterGridMatchTrainer extends StatefulWidget {
 }
 
 class _LetterGridMatchTrainerState extends State<LetterGridMatchTrainer> {
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late final List<String> _practiceLetters;
   late final int _seed;
@@ -45,7 +47,8 @@ class _LetterGridMatchTrainerState extends State<LetterGridMatchTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed('letter-grid-match', widget.params);
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _practiceLetters = parsePracticeLetters(_practiceLettersRaw);
     _seed = buildRoundSeed([
       _filledCount,
@@ -59,9 +62,16 @@ class _LetterGridMatchTrainerState extends State<LetterGridMatchTrainer> {
       gridSize: _gridSize,
       letterCase: _letterCase,
       practiceLetters: _practiceLetters,
-      seed: _seed,
+      random: _snapshotSeed == null
+          ? null
+          : TrainerSnapshotRandom(_snapshotSeed!).nextDouble,
+      seed: _snapshotSeed == null ? _seed : null,
     );
-    final rng = createSeededRng(_seed + 23);
+    final rng = _snapshotSeed == null
+        ? createSeededRng(_seed + 23)
+        : TrainerSnapshotRandom(
+            buildRoundSeed([_snapshotSeed!, 'colors']),
+          ).nextDouble;
     _tileColors = {
       for (final tile in _round.poolTiles)
         tile.id: pickLetterDisplayColor(rng),

@@ -74,8 +74,10 @@ List<String> pickLettersForRound({
 LetterMatchRound buildLetterMatchRound(
   List<String> selectedLetters,
   int seed,
+  [double Function()? random],
 ) {
-  final rng = createSeededRng(seed);
+  final leftRng = random ?? createSeededRng(seed);
+  final rightRng = random ?? createSeededRng(seed + 19);
 
   final leftItems = [
     for (final letter in selectedLetters)
@@ -96,11 +98,8 @@ LetterMatchRound buildLetterMatchRound(
   ];
 
   return LetterMatchRound(
-    leftItems: _shuffleItems(leftItems, rng),
-    rightItems: _shuffleItems(
-      rightItems,
-      createSeededRng(seed + 19),
-    ),
+    leftItems: _shuffleItems(leftItems, leftRng),
+    rightItems: _shuffleItems(rightItems, rightRng),
   );
 }
 
@@ -128,9 +127,10 @@ bool isCaseMatchRoundComplete(
 List<String> buildSelectedLetters({
   required int pairCount,
   required List<String> practiceLetters,
-  required int seed,
+  int? seed,
+  double Function()? random,
 }) {
-  final rng = createSeededRng(seed);
+  final rng = random ?? createSeededRng(seed!);
 
   return pickLettersForRound(
     pairCount: pairCount,

@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_layo
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_field_scene.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
@@ -60,15 +61,22 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     final totalFruits = widget.params['totalFruits'] as int? ?? 1;
     final answerRangeStart = widget.params['answerRangeStart'] as int? ?? 0;
 
-    final seed = hashParamsSeed([
-      targetFruit,
-      _targetCount,
-      fruitTypeCount,
-      totalFruits,
-      answerRangeStart,
-      _layoutSalt,
-    ]);
-    final rng = createSeededRng(seed);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'fruit-count-tap',
+      widget.params,
+    );
+    final rng = snapshotSeed == null
+        ? createSeededRng(
+            hashParamsSeed([
+              targetFruit,
+              _targetCount,
+              fruitTypeCount,
+              totalFruits,
+              answerRangeStart,
+              _layoutSalt,
+            ]),
+          )
+        : TrainerSnapshotRandom(snapshotSeed).nextDouble;
     final tokens = buildFruitTokens(
       BuildFruitFieldInput(
         answerRangeStart: answerRangeStart,

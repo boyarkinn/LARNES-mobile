@@ -65,5 +65,53 @@ void main() {
 
       await tester.pump(const Duration(seconds: 3));
     });
+
+    testWidgets('replays snapshot-seeded digits and placement', (tester) async {
+      Future<List<Object>> buildSignature() async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: SizedBox(
+              width: 360,
+              height: 640,
+              child: DigitFindTapTrainer(
+                params: {
+                  'digit': 2,
+                  'targetCount': 3,
+                  'distractorCount': 8,
+                  '__runtimeSnapshot': {
+                    'version': 1,
+                    'trainerKey': 'digit-find-tap',
+                    'mode': 'materialized',
+                    'payload': {'seed': 20260827},
+                  },
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final digits = tester.widget<DigitFieldScene>(
+          find.byType(DigitFieldScene),
+        ).digits;
+        return [
+          for (final digit in digits)
+            [
+              digit.id,
+              digit.digit,
+              digit.isTarget,
+              digit.xPercent,
+              digit.yPercent,
+            ],
+        ];
+      }
+
+      final first = await buildSignature();
+      await tester.pumpWidget(const SizedBox.shrink());
+      final second = await buildSignature();
+
+      expect(second, first);
+      await tester.pump(const Duration(seconds: 3));
+    });
   });
 }

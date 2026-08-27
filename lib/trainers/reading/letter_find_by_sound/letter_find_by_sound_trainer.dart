@@ -9,6 +9,7 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scen
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/sound_play_button.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -41,6 +42,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
   static const _countdownStepMs = 750;
   static const _countdownColor = Color(0xFFDC2626);
 
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late List<PlacedLetter> _letters;
   late List<String> _practiceLetters;
@@ -66,7 +68,11 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed(
+      'letter-find-by-sound',
+      widget.params,
+    );
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _startSession();
   }
 
@@ -140,14 +146,24 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
 
   List<PlacedLetter> _buildLetters(String targetLetter, String letterCase) {
     final distractorCount = widget.params['distractorCount'] as int? ?? 0;
-    final seed = buildSoundFindRoundSeed(
-      targetLetter: targetLetter,
-      letterCase: letterCase,
-      distractorCount: distractorCount,
-      layoutSalt: _layoutSalt,
-      roundIndex: _roundIndex,
-    );
-    final rng = createSeededRng(seed);
+    final rng = _snapshotSeed == null
+        ? createSeededRng(
+            buildSoundFindRoundSeed(
+              targetLetter: targetLetter,
+              letterCase: letterCase,
+              distractorCount: distractorCount,
+              layoutSalt: _layoutSalt,
+              roundIndex: _roundIndex,
+            ),
+          )
+        : TrainerSnapshotRandom(
+            hashParamsSeed([
+              _snapshotSeed!,
+              targetLetter,
+              _roundIndex,
+              'sound',
+            ]),
+          ).nextDouble;
     final tokens = buildSoundFindTokens(
       BuildSoundFindFieldInput(
         distractorCount: distractorCount,

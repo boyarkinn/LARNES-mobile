@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_audio.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_grid.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_phase.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -88,7 +89,9 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
     return a['gridSize'] != b['gridSize'] ||
         a['rounds'] != b['rounds'] ||
         a['stepCount'] != b['stepCount'] ||
-        a['stepPauseSec'] != b['stepPauseSec'];
+        a['stepPauseSec'] != b['stepPauseSec'] ||
+        readTrainerSnapshotSeed('fly-track', a) !=
+            readTrainerSnapshotSeed('fly-track', b);
   }
 
   int _readIntParam(String key, int fallback) {
@@ -114,9 +117,16 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   }
 
   List<FlyTrackRound> _generateRounds() {
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'fly-track',
+      widget.params,
+    );
     return generateFlyTrackRounds(
       GenerateFlyTrackRoundsInput(
         gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
+        random: snapshotSeed == null
+            ? null
+            : TrainerSnapshotRandom(snapshotSeed).nextDouble,
         rounds: _readIntParam('rounds', kFlyTrackRoundsDefault),
         stepCount: _readIntParam('stepCount', kFlyTrackStepCountDefault),
       ),

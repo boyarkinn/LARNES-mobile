@@ -105,17 +105,22 @@ class ParentHomeworkPlayStep {
     required this.id,
     required this.trainerKey,
     required this.params,
+    this.runtimeSnapshot,
     required this.sortOrder,
   });
 
   factory ParentHomeworkPlayStep.fromJson(Map<String, dynamic> json) {
     final rawParams = json['params'];
+    final rawRuntimeSnapshot = json['runtimeSnapshot'];
     return ParentHomeworkPlayStep(
       id: json['id'] as String,
       trainerKey: json['trainerKey'] as String,
       params: rawParams is Map
           ? Map<String, dynamic>.from(rawParams)
           : const {},
+      runtimeSnapshot: rawRuntimeSnapshot is Map
+          ? Map<String, dynamic>.from(rawRuntimeSnapshot)
+          : null,
       sortOrder: json['sortOrder'] as int? ?? 0,
     );
   }
@@ -123,6 +128,7 @@ class ParentHomeworkPlayStep {
   final String id;
   final String trainerKey;
   final Map<String, dynamic> params;
+  final Map<String, dynamic>? runtimeSnapshot;
   final int sortOrder;
 }
 

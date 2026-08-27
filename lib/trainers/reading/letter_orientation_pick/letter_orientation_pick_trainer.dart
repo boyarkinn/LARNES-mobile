@@ -7,6 +7,7 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scen
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/orientation_board.dart';
 import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/orientation_pick_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -27,7 +28,8 @@ class LetterOrientationPickTrainer extends StatefulWidget {
       _LetterOrientationPickTrainerState();
 }
 
-class _LetterOrientationPickTrainerState extends State<LetterOrientationPickTrainer> {
+class _LetterOrientationPickTrainerState
+    extends State<LetterOrientationPickTrainer> {
   late final int _layoutSalt;
   late final List<OrientationOption> _options;
   late final Color _displayColor;
@@ -51,18 +53,26 @@ class _LetterOrientationPickTrainerState extends State<LetterOrientationPickTrai
   }
 
   ({List<OrientationOption> options, Color displayColor}) _buildRound() {
-    final mainLetter =
-        normalizeTargetLetter(widget.params['letter'] as String? ?? 'А');
+    final mainLetter = normalizeTargetLetter(
+      widget.params['letter'] as String? ?? 'А',
+    );
     final letterCase = widget.params['letterCase'] as String? ?? 'upper';
     final entityCount = widget.params['entityCount'] as int? ?? 4;
 
-    final seed = buildOrientationPickRoundSeed([
-      mainLetter,
-      entityCount,
-      letterCase,
-      _layoutSalt,
-    ]);
-    final rng = createSeededRng(seed);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'letter-orientation-pick',
+      widget.params,
+    );
+    final rng = snapshotSeed == null
+        ? createSeededRng(
+            buildOrientationPickRoundSeed([
+              mainLetter,
+              entityCount,
+              letterCase,
+              _layoutSalt,
+            ]),
+          )
+        : TrainerSnapshotRandom(snapshotSeed).nextDouble;
     final options = buildOrientationOptions(
       BuildOrientationOptionsInput(
         letter: mainLetter,

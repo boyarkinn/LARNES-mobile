@@ -13,6 +13,7 @@ class TrainerPlayer extends StatelessWidget {
     required this.params,
     required this.l10n,
     this.onComplete,
+    this.runtimeSnapshot,
     this.stepChrome,
   });
 
@@ -20,6 +21,7 @@ class TrainerPlayer extends StatelessWidget {
   final Map<String, dynamic> params;
   final AppLocalizations l10n;
   final VoidCallback? onComplete;
+  final Map<String, dynamic>? runtimeSnapshot;
   final TrainerStepChrome? stepChrome;
 
   @override
@@ -37,7 +39,10 @@ class TrainerPlayer extends StatelessWidget {
 
     final key = TrainerKey.tryParse(trainerKey)!;
     final definition = trainerDefinitions[key]!;
-    final validatedParams = validated.params!;
+    final validatedParams = <String, dynamic>{
+      ...validated.params!,
+      if (runtimeSnapshot != null) '__runtimeSnapshot': runtimeSnapshot,
+    };
 
     final builder = trainerBuilders[key];
     final trainerWidget = builder != null

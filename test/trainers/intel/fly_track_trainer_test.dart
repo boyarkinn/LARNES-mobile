@@ -128,6 +128,14 @@ void main() {
       expect(trainerSource, contains('TrainerInstructionScene'));
       expect(trainerSource, contains('loadTrainerInstructionDurationMs'));
       expect(trainerSource, contains('_fireworksKey'));
+      expect(
+        trainerSource,
+        contains("readTrainerSnapshotSeed(\n      'fly-track'"),
+      );
+      expect(
+        trainerSource,
+        contains('TrainerSnapshotRandom(snapshotSeed).nextDouble'),
+      );
       expect(gridSource, contains('AnswerFireworksBurst'));
       expect(gridSource, contains('FlyGlyph'));
     });

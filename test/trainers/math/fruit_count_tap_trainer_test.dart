@@ -101,5 +101,56 @@ void main() {
 
       await tester.pump(const Duration(seconds: 2));
     });
+
+    testWidgets('replays snapshot-seeded fruit order and placement', (tester) async {
+      Future<List<Object>> buildSignature() async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: SizedBox(
+              width: 360,
+              height: 640,
+              child: FruitCountTapTrainer(
+                params: {
+                  'targetFruit': 'watermelon',
+                  'targetCount': 3,
+                  'totalFruits': 18,
+                  'fruitTypeCount': 4,
+                  'answerRangeStart': 2,
+                  '__runtimeSnapshot': {
+                    'version': 1,
+                    'trainerKey': 'fruit-count-tap',
+                    'mode': 'materialized',
+                    'payload': {'seed': 20260827},
+                  },
+                },
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final fruits = tester.widget<FruitFieldScene>(
+          find.byType(FruitFieldScene),
+        ).fruits;
+        return [
+          for (final fruit in fruits)
+            [
+              fruit.id,
+              fruit.fruit,
+              fruit.isTarget,
+              fruit.rotationDeg,
+              fruit.xPercent,
+              fruit.yPercent,
+            ],
+        ];
+      }
+
+      final first = await buildSignature();
+      await tester.pumpWidget(const SizedBox.shrink());
+      final second = await buildSignature();
+
+      expect(second, first);
+      await tester.pump(const Duration(seconds: 3));
+    });
   });
 }

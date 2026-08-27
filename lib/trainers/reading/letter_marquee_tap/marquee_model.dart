@@ -46,18 +46,25 @@ MarqueeMotion getMarqueeMotion(String speed) {
 class BuildMarqueeStreamInput {
   const BuildMarqueeStreamInput({
     required this.practiceLetters,
-    required this.seed,
+    this.random,
+    this.seed,
     required this.targetCount,
   });
 
   final List<String> practiceLetters;
-  final int seed;
+  final double Function()? random;
+  final int? seed;
   final int targetCount;
 }
 
 List<MarqueeTokenSpec> buildMarqueeStream(BuildMarqueeStreamInput input) {
-  final rng = createSeededRng(input.seed);
-  final streamLength = input.targetCount * 12 > 36 ? input.targetCount * 12 : 36;
+  if (input.random == null && input.seed == null) {
+    throw ArgumentError('Either random or seed must be provided.');
+  }
+  final rng = input.random ?? createSeededRng(input.seed!);
+  final streamLength = input.targetCount * 12 > 36
+      ? input.targetCount * 12
+      : 36;
   final targetSlots = _max(
     input.targetCount * 3,
     (streamLength * _targetChance).round(),
@@ -74,7 +81,8 @@ List<MarqueeTokenSpec> buildMarqueeStream(BuildMarqueeStreamInput input) {
           id: 'token-$index',
           isTarget: true,
           letter: normalizeTargetLetter(
-            input.practiceLetters[(rng() * input.practiceLetters.length).floor()],
+            input.practiceLetters[(rng() * input.practiceLetters.length)
+                .floor()],
           ),
         )
       else

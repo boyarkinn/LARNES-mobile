@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_audio.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_scene.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/schulte_table_sizes.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -19,11 +20,7 @@ const kSchulteTableInstructionText =
 
 /// Web: `platform/src/trainers/reading/schulte-table/component.tsx`
 class SchulteTableTrainer extends StatefulWidget {
-  const SchulteTableTrainer({
-    super.key,
-    required this.params,
-    this.onComplete,
-  });
+  const SchulteTableTrainer({super.key, required this.params, this.onComplete});
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -34,6 +31,7 @@ class SchulteTableTrainer extends StatefulWidget {
 
 class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
   late SchulteTable _table;
+  List<SchulteTable>? _fixedTables;
   late int _rounds;
   late String _category;
   late String _order;
@@ -81,7 +79,8 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     return previous['category'] != next['category'] ||
         previous['gridSize'] != next['gridSize'] ||
         previous['order'] != next['order'] ||
-        previous['rounds'] != next['rounds'];
+        previous['rounds'] != next['rounds'] ||
+        previous['__runtimeSnapshot'] != next['__runtimeSnapshot'];
   }
 
   int _readIntParam(String key, int fallback) {
@@ -111,9 +110,22 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     _rounds = _readIntParam('rounds', kSchulteRoundsDefault);
     _category = _readStringParam('category', kSchulteCategoryDefault);
     _order = _readStringParam('order', kSchulteOrderDefault);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'schulte-table',
+      widget.params,
+    );
+    if (snapshotSeed == null) {
+      _fixedTables = null;
+    } else {
+      final random = TrainerSnapshotRandom(snapshotSeed);
+      _fixedTables = List<SchulteTable>.generate(
+        _rounds,
+        (_) => _generateTable(random.nextDouble),
+      );
+    }
 
     setState(() {
-      _table = _generateTable();
+      _table = _fixedTables == null ? _generateTable() : _fixedTables![0];
       _phase = SchultePhase.instruction;
       _instructionLength = 0;
       _roundIndex = 0;
@@ -126,12 +138,13 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     unawaited(_runInstruction(runToken));
   }
 
-  SchulteTable _generateTable() {
+  SchulteTable _generateTable([double Function()? random]) {
     return generateSchulteTable(
       GenerateSchulteTableInput(
         category: _category,
         gridSize: _readIntParam('gridSize', kSchulteGridSizeDefault),
         order: _order,
+        random: random,
       ),
     );
   }
@@ -187,7 +200,11 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
       return;
     }
 
-    if (!isNextSchulteTarget(cell.value, _table.sequence, _foundValues.length)) {
+    if (!isNextSchulteTarget(
+      cell.value,
+      _table.sequence,
+      _foundValues.length,
+    )) {
       _markWrong(schulteCellId(cell));
       return;
     }
@@ -201,29 +218,32 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
 
     setState(() => _isSettling = true);
     _settleTimer?.cancel();
-    _settleTimer = Timer(const Duration(milliseconds: kSchulteRoundSettleMs), () {
-      if (!mounted) {
-        return;
-      }
+    _settleTimer = Timer(
+      const Duration(milliseconds: kSchulteRoundSettleMs),
+      () {
+        if (!mounted) {
+          return;
+        }
 
-      if (_roundIndex + 1 < _rounds) {
-        setState(() {
-          _roundIndex += 1;
-          _table = _generateTable();
-          _foundValues = {};
-          _wrongCellId = null;
-          _isSettling = false;
-        });
-        return;
-      }
+        if (_roundIndex + 1 < _rounds) {
+          setState(() {
+            _roundIndex += 1;
+            _table = _fixedTables?[_roundIndex] ?? _generateTable();
+            _foundValues = {};
+            _wrongCellId = null;
+            _isSettling = false;
+          });
+          return;
+        }
 
-      if (_completeCalled) {
-        return;
-      }
+        if (_completeCalled) {
+          return;
+        }
 
-      _completeCalled = true;
-      widget.onComplete?.call();
-    });
+        _completeCalled = true;
+        widget.onComplete?.call();
+      },
+    );
   }
 
   @override

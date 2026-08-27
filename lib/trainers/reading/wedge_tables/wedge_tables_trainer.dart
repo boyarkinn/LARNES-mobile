@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/reading/wedge_tables/model.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_audio.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_scene.dart';
 import 'package:larnes_mobile/trainers/reading/wedge_tables/wedge_tables_sizes.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -19,11 +20,7 @@ const kWedgeTablesInstructionText =
 
 /// Web: `platform/src/trainers/reading/wedge-tables/component.tsx`
 class WedgeTablesTrainer extends StatefulWidget {
-  const WedgeTablesTrainer({
-    super.key,
-    required this.params,
-    this.onComplete,
-  });
+  const WedgeTablesTrainer({super.key, required this.params, this.onComplete});
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -81,7 +78,8 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
         previous['displaySeconds'] != next['displaySeconds'] ||
         previous['orientation'] != next['orientation'] ||
         previous['rounds'] != next['rounds'] ||
-        previous['rowCount'] != next['rowCount'];
+        previous['rowCount'] != next['rowCount'] ||
+        previous['__runtimeSnapshot'] != next['__runtimeSnapshot'];
   }
 
   int _readIntParam(String key, int fallback) {
@@ -116,12 +114,20 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
       'displaySeconds',
       kWedgeDisplaySecondsDefault,
     );
+    final snapshotSeed = readTrainerSnapshotSeed('wedge-tables', widget.params);
+    final snapshotRandom = snapshotSeed == null
+        ? null
+        : TrainerSnapshotRandom(snapshotSeed);
 
     setState(() {
       _rounds = List<List<WedgeRow>>.generate(
         rounds,
         (_) => generateWedgeRows(
-          GenerateWedgeRowsInput(category: category, rowCount: _rowCount),
+          GenerateWedgeRowsInput(
+            category: category,
+            rowCount: _rowCount,
+            random: snapshotRandom?.nextDouble,
+          ),
         ),
       );
       _displayMs = (displaySeconds * 1000).round();
@@ -178,7 +184,9 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
       return;
     }
 
-    final currentRound = _rounds.isEmpty ? const <WedgeRow>[] : _rounds[_roundIndex];
+    final currentRound = _rounds.isEmpty
+        ? const <WedgeRow>[]
+        : _rounds[_roundIndex];
     if (currentRound.isEmpty) {
       setState(() => _isFinished = true);
       _scheduleComplete();
@@ -248,7 +256,8 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
               right: current.right,
               rowCount: _rowCount,
               rowIndex: _rowIndex,
-              rowKey: '$_roundIndex-$_rowIndex-${current.left}-${current.right}',
+              rowKey:
+                  '$_roundIndex-$_rowIndex-${current.left}-${current.right}',
             )
           : const SizedBox.expand(),
     );

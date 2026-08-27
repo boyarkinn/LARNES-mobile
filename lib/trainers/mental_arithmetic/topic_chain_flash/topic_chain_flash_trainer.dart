@@ -9,6 +9,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generat
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/check_answer.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 /// Web v2: `platform/src/trainers/mental-arithmetic/topic-chain-flash/component.tsx`
@@ -70,6 +71,30 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
 
   int get _totalExamples =>
       _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
+
+  Chain? _fixedChain(int index) {
+    final payload = readTrainerRuntimeSnapshot('topic-chain-flash', widget.params);
+    final rawChains = payload?['chains'];
+    if (rawChains is! List || index < 0 || index >= rawChains.length) return null;
+    final rawChain = rawChains[index];
+    if (rawChain is! Map) return null;
+    final map = Map<String, dynamic>.from(rawChain);
+    final rawSteps = map['steps'];
+    final rawIntermediates = map['intermediates'];
+    if (rawSteps is! List || rawIntermediates is! List) return null;
+    return Chain(
+      answer: (map['answer'] as num).toInt(),
+      intermediates: rawIntermediates.map((value) => (value as num).toInt()).toList(),
+      steps: rawSteps.map((raw) {
+        final step = Map<String, dynamic>.from(raw as Map);
+        return ChainStep(
+          amount: (step['amount'] as num).toInt(),
+          sign: step['sign'] as String,
+        );
+      }).toList(),
+      topicId: map['topicId'] as String,
+    );
+  }
 
   @override
   void initState() {
@@ -211,13 +236,14 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _runToken = runToken;
 
     try {
-      final chain = generateChain(
-        GenerateConfig(
-          topicId: widget.params['topicId'] as String? ?? 'simple-1',
-          actionCount: _readIntParam(widget.params['actionCount'], 5),
-          signMode: 'mix',
-        ),
-      );
+      final chain = _fixedChain(nextIndex) ??
+          generateChain(
+            GenerateConfig(
+              topicId: widget.params['topicId'] as String? ?? 'simple-1',
+              actionCount: _readIntParam(widget.params['actionCount'], 5),
+              signMode: 'mix',
+            ),
+          );
 
       if (!mounted || !identical(runToken, _runToken)) {
         return;

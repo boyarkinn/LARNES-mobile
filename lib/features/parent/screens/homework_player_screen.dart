@@ -207,6 +207,7 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
         key: ValueKey(step.id),
         trainerKey: step.trainerKey,
         params: step.params,
+        runtimeSnapshot: step.runtimeSnapshot,
         l10n: l10n,
         onComplete: isInteractive ? _handleAdvance : null,
         stepChrome: TrainerStepChrome(

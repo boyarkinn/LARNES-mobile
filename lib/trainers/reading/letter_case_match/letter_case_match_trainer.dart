@@ -5,6 +5,7 @@ import 'package:larnes_mobile/trainers/reading/letter_colors.dart';
 import 'package:larnes_mobile/trainers/reading/letter_case_match/case_match_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_case_match/case_match_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -25,6 +26,7 @@ class LetterCaseMatchTrainer extends StatefulWidget {
 }
 
 class _LetterCaseMatchTrainerState extends State<LetterCaseMatchTrainer> {
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late final List<String> _practiceLetters;
   late final int _seed;
@@ -40,7 +42,8 @@ class _LetterCaseMatchTrainerState extends State<LetterCaseMatchTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed('letter-case-match', widget.params);
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _practiceLetters = parsePracticeLetters(
       widget.params['practiceLetters'] as String? ?? 'А',
     );
@@ -52,13 +55,29 @@ class _LetterCaseMatchTrainerState extends State<LetterCaseMatchTrainer> {
     _selectedLetters = buildSelectedLetters(
       pairCount: widget.params['pairCount'] as int? ?? 3,
       practiceLetters: _practiceLetters,
-      seed: _seed,
+      seed: _snapshotSeed == null ? _seed : null,
+      random: _snapshotSeed == null
+          ? null
+          : TrainerSnapshotRandom(_snapshotSeed!).nextDouble,
     );
-    _round = buildLetterMatchRound(_selectedLetters, _seed);
+    _round = buildLetterMatchRound(
+      _selectedLetters,
+      _seed,
+      _snapshotSeed == null
+          ? null
+          : TrainerSnapshotRandom(
+              buildCaseMatchRoundSeed([_snapshotSeed!, 'round']),
+            ).nextDouble,
+    );
+    final snapshotColorRng = _snapshotSeed == null
+        ? null
+        : TrainerSnapshotRandom(
+            buildCaseMatchRoundSeed([_snapshotSeed!, 'colors']),
+          ).nextDouble;
     _colorByLeftId = {
       for (var index = 0; index < _round.leftItems.length; index++)
         _round.leftItems[index].id: pickLetterDisplayColor(
-          createSeededRng(_seed + 31 + index),
+          snapshotColorRng ?? createSeededRng(_seed + 31 + index),
         ),
     };
   }

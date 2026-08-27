@@ -3,6 +3,7 @@ import 'package:larnes_mobile/trainers/reading/letter_colors.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/fill_gap_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
@@ -18,7 +19,8 @@ class LetterPlaceInWordTrainer extends StatefulWidget {
   final VoidCallback? onComplete;
 
   @override
-  State<LetterPlaceInWordTrainer> createState() => _LetterPlaceInWordTrainerState();
+  State<LetterPlaceInWordTrainer> createState() =>
+      _LetterPlaceInWordTrainerState();
 }
 
 class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
@@ -49,14 +51,22 @@ class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
       letterCase,
       _layoutSalt,
     ]);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'letter-place-in-word',
+      widget.params,
+    );
+    final snapshotRng = snapshotSeed == null
+        ? null
+        : TrainerSnapshotRandom(snapshotSeed);
     _tasks = buildFillGapTasks(
       entityCount: entityCount,
       letterCase: letterCase,
       practiceLetters: _practiceLetters,
-      seed: _seed,
+      seed: snapshotRng == null ? _seed : null,
+      random: snapshotRng?.nextDouble,
       wordCase: wordCase,
     );
-    final poolRng = createSeededRng(_seed + 17);
+    final poolRng = snapshotRng?.nextDouble ?? createSeededRng(_seed + 17);
     _poolTiles = buildLetterPoolTiles(
       distractorCount: distractorCount,
       letterCase: letterCase,

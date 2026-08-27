@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 
 void main() {
   group('fly-track model', () {
@@ -108,6 +109,26 @@ void main() {
 
       expect(rounds.length, 5);
       expect(signatures.toSet().length, 5);
+    });
+
+    test('replays all rounds with snapshot RNG', () {
+      List<FlyTrackRound> generate() {
+        final random = TrainerSnapshotRandom(20260827);
+        return generateFlyTrackRounds(
+          GenerateFlyTrackRoundsInput(
+            gridSize: 5,
+            random: random.nextDouble,
+            rounds: 4,
+            stepCount: 6,
+          ),
+        );
+      }
+
+      String signature(FlyTrackRound round) =>
+          '${round.start.row}:${round.start.column}:'
+          '${round.steps.map((step) => '${step.direction}:${step.distance}').join(',')}';
+
+      expect(generate().map(signature), generate().map(signature));
     });
   });
 }

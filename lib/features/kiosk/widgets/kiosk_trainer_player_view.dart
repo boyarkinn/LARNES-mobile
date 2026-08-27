@@ -202,6 +202,7 @@ class _KioskTrainerPlayerViewState extends State<KioskTrainerPlayerView> {
         key: ValueKey('${snapshot.assignmentId}-${widget.reloadToken}-${step.id}'),
         trainerKey: step.trainerKey,
         params: step.params,
+        runtimeSnapshot: step.runtimeSnapshot,
         l10n: l10n,
         onComplete: isInteractive ? _handleAdvance : null,
         stepChrome: TrainerStepChrome(

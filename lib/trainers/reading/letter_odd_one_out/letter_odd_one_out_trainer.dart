@@ -7,6 +7,7 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scen
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_odd_one_out/odd_one_out_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -47,20 +48,28 @@ class _LetterOddOneOutTrainerState extends State<LetterOddOneOutTrainer> {
   }
 
   List<PlacedLetter> _buildLetters() {
-    final mainLetter =
-        normalizeTargetLetter(widget.params['letter'] as String? ?? 'А');
+    final mainLetter = normalizeTargetLetter(
+      widget.params['letter'] as String? ?? 'А',
+    );
     final letterCase = widget.params['letterCase'] as String? ?? 'upper';
     final letterCount = widget.params['letterCount'] as int? ?? 10;
     final oddLetter = widget.params['oddLetter'] ?? 'random';
 
-    final seed = buildOddOneOutRoundSeed([
-      mainLetter,
-      oddLetter,
-      letterCount,
-      letterCase,
-      _layoutSalt,
-    ]);
-    final rng = createSeededRng(seed);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'letter-odd-one-out',
+      widget.params,
+    );
+    final rng = snapshotSeed == null
+        ? createSeededRng(
+            buildOddOneOutRoundSeed([
+              mainLetter,
+              oddLetter,
+              letterCount,
+              letterCase,
+              _layoutSalt,
+            ]),
+          )
+        : TrainerSnapshotRandom(snapshotSeed).nextDouble;
     final tokens = buildOddOneOutTokens(
       BuildOddOneOutInput(
         letter: mainLetter,

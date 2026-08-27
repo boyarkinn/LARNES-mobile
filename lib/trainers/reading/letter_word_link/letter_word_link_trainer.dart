@@ -5,6 +5,7 @@ import 'package:larnes_mobile/trainers/reading/letter_colors.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_scene.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -25,6 +26,7 @@ class LetterWordLinkTrainer extends StatefulWidget {
 }
 
 class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late final int _seed;
   late final WordLinkRound _round;
@@ -38,7 +40,8 @@ class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed('letter-word-link', widget.params);
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _seed = buildWordLinkRoundSeed([
       widget.params['entityCount'] ?? 4,
       widget.params['letter'] ?? 'А',
@@ -51,12 +54,21 @@ class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
         entityCount: widget.params['entityCount'] as int? ?? 4,
         letter: widget.params['letter'] as String? ?? 'А',
         letterCase: widget.params['letterCase'] as String? ?? 'upper',
-        seed: _seed,
+        random: _snapshotSeed == null
+            ? null
+            : TrainerSnapshotRandom(_snapshotSeed!).nextDouble,
+        seed: _snapshotSeed == null ? _seed : null,
         wordCase: widget.params['wordCase'] as String? ?? 'upper',
       ),
     );
     _letterColor = letterDisplayColorFromHex(
-      pickLetterDisplayColor(createSeededRng(_seed + 9)),
+      pickLetterDisplayColor(
+        _snapshotSeed == null
+            ? createSeededRng(_seed + 9)
+            : TrainerSnapshotRandom(
+                buildWordLinkRoundSeed([_snapshotSeed!, 'color']),
+              ).nextDouble,
+      ),
     );
   }
 

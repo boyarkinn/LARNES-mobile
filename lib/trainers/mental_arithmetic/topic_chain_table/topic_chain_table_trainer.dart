@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.d
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_table/parse_step.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 
 /// Web: `platform/src/trainers/mental-arithmetic/topic-chain-table/component.tsx`
 class TopicChainTableTrainer extends StatefulWidget {
@@ -77,6 +78,21 @@ class _TopicChainTableTrainerState extends State<TopicChainTableTrainer> {
 
   String get _topicId => widget.params['topicId'] as String? ?? 'simple-1';
 
+  List<List<ChainStep>>? get _fixedColumns {
+    final payload = readTrainerRuntimeSnapshot('topic-chain-table', widget.params);
+    final rawColumns = payload?['columns'];
+    if (rawColumns is! List) return null;
+    return rawColumns.map((rawColumn) {
+      return (rawColumn as List).map((raw) {
+        final step = Map<String, dynamic>.from(raw as Map);
+        return ChainStep(
+          amount: (step['amount'] as num).toInt(),
+          sign: step['sign'] as String,
+        );
+      }).toList();
+    }).toList();
+  }
+
   Color _columnTone(int columnIndex) {
     if (columnIndex.isOdd) {
       return Colors.white;
@@ -104,6 +120,17 @@ class _TopicChainTableTrainerState extends State<TopicChainTableTrainer> {
   }
 
   void _regenerateAll() {
+    final fixed = _fixedColumns;
+    if (fixed != null) {
+      setState(() {
+        _columns = [
+          for (var index = 0; index < fixed.length; index += 1)
+            _ColumnState(id: 'fixed-$index', steps: fixed[index]),
+        ];
+        _error = null;
+      });
+      return;
+    }
     final columns = <_ColumnState>[];
     String? error;
 
@@ -201,32 +228,34 @@ class _TopicChainTableTrainerState extends State<TopicChainTableTrainer> {
                       ),
                     ),
                   if (_columns.isNotEmpty) ...[
-                    SizedBox(
-                      width: tableWidth,
-                      child: Row(
-                        children: [
-                          for (var columnIndex = 0;
-                              columnIndex < _columns.length;
-                              columnIndex += 1)
-                            SizedBox(
-                              width: _cellWidth,
-                              height: 36,
-                              child: IconButton(
-                                tooltip:
-                                    'Перегенерировать пример ${columnIndex + 1}',
-                                onPressed: () =>
-                                    _regenerateColumn(columnIndex),
-                                icon: const Icon(
-                                  Icons.refresh,
-                                  size: 18,
-                                  color: Color(0xFF737373),
+                    if (_fixedColumns == null) ...[
+                      SizedBox(
+                        width: tableWidth,
+                        child: Row(
+                          children: [
+                            for (var columnIndex = 0;
+                                columnIndex < _columns.length;
+                                columnIndex += 1)
+                              SizedBox(
+                                width: _cellWidth,
+                                height: 36,
+                                child: IconButton(
+                                  tooltip:
+                                      'Перегенерировать пример ${columnIndex + 1}',
+                                  onPressed: () =>
+                                      _regenerateColumn(columnIndex),
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                    size: 18,
+                                    color: Color(0xFF737373),
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
+                      const SizedBox(height: 4),
+                    ],
                     Container(
                       width: tableWidth + _edge * 2,
                       decoration: BoxDecoration(
@@ -256,11 +285,13 @@ class _TopicChainTableTrainerState extends State<TopicChainTableTrainer> {
                                     edge: _edge,
                                     step: _columns[columnIndex]
                                         .steps[stepIndex],
-                                    onChanged: (next) => _updateStep(
-                                      columnIndex,
-                                      stepIndex,
-                                      next,
-                                    ),
+                                    onChanged: _fixedColumns == null
+                                        ? (next) => _updateStep(
+                                              columnIndex,
+                                              stepIndex,
+                                              next,
+                                            )
+                                        : null,
                                   ),
                               ],
                             ),
@@ -313,7 +344,7 @@ class _StepCell extends StatelessWidget {
     required this.showBottomBorder,
     required this.edge,
     required this.step,
-    required this.onChanged,
+    this.onChanged,
   });
 
   final double width;
@@ -323,7 +354,7 @@ class _StepCell extends StatelessWidget {
   final bool showBottomBorder;
   final double edge;
   final ChainStep step;
-  final ValueChanged<ChainStep> onChanged;
+  final ValueChanged<ChainStep>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -341,10 +372,21 @@ class _StepCell extends StatelessWidget {
               : BorderSide.none,
         ),
       ),
-      child: _EditableStep(
-        step: step,
-        onChanged: onChanged,
-      ),
+      child: onChanged == null
+          ? Center(
+              child: Text(
+                formatChainStep(step),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+            )
+          : _EditableStep(
+              step: step,
+              onChanged: onChanged!,
+            ),
     );
   }
 }

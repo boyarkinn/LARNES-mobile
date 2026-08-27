@@ -11,6 +11,7 @@ import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_firs
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/word_card.dart';
 import 'package:larnes_mobile/trainers/reading/sound_play_button.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/play_first_word_audio.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
@@ -46,6 +47,7 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
   static const _countdownColor = Color(0xFFDC2626);
   static const _playFailMessage = 'Не удалось проиграть слово';
 
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late List<FirstBySoundRound> _rounds;
   late List<String> _choices;
@@ -76,7 +78,11 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed(
+      'letter-first-by-sound',
+      widget.params,
+    );
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _startSession();
   }
 
@@ -123,14 +129,18 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
       widget.params['practiceLetters']?.toString(),
     );
     final rounds = widget.params['rounds'] as int? ?? defaultFirstBySoundRounds;
-    final seed = buildFirstBySoundPlanSeed(
-      practiceLetters: formatPracticeLetters(practiceLetters),
-      rounds: rounds,
-      layoutSalt: _layoutSalt,
-    );
+    final planRng = _snapshotSeed == null
+        ? createSeededRng(
+            buildFirstBySoundPlanSeed(
+              practiceLetters: formatPracticeLetters(practiceLetters),
+              rounds: rounds,
+              layoutSalt: _layoutSalt,
+            ),
+          )
+        : TrainerSnapshotRandom(_snapshotSeed!).nextDouble;
     _rounds = buildRoundPlan(
       letters: practiceLetters,
-      rng: createSeededRng(seed),
+      rng: planRng,
       rounds: rounds,
     );
     _roundIndex = 0;
@@ -162,15 +172,24 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
 
     final letterCase = widget.params['letterCase'] as String? ?? 'upper';
     final distractorCount = widget.params['distractorCount'] as int? ?? 3;
-    final rng = createSeededRng(
-      buildFirstBySoundChoicesSeed(
-        slug: current.slug,
-        letterCase: letterCase,
-        distractorCount: distractorCount,
-        layoutSalt: _layoutSalt,
-        roundIndex: _roundIndex,
-      ),
-    );
+    final rng = _snapshotSeed == null
+        ? createSeededRng(
+            buildFirstBySoundChoicesSeed(
+              slug: current.slug,
+              letterCase: letterCase,
+              distractorCount: distractorCount,
+              layoutSalt: _layoutSalt,
+              roundIndex: _roundIndex,
+            ),
+          )
+        : TrainerSnapshotRandom(
+            hashParamsSeed([
+              _snapshotSeed!,
+              current.slug,
+              _roundIndex,
+              'first-by-sound-choices',
+            ]),
+          ).nextDouble;
     _choices = buildLetterChoices(
       BuildLetterChoicesInput(
         distractorCount: distractorCount,

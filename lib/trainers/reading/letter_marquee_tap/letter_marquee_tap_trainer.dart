@@ -5,6 +5,7 @@ import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/marquee_model.
 import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/marquee_progress_dots.dart';
 import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/marquee_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -21,7 +22,8 @@ class LetterMarqueeTapTrainer extends StatefulWidget {
   final VoidCallback? onComplete;
 
   @override
-  State<LetterMarqueeTapTrainer> createState() => _LetterMarqueeTapTrainerState();
+  State<LetterMarqueeTapTrainer> createState() =>
+      _LetterMarqueeTapTrainerState();
 }
 
 class _LetterMarqueeTapTrainerState extends State<LetterMarqueeTapTrainer> {
@@ -46,18 +48,26 @@ class _LetterMarqueeTapTrainerState extends State<LetterMarqueeTapTrainer> {
   List<MarqueeTokenSpec> _buildStream(String practiceRaw) {
     final letterCase = widget.params['letterCase'] as String? ?? 'upper';
     final speed = widget.params['speed'] as String? ?? 'medium';
-    final streamSalt = createLayoutSalt();
-    final seed = buildMarqueeStreamSeed([
-      _targetCount,
-      practiceRaw,
-      letterCase,
-      speed,
-      streamSalt,
-    ]);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'letter-marquee-tap',
+      widget.params,
+    );
+    final seed = snapshotSeed == null
+        ? buildMarqueeStreamSeed([
+            _targetCount,
+            practiceRaw,
+            letterCase,
+            speed,
+            createLayoutSalt(),
+          ])
+        : null;
 
     return buildMarqueeStream(
       BuildMarqueeStreamInput(
         practiceLetters: _practiceLetters,
+        random: snapshotSeed == null
+            ? null
+            : TrainerSnapshotRandom(snapshotSeed).nextDouble,
         seed: seed,
         targetCount: _targetCount,
       ),

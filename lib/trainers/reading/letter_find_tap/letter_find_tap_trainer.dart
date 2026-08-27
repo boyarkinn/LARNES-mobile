@@ -7,6 +7,7 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scen
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -27,6 +28,7 @@ class LetterFindTapTrainer extends StatefulWidget {
 }
 
 class _LetterFindTapTrainerState extends State<LetterFindTapTrainer> {
+  late final int? _snapshotSeed;
   late final int _layoutSalt;
   late final List<PlacedLetter> _letters;
 
@@ -41,7 +43,8 @@ class _LetterFindTapTrainerState extends State<LetterFindTapTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
+    _snapshotSeed = readTrainerSnapshotSeed('letter-find-tap', widget.params);
+    _layoutSalt = _snapshotSeed == null ? createLayoutSalt() : 0;
     _letters = _buildLetters();
     _scheduleReveal();
   }
@@ -60,7 +63,9 @@ class _LetterFindTapTrainerState extends State<LetterFindTapTrainer> {
       distractorCount,
       _layoutSalt,
     ]);
-    final rng = createSeededRng(seed);
+    final rng = _snapshotSeed == null
+        ? createSeededRng(seed)
+        : TrainerSnapshotRandom(_snapshotSeed!).nextDouble;
     final tokens = buildLetterTokens(
       BuildLetterFieldInput(
         distractorCount: distractorCount,

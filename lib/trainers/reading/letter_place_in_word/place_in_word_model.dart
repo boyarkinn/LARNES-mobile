@@ -7,10 +7,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 /// Web: `platform/src/trainers/reading/letter-place-in-word/model.ts`
 
 class OmitResolution {
-  const OmitResolution({
-    required this.omitIndex,
-    required this.omitLetter,
-  });
+  const OmitResolution({required this.omitIndex, required this.omitLetter});
 
   final int omitIndex;
   final String omitLetter;
@@ -45,11 +42,7 @@ class LetterPoolTile {
   final String letter;
   final bool used;
 
-  LetterPoolTile copyWith({
-    String? id,
-    String? letter,
-    bool? used,
-  }) {
+  LetterPoolTile copyWith({String? id, String? letter, bool? used}) {
     return LetterPoolTile(
       id: id ?? this.id,
       letter: letter ?? this.letter,
@@ -58,10 +51,7 @@ class LetterPoolTile {
   }
 }
 
-OmitResolution? resolveOmitForWord(
-  String label,
-  List<String> practiceLetters,
-) {
+OmitResolution? resolveOmitForWord(String label, List<String> practiceLetters) {
   for (final practiceLetter in practiceLetters) {
     final normalizedPractice = normalizeTargetLetter(practiceLetter);
 
@@ -73,10 +63,7 @@ OmitResolution? resolveOmitForWord(
       }
 
       if (normalizeTargetLetter(char) == normalizedPractice) {
-        return OmitResolution(
-          omitIndex: index,
-          omitLetter: normalizedPractice,
-        );
+        return OmitResolution(omitIndex: index, omitLetter: normalizedPractice);
       }
     }
   }
@@ -143,10 +130,14 @@ List<FillGapTask> buildFillGapTasks({
   required int entityCount,
   required String letterCase,
   required List<String> practiceLetters,
-  required int seed,
+  int? seed,
+  double Function()? random,
   required String wordCase,
 }) {
-  final rng = createSeededRng(seed);
+  if (random == null && seed == null) {
+    throw ArgumentError('Either random or seed must be provided.');
+  }
+  final rng = random ?? createSeededRng(seed!);
   final slugs = pickWordsForRound(
     entityCount: entityCount,
     practiceLetters: practiceLetters,
@@ -194,9 +185,10 @@ List<LetterPoolTile> buildLetterPoolTiles({
     );
   }
 
-  return _shuffleItems([...correctTiles, ...distractors], rng)
-      .map((tile) => tile.copyWith(used: false))
-      .toList();
+  return _shuffleItems([
+    ...correctTiles,
+    ...distractors,
+  ], rng).map((tile) => tile.copyWith(used: false)).toList();
 }
 
 int buildPlaceInWordRoundSeed(List<Object> parts) {

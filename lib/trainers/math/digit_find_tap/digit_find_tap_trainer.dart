@@ -5,6 +5,7 @@ import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_field_scene.dar
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_layout.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
@@ -49,13 +50,20 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     final targetCount = widget.params['targetCount'] as int? ?? 1;
     final distractorCount = widget.params['distractorCount'] as int? ?? 0;
 
-    final seed = hashParamsSeed([
-      targetDigit,
-      targetCount,
-      distractorCount,
-      _layoutSalt,
-    ]);
-    final rng = createSeededRng(seed);
+    final snapshotSeed = readTrainerSnapshotSeed(
+      'digit-find-tap',
+      widget.params,
+    );
+    final rng = snapshotSeed == null
+        ? createSeededRng(
+            hashParamsSeed([
+              targetDigit,
+              targetCount,
+              distractorCount,
+              _layoutSalt,
+            ]),
+          )
+        : TrainerSnapshotRandom(snapshotSeed).nextDouble;
     final tokens = buildDigitTokens(
       BuildDigitFieldInput(
         distractorCount: distractorCount,

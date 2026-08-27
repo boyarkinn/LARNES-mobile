@@ -50,14 +50,16 @@ class BuildWordLinkRoundInput {
     required this.entityCount,
     required this.letter,
     required this.letterCase,
-    required this.seed,
+    this.random,
+    this.seed,
     required this.wordCase,
   });
 
   final int entityCount;
   final String letter;
   final String letterCase;
-  final int seed;
+  final double Function()? random;
+  final int? seed;
   final String wordCase;
 }
 
@@ -67,7 +69,7 @@ int countCorrectWordLinkRoundItems(int entityCount, int correctPoolSize) {
 
 WordLinkRound buildWordLinkRound(BuildWordLinkRoundInput input) {
   final letter = normalizeTargetLetter(input.letter);
-  final rng = createSeededRng(input.seed);
+  final rng = input.random ?? createSeededRng(input.seed!);
   final correctPool = getWordsByFirstLetter(letter);
   final distractorPool = getWordsNotStartingWith(letter);
   final correctCount =

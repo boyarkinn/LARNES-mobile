@@ -8,6 +8,8 @@ import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
 import 'package:larnes_mobile/features/parent/models/parent_reward.dart';
+import 'package:larnes_mobile/features/parent/models/parent_trainer_catalog.dart';
+import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
@@ -285,6 +287,81 @@ class ParentApi {
         );
       }
       return data['hasPublishedCourses'] == true;
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<bool> hasPublishedTrainers({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/trainers/available',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.requestFailed),
+        );
+      }
+      return data['available'] == true;
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentTrainerCatalogPage> fetchTrainerCatalog(
+    String childId, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/trainers/catalog',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentTrainersLoadFailed),
+        );
+      }
+      return ParentTrainerCatalogPage.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<TrainerPlayConfig> fetchTrainerPlayConfig(
+    String trainerKey, {
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/trainers/$trainerKey/play-config',
+        queryParameters: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentTrainersPlayConfigLoadFailed),
+        );
+      }
+      return TrainerPlayConfig.fromJson(data);
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

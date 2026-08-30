@@ -19,6 +19,9 @@ class ParentNavigation {
       if (section == 'homework' || section == 'programs') {
         return false;
       }
+      if (section == 'trainers' && segments.length >= 5 && segments[3] == 'play') {
+        return false;
+      }
     }
     return true;
   }

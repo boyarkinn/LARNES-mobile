@@ -57,6 +57,10 @@ import 'package:larnes_mobile/features/parent/screens/homework_player_screen.dar
 import 'package:larnes_mobile/features/parent/screens/program_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/courses_directions_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/trainers/trainer_params_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/trainers/trainer_play_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/trainers/trainers_directions_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/trainers/trainers_list_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/reward_shop_detail_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/rewards_shops_screen.dart';
 import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
@@ -368,6 +372,75 @@ GoRouter createAppRouter({
                                 assignmentId: assignmentId,
                               );
                             },
+                          ),
+                        ],
+                      ),
+                      GoRoute(
+                        path: 'trainers',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return TrainersDirectionsScreen(childId: childId);
+                        },
+                        routes: [
+                          GoRoute(
+                            path: 'play/:trainerKey',
+                            builder: (context, state) {
+                              final childId = state.pathParameters['childId'];
+                              final trainerKey = state.pathParameters['trainerKey'];
+                              if (childId == null ||
+                                  childId.isEmpty ||
+                                  trainerKey == null ||
+                                  trainerKey.isEmpty) {
+                                return const ChildPickerScreen();
+                              }
+                              return TrainerPlayScreen(
+                                childId: childId,
+                                trainerKey: trainerKey,
+                              );
+                            },
+                          ),
+                          GoRoute(
+                            path: ':direction',
+                            builder: (context, state) {
+                              final childId = state.pathParameters['childId'];
+                              final direction = state.pathParameters['direction'];
+                              if (childId == null ||
+                                  childId.isEmpty ||
+                                  direction == null ||
+                                  direction.isEmpty) {
+                                return const ChildPickerScreen();
+                              }
+                              return TrainersListScreen(
+                                childId: childId,
+                                direction: direction,
+                              );
+                            },
+                            routes: [
+                              GoRoute(
+                                path: ':trainerKey',
+                                builder: (context, state) {
+                                  final childId = state.pathParameters['childId'];
+                                  final direction = state.pathParameters['direction'];
+                                  final trainerKey = state.pathParameters['trainerKey'];
+                                  if (childId == null ||
+                                      childId.isEmpty ||
+                                      direction == null ||
+                                      direction.isEmpty ||
+                                      trainerKey == null ||
+                                      trainerKey.isEmpty) {
+                                    return const ChildPickerScreen();
+                                  }
+                                  return TrainerParamsScreen(
+                                    childId: childId,
+                                    direction: direction,
+                                    trainerKey: trainerKey,
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ],
                       ),

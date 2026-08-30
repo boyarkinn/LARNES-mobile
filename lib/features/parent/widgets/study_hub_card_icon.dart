@@ -61,6 +61,13 @@ String _svgForKind(HubCardIconKind kind) {
 <path d="M5.5 8.5 12 5l6.5 3.5v7L12 19l-6.5-3.5v-7Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
 <path d="M12 12v7M5.5 8.5 12 12l6.5-3.5" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
 ''',
+    HubCardIconKind.trainers => '''
+<rect x="4" y="8.5" width="16" height="11" rx="3" stroke="currentColor" stroke-width="1.75" fill="none"/>
+<path d="M8 8.5V7a4 4 0 0 1 8 0v1.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
+<circle cx="9.25" cy="13.75" r="1.1" fill="currentColor"/>
+<circle cx="14.75" cy="13.75" r="1.1" fill="currentColor"/>
+<path d="M10.25 16.25h3.5" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>
+''',
     HubCardIconKind.attendance => '''
 <path d="M8 4h8a2 2 0 0 1 2 2v13.5H6V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-linejoin="round" stroke-width="1.75" fill="none"/>
 <path d="M9 2.5V6M15 2.5V6M8 11h3M8 14.5h8" stroke="currentColor" stroke-linecap="round" stroke-width="1.75" fill="none"/>

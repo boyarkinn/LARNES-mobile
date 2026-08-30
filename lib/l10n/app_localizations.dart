@@ -824,6 +824,12 @@ abstract class AppLocalizations {
   /// **'LARNES courses'**
   String get parentStudyCoursesCard;
 
+  /// No description provided for @parentStudyTrainersCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainers'**
+  String get parentStudyTrainersCard;
+
   /// No description provided for @parentStudyRewardsCard.
   ///
   /// In en, this message translates to:
@@ -1693,6 +1699,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upcoming'**
   String get parentHomeworkStatusUpcoming;
+
+  /// No description provided for @parentTrainersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainers'**
+  String get parentTrainersTitle;
+
+  /// No description provided for @parentTrainersBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get parentTrainersBack;
+
+  /// No description provided for @parentTrainersBackToDirections.
+  ///
+  /// In en, this message translates to:
+  /// **'All directions'**
+  String get parentTrainersBackToDirections;
+
+  /// No description provided for @parentTrainersLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load trainers.'**
+  String get parentTrainersLoadFailed;
+
+  /// No description provided for @parentTrainersEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No published trainers yet.'**
+  String get parentTrainersEmpty;
+
+  /// No description provided for @parentTrainersEmptyTrainersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No trainers in “{direction}” yet'**
+  String parentTrainersEmptyTrainersTitle(String direction);
+
+  /// No description provided for @parentTrainersInvalidDirection.
+  ///
+  /// In en, this message translates to:
+  /// **'This training direction is not available.'**
+  String get parentTrainersInvalidDirection;
+
+  /// No description provided for @parentTrainersPlayConfigLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load trainer settings.'**
+  String get parentTrainersPlayConfigLoadFailed;
+
+  /// No description provided for @parentTrainersLaunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch'**
+  String get parentTrainersLaunch;
+
+  /// No description provided for @parentTrainersLaunching.
+  ///
+  /// In en, this message translates to:
+  /// **'Launching…'**
+  String get parentTrainersLaunching;
+
+  /// No description provided for @parentTrainersDirectionMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'This trainer does not belong to the selected direction.'**
+  String get parentTrainersDirectionMismatch;
+
+  /// No description provided for @parentTrainersWebOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No mobile implementation'**
+  String get parentTrainersWebOnlyTitle;
+
+  /// No description provided for @parentTrainersWebOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This trainer is web-only for now. Open it in the browser on larnes.ru.'**
+  String get parentTrainersWebOnlyMessage;
+
+  /// No description provided for @parentTrainersPlayNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get parentTrainersPlayNext;
+
+  /// No description provided for @parentTrainersPlayFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get parentTrainersPlayFinish;
+
+  /// No description provided for @parentTrainersPlayExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to settings'**
+  String get parentTrainersPlayExit;
+
+  /// No description provided for @parentTrainersPlayMenuContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get parentTrainersPlayMenuContinue;
+
+  /// No description provided for @parentTrainersPlayInteractiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the task on screen'**
+  String get parentTrainersPlayInteractiveHint;
+
+  /// No description provided for @parentTrainersCatalogSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer catalog — coming in the next step.'**
+  String get parentTrainersCatalogSoon;
+
+  /// No description provided for @parentTrainersParamsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer setup — coming in the next step.'**
+  String get parentTrainersParamsSoon;
+
+  /// No description provided for @parentTrainersPlaySoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Trainer player — coming in the next step.'**
+  String get parentTrainersPlaySoon;
 
   /// No description provided for @parentAccountTitle.
   ///

@@ -131,6 +131,7 @@
   "parentStudyTitle": "Что изучаем сегодня?",
   "parentStudyProfileCard": "Профиль",
   "parentStudyCoursesCard": "Курсы LARNES",
+  "parentStudyTrainersCard": "Тренажёры",
   "parentStudyRewardsCard": "Награды",
   "parentRewardsTitle": "Награды",
   "parentRewardsEmptyShops": "Пока нет живых витрин.",
@@ -317,6 +318,34 @@
   "parentHomeworkStatusMissed": "Пропущено",
   "parentHomeworkStatusCancelled": "Отменено",
   "parentHomeworkStatusUpcoming": "Предстоящее",
+  "parentTrainersTitle": "Тренажёры",
+  "parentTrainersBack": "Назад",
+  "parentTrainersBackToDirections": "Все направления",
+  "parentTrainersLoadFailed": "Не удалось загрузить тренажёры.",
+  "parentTrainersEmpty": "Опубликованных тренажёров пока нет.",
+  "parentTrainersEmptyTrainersTitle": "В «{direction}» пока нет тренажёров",
+  "@parentTrainersEmptyTrainersTitle": {
+    "placeholders": {
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "parentTrainersInvalidDirection": "Это направление недоступно.",
+  "parentTrainersPlayConfigLoadFailed": "Не удалось загрузить настройки тренажёра.",
+  "parentTrainersLaunch": "Запустить",
+  "parentTrainersLaunching": "Запуск…",
+  "parentTrainersDirectionMismatch": "Тренажёр не относится к выбранному направлению.",
+  "parentTrainersWebOnlyTitle": "Нет мобильной версии",
+  "parentTrainersWebOnlyMessage": "Этот тренажёр пока доступен только в браузере на larnes.ru.",
+  "parentTrainersPlayNext": "Далее",
+  "parentTrainersPlayFinish": "Завершить",
+  "parentTrainersPlayExit": "К параметрам",
+  "parentTrainersPlayMenuContinue": "Продолжить",
+  "parentTrainersPlayInteractiveHint": "Выполните задание на экране",
+  "parentTrainersCatalogSoon": "Каталог тренажёров — в следующем шаге.",
+  "parentTrainersParamsSoon": "Настройка тренажёра — в следующем шаге.",
+  "parentTrainersPlaySoon": "Плеер тренажёра — в следующем шаге.",
   "parentAccountTitle": "Аккаунт",
   "adminNavTrainers": "Тренажёры",
   "adminNavAccount": "Аккаунт",

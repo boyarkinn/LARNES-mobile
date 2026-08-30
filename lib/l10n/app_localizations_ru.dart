@@ -391,6 +391,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentStudyCoursesCard => 'Курсы LARNES';
 
   @override
+  String get parentStudyTrainersCard => 'Тренажёры';
+
+  @override
   String get parentStudyRewardsCard => 'Награды';
 
   @override
@@ -878,6 +881,76 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentHomeworkStatusUpcoming => 'Предстоящее';
+
+  @override
+  String get parentTrainersTitle => 'Тренажёры';
+
+  @override
+  String get parentTrainersBack => 'Назад';
+
+  @override
+  String get parentTrainersBackToDirections => 'Все направления';
+
+  @override
+  String get parentTrainersLoadFailed => 'Не удалось загрузить тренажёры.';
+
+  @override
+  String get parentTrainersEmpty => 'Опубликованных тренажёров пока нет.';
+
+  @override
+  String parentTrainersEmptyTrainersTitle(String direction) {
+    return 'В «$direction» пока нет тренажёров';
+  }
+
+  @override
+  String get parentTrainersInvalidDirection => 'Это направление недоступно.';
+
+  @override
+  String get parentTrainersPlayConfigLoadFailed =>
+      'Не удалось загрузить настройки тренажёра.';
+
+  @override
+  String get parentTrainersLaunch => 'Запустить';
+
+  @override
+  String get parentTrainersLaunching => 'Запуск…';
+
+  @override
+  String get parentTrainersDirectionMismatch =>
+      'Тренажёр не относится к выбранному направлению.';
+
+  @override
+  String get parentTrainersWebOnlyTitle => 'Нет мобильной версии';
+
+  @override
+  String get parentTrainersWebOnlyMessage =>
+      'Этот тренажёр пока доступен только в браузере на larnes.ru.';
+
+  @override
+  String get parentTrainersPlayNext => 'Далее';
+
+  @override
+  String get parentTrainersPlayFinish => 'Завершить';
+
+  @override
+  String get parentTrainersPlayExit => 'К параметрам';
+
+  @override
+  String get parentTrainersPlayMenuContinue => 'Продолжить';
+
+  @override
+  String get parentTrainersPlayInteractiveHint => 'Выполните задание на экране';
+
+  @override
+  String get parentTrainersCatalogSoon =>
+      'Каталог тренажёров — в следующем шаге.';
+
+  @override
+  String get parentTrainersParamsSoon =>
+      'Настройка тренажёра — в следующем шаге.';
+
+  @override
+  String get parentTrainersPlaySoon => 'Плеер тренажёра — в следующем шаге.';
 
   @override
   String get parentAccountTitle => 'Аккаунт';

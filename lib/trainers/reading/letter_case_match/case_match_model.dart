@@ -73,9 +73,9 @@ List<String> pickLettersForRound({
 
 LetterMatchRound buildLetterMatchRound(
   List<String> selectedLetters,
-  int seed,
-  [double Function()? random],
-) {
+  int seed, {
+  double Function()? random,
+}) {
   final leftRng = random ?? createSeededRng(seed);
   final rightRng = random ?? createSeededRng(seed + 19);
 

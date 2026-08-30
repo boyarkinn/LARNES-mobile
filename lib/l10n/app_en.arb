@@ -166,6 +166,7 @@
   "parentStudyTitle": "What are we studying today?",
   "parentStudyProfileCard": "Profile",
   "parentStudyCoursesCard": "LARNES courses",
+  "parentStudyTrainersCard": "Trainers",
   "parentStudyRewardsCard": "Rewards",
   "parentRewardsTitle": "Rewards",
   "parentRewardsEmptyShops": "No live shelves yet.",
@@ -366,6 +367,34 @@
   "parentHomeworkStatusMissed": "Missed",
   "parentHomeworkStatusCancelled": "Cancelled",
   "parentHomeworkStatusUpcoming": "Upcoming",
+  "parentTrainersTitle": "Trainers",
+  "parentTrainersBack": "Back",
+  "parentTrainersBackToDirections": "All directions",
+  "parentTrainersLoadFailed": "Could not load trainers.",
+  "parentTrainersEmpty": "No published trainers yet.",
+  "parentTrainersEmptyTrainersTitle": "No trainers in “{direction}” yet",
+  "@parentTrainersEmptyTrainersTitle": {
+    "placeholders": {
+      "direction": {
+        "type": "String"
+      }
+    }
+  },
+  "parentTrainersInvalidDirection": "This training direction is not available.",
+  "parentTrainersPlayConfigLoadFailed": "Could not load trainer settings.",
+  "parentTrainersLaunch": "Launch",
+  "parentTrainersLaunching": "Launching…",
+  "parentTrainersDirectionMismatch": "This trainer does not belong to the selected direction.",
+  "parentTrainersWebOnlyTitle": "No mobile implementation",
+  "parentTrainersWebOnlyMessage": "This trainer is web-only for now. Open it in the browser on larnes.ru.",
+  "parentTrainersPlayNext": "Next",
+  "parentTrainersPlayFinish": "Finish",
+  "parentTrainersPlayExit": "Back to settings",
+  "parentTrainersPlayMenuContinue": "Continue",
+  "parentTrainersPlayInteractiveHint": "Complete the task on screen",
+  "parentTrainersCatalogSoon": "Trainer catalog — coming in the next step.",
+  "parentTrainersParamsSoon": "Trainer setup — coming in the next step.",
+  "parentTrainersPlaySoon": "Trainer player — coming in the next step.",
   "parentAccountTitle": "Account",
   "adminNavTrainers": "Trainers",
   "adminNavAccount": "Account",

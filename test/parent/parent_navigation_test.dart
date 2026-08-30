@@ -16,5 +16,16 @@ void main() {
       expect(ParentNavigation.showsBottomNav('/parent/child-1/homework/a1'), isFalse);
       expect(ParentNavigation.showsBottomNav('/parent/child-1/programs/p1'), isFalse);
     });
+
+    test('hides on trainer play route', () {
+      expect(
+        ParentNavigation.showsBottomNav('/parent/child-1/trainers/play/topic-chain-flash'),
+        isFalse,
+      );
+      expect(
+        ParentNavigation.showsBottomNav('/parent/child-1/trainers/mental/topic-chain-flash'),
+        isTrue,
+      );
+    });
   });
 }

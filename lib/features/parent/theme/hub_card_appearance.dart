@@ -10,6 +10,7 @@ enum HubCardIconKind {
   math,
   direction,
   courses,
+  trainers,
   attendance,
   schedule,
   payments,
@@ -35,6 +36,10 @@ ChildCardColorTokens homeworkHubCardTokens() {
 
 ChildCardColorTokens coursesHubCardTokens() {
   return childCardColorTokens(ChildCardColor.violet);
+}
+
+ChildCardColorTokens trainersHubCardTokens() {
+  return childCardColorTokens(ChildCardColor.sky);
 }
 
 ChildCardColorTokens rewardsHubCardTokens() {
@@ -97,6 +102,29 @@ ChildCardColor resolveDirectionHubCardColor(String directionSlug, {int sortOrder
 
 ChildCardColorTokens directionHubCardTokens(String directionSlug, {int sortOrder = 0}) {
   return childCardColorTokens(resolveDirectionHubCardColor(directionSlug, sortOrder: sortOrder));
+}
+
+const _trainerDirectionColor = <String, ChildCardColor>{
+  'mental': ChildCardColor.amber,
+  'math': ChildCardColor.emerald,
+  'reading': ChildCardColor.sky,
+  'intel': ChildCardColor.violet,
+};
+
+ChildCardColorTokens trainerDirectionHubCardTokens(String direction) {
+  return childCardColorTokens(
+    _trainerDirectionColor[direction] ?? ChildCardColor.sky,
+  );
+}
+
+HubCardIconKind resolveTrainerDirectionHubIconKind(String direction) {
+  return switch (direction) {
+    'mental' => HubCardIconKind.trainers,
+    'math' => HubCardIconKind.math,
+    'reading' => HubCardIconKind.reading,
+    'intel' => HubCardIconKind.direction,
+    _ => HubCardIconKind.direction,
+  };
 }
 
 /// Эталон: platform/src/server/homework/homework-card-appearance.ts

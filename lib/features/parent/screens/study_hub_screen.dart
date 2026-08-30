@@ -25,6 +25,7 @@ class StudyHubScreen extends StatefulWidget {
 class _StudyHubScreenState extends State<StudyHubScreen> {
   bool _isLoading = true;
   bool _hasPublishedCourses = false;
+  bool _hasPublishedTrainers = false;
   bool _hasLiveRewards = false;
   String _childFirstName = '';
   bool _wasInactive = false;
@@ -87,6 +88,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
         parentApi.hasPublishedLarnesCourses(locale: locale),
         parentApi.fetchChild(widget.childId, locale: locale),
         _liveRewardsVisible(parentApi, locale),
+        parentApi.hasPublishedTrainers(locale: locale),
       ]);
       if (!mounted) {
         return;
@@ -95,12 +97,14 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
         _hasPublishedCourses = results[0]! as bool;
         _childFirstName = childHubHeaderTitle((results[1]! as ParentChildDetail).child);
         _hasLiveRewards = results[2]! as bool;
+        _hasPublishedTrainers = results[3]! as bool;
         _isLoading = false;
       });
     } on ParentApiException catch (_) {
       if (mounted) {
         setState(() {
           _hasPublishedCourses = false;
+          _hasPublishedTrainers = false;
           _hasLiveRewards = false;
           _isLoading = false;
         });
@@ -109,6 +113,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       if (mounted) {
         setState(() {
           _hasPublishedCourses = false;
+          _hasPublishedTrainers = false;
           _hasLiveRewards = false;
           _isLoading = false;
         });
@@ -159,6 +164,19 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                     segment: 'homework',
                   ),
                 ),
+                if (_hasPublishedTrainers) ...[
+                  const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                  StudyHubCard(
+                    title: l10n.parentStudyTrainersCard,
+                    tokens: trainersHubCardTokens(),
+                    icon: HubCardIconKind.trainers,
+                    onTap: () => ParentChildRoutes.pushForChild(
+                      context,
+                      childId: widget.childId,
+                      segment: 'trainers',
+                    ),
+                  ),
+                ],
                 if (_hasPublishedCourses) ...[
                   const SizedBox(height: ParentChildCardMetrics.pickerListGap),
                   StudyHubCard(

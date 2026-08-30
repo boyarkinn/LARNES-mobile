@@ -120,7 +120,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
       final random = TrainerSnapshotRandom(snapshotSeed);
       _fixedTables = List<SchulteTable>.generate(
         _rounds,
-        (_) => _generateTable(random.nextDouble),
+        (_) => _generateTable(random: random.nextDouble),
       );
     }
 
@@ -138,7 +138,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     unawaited(_runInstruction(runToken));
   }
 
-  SchulteTable _generateTable([double Function()? random]) {
+  SchulteTable _generateTable({double Function()? random}) {
     return generateSchulteTable(
       GenerateSchulteTableInput(
         category: _category,

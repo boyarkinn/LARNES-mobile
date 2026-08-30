@@ -63,7 +63,7 @@ class _LetterCaseMatchTrainerState extends State<LetterCaseMatchTrainer> {
     _round = buildLetterMatchRound(
       _selectedLetters,
       _seed,
-      _snapshotSeed == null
+      random: _snapshotSeed == null
           ? null
           : TrainerSnapshotRandom(
               buildCaseMatchRoundSeed([_snapshotSeed!, 'round']),

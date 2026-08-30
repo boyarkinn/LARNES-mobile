@@ -390,6 +390,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentStudyCoursesCard => 'LARNES courses';
 
   @override
+  String get parentStudyTrainersCard => 'Trainers';
+
+  @override
   String get parentStudyRewardsCard => 'Rewards';
 
   @override
@@ -872,6 +875,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentHomeworkStatusUpcoming => 'Upcoming';
+
+  @override
+  String get parentTrainersTitle => 'Trainers';
+
+  @override
+  String get parentTrainersBack => 'Back';
+
+  @override
+  String get parentTrainersBackToDirections => 'All directions';
+
+  @override
+  String get parentTrainersLoadFailed => 'Could not load trainers.';
+
+  @override
+  String get parentTrainersEmpty => 'No published trainers yet.';
+
+  @override
+  String parentTrainersEmptyTrainersTitle(String direction) {
+    return 'No trainers in “$direction” yet';
+  }
+
+  @override
+  String get parentTrainersInvalidDirection =>
+      'This training direction is not available.';
+
+  @override
+  String get parentTrainersPlayConfigLoadFailed =>
+      'Could not load trainer settings.';
+
+  @override
+  String get parentTrainersLaunch => 'Launch';
+
+  @override
+  String get parentTrainersLaunching => 'Launching…';
+
+  @override
+  String get parentTrainersDirectionMismatch =>
+      'This trainer does not belong to the selected direction.';
+
+  @override
+  String get parentTrainersWebOnlyTitle => 'No mobile implementation';
+
+  @override
+  String get parentTrainersWebOnlyMessage =>
+      'This trainer is web-only for now. Open it in the browser on larnes.ru.';
+
+  @override
+  String get parentTrainersPlayNext => 'Next';
+
+  @override
+  String get parentTrainersPlayFinish => 'Finish';
+
+  @override
+  String get parentTrainersPlayExit => 'Back to settings';
+
+  @override
+  String get parentTrainersPlayMenuContinue => 'Continue';
+
+  @override
+  String get parentTrainersPlayInteractiveHint => 'Complete the task on screen';
+
+  @override
+  String get parentTrainersCatalogSoon =>
+      'Trainer catalog — coming in the next step.';
+
+  @override
+  String get parentTrainersParamsSoon =>
+      'Trainer setup — coming in the next step.';
+
+  @override
+  String get parentTrainersPlaySoon =>
+      'Trainer player — coming in the next step.';
 
   @override
   String get parentAccountTitle => 'Account';

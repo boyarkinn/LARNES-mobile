@@ -10,6 +10,13 @@ void main() {
     });
   });
 
+  group('trainersHubCardTokens', () {
+    test('uses sky tokens', () {
+      final tokens = trainersHubCardTokens();
+      expect(tokens.tag, childCardColorTokens(ChildCardColor.sky).tag);
+    });
+  });
+
   group('rewardsHubCardTokens', () {
     test('uses rose tokens', () {
       final tokens = rewardsHubCardTokens();
@@ -44,7 +51,7 @@ void main() {
   group('homeworkAssignmentCardTokens', () {
     test('maps display status to band colors', () {
       expect(
-        homeworkAssignmentCardTokens('overdue').tag,
+        homeworkAssignmentCardTokens('missed').tag,
         childCardColorTokens(ChildCardColor.rose).tag,
       );
       expect(
@@ -88,6 +95,27 @@ void main() {
       expect(resolveDirectionHubIconKind('pismo'), HubCardIconKind.writing);
       expect(resolveDirectionHubIconKind('math'), HubCardIconKind.math);
       expect(resolveDirectionHubIconKind('other'), HubCardIconKind.direction);
+    });
+  });
+
+  group('trainerDirectionHubCardTokens', () {
+    test('maps trainer directions to web palette', () {
+      expect(
+        trainerDirectionHubCardTokens('mental').tag,
+        childCardColorTokens(ChildCardColor.amber).tag,
+      );
+      expect(
+        trainerDirectionHubCardTokens('reading').tag,
+        childCardColorTokens(ChildCardColor.sky).tag,
+      );
+      expect(
+        resolveTrainerDirectionHubIconKind('mental'),
+        HubCardIconKind.trainers,
+      );
+      expect(
+        resolveTrainerDirectionHubIconKind('intel'),
+        HubCardIconKind.direction,
+      );
     });
   });
 }

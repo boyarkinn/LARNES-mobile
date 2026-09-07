@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_field_scene.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_trainer.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
@@ -29,12 +30,10 @@ void main() {
 
       expect(find.byType(TrainerScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
-      expect(find.byType(DigitFieldScene), findsOneWidget);
-      expect(find.textContaining('Найди'), findsNothing);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
+      expect(find.textContaining('Найди все'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
       expect(find.textContaining('/'), findsNothing);
-
-      await tester.pump(const Duration(seconds: 3));
     });
 
     testWidgets('fills bounded stage', (tester) async {
@@ -62,8 +61,34 @@ void main() {
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
+    });
 
-      await tester.pump(const Duration(seconds: 3));
+    testWidgets('shows digit field after instruction and countdown', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 360,
+              height: 640,
+              child: DigitFindTapTrainer(
+                params: {
+                  'digit': 5,
+                  'targetCount': 1,
+                  'distractorCount': 4,
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(DigitFieldScene), findsNothing);
+
+      await tester.pump(const Duration(seconds: 8));
+      await tester.pump();
+
+      expect(find.byType(DigitFieldScene), findsOneWidget);
     });
 
     testWidgets('replays snapshot-seeded digits and placement', (tester) async {
@@ -90,6 +115,7 @@ void main() {
           ),
         );
         await tester.pump();
+        await tester.pump(const Duration(seconds: 8));
 
         final digits = tester.widget<DigitFieldScene>(
           find.byType(DigitFieldScene),
@@ -111,7 +137,6 @@ void main() {
       final second = await buildSignature();
 
       expect(second, first);
-      await tester.pump(const Duration(seconds: 3));
     });
   });
 }

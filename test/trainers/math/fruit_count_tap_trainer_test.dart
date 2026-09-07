@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_trainer.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_field_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
@@ -32,11 +33,9 @@ void main() {
 
       expect(find.byType(TrainerScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
-      expect(find.byType(FruitFieldScene), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.textContaining('Сколько'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
-
-      await tester.pump(const Duration(seconds: 3));
     });
 
     testWidgets('fills bounded stage', (tester) async {
@@ -66,11 +65,9 @@ void main() {
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
-
-      await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('shows answer bar after fruit reveal completes', (tester) async {
+    testWidgets('shows answer bar after instruction, countdown and fruit reveal', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -94,12 +91,11 @@ void main() {
 
       expect(find.byType(NumericChoiceBar), findsNothing);
 
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(seconds: 8));
       await tester.pump();
 
+      expect(find.byType(FruitFieldScene), findsOneWidget);
       expect(find.byType(NumericChoiceBar), findsOneWidget);
-
-      await tester.pump(const Duration(seconds: 2));
     });
 
     testWidgets('replays snapshot-seeded fruit order and placement', (tester) async {
@@ -128,6 +124,7 @@ void main() {
           ),
         );
         await tester.pump();
+        await tester.pump(const Duration(seconds: 8));
 
         final fruits = tester.widget<FruitFieldScene>(
           find.byType(FruitFieldScene),
@@ -150,7 +147,6 @@ void main() {
       final second = await buildSignature();
 
       expect(second, first);
-      await tester.pump(const Duration(seconds: 3));
     });
   });
 }

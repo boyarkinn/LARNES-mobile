@@ -2,15 +2,21 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_answer_bar_layout.dart';
+import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_audio.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_layout.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_field_scene.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_choice_bar.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
+
+enum FruitCountTapPhase { instruction, countdown, play }
 
 /// Web v2: `platform/src/trainers/math/fruit-count-tap/component.tsx`
 class FruitCountTapTrainer extends StatefulWidget {
@@ -28,17 +34,28 @@ class FruitCountTapTrainer extends StatefulWidget {
 }
 
 class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
-  late final int _layoutSalt;
-  late final List<PlacedFruit> _fruits;
+  static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
+  static const _countdownStepMs = 750;
+  static const _countdownColor = Color(0xFFDC2626);
+
+  var _layoutSalt = 0;
+  late List<PlacedFruit> _fruits;
   late final List<int> _answerChoices;
   late final int _targetCount;
 
+  FruitCountTapPhase _phase = FruitCountTapPhase.instruction;
+  String _countdownLabel = _countdownLabels.first;
+  var _instructionLength = 0;
   int? _wrongValue;
   int? _selectedValue;
   var _isCompleted = false;
   var _isFruitRevealComplete = false;
   var _isAnswerRevealComplete = false;
   var _completeCalled = false;
+  Object _runToken = Object();
+
+  final _instructionTypewriter = TrainerInstructionTypewriter();
+  Timer? _countdownTimer;
   Timer? _fruitRevealTimer;
   Timer? _answerRevealTimer;
   Timer? _completeTimer;
@@ -46,12 +63,57 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
   @override
   void initState() {
     super.initState();
+    _startSession();
+  }
+
+  @override
+  void didUpdateWidget(FruitCountTapTrainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.params != widget.params) {
+      _startSession();
+    }
+  }
+
+  @override
+  void dispose() {
+    _instructionTypewriter.cancel();
+    _countdownTimer?.cancel();
+    _fruitRevealTimer?.cancel();
+    _answerRevealTimer?.cancel();
+    _completeTimer?.cancel();
+    unawaited(cancelFruitCountTapAudio());
+    super.dispose();
+  }
+
+  void _startSession() {
+    final runToken = Object();
+    _runToken = runToken;
+    _instructionTypewriter.cancel();
+    _countdownTimer?.cancel();
+    _fruitRevealTimer?.cancel();
+    _answerRevealTimer?.cancel();
+    _completeTimer?.cancel();
+    unawaited(cancelFruitCountTapAudio());
+
     _layoutSalt = createLayoutSalt();
     _targetCount = widget.params['targetCount'] as int? ?? 0;
     _answerChoices =
         getAnswerChoices(widget.params['answerRangeStart'] as int? ?? 0);
     _fruits = _buildFruits();
-    _scheduleFruitReveal();
+
+    setState(() {
+      _phase = FruitCountTapPhase.instruction;
+      _instructionLength = 0;
+      _countdownLabel = _countdownLabels.first;
+      _wrongValue = null;
+      _selectedValue = null;
+      _isCompleted = false;
+      _isFruitRevealComplete = false;
+      _isAnswerRevealComplete = false;
+      _completeCalled = false;
+    });
+
+    unawaited(_runInstruction(runToken));
   }
 
   List<PlacedFruit> _buildFruits() {
@@ -89,6 +151,67 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     );
 
     return placeFruitTokens(tokens, rng);
+  }
+
+  Future<void> _runInstruction(Object runToken) async {
+    final durationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getFruitCountTapInstructionAudioAsset(),
+      playbackRate: kFruitCountTapInstructionPlaybackRate,
+      fallbackMs: kFruitCountTapInstructionDurationFallbackMs,
+    );
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    _instructionTypewriter.start(
+      text: fruitCountTapInstructionText,
+      durationMs: durationMs,
+      isCurrent: () => mounted && identical(runToken, _runToken),
+      onLength: (length) {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        setState(() => _instructionLength = length);
+      },
+    );
+
+    await playFruitCountTapInstruction();
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    _instructionTypewriter.cancel();
+    setState(() {
+      _instructionLength = fruitCountTapInstructionText.length;
+      _phase = FruitCountTapPhase.countdown;
+    });
+    _runCountdown(runToken);
+  }
+
+  void _runCountdown(Object runToken) {
+    _countdownTimer?.cancel();
+    var index = 0;
+
+    void showNext() {
+      if (!mounted || !identical(runToken, _runToken)) {
+        return;
+      }
+
+      if (index >= _countdownLabels.length) {
+        setState(() => _phase = FruitCountTapPhase.play);
+        _scheduleFruitReveal();
+        return;
+      }
+
+      setState(() => _countdownLabel = _countdownLabels[index]);
+      index += 1;
+      _countdownTimer = Timer(
+        const Duration(milliseconds: _countdownStepMs),
+        showNext,
+      );
+    }
+
+    showNext();
   }
 
   void _scheduleFruitReveal() {
@@ -186,48 +309,64 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     );
   }
 
-  @override
-  void dispose() {
-    _fruitRevealTimer?.cancel();
-    _answerRevealTimer?.cancel();
-    _completeTimer?.cancel();
-    super.dispose();
+  Widget _buildPlayBody(BoxConstraints constraints) {
+    final answerLayout = computeFruitAnswerBarLayout(
+      viewportWidth: constraints.maxWidth,
+      viewportHeight: constraints.maxHeight,
+    );
+
+    return TrainerSceneColumn(
+      body: FruitFieldScene(fruits: _fruits),
+      footer: _isFruitRevealComplete
+          ? Padding(
+              padding: EdgeInsets.fromLTRB(
+                answerLayout.horizontalPadding,
+                answerLayout.paddingTop,
+                answerLayout.horizontalPadding,
+                answerLayout.paddingBottom,
+              ),
+              child: NumericChoiceBar(
+                choices: _answerChoices,
+                disabled: _isCompleted || !_isAnswerRevealComplete,
+                enterDelayMsForIndex: (index) =>
+                    getAnswerRevealDelayMs(index, _answerChoices.length),
+                buttonHeight: answerLayout.buttonHeight,
+                fontSize: answerLayout.fontSize,
+                onSelect: _handleSelect,
+                selectedValue: _selectedValue,
+                wrongValue: _wrongValue,
+              ),
+            )
+          : null,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final answerLayout = computeFruitAnswerBarLayout(
-          viewportWidth: constraints.maxWidth,
-          viewportHeight: constraints.maxHeight,
-        );
-
-        return TrainerSceneColumn(
-          body: FruitFieldScene(fruits: _fruits),
-          footer: _isFruitRevealComplete
-              ? Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    answerLayout.horizontalPadding,
-                    answerLayout.paddingTop,
-                    answerLayout.horizontalPadding,
-                    answerLayout.paddingBottom,
-                  ),
-                  child: NumericChoiceBar(
-                    choices: _answerChoices,
-                    disabled: _isCompleted || !_isAnswerRevealComplete,
-                    enterDelayMsForIndex: (index) =>
-                        getAnswerRevealDelayMs(index, _answerChoices.length),
-                    buttonHeight: answerLayout.buttonHeight,
-                    fontSize: answerLayout.fontSize,
-                    onSelect: _handleSelect,
-                    selectedValue: _selectedValue,
-                    wrongValue: _wrongValue,
-                  ),
-                )
-              : null,
-        );
-      },
+    return TrainerScene(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return switch (_phase) {
+            FruitCountTapPhase.instruction => TrainerInstructionScene(
+              length: _instructionLength,
+              text: fruitCountTapInstructionText,
+            ),
+            FruitCountTapPhase.countdown => Center(
+              child: Text(
+                _countdownLabel,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
+                  height: 1,
+                  color: _countdownColor,
+                ),
+              ),
+            ),
+            FruitCountTapPhase.play => _buildPlayBody(constraints),
+          };
+        },
+      ),
     );
   }
 }

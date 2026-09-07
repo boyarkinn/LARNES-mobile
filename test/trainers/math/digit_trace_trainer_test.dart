@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/digit_trace_trainer.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/trace_pad.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
@@ -25,16 +26,13 @@ void main() {
 
       expect(find.byType(TrainerScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
-      expect(find.byType(TracePad), findsOneWidget);
-      expect(find.textContaining('Обведи цифру'), findsNothing);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.textContaining('ПОХОЖЕСТЬ'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
       expect(find.textContaining('попробовать снова'), findsNothing);
-
-      await tester.pump(const Duration(milliseconds: 500));
     });
 
-    testWidgets('shows clear button before pass', (tester) async {
+    testWidgets('shows trace pad after instruction and countdown', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -49,8 +47,13 @@ void main() {
         ),
       );
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
 
+      expect(find.byType(TracePad), findsNothing);
+
+      await tester.pump(const Duration(seconds: 8));
+      await tester.pump();
+
+      expect(find.byType(TracePad), findsOneWidget);
       expect(find.text('Стереть'), findsOneWidget);
     });
 
@@ -75,8 +78,6 @@ void main() {
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
-
-      await tester.pump(const Duration(milliseconds: 500));
     });
   });
 }

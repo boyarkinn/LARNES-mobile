@@ -49,7 +49,7 @@ typedef TrainerWidgetBuilder = Widget Function({
 
 final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
   TrainerKey.numberRowShow: ({required params, onComplete}) =>
-      NumberRowShowTrainer(params: params),
+      NumberRowShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.appleCountShow: ({required params, onComplete}) =>
       AppleCountShowTrainer(params: params),
   TrainerKey.flashCards: ({required params, onComplete}) =>
@@ -129,6 +129,7 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     key: TrainerKey.numberRowShow,
     title: 'Числовой ряд',
     direction: TrainerDirection.math,
+    isInteractive: true,
     validate: validateNumberRowShowParams,
   ),
   TrainerKey.appleCountShow: TrainerDefinition(

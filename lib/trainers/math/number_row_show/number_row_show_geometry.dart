@@ -18,14 +18,25 @@ class DigitSlot {
   final double x;
 }
 
-List<DigitSlot> getNumberRowSlots() {
+List<DigitSlot> getNumberRowSlots(int studyDigit) {
+  final digits = getRowDigits(studyDigit);
   final innerWidth = NumberRowLayout.width - NumberRowLayout.paddingX * 2;
-  final step = innerWidth / (numberRowDigits.length - 1);
+  final step = digits.length > 1 ? innerWidth / (digits.length - 1) : 0.0;
 
-  return List.generate(numberRowDigits.length, (index) {
+  return List.generate(digits.length, (index) {
     return DigitSlot(
-      digit: numberRowDigits[index],
+      digit: digits[index],
       x: NumberRowLayout.paddingX + index * step,
     );
   });
+}
+
+double numberRowSceneWidthForDigit(int studyDigit) {
+  final slotCount = getRowDigits(normalizeStudyDigit(studyDigit)).length;
+  if (slotCount >= 10) {
+    return NumberRowLayout.width;
+  }
+  return (NumberRowLayout.paddingX * 2 + (slotCount - 1) * 36)
+      .clamp(220, NumberRowLayout.width)
+      .toDouble();
 }

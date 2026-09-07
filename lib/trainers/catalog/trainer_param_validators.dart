@@ -16,10 +16,28 @@ ValidateTrainerParamsResult _fail(String message) {
 
 ValidateTrainerParamsResult validateNumberRowShowParams(Map<String, dynamic> raw) {
   final digit = coerceInt(raw['digit']);
-  if (digit == null || digit < 0 || digit > 9) {
+  if (digit == null || digit < 1 || digit > 9) {
     return _fail('Некорректные параметры.');
   }
-  return ValidateTrainerParamsResult.success({'digit': digit});
+
+  final stepPauseSecRaw = raw['stepPauseSec'];
+  final double stepPauseSec;
+  if (stepPauseSecRaw == null) {
+    stepPauseSec = 1;
+  } else {
+    final parsed = stepPauseSecRaw is num
+        ? stepPauseSecRaw.toDouble()
+        : double.tryParse('$stepPauseSecRaw');
+    if (parsed == null || parsed < 0.5 || parsed > 3) {
+      return _fail('Некорректные параметры.');
+    }
+    stepPauseSec = parsed;
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'digit': digit,
+    'stepPauseSec': stepPauseSec,
+  });
 }
 
 ValidateTrainerParamsResult validateAppleCountShowParams(Map<String, dynamic> raw) {

@@ -7,13 +7,13 @@ void main() {
     test('accepts number-row-show params', () {
       final result = validateTrainerParams('number-row-show', {'digit': 5});
       expect(result.ok, isTrue);
-      expect(result.params, {'digit': 5});
+      expect(result.params, {'digit': 5, 'stepPauseSec': 1});
     });
 
     test('coerces string digits', () {
-      final result = validateTrainerParams('number-row-show', {'digit': '3'});
+      final result = validateTrainerParams('number-row-show', {'digit': '3', 'stepPauseSec': '2'});
       expect(result.ok, isTrue);
-      expect(result.params, {'digit': 3});
+      expect(result.params, {'digit': 3, 'stepPauseSec': 2});
     });
 
     test('rejects unknown trainer', () {

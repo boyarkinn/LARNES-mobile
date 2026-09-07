@@ -16,6 +16,20 @@ void main() {
       expect(result.params, {'digit': 3, 'stepPauseSec': 2});
     });
 
+    test('accepts apple-count-show params', () {
+      final result = validateTrainerParams('apple-count-show', {
+        'targetCount': 3,
+        'totalApples': 5,
+        'targetDisplay': 'audio_only',
+      });
+      expect(result.ok, isTrue);
+      expect(result.params, {
+        'targetCount': 3,
+        'totalApples': 5,
+        'targetDisplay': 'audio_only',
+      });
+    });
+
     test('rejects unknown trainer', () {
       final result = validateTrainerParams('missing-trainer', {});
       expect(result.ok, isFalse);

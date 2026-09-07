@@ -1,5 +1,6 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/definition.dart';
+import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
@@ -41,11 +42,27 @@ ValidateTrainerParamsResult validateNumberRowShowParams(Map<String, dynamic> raw
 }
 
 ValidateTrainerParamsResult validateAppleCountShowParams(Map<String, dynamic> raw) {
-  final digit = coerceInt(raw['digit']);
-  if (digit == null || digit < 0) {
+  final targetCount = coerceInt(raw['targetCount'] ?? raw['digit']);
+  if (targetCount == null || targetCount < 1 || targetCount > 9) {
     return _fail('Некорректные параметры.');
   }
-  return ValidateTrainerParamsResult.success({'digit': digit});
+
+  final totalApples = coerceInt(raw['totalApples'] ?? raw['totalFruits']);
+  final resolvedTotalApples = totalApples ?? (targetCount + 2).clamp(1, 15);
+  if (resolvedTotalApples < 1 || resolvedTotalApples > 15) {
+    return _fail('Некорректные параметры.');
+  }
+  if (resolvedTotalApples < targetCount) {
+    return _fail('Некорректные параметры.');
+  }
+
+  final targetDisplay = normalizeTargetDisplay(raw['targetDisplay'] ?? raw['targetMode']);
+
+  return ValidateTrainerParamsResult.success({
+    'targetCount': targetCount,
+    'totalApples': resolvedTotalApples,
+    'targetDisplay': targetDisplay,
+  });
 }
 
 ValidateTrainerParamsResult validateFlashCardsParams(Map<String, dynamic> raw) {

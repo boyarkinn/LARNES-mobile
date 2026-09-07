@@ -1,41 +1,46 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_choreography.dart';
 import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_model.dart';
 
 void main() {
-  group('normalizeDigit / digitToAppleCount', () {
-    test('truncates and clamps negatives to zero', () {
-      expect(normalizeDigit(-3), 0);
-      expect(normalizeDigit(2.9), 2);
-    });
-
-    test('maps digit to apple count 1:1', () {
-      expect(digitToAppleCount(0), 0);
-      expect(digitToAppleCount(5), 5);
-      expect(digitToAppleCount(12), 12);
+  group('normalizeTargetCount', () {
+    test('clamps to 1-9', () {
+      expect(normalizeTargetCount(-3), 1);
+      expect(normalizeTargetCount(4), 4);
+      expect(normalizeTargetCount(15), 9);
     });
   });
 
-  group('buildAppleDropSequence', () {
-    test('returns empty sequence for zero apples', () {
-      expect(buildAppleDropSequence(0), isEmpty);
+  group('normalizeTotalApples', () {
+    test('clamps to 1-15', () {
+      expect(normalizeTotalApples(0), 1);
+      expect(normalizeTotalApples(5), 5);
+      expect(normalizeTotalApples(20), 15);
     });
+  });
 
-    test('staggers each apple drop', () {
-      final steps = buildAppleDropSequence(3);
-
-      expect(steps.length, 3);
-      expect(steps[0].delayMs, 0);
-      expect(steps[1].delayMs, appleDropStaggerMs);
-      expect(steps[2].delayMs, appleDropStaggerMs * 2);
+  group('normalizeTargetDisplay', () {
+    test('defaults to with_digit', () {
+      expect(normalizeTargetDisplay(null), targetDisplayWithDigit);
+      expect(normalizeTargetDisplay('audio_only'), targetDisplayAudioOnly);
     });
+  });
 
-    test('moves apples from spawn above into basket slots', () {
-      final steps = buildAppleDropSequence(2);
+  group('interactive apple flow', () {
+    test('tracks basket count and reshuffles on error', () {
+      final initial = buildInitialApples(4, 2, targetDisplayWithDigit);
+      final withTwo = moveAppleToBasket(moveAppleToBasket(initial, 'apple-0'), 'apple-1');
 
-      expect(steps[0].from.y < steps[0].to.y, isTrue);
-      expect(steps[1].from.y < steps[1].to.y, isTrue);
-      expect(steps[0].to.x == steps[1].to.x && steps[0].to.y == steps[1].to.y, isFalse);
+      expect(isCorrectBasketCount(2, 2), isTrue);
+      expect(isCorrectBasketCount(1, 2), isFalse);
+
+      final reshuffled = reshuffleAllApplesToField(
+        withTwo,
+        4,
+        2,
+        targetDisplayWithDigit,
+        1,
+      );
+      expect(reshuffled.every((apple) => apple.zone == AppleEntity.zoneField), isTrue);
     });
   });
 }

@@ -51,7 +51,7 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
   TrainerKey.numberRowShow: ({required params, onComplete}) =>
       NumberRowShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.appleCountShow: ({required params, onComplete}) =>
-      AppleCountShowTrainer(params: params),
+      AppleCountShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.flashCards: ({required params, onComplete}) =>
       FlashCardsTrainer(params: params, onComplete: onComplete),
   TrainerKey.dotsDigitAbacus: ({required params, onComplete}) =>
@@ -136,6 +136,7 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     key: TrainerKey.appleCountShow,
     title: 'Яблоки в корзине',
     direction: TrainerDirection.math,
+    isInteractive: true,
     validate: validateAppleCountShowParams,
   ),
   TrainerKey.flashCards: TrainerDefinition(

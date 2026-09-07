@@ -1,6 +1,6 @@
 /// Все зарегистрированные trainerKey (паритет с web registry).
 enum TrainerKey {
-  abacusShow('abacus-show'),
+  flashCards('flash-cards'),
   appleCountShow('apple-count-show'),
   digitFindTap('digit-find-tap'),
   digitTrace('digit-trace'),

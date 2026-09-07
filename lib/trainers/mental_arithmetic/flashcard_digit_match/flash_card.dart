@@ -9,6 +9,7 @@ class FlashCard extends StatelessWidget {
     required this.value,
     required this.totalRods,
     required this.abacusHeight,
+    required this.activeBeadColor,
     this.connected = false,
     this.disabled = false,
     this.onPointerDown,
@@ -18,6 +19,7 @@ class FlashCard extends StatelessWidget {
   final int value;
   final int totalRods;
   final double abacusHeight;
+  final Color activeBeadColor;
   final bool connected;
   final bool disabled;
   final void Function(PointerDownEvent event)? onPointerDown;
@@ -65,6 +67,7 @@ class FlashCard extends StatelessWidget {
               height: abacusHeight,
               child: IgnorePointer(
                 child: AbacusWidget(
+                  activeBeadColor: activeBeadColor,
                   animate: false,
                   rods: numberToAbacus(value, totalRods),
                   totalRods: totalRods,

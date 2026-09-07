@@ -1201,6 +1201,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainerPlayValueLabel => 'Значение';
 
   @override
+  String get adminTrainerPlayFlashValuesLabel => 'Числа';
+
+  @override
   String get adminTrainerPlayMatchValue1Label => 'Значение 1';
 
   @override
@@ -1211,6 +1214,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adminTrainerPlayMatchValue4Label => 'Значение 4';
+
+  @override
+  String get adminTrainerPlayTargetModeLabel => 'Справа';
+
+  @override
+  String get adminTrainerPlayTargetModeDigits => 'Цифры';
+
+  @override
+  String get adminTrainerPlayTargetModeDots => 'Точки';
 
   @override
   String get adminTrainerPlayLetterCaseUpper => 'Заглавные';

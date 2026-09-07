@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/dot_target.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/digit_target.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flash_card.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
@@ -43,6 +44,7 @@ class MatchBoard extends StatefulWidget {
     super.key,
     required this.round,
     required this.totalRods,
+    required this.targetMode,
     required this.connections,
     this.disabled = false,
     required this.onConnect,
@@ -50,6 +52,7 @@ class MatchBoard extends StatefulWidget {
 
   final MatchRound round;
   final int totalRods;
+  final FlashcardTargetMode targetMode;
   final List<MatchConnection> connections;
   final bool disabled;
   final ValueChanged<MatchConnection> onConnect;
@@ -146,6 +149,22 @@ class _MatchBoardState extends State<MatchBoard> {
 
     final boardOrigin = boardBox.localToGlobal(Offset.zero);
     return globalPosition - boardOrigin;
+  }
+
+  List<Color> _lockedLineColors() {
+    final colors = <Color>[];
+
+    for (final connection in widget.connections) {
+      final leftItem = widget.round.leftItems
+          .where((item) => item.id == connection.leftId)
+          .firstOrNull;
+
+      colors.add(
+        leftItem == null ? const Color(0xFF34D399) : Color(leftItem.leftDisplayColor),
+      );
+    }
+
+    return colors;
   }
 
   List<_DrawLine> _lockedLines() {
@@ -405,6 +424,7 @@ class _MatchBoardState extends State<MatchBoard> {
   @override
   Widget build(BuildContext context) {
     final lockedLines = _lockedLines();
+    final lockedLineColors = _lockedLineColors();
     final missingAnchors = widget.connections.isNotEmpty &&
         lockedLines.length < widget.connections.length;
 
@@ -447,6 +467,7 @@ class _MatchBoardState extends State<MatchBoard> {
                         layout: layout,
                         buildItem: (item, _) => FlashCard(
                           abacusHeight: layout.abacusHeight,
+                          activeBeadColor: Color(item.leftDisplayColor),
                           connected: _connectedLeftIds.contains(item.id),
                           disabled: widget.disabled,
                           onPointerDown: (event) =>
@@ -464,12 +485,20 @@ class _MatchBoardState extends State<MatchBoard> {
                         items: widget.round.rightItems,
                         count: pairCount,
                         layout: layout,
-                        buildItem: (item, _) => DigitTarget(
-                          connected: _connectedRightIds.contains(item.id),
-                          digit: item.value,
-                          fontSize: layout.digitFontSize,
-                          size: layout.digitSize,
-                        ),
+                        buildItem: (item, _) => widget.targetMode == FlashcardTargetMode.dots
+                            ? DotTarget(
+                                color: Color(item.rightDisplayColor),
+                                connected: _connectedRightIds.contains(item.id),
+                                count: item.value,
+                                size: layout.digitSize,
+                              )
+                            : DigitTarget(
+                                color: Color(item.rightDisplayColor),
+                                connected: _connectedRightIds.contains(item.id),
+                                digit: item.value,
+                                fontSize: layout.digitFontSize,
+                                size: layout.digitSize,
+                              ),
                       ),
                     ),
                   ],
@@ -479,6 +508,16 @@ class _MatchBoardState extends State<MatchBoard> {
                     child: CustomPaint(
                       painter: _ConnectionLinesPainter(
                         activeDraw: _activeDraw,
+                        activeDrawColor: _activeDraw == null
+                            ? const Color(0xFFFB923C)
+                            : Color(
+                                widget.round.leftItems
+                                        .where((item) => item.id == _activeDraw!.leftId)
+                                        .firstOrNull
+                                        ?.leftDisplayColor ??
+                                    0xFFFB923C,
+                              ),
+                        lockedLineColors: lockedLineColors,
                         lockedLines: lockedLines,
                         wrongFlash: _wrongFlash,
                       ),
@@ -497,23 +536,30 @@ class _MatchBoardState extends State<MatchBoard> {
 class _ConnectionLinesPainter extends CustomPainter {
   _ConnectionLinesPainter({
     required this.lockedLines,
+    required this.lockedLineColors,
     required this.activeDraw,
+    required this.activeDrawColor,
     required this.wrongFlash,
   });
 
   final List<_DrawLine> lockedLines;
+  final List<Color> lockedLineColors;
   final _ActiveDraw? activeDraw;
+  final Color activeDrawColor;
   final _WrongFlash? wrongFlash;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final lockedPaint = Paint()
-      ..color = const Color(0xFF34D399)
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
+    for (var index = 0; index < lockedLines.length; index++) {
+      final line = lockedLines[index];
+      final paint = Paint()
+        ..color = index < lockedLineColors.length
+            ? lockedLineColors[index]
+            : const Color(0xFF34D399)
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round;
 
-    for (final line in lockedLines) {
-      canvas.drawLine(line.from, line.to, lockedPaint);
+      canvas.drawLine(line.from, line.to, paint);
     }
 
     if (activeDraw != null) {
@@ -522,7 +568,7 @@ class _ConnectionLinesPainter extends CustomPainter {
         activeDraw!.from,
         activeDraw!.to,
         Paint()
-          ..color = const Color(0xFFFB923C)
+          ..color = activeDrawColor
           ..strokeWidth = 4
           ..strokeCap = StrokeCap.round,
       );
@@ -561,7 +607,9 @@ class _ConnectionLinesPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ConnectionLinesPainter oldDelegate) {
     return oldDelegate.lockedLines != lockedLines ||
+        oldDelegate.lockedLineColors != lockedLineColors ||
         oldDelegate.activeDraw != activeDraw ||
+        oldDelegate.activeDrawColor != activeDrawColor ||
         oldDelegate.wrongFlash != wrongFlash;
   }
 }

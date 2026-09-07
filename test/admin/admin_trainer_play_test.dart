@@ -201,7 +201,7 @@ void main() {
       expect(payload.containsKey('chainTopicId'), isFalse);
     });
 
-    test('builds flashcard values array fields for API', () {
+    test('builds flashcard match params for API', () {
       final config = TrainerPlayConfig.fromJson({
         'status': 'success',
         'trainerKey': 'flashcard-digit-match',
@@ -210,24 +210,24 @@ void main() {
         'isInteractive': false,
         'defaultParams': {
           'pairCount': '3',
+          'rounds': '2',
+          'targetMode': 'dots',
           'totalRods': 1,
-          'value0': 0,
-          'value1': 1,
-          'value2': 2,
         },
         'fields': [],
       });
 
       final payload = buildPlayParamsPayload(config, {
         'pairCount': '3',
+        'rounds': '2',
+        'targetMode': 'dots',
         'totalRods': '1',
-        'value0': '0',
-        'value1': '1',
-        'value2': '2',
       });
 
       expect(payload['totalRods'], 1);
-      expect(payload['values'], [0, 1, 2]);
+      expect(payload['pairCount'], 3);
+      expect(payload['rounds'], 2);
+      expect(payload['targetMode'], 'dots');
     });
 
     test('maps fly-track digit to gridSize for native player', () {

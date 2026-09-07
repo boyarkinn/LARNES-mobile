@@ -2,6 +2,7 @@ import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.da
 import 'package:larnes_mobile/trainers/intel/fly_track/definition.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
@@ -29,7 +30,36 @@ ValidateTrainerParamsResult validateAppleCountShowParams(Map<String, dynamic> ra
   return ValidateTrainerParamsResult.success({'digit': digit});
 }
 
-ValidateTrainerParamsResult validateAbacusShowParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateFlashCardsParams(Map<String, dynamic> raw) {
+  final totalRods = coerceInt(raw['totalRods']);
+  if (totalRods == null || totalRods < 1 || totalRods > 21) {
+    return _fail('Некорректные параметры.');
+  }
+
+  final valuesRaw = raw['values'];
+  final String valuesString;
+  if (valuesRaw is String && valuesRaw.trim().isNotEmpty) {
+    valuesString = normalizeFlashCardValuesInput(valuesRaw, totalRods);
+  } else if (raw['value'] != null) {
+    valuesString = normalizeFlashCardValuesInput(raw['value'], totalRods);
+  } else {
+    return _fail('Некорректные параметры.');
+  }
+
+  if (!isValidFlashCardValues(valuesString, totalRods)) {
+    final maxValue = getMaxValueForRods(totalRods);
+    return _fail(
+      'Укажите числа через запятую от 0 до $maxValue для $totalRods разряд(ов).',
+    );
+  }
+
+  return ValidateTrainerParamsResult.success({
+    'totalRods': totalRods,
+    'values': formatFlashCardValues(parseFlashCardValues(valuesString)),
+  });
+}
+
+ValidateTrainerParamsResult validateDotsDigitAbacusParams(Map<String, dynamic> raw) {
   final totalRods = coerceInt(raw['totalRods']);
   final value = coerceInt(raw['value']);
   if (totalRods == null || totalRods < 1 || totalRods > 21) {
@@ -48,10 +78,6 @@ ValidateTrainerParamsResult validateAbacusShowParams(Map<String, dynamic> raw) {
     'totalRods': totalRods,
     'value': value,
   });
-}
-
-ValidateTrainerParamsResult validateDotsDigitAbacusParams(Map<String, dynamic> raw) {
-  return validateAbacusShowParams(raw);
 }
 
 ValidateTrainerParamsResult validateStaticExampleShowParams(Map<String, dynamic> raw) {
@@ -349,31 +375,35 @@ ValidateTrainerParamsResult validateTopicChainTableParams(Map<String, dynamic> r
 
 ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynamic> raw) {
   final totalRods = coerceInt(raw['totalRods']);
-  var values = coerceIntList(raw['values']);
-  values ??= parseMatchValuesFromInput(
-    pairCount: raw['pairCount'],
-    value0: raw['value0'],
-    value1: raw['value1'],
-    value2: raw['value2'],
-    value3: raw['value3'],
-  );
+  var pairCount = coerceInt(raw['pairCount']);
+  var rounds = coerceInt(raw['rounds']);
+  final legacyValues = coerceIntList(raw['values']);
+
+  if (pairCount == null && legacyValues != null) {
+    pairCount = legacyValues.length;
+  }
+
+  rounds ??= minMatchRounds;
+  final targetMode = normalizeTargetMode(raw['targetMode']);
 
   if (totalRods == null || totalRods < 1 || totalRods > 21) {
     return _fail('Некорректные параметры.');
   }
-  if (values == null ||
-      values.length < minMatchPairs ||
-      values.length > maxMatchPairs) {
+  if (pairCount == null ||
+      pairCount < minMatchPairs ||
+      pairCount > maxMatchPairs) {
     return _fail('Некорректные параметры.');
   }
-  if (!areFlashcardValuesValid(values, totalRods)) {
-    return _fail(
-      'Числа должны быть уникальными и помещаться в выбранное число разрядов.',
-    );
+  if (rounds == null || rounds < minMatchRounds || rounds > maxMatchRounds) {
+    return _fail('Некорректные параметры.');
   }
+
   return ValidateTrainerParamsResult.success({
     'totalRods': totalRods,
-    'values': values,
+    'pairCount': pairCount,
+    'rounds': rounds,
+    'targetMode':
+        targetMode == FlashcardTargetMode.dots ? 'dots' : 'digits',
   });
 }
 

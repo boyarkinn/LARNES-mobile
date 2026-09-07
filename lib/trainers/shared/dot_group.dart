@@ -29,6 +29,7 @@ class DotGroup extends StatefulWidget {
     this.revealProgressively = false,
     this.frameWidth,
     this.frameHeight,
+    this.dotColor,
   });
 
   final int count;
@@ -37,6 +38,7 @@ class DotGroup extends StatefulWidget {
   final bool revealProgressively;
   final double? frameWidth;
   final double? frameHeight;
+  final Color? dotColor;
 
   @override
   State<DotGroup> createState() => _DotGroupState();
@@ -100,7 +102,7 @@ class _DotGroupState extends State<DotGroup> {
   @override
   Widget build(BuildContext context) {
     final spec = _sizeSpec(widget.size, widget.count);
-    final colors = _colorsForTone(widget.tone);
+    final colors = _colorsForTone(widget.tone, widget.dotColor);
     final width = widget.frameWidth ?? spec.frameSize;
     final height = widget.frameHeight ?? spec.frameSize;
     final positions = getDotPositionsForValue(widget.count);
@@ -155,7 +157,14 @@ class _DotGroupState extends State<DotGroup> {
     }
   }
 
-  static _DotGroupColors _colorsForTone(DotGroupTone tone) {
+  static _DotGroupColors _colorsForTone(DotGroupTone tone, Color? dotColor) {
+    if (dotColor != null) {
+      return _DotGroupColors(
+        border: dotColor.withValues(alpha: 0.35),
+        dot: dotColor,
+      );
+    }
+
     switch (tone) {
       case DotGroupTone.orange:
         return const _DotGroupColors(

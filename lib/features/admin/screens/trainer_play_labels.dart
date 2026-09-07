@@ -107,6 +107,8 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayAmountScopeLabel;
     case 'valueLabel':
       return l10n.adminTrainerPlayValueLabel;
+    case 'flashValuesLabel':
+      return l10n.adminTrainerPlayFlashValuesLabel;
     case 'matchValue1Label':
       return l10n.adminTrainerPlayMatchValue1Label;
     case 'matchValue2Label':
@@ -115,6 +117,8 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayMatchValue3Label;
     case 'matchValue4Label':
       return l10n.adminTrainerPlayMatchValue4Label;
+    case 'targetModeLabel':
+      return l10n.adminTrainerPlayTargetModeLabel;
     default:
       return labelKey;
   }
@@ -154,6 +158,10 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
       return l10n.adminTrainerPlaySolveModeAbacus;
     case 'solveModeMental':
       return l10n.adminTrainerPlaySolveModeMental;
+    case 'targetModeDigits':
+      return l10n.adminTrainerPlayTargetModeDigits;
+    case 'targetModeDots':
+      return l10n.adminTrainerPlayTargetModeDots;
     case 'schulteCategoryDigits':
       return l10n.adminTrainerPlaySchulteCategoryDigits;
     case 'schulteCategoryLetters':
@@ -176,19 +184,5 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
 }
 
 bool trainerPlayFieldVisible(TrainerPlayConfig config, TrainerPlayField field, Map<String, String> values) {
-  if (!field.isVisible(values)) {
-    return false;
-  }
-
-  if (config.trainerKey != 'flashcard-digit-match') {
-    return true;
-  }
-
-  if (!field.key.startsWith('value')) {
-    return true;
-  }
-
-  final index = int.tryParse(field.key.replaceFirst('value', '')) ?? 0;
-  final pairCount = int.tryParse(values['pairCount'] ?? '2') ?? 2;
-  return index < pairCount;
+  return field.isVisible(values);
 }

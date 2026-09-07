@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 abstract final class AbacusColors {
   static const bar = Color(0xFF6B5344);
@@ -12,11 +13,15 @@ abstract final class AbacusColors {
 class AbacusPainter extends CustomPainter {
   AbacusPainter({
     required this.rodLayouts,
+    required this.rods,
     required this.totalRods,
+    this.activeBeadColor,
   });
 
   final List<RodBeadLayout> rodLayouts;
+  final List<RodState> rods;
   final int totalRods;
+  final Color? activeBeadColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -43,7 +48,7 @@ class AbacusPainter extends CustomPainter {
     );
 
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
-      _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex]);
+      _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex], rods[rodIndex]);
     }
   }
 
@@ -73,22 +78,40 @@ class AbacusPainter extends CustomPainter {
     );
   }
 
-  void _paintRodBeads(Canvas canvas, int rodIndex, RodBeadLayout beadLayout) {
+  void _paintRodBeads(
+    Canvas canvas,
+    int rodIndex,
+    RodBeadLayout beadLayout,
+    RodState rodState,
+  ) {
     final cx = rodCenterX(rodIndex);
 
-    _paintHexBead(canvas, cx, beadLayout.heavenY);
+    _paintHexBead(
+      canvas,
+      cx,
+      beadLayout.heavenY,
+      fill: rodState.heavenUp ? activeBeadColor : null,
+    );
 
     for (var beadIndex = 0; beadIndex < beadLayout.earthYs.length; beadIndex++) {
+      final isActive = beadIndex < rodState.earthCount;
       _paintHexBead(
         canvas,
         cx,
         beadLayout.earthYs[beadIndex],
-        marked: isMarkedEarthBead(rodIndex, beadIndex, totalRods),
+        fill: isActive ? activeBeadColor : null,
+        marked: !isActive && isMarkedEarthBead(rodIndex, beadIndex, totalRods),
       );
     }
   }
 
-  void _paintHexBead(Canvas canvas, double cx, double cy, {bool marked = false}) {
+  void _paintHexBead(
+    Canvas canvas,
+    double cx,
+    double cy, {
+    Color? fill,
+    bool marked = false,
+  }) {
     final halfHeight = AbacusLayout.beadHeight / 2;
     final slant = AbacusLayout.beadHalfWidth * AbacusLayout.beadSlantRatio;
     final left = cx - AbacusLayout.beadHalfWidth;
@@ -106,7 +129,7 @@ class AbacusPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = marked ? AbacusColors.beadMarkerFill : AbacusColors.beadFill
+        ..color = fill ?? (marked ? AbacusColors.beadMarkerFill : AbacusColors.beadFill)
         ..style = PaintingStyle.fill,
     );
     canvas.drawPath(
@@ -121,6 +144,8 @@ class AbacusPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant AbacusPainter oldDelegate) {
     return oldDelegate.rodLayouts != rodLayouts ||
-        oldDelegate.totalRods != totalRods;
+        oldDelegate.rods != rods ||
+        oldDelegate.totalRods != totalRods ||
+        oldDelegate.activeBeadColor != activeBeadColor;
   }
 }

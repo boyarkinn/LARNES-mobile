@@ -2294,6 +2294,12 @@ abstract class AppLocalizations {
   /// **'Value'**
   String get adminTrainerPlayValueLabel;
 
+  /// No description provided for @adminTrainerPlayFlashValuesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Values'**
+  String get adminTrainerPlayFlashValuesLabel;
+
   /// No description provided for @adminTrainerPlayMatchValue1Label.
   ///
   /// In en, this message translates to:
@@ -2317,6 +2323,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Value 4'**
   String get adminTrainerPlayMatchValue4Label;
+
+  /// No description provided for @adminTrainerPlayTargetModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Right side'**
+  String get adminTrainerPlayTargetModeLabel;
+
+  /// No description provided for @adminTrainerPlayTargetModeDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Digits'**
+  String get adminTrainerPlayTargetModeDigits;
+
+  /// No description provided for @adminTrainerPlayTargetModeDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Dots'**
+  String get adminTrainerPlayTargetModeDots;
 
   /// No description provided for @adminTrainerPlayLetterCaseUpper.
   ///

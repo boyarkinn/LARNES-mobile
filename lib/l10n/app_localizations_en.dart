@@ -1193,6 +1193,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainerPlayValueLabel => 'Value';
 
   @override
+  String get adminTrainerPlayFlashValuesLabel => 'Values';
+
+  @override
   String get adminTrainerPlayMatchValue1Label => 'Value 1';
 
   @override
@@ -1203,6 +1206,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminTrainerPlayMatchValue4Label => 'Value 4';
+
+  @override
+  String get adminTrainerPlayTargetModeLabel => 'Right side';
+
+  @override
+  String get adminTrainerPlayTargetModeDigits => 'Digits';
+
+  @override
+  String get adminTrainerPlayTargetModeDots => 'Dots';
 
   @override
   String get adminTrainerPlayLetterCaseUpper => 'Uppercase';

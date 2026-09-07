@@ -14,12 +14,16 @@ Map<String, String> mergeStoredParamsIntoFormValues(
   final values = config.initialValues();
 
   if (config.trainerKey == 'flashcard-digit-match') {
-    final pairValues = params['values'];
-    if (pairValues is List) {
-      for (var index = 0; index < pairValues.length && index < 4; index++) {
-        values['value$index'] = stringifyTrainerFormValue(pairValues[index]);
-      }
-      values['pairCount'] = '${pairValues.length}';
+    if (params.containsKey('pairCount')) {
+      values['pairCount'] = stringifyTrainerFormValue(params['pairCount']);
+    } else if (params['values'] is List) {
+      values['pairCount'] = '${(params['values'] as List).length}';
+    }
+    if (params.containsKey('rounds')) {
+      values['rounds'] = stringifyTrainerFormValue(params['rounds']);
+    }
+    if (params.containsKey('targetMode')) {
+      values['targetMode'] = stringifyTrainerFormValue(params['targetMode']);
     }
     if (params.containsKey('totalRods')) {
       values['totalRods'] = stringifyTrainerFormValue(params['totalRods']);

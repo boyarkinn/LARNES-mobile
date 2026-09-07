@@ -45,7 +45,7 @@ void main() {
     test('interactive flags match web for math and mental', () {
       expect(getTrainerDefinition('digit-find-tap')?.isInteractive, isTrue);
       expect(getTrainerDefinition('number-row-show')?.isInteractive, isFalse);
-      expect(getTrainerDefinition('abacus-show')?.isInteractive, isFalse);
+      expect(getTrainerDefinition('flash-cards')?.isInteractive, isTrue);
       expect(getTrainerDefinition('example-visualization')?.isInteractive, isFalse);
       expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
       expect(getTrainerDefinition('flashcard-digit-match')?.isInteractive, isTrue);

@@ -12,7 +12,7 @@ import 'package:larnes_mobile/trainers/math/digit_trace/digit_trace_trainer.dart
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_pay_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_composition/number_composition_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_show/abacus_show_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_show_trainer.dart';
@@ -52,8 +52,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       NumberRowShowTrainer(params: params),
   TrainerKey.appleCountShow: ({required params, onComplete}) =>
       AppleCountShowTrainer(params: params),
-  TrainerKey.abacusShow: ({required params, onComplete}) =>
-      AbacusShowTrainer(params: params),
+  TrainerKey.flashCards: ({required params, onComplete}) =>
+      FlashCardsTrainer(params: params, onComplete: onComplete),
   TrainerKey.dotsDigitAbacus: ({required params, onComplete}) =>
       DotsDigitAbacusTrainer(params: params),
   TrainerKey.digitFindTap: ({required params, onComplete}) =>
@@ -137,11 +137,12 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.math,
     validate: validateAppleCountShowParams,
   ),
-  TrainerKey.abacusShow: TrainerDefinition(
-    key: TrainerKey.abacusShow,
-    title: 'Цифровой абакус',
+  TrainerKey.flashCards: TrainerDefinition(
+    key: TrainerKey.flashCards,
+    title: 'Флеш-карты',
     direction: TrainerDirection.mental,
-    validate: validateAbacusShowParams,
+    isInteractive: true,
+    validate: validateFlashCardsParams,
   ),
   TrainerKey.dotsDigitAbacus: TrainerDefinition(
     key: TrainerKey.dotsDigitAbacus,

@@ -62,7 +62,11 @@ class _ShopSceneState extends State<ShopScene> {
     _interactionReadyTimer?.cancel();
     _errorFlashTimer?.cancel();
 
-    _coins = createCoins(widget.coinCount);
+    _coins = buildCoinTrayForParams(
+      item: widget.item,
+      price: widget.price,
+      coinCount: widget.coinCount,
+    );
     _hasErrorFlash = false;
     _isSuccess = false;
     _isInteractionReady = false;
@@ -87,7 +91,7 @@ class _ShopSceneState extends State<ShopScene> {
     );
   }
 
-  int get _paidAmount => countCoinsInRegister(_coins);
+  int get _paidAmount => sumCoinsInRegister(_coins);
 
   bool get _isLocked =>
       widget.disabled || _isSuccess || !_isInteractionReady;
@@ -526,7 +530,7 @@ class _RegisterCoinButton extends StatelessWidget {
       child: InkWell(
         onTap: disabled ? null : onTap,
         customBorder: const CircleBorder(),
-        child: RubleCoin(size: size),
+        child: RubleCoin(size: size, value: coin.value),
       ),
     );
   }
@@ -594,7 +598,7 @@ class _TrayCoinButtonState extends State<_TrayCoinButton>
 
   @override
   Widget build(BuildContext context) {
-    Widget coin = RubleCoin(size: widget.size);
+    Widget coin = RubleCoin(size: widget.size, value: widget.coin.value);
 
     if (!widget.disabled) {
       coin = Draggable<String>(
@@ -602,11 +606,11 @@ class _TrayCoinButtonState extends State<_TrayCoinButton>
         maxSimultaneousDrags: 1,
         feedback: Material(
           color: Colors.transparent,
-          child: RubleCoin(size: widget.dragSize),
+          child: RubleCoin(size: widget.dragSize, value: widget.coin.value),
         ),
         childWhenDragging: Opacity(
           opacity: 0.3,
-          child: RubleCoin(size: widget.size),
+          child: RubleCoin(size: widget.size, value: widget.coin.value),
         ),
         onDragEnd: (details) {
           if (!details.wasAccepted) {
@@ -618,7 +622,7 @@ class _TrayCoinButtonState extends State<_TrayCoinButton>
           child: InkWell(
             onTap: widget.onSelect,
             customBorder: const CircleBorder(),
-            child: RubleCoin(size: widget.size),
+            child: RubleCoin(size: widget.size, value: widget.coin.value),
           ),
         ),
       );

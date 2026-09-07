@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_item_icon.dart';
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_pay_trainer.dart';
 import 'package:larnes_mobile/trainers/math/shop_pay/shop_scene.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
@@ -30,18 +31,16 @@ void main() {
 
       expect(find.byType(TrainerScene), findsOneWidget);
       expect(find.byType(TrainerShell), findsNothing);
-      expect(find.byType(ShopScene), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.textContaining('Положи в кассу'), findsNothing);
       expect(find.textContaining('ВИТРИНА'), findsNothing);
       expect(find.textContaining('КАССА'), findsNothing);
       expect(find.textContaining('МОНЕТКИ'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
       expect(find.textContaining('Перетащи'), findsNothing);
-
-      await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('shows pay button after reveal chain', (tester) async {
+    testWidgets('shows pay button after instruction, countdown and reveal chain', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -63,9 +62,10 @@ void main() {
 
       expect(find.text('Заплатить'), findsNothing);
 
-      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(seconds: 8));
       await tester.pump();
 
+      expect(find.byType(ShopScene), findsOneWidget);
       expect(find.text('Заплатить'), findsOneWidget);
     });
 
@@ -95,7 +95,7 @@ void main() {
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
 
-      await tester.pump(const Duration(seconds: 4));
+      await tester.pump(const Duration(seconds: 8));
     });
 
     testWidgets('showcase item icon is visible in portrait and landscape', (
@@ -120,7 +120,7 @@ void main() {
           ),
         );
         await tester.pump();
-        await tester.pump(const Duration(seconds: 2));
+        await tester.pump(const Duration(seconds: 8));
       }
 
       await pumpScene(const Size(360, 640));

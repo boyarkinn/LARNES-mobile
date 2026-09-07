@@ -28,32 +28,66 @@ void main() {
   });
 
   group('coin helpers', () {
-    test('creates coins in tray', () {
-      final coins = createCoins(4);
+    test('builds coins in tray with denominations', () {
+      final coins = buildCoinTrayForParams(item: 'candy', price: 13, coinCount: 8);
 
-      expect(coins.length, 4);
-      expect(countCoinsInRegister(coins), 0);
+      expect(coins.length, 8);
+      expect(sumCoinsInRegister(coins), 0);
+      expect(coins.every((coin) => shopCoinDenominations.contains(coin.value)), isTrue);
     });
 
-    test('moves coin to register', () {
-      final coins = moveCoinToZone(createCoins(3), 'coin-1', coinZoneRegister);
+    test('moves coin to register and sums values', () {
+      final coins = moveCoinToZone(
+        buildCoinTrayForParams(item: 'candy', price: 7, coinCount: 6),
+        'coin-1',
+        coinZoneRegister,
+      );
 
-      expect(countCoinsInRegister(coins), 1);
+      expect(sumCoinsInRegister(coins), greaterThanOrEqualTo(1));
     });
 
     test('resets coins to tray', () {
       final coins = resetCoinsToTray(
-        moveCoinToZone(createCoins(2), 'coin-1', coinZoneRegister),
+        moveCoinToZone(
+          buildCoinTrayForParams(item: 'candy', price: 5, coinCount: 6),
+          'coin-1',
+          coinZoneRegister,
+        ),
       );
 
-      expect(countCoinsInRegister(coins), 0);
+      expect(sumCoinsInRegister(coins), 0);
     });
   });
 
   group('isShopCoinCountValid', () {
-    test('requires at least price coins', () {
-      expect(isShopCoinCountValid(5, 3), isTrue);
-      expect(isShopCoinCountValid(2, 3), isFalse);
+    test('requires enough slots for the minimum decomposition', () {
+      expect(isShopCoinCountValid(6, 13), isTrue);
+      expect(isShopCoinCountValid(2, 13), isFalse);
+      expect(minCoinsForPrice(50), 5);
+      expect(isShopCoinCountValid(5, 50), isTrue);
+    });
+  });
+
+  group('buildCoinTray', () {
+    test('always includes a subset that pays the price', () {
+      final coins = buildCoinTrayForParams(item: 'banana', price: 37, coinCount: 10);
+
+      expect(coins.length, 10);
+      expect(
+        trayCanPayPrice(coins.map((coin) => coin.value).toList(), 37),
+        isTrue,
+      );
+    });
+
+    test('is deterministic for the same params', () {
+      final first = buildCoinTrayForParams(item: 'car', price: 18, coinCount: 8)
+          .map((coin) => coin.value)
+          .toList();
+      final second = buildCoinTrayForParams(item: 'car', price: 18, coinCount: 8)
+          .map((coin) => coin.value)
+          .toList();
+
+      expect(first, second);
     });
   });
 }

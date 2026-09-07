@@ -13,7 +13,7 @@ const maxDigitFieldTokens = 28;
 const maxFruitFieldTokens = 30;
 const maxDotChoice = 3;
 const maxShopCoins = 12;
-const maxShopPrice = 9;
+const maxShopPrice = 50;
 const minMatchPairs = 2;
 const maxMatchPairs = 4;
 
@@ -51,7 +51,17 @@ bool isMissingPartInDotRange(int missingPart) {
 }
 
 bool isCoinCountValid(int coinCount, int price) {
-  return coinCount >= price && coinCount >= 1 && coinCount <= maxShopCoins;
+  var remaining = price.clamp(0, 1 << 30);
+  var minCoins = 0;
+
+  for (final denomination in const [10, 5, 2, 1]) {
+    while (remaining >= denomination) {
+      remaining -= denomination;
+      minCoins += 1;
+    }
+  }
+
+  return coinCount >= minCoins && coinCount >= 1 && coinCount <= maxShopCoins;
 }
 
 bool areFlashcardValuesValid(List<int> values, int totalRods) {

@@ -300,7 +300,7 @@ ValidateTrainerParamsResult validateShopPayParams(Map<String, dynamic> raw) {
     return _fail('Некорректные параметры.');
   }
   if (!isCoinCountValid(coinCount, price)) {
-    return _fail('Монет должно быть не меньше цены товара.');
+    return _fail('Монет должно хватить, чтобы собрать цену товара.');
   }
   return ValidateTrainerParamsResult.success({
     'coinCount': coinCount,

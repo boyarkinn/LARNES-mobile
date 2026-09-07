@@ -4,28 +4,42 @@ class RubleCoin extends StatelessWidget {
   const RubleCoin({
     super.key,
     this.size = 52,
+    this.value = 1,
   });
 
   final double size;
+  final int value;
 
   @override
   Widget build(BuildContext context) {
     final r = size / 2;
+    final label = value.toString();
+    final fontSize = label.length > 1 ? r * 0.58 : r * 0.72;
 
     return SizedBox(
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _RubleCoinPainter(r: r),
+        painter: _RubleCoinPainter(
+          fontSize: fontSize,
+          label: label,
+          r: r,
+        ),
       ),
     );
   }
 }
 
 class _RubleCoinPainter extends CustomPainter {
-  _RubleCoinPainter({required this.r});
+  _RubleCoinPainter({
+    required this.r,
+    required this.label,
+    required this.fontSize,
+  });
 
   final double r;
+  final String label;
+  final double fontSize;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,10 +71,10 @@ class _RubleCoinPainter extends CustomPainter {
 
     final textPainter = TextPainter(
       text: TextSpan(
-        text: '1',
+        text: label,
         style: TextStyle(
           color: const Color(0xFFE65100),
-          fontSize: r * 0.72,
+          fontSize: fontSize,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -74,5 +88,7 @@ class _RubleCoinPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RubleCoinPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RubleCoinPainter oldDelegate) {
+    return oldDelegate.label != label || oldDelegate.fontSize != fontSize;
+  }
 }

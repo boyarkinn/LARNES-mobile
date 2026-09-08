@@ -11,30 +11,49 @@ void main() {
     });
   });
 
+  group('isValidDigitFindTapValues', () {
+    test('accepts digits 0-9', () {
+      expect(isValidDigitFindTapValues('0,2,5,9'), isTrue);
+      expect(isValidDigitFindTapValues('7'), isTrue);
+    });
+
+    test('rejects out-of-range and garbage parts', () {
+      expect(isValidDigitFindTapValues('2,12,7'), isFalse);
+      expect(isValidDigitFindTapValues('2,-1'), isFalse);
+      expect(isValidDigitFindTapValues('2,foo'), isFalse);
+      expect(isValidDigitFindTapValues(''), isFalse);
+    });
+  });
+
+  group('parseDigitFindTapValues', () {
+    test('parses comma-separated digits', () {
+      expect(parseDigitFindTapValues('2,5,7'), [2, 5, 7]);
+    });
+  });
+
   group('canFitDigitField', () {
     test('accepts valid counts', () {
-      expect(canFitDigitField(3, 12), isTrue);
+      expect(canFitDigitField(12), isTrue);
     });
 
     test('rejects overflow', () {
-      expect(canFitDigitField(9, 20), isFalse);
+      expect(canFitDigitField(28), isFalse);
     });
   });
 
   group('buildDigitTokens', () {
-    test('creates the requested number of targets and distractors', () {
+    test('creates one target and the requested distractors', () {
       final rng = createSeededRng(42);
       final tokens = buildDigitTokens(
         BuildDigitFieldInput(
           distractorCount: 8,
           rng: rng,
-          targetCount: 3,
           targetDigit: 2,
         ),
       );
 
-      expect(tokens.length, 11);
-      expect(tokens.where((token) => token.isTarget).length, 3);
+      expect(tokens.length, 9);
+      expect(tokens.where((token) => token.isTarget).length, 1);
       expect(tokens.where((token) => !token.isTarget).length, 8);
       expect(
         tokens.every((token) => token.isTarget || token.digit != 2),
@@ -53,7 +72,6 @@ void main() {
         BuildDigitFieldInput(
           distractorCount: 5,
           rng: createSeededRng(99),
-          targetCount: 2,
           targetDigit: 7,
         ),
       );
@@ -61,7 +79,6 @@ void main() {
         BuildDigitFieldInput(
           distractorCount: 5,
           rng: createSeededRng(99),
-          targetCount: 2,
           targetDigit: 7,
         ),
       );
@@ -76,14 +93,13 @@ void main() {
         BuildDigitFieldInput(
           distractorCount: 2,
           rng: createSeededRng(1),
-          targetCount: 2,
           targetDigit: 4,
         ),
       );
       final targetIds =
           tokens.where((token) => token.isTarget).map((token) => token.id).toList();
 
-      expect(allTargetsFound({targetIds[0]}, tokens), isFalse);
+      expect(allTargetsFound({}, tokens), isFalse);
       expect(allTargetsFound(targetIds.toSet(), tokens), isTrue);
     });
   });

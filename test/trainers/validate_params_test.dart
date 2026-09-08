@@ -45,9 +45,16 @@ void main() {
 
     test('rejects invalid digit-find-tap field size', () {
       final result = validateTrainerParams('digit-find-tap', {
-        'digit': 1,
-        'targetCount': 20,
-        'distractorCount': 20,
+        'values': '2,5,7',
+        'distractorCount': 28,
+      });
+      expect(result.ok, isFalse);
+    });
+
+    test('rejects digit-find-tap values outside 0-9', () {
+      final result = validateTrainerParams('digit-find-tap', {
+        'values': '2,12,7',
+        'distractorCount': 8,
       });
       expect(result.ok, isFalse);
     });

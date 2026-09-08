@@ -14,7 +14,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-enum DigitFindTapPhase { instruction, countdown, play }
+enum DigitFindTapPhase { instruction, countdown, announce, play }
 
 /// Web v2: `platform/src/trainers/math/digit-find-tap/component.tsx`
 class DigitFindTapTrainer extends StatefulWidget {
@@ -35,7 +35,10 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
   static const _countdownColor = Color(0xFFDC2626);
+  static const _roundPauseMs = 700;
 
+  late List<int> _roundValues;
+  var _roundIndex = 0;
   var _layoutSalt = 0;
   late List<PlacedDigit> _digits;
 
@@ -44,15 +47,20 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   var _instructionLength = 0;
   final Set<String> _foundIds = {};
   String? _wrongId;
-  var _isCompleted = false;
+  var _isRoundComplete = false;
   var _isRevealComplete = false;
   var _completeCalled = false;
   Object _runToken = Object();
 
   final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _countdownTimer;
+  Timer? _instructionDelayTimer;
   Timer? _revealTimer;
+  Timer? _advanceTimer;
   Timer? _completeTimer;
+
+  int get _targetDigit =>
+      _roundValues.isEmpty ? 0 : _roundValues[_roundIndex.clamp(0, _roundValues.length - 1)];
 
   @override
   void initState() {
@@ -72,7 +80,9 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   void dispose() {
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
+    _instructionDelayTimer?.cancel();
     _revealTimer?.cancel();
+    _advanceTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelDigitFindTapAudio());
     super.dispose();
@@ -83,10 +93,16 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     _runToken = runToken;
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
+    _instructionDelayTimer?.cancel();
     _revealTimer?.cancel();
+    _advanceTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelDigitFindTapAudio());
 
+    _roundValues = parseDigitFindTapValues(
+      normalizeDigitFindTapValuesInput(widget.params['values']),
+    );
+    _roundIndex = 0;
     _layoutSalt = createLayoutSalt();
     _digits = _buildDigits();
     _foundIds.clear();
@@ -96,7 +112,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
       _instructionLength = 0;
       _countdownLabel = _countdownLabels.first;
       _wrongId = null;
-      _isCompleted = false;
+      _isRoundComplete = false;
       _isRevealComplete = false;
       _completeCalled = false;
     });
@@ -105,9 +121,8 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
   }
 
   List<PlacedDigit> _buildDigits() {
-    final targetDigit = normalizeTargetDigit(widget.params['digit'] as num? ?? 0);
-    final targetCount = widget.params['targetCount'] as int? ?? 1;
     final distractorCount = widget.params['distractorCount'] as int? ?? 0;
+    final targetDigit = _targetDigit;
 
     final snapshotSeed = readTrainerSnapshotSeed(
       'digit-find-tap',
@@ -116,18 +131,18 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     final rng = snapshotSeed == null
         ? createSeededRng(
             hashParamsSeed([
+              normalizeDigitFindTapValuesInput(widget.params['values']),
+              _roundIndex,
               targetDigit,
-              targetCount,
               distractorCount,
               _layoutSalt,
             ]),
           )
-        : TrainerSnapshotRandom(snapshotSeed).nextDouble;
+        : TrainerSnapshotRandom(snapshotSeed + _roundIndex).nextDouble;
     final tokens = buildDigitTokens(
       BuildDigitFieldInput(
         distractorCount: distractorCount,
         rng: rng,
-        targetCount: targetCount,
         targetDigit: targetDigit,
       ),
     );
@@ -135,11 +150,22 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     return placeDigitTokens(tokens, rng);
   }
 
+  void _resetRoundState() {
+    _foundIds.clear();
+    _wrongId = null;
+    _isRoundComplete = false;
+    _isRevealComplete = false;
+    _digits = _buildDigits();
+  }
+
   Future<void> _runInstruction(Object runToken) async {
     final durationMs = await loadTrainerInstructionDurationMs(
       assetPath: getDigitFindTapInstructionAudioAsset(),
       playbackRate: kDigitFindTapInstructionPlaybackRate,
       fallbackMs: kDigitFindTapInstructionDurationFallbackMs,
+    ).timeout(
+      const Duration(milliseconds: kDigitFindTapInstructionDurationFallbackMs),
+      onTimeout: () => kDigitFindTapInstructionDurationFallbackMs,
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
@@ -157,17 +183,20 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
       },
     );
 
-    await playDigitFindTapInstruction();
-    if (!mounted || !identical(runToken, _runToken)) {
-      return;
-    }
+    unawaited(playDigitFindTapInstruction());
+    _instructionDelayTimer?.cancel();
+    _instructionDelayTimer = Timer(Duration(milliseconds: durationMs), () {
+      if (!mounted || !identical(runToken, _runToken)) {
+        return;
+      }
 
-    _instructionTypewriter.cancel();
-    setState(() {
-      _instructionLength = digitFindTapInstructionText.length;
-      _phase = DigitFindTapPhase.countdown;
+      _instructionTypewriter.cancel();
+      setState(() {
+        _instructionLength = digitFindTapInstructionText.length;
+        _phase = DigitFindTapPhase.countdown;
+      });
+      _runCountdown(runToken);
     });
-    _runCountdown(runToken);
   }
 
   void _runCountdown(Object runToken) {
@@ -180,8 +209,8 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() => _phase = DigitFindTapPhase.play);
-        _scheduleReveal();
+        setState(() => _phase = DigitFindTapPhase.announce);
+        unawaited(_runAnnounce(runToken));
         return;
       }
 
@@ -194,6 +223,21 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     }
 
     showNext();
+  }
+
+  Future<void> _runAnnounce(Object runToken) async {
+    try {
+      await playDigitFindTapTargetDigit(_targetDigit)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // Tests / missing assets — still reveal the field.
+    }
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    setState(() => _phase = DigitFindTapPhase.play);
+    _scheduleReveal();
   }
 
   void _scheduleReveal() {
@@ -217,8 +261,24 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     );
   }
 
+  void _advanceRound() {
+    if (_roundIndex + 1 < _roundValues.length) {
+      setState(() {
+        _layoutSalt = createLayoutSalt();
+        _roundIndex += 1;
+        _countdownLabel = _countdownLabels.first;
+        _phase = DigitFindTapPhase.countdown;
+        _resetRoundState();
+      });
+      _runCountdown(_runToken);
+      return;
+    }
+
+    _scheduleComplete();
+  }
+
   void _handleTap(String id) {
-    if (_isCompleted || !_isRevealComplete || _foundIds.contains(id)) {
+    if (_isRoundComplete || !_isRevealComplete || _foundIds.contains(id)) {
       return;
     }
 
@@ -249,8 +309,16 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     setState(() => _foundIds.add(id));
 
     if (allTargetsFound(_foundIds, _digits)) {
-      setState(() => _isCompleted = true);
-      _scheduleComplete();
+      setState(() => _isRoundComplete = true);
+      _advanceTimer?.cancel();
+      _advanceTimer = Timer(
+        const Duration(milliseconds: _roundPauseMs),
+        () {
+          if (mounted) {
+            _advanceRound();
+          }
+        },
+      );
     }
   }
 
@@ -290,9 +358,10 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
             ),
           ),
         ),
+        DigitFindTapPhase.announce => const SizedBox.expand(),
         DigitFindTapPhase.play => DigitFieldScene(
           digits: _digits,
-          disabled: _isCompleted || !_isRevealComplete,
+          disabled: _isRoundComplete || !_isRevealComplete,
           foundIds: _foundIds,
           onTap: _handleTap,
           wrongId: _wrongId,

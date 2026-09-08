@@ -18,4 +18,15 @@ void main() {
       expect(getDigitDisplayColor(-1), digitDisplayColors[0]);
     });
   });
+
+  group('getDigitFieldChipColor', () {
+    test('returns a unique color for each chip index on the field', () {
+      final colors = <Color>{
+        for (var index = 0; index < digitFieldChipColors.length; index++)
+          getDigitFieldChipColor(index),
+      };
+
+      expect(colors.length, digitFieldChipColors.length);
+    });
+  });
 }

@@ -1,6 +1,7 @@
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
 const distractorDigits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const digitFindTapTargetCount = 1;
 
 class DigitToken {
   const DigitToken({
@@ -18,13 +19,11 @@ class BuildDigitFieldInput {
   const BuildDigitFieldInput({
     required this.distractorCount,
     required this.rng,
-    required this.targetCount,
     required this.targetDigit,
   });
 
   final int distractorCount;
   final double Function() rng;
-  final int targetCount;
   final int targetDigit;
 }
 
@@ -35,10 +34,67 @@ int normalizeTargetDigit(num value) {
   return value.truncate().clamp(0, 9);
 }
 
-bool canFitDigitField(int targetCount, int distractorCount) {
-  return targetCount >= 1 &&
-      distractorCount >= 0 &&
-      targetCount + distractorCount <= maxDigitFieldTokens;
+List<int> parseDigitFindTapValues(String raw) {
+  return splitDigitFindTapValueParts(raw)
+      .map((part) => int.tryParse(part))
+      .whereType<int>()
+      .where((value) => value >= 0 && value <= 9)
+      .toList();
+}
+
+List<String> splitDigitFindTapValueParts(String raw) {
+  return raw
+      .split(RegExp(r'[,;]+'))
+      .map((part) => part.trim())
+      .where((part) => part.isNotEmpty)
+      .toList();
+}
+
+bool isValidDigitFindTapValuePart(String part) {
+  if (!RegExp(r'^\d+$').hasMatch(part)) {
+    return false;
+  }
+
+  final value = int.tryParse(part);
+  return value != null && value >= 0 && value <= 9;
+}
+
+bool isValidDigitFindTapValues(String raw) {
+  final parts = splitDigitFindTapValueParts(raw);
+  return parts.isNotEmpty && parts.every(isValidDigitFindTapValuePart);
+}
+
+String formatDigitFindTapValues(List<int> values) {
+  return values.join(',');
+}
+
+String normalizeDigitFindTapValuesInput(Object? values) {
+  if (values is String && values.trim().isNotEmpty) {
+    if (isValidDigitFindTapValues(values)) {
+      return formatDigitFindTapValues(parseDigitFindTapValues(values));
+    }
+  }
+
+  if (values is num && values.isFinite) {
+    return formatDigitFindTapValues([normalizeTargetDigit(values)]);
+  }
+
+  if (values is List) {
+    final parsed = values
+        .map((entry) => entry is num ? normalizeTargetDigit(entry) : null)
+        .whereType<int>()
+        .toList();
+    if (parsed.isNotEmpty) {
+      return formatDigitFindTapValues(parsed);
+    }
+  }
+
+  return '2,5,7';
+}
+
+bool canFitDigitField(int distractorCount) {
+  return distractorCount >= 0 &&
+      digitFindTapTargetCount + distractorCount <= maxDigitFieldTokens;
 }
 
 List<DigitToken> buildDigitTokens(BuildDigitFieldInput input) {
@@ -46,14 +102,13 @@ List<DigitToken> buildDigitTokens(BuildDigitFieldInput input) {
   final distractorPool =
       distractorDigits.where((digit) => digit != targetDigit).toList();
 
-  final targets = List.generate(
-    input.targetCount,
-    (index) => DigitToken(
+  final targets = [
+    DigitToken(
       digit: targetDigit,
-      id: 'target-$index',
+      id: 'target-0',
       isTarget: true,
     ),
-  );
+  ];
 
   final distractors = List.generate(input.distractorCount, (index) {
     final poolIndex = (input.rng() * distractorPool.length).floor();

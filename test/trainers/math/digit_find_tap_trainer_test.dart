@@ -17,8 +17,7 @@ void main() {
               height: 640,
               child: DigitFindTapTrainer(
                 params: {
-                  'digit': 5,
-                  'targetCount': 3,
+                  'values': '2,5,7',
                   'distractorCount': 10,
                 },
               ),
@@ -28,12 +27,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.byType(TrainerScene), findsOneWidget);
+      expect(find.byType(TrainerScene), findsAtLeast(1));
       expect(find.byType(TrainerShell), findsNothing);
       expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.textContaining('Найди все'), findsNothing);
       expect(find.textContaining('Молодец'), findsNothing);
       expect(find.textContaining('/'), findsNothing);
+
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
     testWidgets('fills bounded stage', (tester) async {
@@ -48,8 +49,7 @@ void main() {
               height: 480,
               child: DigitFindTapTrainer(
                 params: {
-                  'digit': 2,
-                  'targetCount': 2,
+                  'values': '2,5',
                   'distractorCount': 6,
                 },
               ),
@@ -60,10 +60,12 @@ void main() {
       await tester.pump();
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
-      expect(tester.getSize(find.byType(TrainerScene)), const Size(320, 480));
+      expect(tester.getSize(find.byType(TrainerScene).first), const Size(320, 480));
+
+      await tester.pump(const Duration(milliseconds: 1200));
     });
 
-    testWidgets('shows digit field after instruction and countdown', (tester) async {
+    testWidgets('shows digit field after instruction, countdown and announce', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -72,8 +74,7 @@ void main() {
               height: 640,
               child: DigitFindTapTrainer(
                 params: {
-                  'digit': 5,
-                  'targetCount': 1,
+                  'values': '5',
                   'distractorCount': 4,
                 },
               ),
@@ -85,7 +86,7 @@ void main() {
 
       expect(find.byType(DigitFieldScene), findsNothing);
 
-      await tester.pump(const Duration(seconds: 8));
+      await tester.pump(const Duration(seconds: 10));
       await tester.pump();
 
       expect(find.byType(DigitFieldScene), findsOneWidget);
@@ -100,8 +101,7 @@ void main() {
               height: 640,
               child: DigitFindTapTrainer(
                 params: {
-                  'digit': 2,
-                  'targetCount': 3,
+                  'values': '2,5,7',
                   'distractorCount': 8,
                   '__runtimeSnapshot': {
                     'version': 1,
@@ -115,7 +115,7 @@ void main() {
           ),
         );
         await tester.pump();
-        await tester.pump(const Duration(seconds: 8));
+        await tester.pump(const Duration(seconds: 10));
 
         final digits = tester.widget<DigitFieldScene>(
           find.byType(DigitFieldScene),

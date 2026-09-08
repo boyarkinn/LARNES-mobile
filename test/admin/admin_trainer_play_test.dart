@@ -61,17 +61,14 @@ void main() {
         'direction': 'math',
         'isInteractive': true,
         'defaultParams': {
-          'digit': 2,
-          'targetCount': 3,
+          'values': '2,5,7',
           'distractorCount': 12,
         },
         'fields': [
           {
-            'key': 'digit',
-            'type': 'number',
-            'labelKey': 'digitLabel',
-            'min': 0,
-            'max': 9,
+            'key': 'values',
+            'type': 'text',
+            'labelKey': 'flashValuesLabel',
           },
         ],
       });

@@ -1,10 +1,12 @@
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/definition.dart';
 import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_model.dart';
+import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_model.dart'
+    hide getMaxValueForRods;
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
@@ -214,25 +216,32 @@ ValidateTrainerParamsResult validateExampleVisualizationParams(
 }
 
 ValidateTrainerParamsResult validateDigitFindTapParams(Map<String, dynamic> raw) {
-  final digit = coerceInt(raw['digit']);
   final distractorCount = coerceInt(raw['distractorCount']);
-  final targetCount = coerceInt(raw['targetCount']);
-  if (digit == null || digit < 0 || digit > 9) {
-    return _fail('Некорректные параметры.');
-  }
   if (distractorCount == null || distractorCount < 0 || distractorCount > 30) {
     return _fail('Некорректные параметры.');
   }
-  if (targetCount == null || targetCount < 1 || targetCount > 9) {
-    return _fail('Некорректные параметры.');
+
+  final valuesRaw = raw['values'] ?? raw['digit'];
+  final String valuesString;
+  if (valuesRaw is String && valuesRaw.trim().isNotEmpty) {
+    valuesString = valuesRaw.trim();
+  } else if (valuesRaw is num && valuesRaw.isFinite) {
+    valuesString = normalizeTargetDigit(valuesRaw).toString();
+  } else {
+    return _fail('Укажите цифры от 0 до 9 через запятую.');
   }
-  if (targetCount + distractorCount > maxDigitFieldTokens) {
+
+  if (!isValidDigitFindTapValues(valuesString)) {
+    return _fail('Укажите цифры от 0 до 9 через запятую.');
+  }
+
+  if (!canFitDigitField(distractorCount)) {
     return _fail('Слишком много цифр на экране (максимум $maxDigitFieldTokens).');
   }
+
   return ValidateTrainerParamsResult.success({
-    'digit': digit,
     'distractorCount': distractorCount,
-    'targetCount': targetCount,
+    'values': formatDigitFindTapValues(parseDigitFindTapValues(valuesString)),
   });
 }
 

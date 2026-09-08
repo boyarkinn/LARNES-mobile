@@ -11,7 +11,6 @@ void main() {
         BuildDigitFieldInput(
           distractorCount: 10,
           rng: rng,
-          targetCount: 3,
           targetDigit: 1,
         ),
       );

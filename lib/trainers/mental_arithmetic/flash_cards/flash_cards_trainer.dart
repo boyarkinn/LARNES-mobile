@@ -30,7 +30,7 @@ class FlashCardsTrainer extends StatefulWidget {
 
 class _FlashCardsTrainerState extends State<FlashCardsTrainer>
     with SingleTickerProviderStateMixin {
-  static const _instructionText = 'Посмотри на абакус и введи число';
+  static const _instructionText = kFlashCardsInstructionText;
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
   static const _countdownColor = Color(0xFFDC2626);
@@ -361,6 +361,7 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
                   child: FittedBox(
                     fit: BoxFit.contain,
                     child: AnimatedAbacusValue(
+                      activeBeadColor: const Color(kFlashCardsActiveBeadColor),
                       value: _currentValue,
                       totalRods: _totalRods,
                     ),

@@ -43,6 +43,7 @@ class DigitFieldScene extends StatelessWidget {
                 top: digits[index].yPercent / 100 * constraints.maxHeight,
                 child: _DigitChip(
                   key: ValueKey(digits[index].id),
+                  colorIndex: index,
                   digit: digits[index],
                   chipSize: chipSize,
                   fontSize: fontSize,
@@ -66,6 +67,7 @@ class DigitFieldScene extends StatelessWidget {
 class _DigitChip extends StatefulWidget {
   const _DigitChip({
     super.key,
+    required this.colorIndex,
     required this.digit,
     required this.chipSize,
     required this.fontSize,
@@ -75,6 +77,7 @@ class _DigitChip extends StatefulWidget {
     required this.onTap,
   });
 
+  final int colorIndex;
   final PlacedDigit digit;
   final double chipSize;
   final double fontSize;
@@ -96,7 +99,7 @@ class _DigitChipState extends State<_DigitChip> with TickerProviderStateMixin {
   late final Animation<double> _foundProgress;
   Timer? _enterTimer;
 
-  Color get _baseColor => getDigitDisplayColor(widget.digit.digit);
+  Color get _baseColor => getDigitFieldChipColor(widget.colorIndex);
 
   @override
   void initState() {

@@ -123,10 +123,12 @@ class AnimatedAbacusValue extends StatefulWidget {
     super.key,
     required this.value,
     required this.totalRods,
+    this.activeBeadColor,
   });
 
   final int value;
   final int totalRods;
+  final Color? activeBeadColor;
 
   @override
   State<AnimatedAbacusValue> createState() => _AnimatedAbacusValueState();
@@ -167,6 +169,7 @@ class _AnimatedAbacusValueState extends State<AnimatedAbacusValue> {
   @override
   Widget build(BuildContext context) {
     return AbacusWidget(
+      activeBeadColor: widget.activeBeadColor,
       rods: _rods,
       totalRods: widget.totalRods,
     );

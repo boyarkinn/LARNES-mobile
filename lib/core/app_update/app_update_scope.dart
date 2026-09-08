@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:larnes_mobile/core/app_update/app_update_controller.dart';
-import 'package:larnes_mobile/core/app_update/app_update_dialog.dart';
 
 class AppUpdateScope extends InheritedNotifier<AppUpdateController> {
   const AppUpdateScope({
@@ -20,50 +19,12 @@ class AppUpdateScope extends InheritedNotifier<AppUpdateController> {
   }
 }
 
-class AppUpdateHost extends StatefulWidget {
+/// Pass-through wrapper kept for stable tree shape in [LarnesApp].
+class AppUpdateHost extends StatelessWidget {
   const AppUpdateHost({super.key, required this.child});
 
   final Widget child;
 
   @override
-  State<AppUpdateHost> createState() => _AppUpdateHostState();
-}
-
-class _AppUpdateHostState extends State<AppUpdateHost> {
-  AppUpdateController? _controller;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final next = AppUpdateScope.maybeOf(context);
-    if (!identical(_controller, next)) {
-      _controller?.removeListener(_handleControllerChanged);
-      _controller = next;
-      _controller?.addListener(_handleControllerChanged);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller?.removeListener(_handleControllerChanged);
-    super.dispose();
-  }
-
-  void _handleControllerChanged() {
-    final controller = _controller;
-    if (controller == null || !mounted || !controller.shouldShowColdStartDialog) {
-      return;
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !controller.shouldShowColdStartDialog) {
-        return;
-      }
-      controller.markDialogShown();
-      showAppUpdateDialog(context, controller: controller);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) => child;
 }

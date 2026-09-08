@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/app_update/app_update_dialog.dart';
 import 'package:larnes_mobile/core/app_update/app_update_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
@@ -40,7 +41,16 @@ class _SplashScreenState extends State<SplashScreen> {
       return;
     }
 
-    await AppUpdateScope.of(context).checkForUpdate();
+    final appUpdate = AppUpdateScope.of(context);
+    await appUpdate.checkForUpdate();
+    if (!mounted) {
+      return;
+    }
+
+    if (appUpdate.shouldShowColdStartDialog) {
+      appUpdate.markDialogShown();
+      await showAppUpdateDialog(context, controller: appUpdate);
+    }
     if (!mounted) {
       return;
     }

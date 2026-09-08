@@ -55,7 +55,7 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
   TrainerKey.flashCards: ({required params, onComplete}) =>
       FlashCardsTrainer(params: params, onComplete: onComplete),
   TrainerKey.dotsDigitAbacus: ({required params, onComplete}) =>
-      DotsDigitAbacusTrainer(params: params),
+      DotsDigitAbacusTrainer(params: params, onComplete: onComplete),
   TrainerKey.digitFindTap: ({required params, onComplete}) =>
       DigitFindTapTrainer(params: params, onComplete: onComplete),
   TrainerKey.fruitCountTap: ({required params, onComplete}) =>
@@ -150,6 +150,7 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     key: TrainerKey.dotsDigitAbacus,
     title: 'Точки, цифра, абакус',
     direction: TrainerDirection.mental,
+    isInteractive: true,
     validate: validateDotsDigitAbacusParams,
   ),
   TrainerKey.digitFindTap: TrainerDefinition(

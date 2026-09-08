@@ -59,9 +59,14 @@ TripleSceneLayout computeTripleSceneLayout({
   required int dotCount,
 }) {
   final isLandscape = viewportWidth > viewportHeight;
-  final equalsFontSize = _minSvh(viewportHeight, _equalsFontSvh, _equalsFontMaxPx);
+  final equalsFontSize = _minSvh(
+    viewportHeight,
+    _equalsFontSvh,
+    _equalsFontMaxPx,
+  );
   final equalsSlotWidth = equalsFontSize + _equalsSlotPaddingPx;
-  final contentWidth = viewportWidth -
+  final contentWidth =
+      viewportWidth -
       _horizontalPaddingPx -
       _columnGapPx * 4 -
       equalsSlotWidth * 2;
@@ -88,7 +93,9 @@ TripleSceneLayout computeTripleSceneLayout({
     digitCardSize * _digitFontInCardRatio,
   );
 
-  final abacusWidthCap = isLandscape ? _abacusWidthVwLandscape : _abacusWidthVwPortrait;
+  final abacusWidthCap = isLandscape
+      ? _abacusWidthVwLandscape
+      : _abacusWidthVwPortrait;
   final abacusWidth = _fitCell(
     _minOf(
       viewportWidth * abacusWidthCap,
@@ -129,7 +136,11 @@ double _minSvh(double viewportHeight, double fraction, double maxPx) {
 
 // Legacy helpers kept for tests / gradual migration — delegate to layout engine.
 
-double tripleDotFrameWidth(double viewportWidth, double viewportHeight, int count) {
+double tripleDotFrameWidth(
+  double viewportWidth,
+  double viewportHeight,
+  int count,
+) {
   return computeTripleSceneLayout(
     viewportWidth: viewportWidth,
     viewportHeight: viewportHeight,
@@ -137,7 +148,11 @@ double tripleDotFrameWidth(double viewportWidth, double viewportHeight, int coun
   ).dotFrameWidth;
 }
 
-double tripleDotFrameHeight(double viewportWidth, double viewportHeight, int count) {
+double tripleDotFrameHeight(
+  double viewportWidth,
+  double viewportHeight,
+  int count,
+) {
   return computeTripleSceneLayout(
     viewportWidth: viewportWidth,
     viewportHeight: viewportHeight,
@@ -149,10 +164,7 @@ double tripleEqualsFontSize(double viewportHeight) {
   return _minSvh(viewportHeight, _equalsFontSvh, _equalsFontMaxPx);
 }
 
-double tripleDigitCardSize(
-  double viewportWidth,
-  double viewportHeight,
-) {
+double tripleDigitCardSize(double viewportWidth, double viewportHeight) {
   return computeTripleSceneLayout(
     viewportWidth: viewportWidth,
     viewportHeight: viewportHeight,
@@ -160,10 +172,7 @@ double tripleDigitCardSize(
   ).digitCardSize;
 }
 
-double tripleDigitFontSize(
-  double viewportWidth,
-  double viewportHeight,
-) {
+double tripleDigitFontSize(double viewportWidth, double viewportHeight) {
   return computeTripleSceneLayout(
     viewportWidth: viewportWidth,
     viewportHeight: viewportHeight,

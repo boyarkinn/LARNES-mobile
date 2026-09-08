@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/math/apple_count_show/apple_count_show_mo
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
@@ -95,22 +96,13 @@ ValidateTrainerParamsResult validateFlashCardsParams(Map<String, dynamic> raw) {
 }
 
 ValidateTrainerParamsResult validateDotsDigitAbacusParams(Map<String, dynamic> raw) {
-  final totalRods = coerceInt(raw['totalRods']);
   final value = coerceInt(raw['value']);
-  if (totalRods == null || totalRods < 1 || totalRods > 21) {
+  if (value == null || value < 0 || value > kDotsDigitAbacusMaxValue) {
     return _fail('Некорректные параметры.');
   }
-  if (value == null || value < 0) {
-    return _fail('Некорректные параметры.');
-  }
-  final maxValue = getMaxValueForRods(totalRods);
-  if (value > maxValue) {
-    return _fail(
-      'Число не помещается в $totalRods разряд(ов) (макс. $maxValue)',
-    );
-  }
+
   return ValidateTrainerParamsResult.success({
-    'totalRods': totalRods,
+    'totalRods': kDotsDigitAbacusTotalRods,
     'value': value,
   });
 }

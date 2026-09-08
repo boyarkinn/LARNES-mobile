@@ -27,6 +27,7 @@ class DotGroup extends StatefulWidget {
     this.size = DotGroupSize.auto,
     this.tone = DotGroupTone.orange,
     this.revealProgressively = false,
+    this.visibleCount,
     this.frameWidth,
     this.frameHeight,
     this.dotColor,
@@ -36,6 +37,9 @@ class DotGroup extends StatefulWidget {
   final DotGroupSize size;
   final DotGroupTone tone;
   final bool revealProgressively;
+
+  /// Управляемый режим: сколько точек видно (0…count).
+  final int? visibleCount;
   final double? frameWidth;
   final double? frameHeight;
   final Color? dotColor;
@@ -64,12 +68,6 @@ class _DotGroupState extends State<DotGroup> {
     }
   }
 
-  @override
-  void dispose() {
-    _cancelRevealTimers();
-    super.dispose();
-  }
-
   void _cancelRevealTimers() {
     for (final timer in _revealTimers) {
       timer.cancel();
@@ -78,6 +76,10 @@ class _DotGroupState extends State<DotGroup> {
   }
 
   void _scheduleReveal() {
+    if (widget.visibleCount != null) {
+      return;
+    }
+
     if (!widget.revealProgressively) {
       setState(() => _visibleCount = widget.count);
       return;
@@ -100,14 +102,23 @@ class _DotGroupState extends State<DotGroup> {
   }
 
   @override
+  void dispose() {
+    _cancelRevealTimers();
+    super.dispose();
+  }
+
+  int get _effectiveVisibleCount => widget.visibleCount ?? _visibleCount;
+
+  @override
   Widget build(BuildContext context) {
     final spec = _sizeSpec(widget.size, widget.count);
     final colors = _colorsForTone(widget.tone, widget.dotColor);
     final width = widget.frameWidth ?? spec.frameSize;
     final height = widget.frameHeight ?? spec.frameSize;
     final positions = getDotPositionsForValue(widget.count);
-    final visiblePositions = widget.revealProgressively
-        ? positions.take(_visibleCount).toList(growable: false)
+    final effectiveVisibleCount = _effectiveVisibleCount;
+    final visiblePositions = widget.revealProgressively || widget.visibleCount != null
+        ? positions.take(effectiveVisibleCount).toList(growable: false)
         : positions;
 
     return Container(

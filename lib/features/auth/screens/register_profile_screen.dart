@@ -17,11 +17,11 @@ import 'package:larnes_mobile/features/auth/widgets/auth_text_field.dart';
 import 'package:larnes_mobile/core/formatting/date_of_birth_input.dart';
 import 'package:larnes_mobile/features/auth/widgets/date_of_birth_text_field.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
-import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/core/config/mobile_config.dart';
 import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/widgets/place_autocomplete_field.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:larnes_mobile/core/navigation/legal_web_url.dart';
+import 'package:larnes_mobile/core/navigation/open_external_url.dart';
 
 String _registrationUuid() {
   final bytes = List<int>.generate(16, (_) => Random.secure().nextInt(256));
@@ -552,8 +552,7 @@ class _RegisterProfileScreenState extends State<RegisterProfileScreen> {
   }
 
   Future<void> _openLegalPath(String path) async {
-    final base = AppConfig.apiBaseUrl.replaceFirst(RegExp(r'/$'), '');
-    await SharePlus.instance.share(ShareParams(text: '$base$path'));
+    await openExternalUrlString(buildAppWebUrl(path));
   }
 
   Widget _passwordFields(AppLocalizations l10n) {

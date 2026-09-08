@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:larnes_mobile/core/config/app_config.dart';
+import 'package:larnes_mobile/core/navigation/legal_web_url.dart';
+import 'package:larnes_mobile/core/navigation/open_external_url.dart';
 import 'package:larnes_mobile/features/auth/theme/auth_theme.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
-import 'package:share_plus/share_plus.dart';
 
 class AuthLegalFooter extends StatelessWidget {
   const AuthLegalFooter({super.key});
 
   Future<void> _openLegal(BuildContext context) async {
-    final base = AppConfig.apiBaseUrl.replaceFirst(RegExp(r'/$'), '');
-    final locale = Localizations.localeOf(context).languageCode == 'en'
-        ? 'en'
-        : 'ru';
-    await SharePlus.instance.share(
-      ShareParams(text: '$base/$locale/legal'),
-    );
+    final locale = Localizations.localeOf(context).languageCode;
+    await openExternalUrlString(buildLegalHubUrl(locale: locale));
   }
 
   @override

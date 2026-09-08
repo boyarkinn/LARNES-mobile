@@ -4634,36 +4634,69 @@ abstract class AppLocalizations {
   String get registerSchoolOffersSelectOne;
 
   /// No description provided for @appUpdateSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About the app'**
   String get appUpdateSectionTitle;
 
   /// No description provided for @appUpdateAvailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
   String get appUpdateAvailableTitle;
 
   /// No description provided for @appUpdateAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {versionName} ({versionCode}) is ready to install.'**
   String appUpdateAvailableMessage(String versionName, int versionCode);
 
   /// No description provided for @appUpdateInstalledVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed: {versionLabel}'**
   String appUpdateInstalledVersion(String versionLabel);
 
   /// No description provided for @appUpdateCheckButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
   String get appUpdateCheckButton;
 
   /// No description provided for @appUpdateCheckingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking…'**
   String get appUpdateCheckingButton;
 
   /// No description provided for @appUpdateInstallButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
   String get appUpdateInstallButton;
 
   /// No description provided for @appUpdateLaterButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
   String get appUpdateLaterButton;
 
   /// No description provided for @appUpdateDownloadingButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading…'**
   String get appUpdateDownloadingButton;
 
   /// No description provided for @appUpdateChecksumFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The update file failed verification. Try again later.'**
   String get appUpdateChecksumFailed;
 
   /// No description provided for @appUpdateInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the installer.'**
   String get appUpdateInstallFailed;
 }
 

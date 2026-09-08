@@ -77,6 +77,8 @@ flutter:
     - assets/audio/ru/mental-arithmetic/flash-cards/
     - assets/audio/ru/mental-arithmetic/dots-digit-abacus/
     - assets/audio/ru/math/digit-find-tap/
+    - assets/audio/ru/math/fruit-count-tap/
+    - assets/audio/ru/math/fruit-count-tap/targets/
     - assets/audio/ru/intel/fly-track/
     - assets/audio/ru/reading/stroop-colors/
     - assets/audio/ru/reading/schulte-table/

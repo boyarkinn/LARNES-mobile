@@ -16,7 +16,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-enum FruitCountTapPhase { instruction, countdown, play }
+enum FruitCountTapPhase { instruction, countdown, announce, play }
 
 /// Web v2: `platform/src/trainers/math/fruit-count-tap/component.tsx`
 class FruitCountTapTrainer extends StatefulWidget {
@@ -56,6 +56,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
 
   final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _countdownTimer;
+  Timer? _instructionDelayTimer;
   Timer? _fruitRevealTimer;
   Timer? _answerRevealTimer;
   Timer? _completeTimer;
@@ -78,6 +79,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
   void dispose() {
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
+    _instructionDelayTimer?.cancel();
     _fruitRevealTimer?.cancel();
     _answerRevealTimer?.cancel();
     _completeTimer?.cancel();
@@ -90,6 +92,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     _runToken = runToken;
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
+    _instructionDelayTimer?.cancel();
     _fruitRevealTimer?.cancel();
     _answerRevealTimer?.cancel();
     _completeTimer?.cancel();
@@ -158,6 +161,9 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       assetPath: getFruitCountTapInstructionAudioAsset(),
       playbackRate: kFruitCountTapInstructionPlaybackRate,
       fallbackMs: kFruitCountTapInstructionDurationFallbackMs,
+    ).timeout(
+      const Duration(milliseconds: kFruitCountTapInstructionDurationFallbackMs),
+      onTimeout: () => kFruitCountTapInstructionDurationFallbackMs,
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
@@ -175,17 +181,20 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       },
     );
 
-    await playFruitCountTapInstruction();
-    if (!mounted || !identical(runToken, _runToken)) {
-      return;
-    }
+    unawaited(playFruitCountTapInstruction());
+    _instructionDelayTimer?.cancel();
+    _instructionDelayTimer = Timer(Duration(milliseconds: durationMs), () {
+      if (!mounted || !identical(runToken, _runToken)) {
+        return;
+      }
 
-    _instructionTypewriter.cancel();
-    setState(() {
-      _instructionLength = fruitCountTapInstructionText.length;
-      _phase = FruitCountTapPhase.countdown;
+      _instructionTypewriter.cancel();
+      setState(() {
+        _instructionLength = fruitCountTapInstructionText.length;
+        _phase = FruitCountTapPhase.countdown;
+      });
+      _runCountdown(runToken);
     });
-    _runCountdown(runToken);
   }
 
   void _runCountdown(Object runToken) {
@@ -198,8 +207,8 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() => _phase = FruitCountTapPhase.play);
-        _scheduleFruitReveal();
+        setState(() => _phase = FruitCountTapPhase.announce);
+        unawaited(_runAnnounce(runToken));
         return;
       }
 
@@ -212,6 +221,25 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     }
 
     showNext();
+  }
+
+  Future<void> _runAnnounce(Object runToken) async {
+    final targetFruit =
+        normalizeFruitSlug(widget.params['targetFruit'] as String? ?? 'watermelon');
+
+    try {
+      await playFruitCountTapTargetFruit(targetFruit)
+          .timeout(const Duration(seconds: 2));
+    } catch (_) {
+      // Tests / missing assets — still reveal the field.
+    }
+
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    setState(() => _phase = FruitCountTapPhase.play);
+    _scheduleFruitReveal();
   }
 
   void _scheduleFruitReveal() {
@@ -363,6 +391,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
                 ),
               ),
             ),
+            FruitCountTapPhase.announce => const SizedBox.expand(),
             FruitCountTapPhase.play => _buildPlayBody(constraints),
           };
         },

@@ -2496,4 +2496,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get registerSchoolOffersSelectOne => 'Выберите хотя бы одного ребёнка';
+
+  @override
+  String get appUpdateSectionTitle => 'О приложении';
+
+  @override
+  String get appUpdateAvailableTitle => 'Доступно обновление';
+
+  @override
+  String appUpdateAvailableMessage(String versionName, int versionCode) {
+    return 'Версия $versionName ($versionCode) готова к установке.';
+  }
+
+  @override
+  String appUpdateInstalledVersion(String versionLabel) {
+    return 'Установлено: $versionLabel';
+  }
+
+  @override
+  String get appUpdateCheckButton => 'Проверить обновление';
+
+  @override
+  String get appUpdateCheckingButton => 'Проверяем…';
+
+  @override
+  String get appUpdateInstallButton => 'Обновить';
+
+  @override
+  String get appUpdateLaterButton => 'Позже';
+
+  @override
+  String get appUpdateDownloadingButton => 'Скачиваем…';
+
+  @override
+  String get appUpdateChecksumFailed =>
+      'Файл обновления не прошёл проверку. Попробуйте позже.';
+
+  @override
+  String get appUpdateInstallFailed => 'Не удалось открыть установщик.';
 }

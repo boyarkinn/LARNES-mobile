@@ -153,7 +153,7 @@ class _NumberRowShowTrainerState extends State<NumberRowShowTrainer> {
     setState(() => _isComplete = true);
 
     _completeTimer?.cancel();
-    _completeTimer = Timer(kTrainerCompleteDelay, () {
+    _completeTimer = Timer(const Duration(milliseconds: TrainerTimings.completeDelayMs), () {
       if (!mounted || _completeCalled) {
         return;
       }

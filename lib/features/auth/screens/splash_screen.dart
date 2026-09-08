@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_text_theme.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/app_update/app_update_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
@@ -35,6 +36,11 @@ class _SplashScreenState extends State<SplashScreen> {
       widget.authSession.bootstrap(),
       widget.kioskRouteState.refreshDeviceToken(),
     ]);
+    if (!mounted) {
+      return;
+    }
+
+    await AppUpdateScope.of(context).checkForUpdate();
     if (!mounted) {
       return;
     }

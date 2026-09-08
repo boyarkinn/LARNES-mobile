@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/admin_theme.dart';
+import 'package:larnes_mobile/core/app_update/app_update_account_section.dart';
 import 'package:larnes_mobile/core/api/admin_account_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -244,6 +245,10 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
               ),
             ],
           ),
+        ),
+        AdminAccountCard(
+          title: l10n.appUpdateSectionTitle,
+          child: const AppUpdateAccountSection(),
         ),
         AdminAccountCard(
           title: l10n.adminAccountSectionLanguage,

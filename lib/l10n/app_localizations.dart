@@ -4632,6 +4632,39 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select at least one child'**
   String get registerSchoolOffersSelectOne;
+
+  /// No description provided for @appUpdateSectionTitle.
+  String get appUpdateSectionTitle;
+
+  /// No description provided for @appUpdateAvailableTitle.
+  String get appUpdateAvailableTitle;
+
+  /// No description provided for @appUpdateAvailableMessage.
+  String appUpdateAvailableMessage(String versionName, int versionCode);
+
+  /// No description provided for @appUpdateInstalledVersion.
+  String appUpdateInstalledVersion(String versionLabel);
+
+  /// No description provided for @appUpdateCheckButton.
+  String get appUpdateCheckButton;
+
+  /// No description provided for @appUpdateCheckingButton.
+  String get appUpdateCheckingButton;
+
+  /// No description provided for @appUpdateInstallButton.
+  String get appUpdateInstallButton;
+
+  /// No description provided for @appUpdateLaterButton.
+  String get appUpdateLaterButton;
+
+  /// No description provided for @appUpdateDownloadingButton.
+  String get appUpdateDownloadingButton;
+
+  /// No description provided for @appUpdateChecksumFailed.
+  String get appUpdateChecksumFailed;
+
+  /// No description provided for @appUpdateInstallFailed.
+  String get appUpdateInstallFailed;
 }
 
 class _AppLocalizationsDelegate

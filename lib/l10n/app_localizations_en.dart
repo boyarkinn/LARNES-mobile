@@ -2476,4 +2476,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get registerSchoolOffersSelectOne => 'Select at least one child';
+
+  @override
+  String get appUpdateSectionTitle => 'About the app';
+
+  @override
+  String get appUpdateAvailableTitle => 'Update available';
+
+  @override
+  String appUpdateAvailableMessage(String versionName, int versionCode) {
+    return 'Version $versionName ($versionCode) is ready to install.';
+  }
+
+  @override
+  String appUpdateInstalledVersion(String versionLabel) {
+    return 'Installed: $versionLabel';
+  }
+
+  @override
+  String get appUpdateCheckButton => 'Check for updates';
+
+  @override
+  String get appUpdateCheckingButton => 'Checking…';
+
+  @override
+  String get appUpdateInstallButton => 'Update';
+
+  @override
+  String get appUpdateLaterButton => 'Later';
+
+  @override
+  String get appUpdateDownloadingButton => 'Downloading…';
+
+  @override
+  String get appUpdateChecksumFailed =>
+      'The update file failed verification. Try again later.';
+
+  @override
+  String get appUpdateInstallFailed => 'Could not open the installer.';
 }

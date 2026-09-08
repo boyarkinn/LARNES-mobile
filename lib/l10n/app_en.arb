@@ -920,5 +920,18 @@
   "registerSchoolOffersLead": "We found school families for your contact. Select whom to accept, or skip.",
   "registerSchoolOffersContinue": "Continue with selected",
   "registerSchoolOffersSkip": "Skip",
-  "registerSchoolOffersSelectOne": "Select at least one child"
+  "registerSchoolOffersSelectOne": "Select at least one child",
+  "appUpdateSectionTitle": "About the app",
+  "appUpdateAvailableTitle": "Update available",
+  "appUpdateAvailableMessage": "Version {versionName} ({versionCode}) is ready to install.",
+  "@appUpdateAvailableMessage": {"placeholders": {"versionName": {"type": "String"}, "versionCode": {"type": "int"}}},
+  "appUpdateInstalledVersion": "Installed: {versionLabel}",
+  "@appUpdateInstalledVersion": {"placeholders": {"versionLabel": {"type": "String"}}},
+  "appUpdateCheckButton": "Check for updates",
+  "appUpdateCheckingButton": "Checking…",
+  "appUpdateInstallButton": "Update",
+  "appUpdateLaterButton": "Later",
+  "appUpdateDownloadingButton": "Downloading…",
+  "appUpdateChecksumFailed": "The update file failed verification. Try again later.",
+  "appUpdateInstallFailed": "Could not open the installer."
 }

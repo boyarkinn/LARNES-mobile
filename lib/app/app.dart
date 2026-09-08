@@ -4,6 +4,8 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/router.dart';
 import 'package:larnes_mobile/app/theme/larnes_theme.dart';
+import 'package:larnes_mobile/core/app_update/app_update_controller.dart';
+import 'package:larnes_mobile/core/app_update/app_update_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/deep_links/invite_deep_link.dart';
@@ -23,6 +25,7 @@ class _LarnesAppState extends State<LarnesApp> {
   late final AuthSession _authSession;
   late final KioskRouteState _kioskRouteState;
   late final LocaleController _localeController;
+  late final AppUpdateController _appUpdateController;
   late final GoRouter _router;
 
   @override
@@ -31,6 +34,7 @@ class _LarnesAppState extends State<LarnesApp> {
     _authSession = AuthSession();
     _kioskRouteState = KioskRouteState();
     _localeController = LocaleController()..load();
+    _appUpdateController = AppUpdateController();
     _router = createAppRouter(
       authSession: _authSession,
       kioskRouteState: _kioskRouteState,
@@ -52,6 +56,7 @@ class _LarnesAppState extends State<LarnesApp> {
     _authSession.removeListener(_onStateChanged);
     _kioskRouteState.removeListener(_onStateChanged);
     _localeController.removeListener(_onStateChanged);
+    _appUpdateController.dispose();
     _router.dispose();
     _authSession.dispose();
     _kioskRouteState.dispose();
@@ -73,15 +78,20 @@ class _LarnesAppState extends State<LarnesApp> {
       ],
       routerConfig: _router,
       builder: (context, child) {
-        return InviteDeepLinkBinder(
-          router: _router,
-          child: LocaleScope(
-            localeController: _localeController,
-            child: AuthScope(
-              authSession: _authSession,
-              child: KioskScope(
-                kioskRouteState: _kioskRouteState,
-                child: child ?? const SizedBox.shrink(),
+        return AppUpdateScope(
+          controller: _appUpdateController,
+          child: AppUpdateHost(
+            child: InviteDeepLinkBinder(
+              router: _router,
+              child: LocaleScope(
+                localeController: _localeController,
+                child: AuthScope(
+                  authSession: _authSession,
+                  child: KioskScope(
+                    kioskRouteState: _kioskRouteState,
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                ),
               ),
             ),
           ),

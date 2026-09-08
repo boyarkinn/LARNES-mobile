@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/guardians_api.dart';
+import 'package:larnes_mobile/core/app_update/app_update_account_section.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
@@ -455,6 +456,10 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
             snapshot: _guardians,
             onChanged: () => _load(silent: true),
           ),
+        ),
+        AccountDeskCard(
+          bandTitle: l10n.appUpdateSectionTitle,
+          child: const AppUpdateAccountSection(),
         ),
         AccountDeskCard(
           bandTitle: l10n.parentAccountSectionLanguage,

@@ -260,7 +260,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
 
   void _afterShowComplete(Object runToken) {
     _completeTimer?.cancel();
-    _completeTimer = Timer(TrainerTimings.completeDelayMs, () {
+    _completeTimer = Timer(const Duration(milliseconds: TrainerTimings.completeDelayMs), () {
       if (!mounted || !identical(runToken, _runToken)) {
         return;
       }
@@ -492,7 +492,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       _fireworksKey += 1;
     });
     _completeTimer?.cancel();
-    _completeTimer = Timer(TrainerTimings.completeDelayMs, () {
+    _completeTimer = Timer(const Duration(milliseconds: TrainerTimings.completeDelayMs), () {
       if (!mounted || _completeCalled) {
         return;
       }

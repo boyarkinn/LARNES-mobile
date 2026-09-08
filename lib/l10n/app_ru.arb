@@ -871,5 +871,18 @@
   "registerSchoolOffersLead": "По вашему контакту нашлись семьи в школах. Выберите, кого принять, или пропустите.",
   "registerSchoolOffersContinue": "Продолжить с выбранными",
   "registerSchoolOffersSkip": "Пропустить",
-  "registerSchoolOffersSelectOne": "Выберите хотя бы одного ребёнка"
+  "registerSchoolOffersSelectOne": "Выберите хотя бы одного ребёнка",
+  "appUpdateSectionTitle": "О приложении",
+  "appUpdateAvailableTitle": "Доступно обновление",
+  "appUpdateAvailableMessage": "Версия {versionName} ({versionCode}) готова к установке.",
+  "@appUpdateAvailableMessage": {"placeholders": {"versionName": {"type": "String"}, "versionCode": {"type": "int"}}},
+  "appUpdateInstalledVersion": "Установлено: {versionLabel}",
+  "@appUpdateInstalledVersion": {"placeholders": {"versionLabel": {"type": "String"}}},
+  "appUpdateCheckButton": "Проверить обновление",
+  "appUpdateCheckingButton": "Проверяем…",
+  "appUpdateInstallButton": "Обновить",
+  "appUpdateLaterButton": "Позже",
+  "appUpdateDownloadingButton": "Скачиваем…",
+  "appUpdateChecksumFailed": "Файл обновления не прошёл проверку. Попробуйте позже.",
+  "appUpdateInstallFailed": "Не удалось открыть установщик."
 }

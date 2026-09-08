@@ -69,7 +69,7 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
   TrainerKey.flashcardDigitMatch: ({required params, onComplete}) =>
       FlashcardDigitMatchTrainer(params: params, onComplete: onComplete),
   TrainerKey.exampleVisualization: ({required params, onComplete}) =>
-      ExampleVisualizationTrainer(params: params),
+      ExampleVisualizationTrainer(params: params, onComplete: onComplete),
   TrainerKey.staticExampleShow: ({required params, onComplete}) =>
       StaticExampleShowTrainer(params: params),
   TrainerKey.topicChainFlash: ({required params, onComplete}) =>
@@ -358,6 +358,7 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     key: TrainerKey.exampleVisualization,
     title: 'Визуализация примера',
     direction: TrainerDirection.mental,
+    isInteractive: true,
     validate: validateExampleVisualizationParams,
   ),
   TrainerKey.topicChainFlash: TrainerDefinition(

@@ -16,12 +16,18 @@ class AbacusPainter extends CustomPainter {
     required this.rods,
     required this.totalRods,
     this.activeBeadColor,
+    this.loweringBeadColor,
+    this.movingBeadHighlights,
+    this.raisingBeadColor,
   });
 
   final List<RodBeadLayout> rodLayouts;
   final List<RodState> rods;
   final int totalRods;
   final Color? activeBeadColor;
+  final Color? loweringBeadColor;
+  final List<RodMovingBeadHighlight>? movingBeadHighlights;
+  final Color? raisingBeadColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -48,7 +54,13 @@ class AbacusPainter extends CustomPainter {
     );
 
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
-      _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex], rods[rodIndex]);
+      _paintRodBeads(
+        canvas,
+        rodIndex,
+        rodLayouts[rodIndex],
+        rods[rodIndex],
+        movingBeadHighlights == null ? null : movingBeadHighlights![rodIndex],
+      );
     }
   }
 
@@ -83,6 +95,7 @@ class AbacusPainter extends CustomPainter {
     int rodIndex,
     RodBeadLayout beadLayout,
     RodState rodState,
+    RodMovingBeadHighlight? movingHighlight,
   ) {
     final cx = rodCenterX(rodIndex);
 
@@ -90,7 +103,10 @@ class AbacusPainter extends CustomPainter {
       canvas,
       cx,
       beadLayout.heavenY,
-      fill: rodState.heavenUp ? activeBeadColor : null,
+      fill: _beadFill(
+        direction: movingHighlight?.heaven,
+        active: rodState.heavenUp,
+      ),
     );
 
     for (var beadIndex = 0; beadIndex < beadLayout.earthYs.length; beadIndex++) {
@@ -99,10 +115,29 @@ class AbacusPainter extends CustomPainter {
         canvas,
         cx,
         beadLayout.earthYs[beadIndex],
-        fill: isActive ? activeBeadColor : null,
+        fill: _beadFill(
+          direction: earthBeadMoveDirection(movingHighlight, beadIndex),
+          active: isActive,
+        ),
         marked: !isActive && isMarkedEarthBead(rodIndex, beadIndex, totalRods),
       );
     }
+  }
+
+  Color? _beadFill({required BeadMoveDirection? direction, required bool active}) {
+    if (direction == BeadMoveDirection.raise && raisingBeadColor != null) {
+      return raisingBeadColor;
+    }
+
+    if (direction == BeadMoveDirection.lower && loweringBeadColor != null) {
+      return loweringBeadColor;
+    }
+
+    if (active && activeBeadColor != null) {
+      return activeBeadColor;
+    }
+
+    return null;
   }
 
   void _paintHexBead(
@@ -146,6 +181,9 @@ class AbacusPainter extends CustomPainter {
     return oldDelegate.rodLayouts != rodLayouts ||
         oldDelegate.rods != rods ||
         oldDelegate.totalRods != totalRods ||
-        oldDelegate.activeBeadColor != activeBeadColor;
+        oldDelegate.activeBeadColor != activeBeadColor ||
+        oldDelegate.loweringBeadColor != loweringBeadColor ||
+        oldDelegate.movingBeadHighlights != movingBeadHighlights ||
+        oldDelegate.raisingBeadColor != raisingBeadColor;
   }
 }

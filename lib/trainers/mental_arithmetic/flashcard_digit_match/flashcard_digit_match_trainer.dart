@@ -30,9 +30,6 @@ class FlashcardDigitMatchTrainer extends StatefulWidget {
 }
 
 class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer> {
-  static const _instructionTextDigits = 'Соедини флеш-карту с такой же цифрой';
-  static const _instructionTextDots =
-      'Соедини флеш-карту с таким же количеством точек';
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
   static const _countdownColor = Color(0xFFDC2626);
@@ -55,10 +52,6 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
   final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _countdownTimer;
   Timer? _roundTimer;
-
-  String get _instructionText => _targetMode == FlashcardTargetMode.dots
-      ? _instructionTextDots
-      : _instructionTextDigits;
 
   MatchRound? get _currentRound =>
       _rounds.isEmpty ? null : _rounds[_roundIndex.clamp(0, _rounds.length - 1)];
@@ -136,7 +129,7 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
     }
 
     _instructionTypewriter.start(
-      text: _instructionText,
+      text: kFlashcardDigitMatchInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
       onLength: (length) {
@@ -154,7 +147,7 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
 
     _instructionTypewriter.cancel();
     setState(() {
-      _instructionLength = _instructionText.length;
+      _instructionLength = kFlashcardDigitMatchInstructionText.length;
       _phase = FlashcardDigitMatchPhase.countdown;
     });
     _runCountdown(runToken);
@@ -232,7 +225,7 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
     if (_phase == FlashcardDigitMatchPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: _instructionText,
+        text: kFlashcardDigitMatchInstructionText,
       );
     }
 

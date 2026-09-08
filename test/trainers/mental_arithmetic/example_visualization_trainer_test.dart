@@ -27,8 +27,13 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TrainerScene), findsOneWidget);
+      expect(find.text('Посмотри как решается пример'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 4));
+
       expect(find.byType(AbacusWidget), findsOneWidget);
-      expect(find.text('+2'), findsOneWidget);
     });
 
     testWidgets('autoplay advances action label and holds final state', (tester) async {
@@ -49,6 +54,11 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
+
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 4));
       await tester.pump();
 
       expect(find.text('+2'), findsOneWidget);

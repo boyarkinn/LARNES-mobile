@@ -18,6 +18,43 @@ class RodState {
   int get hashCode => Object.hash(heavenUp, earthCount);
 }
 
+/// Косточки, которые сдвинутся на следующем шаге анимации.
+class RodMovingBeadHighlight {
+  const RodMovingBeadHighlight({
+    this.heaven,
+    this.raisingEarthIndices = const {},
+    this.loweringEarthIndices = const {},
+  });
+
+  final BeadMoveDirection? heaven;
+  final Set<int> raisingEarthIndices;
+  final Set<int> loweringEarthIndices;
+
+  bool get isEmpty =>
+      heaven == null && raisingEarthIndices.isEmpty && loweringEarthIndices.isEmpty;
+}
+
+enum BeadMoveDirection { raise, lower }
+
+BeadMoveDirection? earthBeadMoveDirection(
+  RodMovingBeadHighlight? highlight,
+  int beadIndex,
+) {
+  if (highlight == null) {
+    return null;
+  }
+
+  if (highlight.raisingEarthIndices.contains(beadIndex)) {
+    return BeadMoveDirection.raise;
+  }
+
+  if (highlight.loweringEarthIndices.contains(beadIndex)) {
+    return BeadMoveDirection.lower;
+  }
+
+  return null;
+}
+
 RodState digitToBeads(int digit) {
   final normalized = ((digit.truncate() % 10) + 10) % 10;
   final heavenUp = normalized >= 5;

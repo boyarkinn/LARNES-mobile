@@ -47,7 +47,8 @@ void main() {
       expect(getTrainerDefinition('apple-count-show')?.isInteractive, isTrue);
       expect(getTrainerDefinition('number-row-show')?.isInteractive, isTrue);
       expect(getTrainerDefinition('flash-cards')?.isInteractive, isTrue);
-      expect(getTrainerDefinition('example-visualization')?.isInteractive, isFalse);
+      expect(getTrainerDefinition('example-visualization')?.isInteractive, isTrue);
+      expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
       expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
       expect(getTrainerDefinition('flashcard-digit-match')?.isInteractive, isTrue);
       expect(getTrainerDefinition('topic-chain-flash')?.isInteractive, isTrue);

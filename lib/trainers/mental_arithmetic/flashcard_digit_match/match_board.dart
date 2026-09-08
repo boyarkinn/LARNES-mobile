@@ -8,6 +8,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/f
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_grid_layout.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_hit_test.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_hud_inset.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 class _DrawLine {
@@ -443,6 +444,7 @@ class _MatchBoardState extends State<MatchBoard> {
           viewportHeight: constraints.maxHeight,
         );
         final pairCount = widget.round.leftItems.length;
+        final hudSideInset = computeTrainerPlayHudSideInset(context);
 
         return Listener(
           behavior: HitTestBehavior.translucent,
@@ -456,52 +458,55 @@ class _MatchBoardState extends State<MatchBoard> {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _buildSidePanel(
-                        side: MatchSide.left,
-                        items: widget.round.leftItems,
-                        count: pairCount,
-                        layout: layout,
-                        buildItem: (item, _) => FlashCard(
-                          abacusHeight: layout.abacusHeight,
-                          activeBeadColor: Color(item.leftDisplayColor),
-                          connected: _connectedLeftIds.contains(item.id),
-                          disabled: widget.disabled,
-                          onPointerDown: (event) =>
-                              _handleLeftPointerDown(item.id, event),
-                          onPointerUp: (event) =>
-                              _handleLeftPointerUp(item.id, event),
-                          totalRods: widget.totalRods,
-                          value: item.value,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: hudSideInset),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _buildSidePanel(
+                          side: MatchSide.left,
+                          items: widget.round.leftItems,
+                          count: pairCount,
+                          layout: layout,
+                          buildItem: (item, _) => FlashCard(
+                            abacusHeight: layout.abacusHeight,
+                            activeBeadColor: Color(item.leftDisplayColor),
+                            connected: _connectedLeftIds.contains(item.id),
+                            disabled: widget.disabled,
+                            onPointerDown: (event) =>
+                                _handleLeftPointerDown(item.id, event),
+                            onPointerUp: (event) =>
+                                _handleLeftPointerUp(item.id, event),
+                            totalRods: widget.totalRods,
+                            value: item.value,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: _buildSidePanel(
-                        side: MatchSide.right,
-                        items: widget.round.rightItems,
-                        count: pairCount,
-                        layout: layout,
-                        buildItem: (item, _) => widget.targetMode == FlashcardTargetMode.dots
-                            ? DotTarget(
-                                color: Color(item.rightDisplayColor),
-                                connected: _connectedRightIds.contains(item.id),
-                                count: item.value,
-                                size: layout.digitSize,
-                              )
-                            : DigitTarget(
-                                color: Color(item.rightDisplayColor),
-                                connected: _connectedRightIds.contains(item.id),
-                                digit: item.value,
-                                fontSize: layout.digitFontSize,
-                                size: layout.digitSize,
-                              ),
+                      Expanded(
+                        child: _buildSidePanel(
+                          side: MatchSide.right,
+                          items: widget.round.rightItems,
+                          count: pairCount,
+                          layout: layout,
+                          buildItem: (item, _) => widget.targetMode == FlashcardTargetMode.dots
+                              ? DotTarget(
+                                  color: Color(item.rightDisplayColor),
+                                  connected: _connectedRightIds.contains(item.id),
+                                  count: item.value,
+                                  size: layout.digitSize,
+                                )
+                              : DigitTarget(
+                                  color: Color(item.rightDisplayColor),
+                                  connected: _connectedRightIds.contains(item.id),
+                                  digit: item.value,
+                                  fontSize: layout.digitFontSize,
+                                  size: layout.digitSize,
+                                ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Positioned.fill(
                   child: IgnorePointer(

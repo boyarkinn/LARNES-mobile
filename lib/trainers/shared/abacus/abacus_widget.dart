@@ -11,12 +11,18 @@ class AbacusWidget extends StatefulWidget {
     required this.totalRods,
     this.animate = true,
     this.activeBeadColor,
+    this.loweringBeadColor,
+    this.movingBeadHighlights,
+    this.raisingBeadColor,
   });
 
   final List<RodState> rods;
   final int totalRods;
   final bool animate;
   final Color? activeBeadColor;
+  final Color? loweringBeadColor;
+  final List<RodMovingBeadHighlight>? movingBeadHighlights;
+  final Color? raisingBeadColor;
 
   @override
   State<AbacusWidget> createState() => _AbacusWidgetState();
@@ -87,6 +93,9 @@ class _AbacusWidgetState extends State<AbacusWidget>
         child: CustomPaint(
           painter: AbacusPainter(
             activeBeadColor: widget.activeBeadColor,
+            loweringBeadColor: widget.loweringBeadColor,
+            movingBeadHighlights: widget.movingBeadHighlights,
+            raisingBeadColor: widget.raisingBeadColor,
             rodLayouts: layouts,
             rods: widget.rods,
             totalRods: widget.totalRods,

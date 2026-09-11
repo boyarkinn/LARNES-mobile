@@ -47,6 +47,16 @@ void main() {
       expect(isFamilyInviteRoute('/invite/family-join-request'), isTrue);
       expect(isFamilyInviteRoute('/parent/account'), isFalse);
     });
+
+    test('detects lesson invite and live-lesson room', () {
+      expect(isLessonInviteRoute('/invite/lesson?token=abc'), isTrue);
+      expect(isLessonInviteRoute('/invite/lesson/room?token=abc'), isTrue);
+      expect(isOpenInviteRoute('/invite/lesson'), isTrue);
+      expect(isOpenInviteRoute('/invite/lesson/room'), isTrue);
+      expect(isLiveLessonRoomRoute('/parent/child-1/lesson'), isTrue);
+      expect(isParentChildrenRoute('/parent/child-1/lesson'), isFalse);
+      expect(isParentChildrenRoute('/parent/child-1/homework'), isTrue);
+    });
   });
 
   group('family setup redirect', () {
@@ -93,12 +103,53 @@ void main() {
       );
     });
 
+    test('keeps lesson invite and room off the family-setup gate', () {
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: true,
+          path: '/invite/lesson?token=abc',
+          accountType: 'parent',
+          familySetupComplete: false,
+        ),
+        isNull,
+      );
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: true,
+          path: '/parent/child-1/lesson',
+          accountType: 'parent',
+          familySetupComplete: false,
+        ),
+        isNull,
+      );
+    });
+
     test('allows invite routes without auth', () {
       expect(
         resolveAppRedirect(
           isLoading: false,
           isAuthenticated: false,
           path: '/invite/family-guardian?token=abc',
+          accountType: null,
+        ),
+        isNull,
+      );
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: false,
+          path: '/invite/lesson',
+          accountType: null,
+        ),
+        isNull,
+      );
+      expect(
+        resolveAppRedirect(
+          isLoading: false,
+          isAuthenticated: false,
+          path: '/invite/lesson/room?token=abc',
           accountType: null,
         ),
         isNull,

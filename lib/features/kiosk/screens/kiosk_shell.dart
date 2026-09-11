@@ -37,6 +37,7 @@ class KioskShell extends StatefulWidget {
     this.childSessionTokenStorage,
     this.childSessionApiClient,
     this.onControllerReady,
+    this.initialMode,
   });
 
   final Duration syncInterval;
@@ -48,6 +49,10 @@ class KioskShell extends StatefulWidget {
   /// Widget tests: capture controller and drive [KioskSessionController.runSyncCycle].
   @visibleForTesting
   final void Function(KioskSessionController controller)? onControllerReady;
+
+  /// Widget tests: force scan UI while production QR start is frozen.
+  @visibleForTesting
+  final KioskSessionMode? initialMode;
 
   @override
   State<KioskShell> createState() => _KioskShellState();
@@ -198,6 +203,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       kioskApi: kioskApi,
       childSessionTokenStorage: _childSessionTokenStorage,
       deviceContext: device,
+      initialMode: widget.initialMode,
       initialScanResult: initialScanResult,
       syncInterval: widget.syncInterval,
       onDeviceUnauthorized: () {
@@ -460,6 +466,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     switch (controller.mode) {
       case KioskSessionMode.idle:
         return KioskIdleScreen(
+          kind: controller.standbyKind,
           placement: kioskDevicePlacementLine(controller.deviceContext, l10n),
         );
       case KioskSessionMode.scan:

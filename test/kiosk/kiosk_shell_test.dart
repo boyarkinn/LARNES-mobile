@@ -12,6 +12,7 @@ import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_settings_screen.dart';
 import 'package:larnes_mobile/features/kiosk/screens/kiosk_shell.dart';
+import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
@@ -389,7 +390,7 @@ void main() {
       expect(find.text('Настройки устройства'), findsOneWidget);
     });
 
-    testWidgets('shows scan copy when lesson awaits scan', (tester) async {
+    testWidgets('shows idle standby when leftover QR signals remain', (tester) async {
       final kioskRouteState = kioskRouteStateWithMock(
         deviceMeData: {
           'deviceId': '55555555-5555-4555-8555-555555555555',
@@ -427,8 +428,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Поднесите QR'), findsNothing);
+      expect(find.text('Включить камеру'), findsNothing);
+      expect(find.text('Ребёнок не назначен'), findsOneWidget);
+      expect(find.text('Занятие не начато'), findsNothing);
       expect(find.textContaining('Center A'), findsOneWidget);
-      expect(find.text('Включить камеру'), findsOneWidget);
     });
 
     testWidgets('opens program player after mock scan success', (tester) async {
@@ -460,6 +463,7 @@ void main() {
             builder: (context, state) => KioskShell(
               syncInterval: Duration(days: 1),
               mockScanner: true,
+              initialMode: KioskSessionMode.scan,
               childSessionTokenStorage: childStorage,
               childSessionApiClient: childClient,
             ),
@@ -521,6 +525,7 @@ void main() {
             builder: (context, state) => KioskShell(
               syncInterval: Duration(days: 1),
               mockScanner: true,
+              initialMode: KioskSessionMode.scan,
               childSessionTokenStorage: childStorage,
               childSessionApiClient: childClient,
             ),

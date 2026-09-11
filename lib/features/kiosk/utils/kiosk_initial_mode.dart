@@ -10,6 +10,22 @@ enum KioskSessionMode {
   trainer,
 }
 
+enum KioskStandbyKind {
+  lessonNotStarted,
+  childNotAssigned,
+}
+
+KioskStandbyKind resolveKioskStandbyKind({
+  required bool hasActiveLesson,
+  required bool hasAssignedChild,
+}) {
+  if (hasActiveLesson && !hasAssignedChild) {
+    return KioskStandbyKind.childNotAssigned;
+  }
+
+  return KioskStandbyKind.lessonNotStarted;
+}
+
 KioskSessionMode modeFromScanOutcome(KioskScanOutcome outcome) {
   switch (outcome) {
     case KioskScanOutcome.play:
@@ -19,11 +35,14 @@ KioskSessionMode modeFromScanOutcome(KioskScanOutcome outcome) {
   }
 }
 
+/// QR on kiosk is frozen. Scan code stays; flip with web `KIOSK_QR_SCAN_FROZEN`.
+const bool kioskQrScanFrozen = true;
+
 KioskSessionMode modeFromCommand(KioskDeviceCommandKind command) {
   switch (command) {
     case KioskDeviceCommandKind.openScan:
     case KioskDeviceCommandKind.resetChild:
-      return KioskSessionMode.scan;
+      return kioskQrScanFrozen ? KioskSessionMode.idle : KioskSessionMode.scan;
     case KioskDeviceCommandKind.playTrainer:
       return KioskSessionMode.trainer;
     case KioskDeviceCommandKind.idle:
@@ -39,16 +58,20 @@ KioskSessionMode resolveInitialMode({
     return KioskSessionMode.trainer;
   }
 
+  if (status == 'child_active' || status == 'no_program') {
+    return KioskSessionMode.result;
+  }
+
+  if (kioskQrScanFrozen) {
+    return KioskSessionMode.idle;
+  }
+
   if (pendingCommand == 'open_scan' || pendingCommand == 'reset_child') {
     return KioskSessionMode.scan;
   }
 
   if (status == 'waiting_scan' || status == 'offline') {
     return KioskSessionMode.scan;
-  }
-
-  if (status == 'child_active' || status == 'no_program') {
-    return KioskSessionMode.result;
   }
 
   return KioskSessionMode.idle;

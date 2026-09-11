@@ -6,28 +6,22 @@ import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 
 void main() {
   group('resolveInitialMode', () {
-    test('returns scan for open_scan pending command', () {
+    test('stays idle for leftover QR signals while scan is frozen', () {
       expect(
         resolveInitialMode(pendingCommand: 'open_scan', status: 'idle_child'),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
-    });
-
-    test('returns scan for reset_child pending command', () {
       expect(
         resolveInitialMode(pendingCommand: 'reset_child', status: null),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
-    });
-
-    test('returns scan for waiting_scan and offline statuses', () {
       expect(
         resolveInitialMode(pendingCommand: null, status: 'waiting_scan'),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
       expect(
         resolveInitialMode(pendingCommand: null, status: 'offline'),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
     });
 
@@ -39,6 +33,17 @@ void main() {
       expect(
         resolveInitialMode(pendingCommand: null, status: 'no_program'),
         KioskSessionMode.result,
+      );
+    });
+
+    test('resolves standby copy from lesson presence', () {
+      expect(
+        resolveKioskStandbyKind(hasActiveLesson: false, hasAssignedChild: false),
+        KioskStandbyKind.lessonNotStarted,
+      );
+      expect(
+        resolveKioskStandbyKind(hasActiveLesson: true, hasAssignedChild: false),
+        KioskStandbyKind.childNotAssigned,
       );
     });
 
@@ -101,11 +106,11 @@ void main() {
     test('maps device commands to session modes', () {
       expect(
         modeFromCommand(KioskDeviceCommandKind.openScan),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
       expect(
         modeFromCommand(KioskDeviceCommandKind.resetChild),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
       expect(
         modeFromCommand(KioskDeviceCommandKind.idle),

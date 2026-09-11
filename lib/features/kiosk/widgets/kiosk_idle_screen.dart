@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
+import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class KioskIdleScreen extends StatelessWidget {
   const KioskIdleScreen({
     super.key,
     required this.placement,
+    this.kind = KioskStandbyKind.lessonNotStarted,
   });
 
   final String placement;
+  final KioskStandbyKind kind;
 
   static const _paper = Color(0xFFFFFEFA);
   static const _ink = Color(0xFF12262F);
@@ -39,7 +42,9 @@ class KioskIdleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  l10n.kioskIdleEyebrow,
+                  kind == KioskStandbyKind.childNotAssigned
+                      ? l10n.kioskAwaitingChildEyebrow
+                      : l10n.kioskIdleEyebrow,
                   style: const TextStyle(
                     color: _blue,
                     fontFamily: 'monospace',
@@ -51,7 +56,9 @@ class KioskIdleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.kioskIdleTitle,
+                  kind == KioskStandbyKind.childNotAssigned
+                      ? l10n.kioskAwaitingChildTitle
+                      : l10n.kioskIdleTitle,
                   style: const TextStyle(
                     color: _ink,
                     fontSize: 30,
@@ -63,7 +70,9 @@ class KioskIdleScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n.kioskIdleSubtitle,
+                  kind == KioskStandbyKind.childNotAssigned
+                      ? l10n.kioskAwaitingChildSubtitle
+                      : l10n.kioskIdleSubtitle,
                   style: const TextStyle(
                     color: _muted,
                     fontSize: 16,
@@ -122,7 +131,9 @@ class KioskIdleScreen extends StatelessWidget {
                     _WaitingDot(reduceMotion: reduceMotion),
                     const SizedBox(width: 8),
                     Text(
-                      l10n.kioskIdleWaiting,
+                      kind == KioskStandbyKind.childNotAssigned
+                          ? l10n.kioskAwaitingChildWaiting
+                          : l10n.kioskIdleWaiting,
                       style: const TextStyle(
                         color: _muted,
                         fontSize: 13,

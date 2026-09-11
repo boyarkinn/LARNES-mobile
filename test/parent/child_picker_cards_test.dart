@@ -77,6 +77,22 @@ void main() {
       expect(silhouette.gender, 'male');
     });
 
+    testWidgets('shows live lesson pill when labeled', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          ChildProfileCard(
+            child: _sampleChild(),
+            liveLabel: 'Зайдите в урок',
+            livePulse: true,
+            onTap: () {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Зайдите в урок'), findsOneWidget);
+    });
+
     testWidgets('uses card color band', (tester) async {
       await tester.pumpWidget(
         wrap(

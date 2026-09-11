@@ -794,6 +794,60 @@ abstract class AppLocalizations {
   /// **'Add a child'**
   String get parentAddChild;
 
+  /// No description provided for @parentLiveLessonJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the lesson'**
+  String get parentLiveLessonJoin;
+
+  /// No description provided for @parentLiveLessonJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining…'**
+  String get parentLiveLessonJoining;
+
+  /// No description provided for @parentLiveLessonJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'In the lesson'**
+  String get parentLiveLessonJoined;
+
+  /// No description provided for @parentLiveLessonAtDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'At a desk now'**
+  String get parentLiveLessonAtDesk;
+
+  /// No description provided for @parentLiveLessonJoinFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join the lesson.'**
+  String get parentLiveLessonJoinFailed;
+
+  /// No description provided for @parentLiveLessonUntitled.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson'**
+  String get parentLiveLessonUntitled;
+
+  /// No description provided for @parentLiveLessonWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a task'**
+  String get parentLiveLessonWaitingTitle;
+
+  /// No description provided for @parentLiveLessonLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the lesson.'**
+  String get parentLiveLessonLoadFailed;
+
+  /// No description provided for @parentLiveLessonLeaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not leave the lesson.'**
+  String get parentLiveLessonLeaveFailed;
+
   /// No description provided for @parentAccount.
   ///
   /// In en, this message translates to:
@@ -3050,6 +3104,114 @@ abstract class AppLocalizations {
   /// **'Invalid invitation'**
   String get inviteInvalidTitle;
 
+  /// No description provided for @inviteLessonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the lesson'**
+  String get inviteLessonTitle;
+
+  /// No description provided for @inviteLessonSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a child who is on this lesson.'**
+  String get inviteLessonSubtitle;
+
+  /// No description provided for @inviteLessonJoinChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Join the lesson: {name}'**
+  String inviteLessonJoinChild(String name);
+
+  /// No description provided for @inviteLessonOpenChild.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the lesson: {name}'**
+  String inviteLessonOpenChild(String name);
+
+  /// No description provided for @inviteLessonJoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining…'**
+  String get inviteLessonJoining;
+
+  /// No description provided for @inviteLessonAtDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'At a desk now'**
+  String get inviteLessonAtDesk;
+
+  /// No description provided for @inviteLessonNoChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Your children are not on this lesson.'**
+  String get inviteLessonNoChildren;
+
+  /// No description provided for @inviteLessonLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to open the lesson'**
+  String get inviteLessonLoginTitle;
+
+  /// No description provided for @inviteLessonLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link opens a live lesson. Sign in to the parent cabinet.'**
+  String get inviteLessonLoginSubtitle;
+
+  /// No description provided for @inviteLessonLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get inviteLessonLogin;
+
+  /// No description provided for @inviteLessonRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get inviteLessonRegister;
+
+  /// No description provided for @inviteLessonWrongAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent cabinet required'**
+  String get inviteLessonWrongAccountTitle;
+
+  /// No description provided for @inviteLessonWrongAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is for a parent. Sign in with another account.'**
+  String get inviteLessonWrongAccountSubtitle;
+
+  /// No description provided for @inviteLessonExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This lesson has already ended'**
+  String get inviteLessonExpiredTitle;
+
+  /// No description provided for @inviteLessonExpiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This link is no longer valid.'**
+  String get inviteLessonExpiredMessage;
+
+  /// No description provided for @inviteLessonContinueAsGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without signing in'**
+  String get inviteLessonContinueAsGuest;
+
+  /// No description provided for @inviteLessonContinuingAsGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Joining…'**
+  String get inviteLessonContinuingAsGuest;
+
+  /// No description provided for @inviteLessonGuestJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in the lesson. The teacher sees “Someone”. You can still sign in to the parent cabinet.'**
+  String get inviteLessonGuestJoined;
+
   /// No description provided for @inviteFamilyJoinRequestTitle.
   ///
   /// In en, this message translates to:
@@ -3924,6 +4086,14 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for the lesson to start'**
   String get kioskIdleWaiting;
+
+  String get kioskAwaitingChildTitle;
+
+  String get kioskAwaitingChildEyebrow;
+
+  String get kioskAwaitingChildSubtitle;
+
+  String get kioskAwaitingChildWaiting;
 
   /// No description provided for @kioskUnplacedTitle.
   ///

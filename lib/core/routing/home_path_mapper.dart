@@ -74,6 +74,19 @@ bool isFamilyInviteRoute(String path) {
       base.startsWith('/invite/preaccount-claim');
 }
 
+bool isLessonInviteRoute(String path) {
+  final base = path.split('?').first;
+  return base == '/invite/lesson' || base.startsWith('/invite/lesson/');
+}
+
+bool isOpenInviteRoute(String path) =>
+    isFamilyInviteRoute(path) || isLessonInviteRoute(path);
+
+bool isLiveLessonRoomRoute(String path) {
+  final parts = path.split('?').first.split('/').where((part) => part.isNotEmpty).toList();
+  return parts.length == 3 && parts[0] == 'parent' && parts[2] == 'lesson';
+}
+
 bool isConfirmFamilyChildrenRoute(String path) {
   final base = path.split('?').first;
   return base == '/parent/family/confirm-children' ||
@@ -102,7 +115,8 @@ bool isParentChildrenRoute(String path) {
   if (isParentAccountRoute(path) ||
       isFamilySetupRoute(path) ||
       isFamilyJoinDedupRoute(path) ||
-      isConfirmFamilyChildrenRoute(path)) {
+      isConfirmFamilyChildrenRoute(path) ||
+      isLiveLessonRoomRoute(path)) {
     return false;
   }
   return true;
@@ -140,7 +154,7 @@ String? resolveAppRedirect({
   if (!isLoading &&
       !isAuthenticated &&
       !isAuthRoute(path) &&
-      !isFamilyInviteRoute(path)) {
+      !isOpenInviteRoute(path)) {
     return '/login';
   }
 

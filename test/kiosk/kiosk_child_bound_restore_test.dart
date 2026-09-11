@@ -120,7 +120,7 @@ void main() {
       expect(await storage.readToken(), 'fresh-child-jwt');
     });
 
-    test('returns null when lesson expects scan mode', () async {
+    test('returns null when leftover waiting_scan is not a child-bound room', () async {
       final storage = MemoryChildSessionTokenStorage();
       await storage.writeToken('stored-child-jwt');
 
@@ -152,7 +152,7 @@ void main() {
           pendingCommand: null,
           status: 'waiting_scan',
         ),
-        KioskSessionMode.scan,
+        KioskSessionMode.idle,
       );
     });
   });

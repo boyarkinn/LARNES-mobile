@@ -23,6 +23,11 @@ class ParentChildRoutes {
     return context.push<T>('/parent/$childId');
   }
 
+  /// Opens the live-lesson room (`/parent/:childId/lesson`).
+  static Future<T?> openLesson<T>(BuildContext context, String childId) {
+    return pushForChild<T>(context, childId: childId, segment: 'lesson');
+  }
+
   /// Pushes `/parent/:childId/:segment` (absolute — relative `./` breaks when shell URI drifts).
   static Future<T?> pushForChild<T>(
     BuildContext context, {

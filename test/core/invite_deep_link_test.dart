@@ -16,6 +16,13 @@ void main() {
     expect(path, '/invite/family-adult-claim?token=xyz');
   });
 
+  test('maps lesson invite URL', () {
+    final path = mapInviteUriToAppPath(
+      Uri.parse('https://larnes.ru/ru/invite/lesson?token=lesson-1'),
+    );
+    expect(path, '/invite/lesson?token=lesson-1');
+  });
+
   test('ignores unrelated paths', () {
     expect(mapInviteUriToAppPath(Uri.parse('https://larnes.ru/parent')), isNull);
   });

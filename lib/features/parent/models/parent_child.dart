@@ -1,5 +1,46 @@
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
+enum ParentLiveLessonPresence {
+  none,
+  online,
+  classroom,
+}
+
+ParentLiveLessonPresence parentLiveLessonPresenceFromJson(String? value) {
+  switch (value) {
+    case 'online':
+      return ParentLiveLessonPresence.online;
+    case 'classroom':
+      return ParentLiveLessonPresence.classroom;
+    default:
+      return ParentLiveLessonPresence.none;
+  }
+}
+
+class ParentLiveLesson {
+  const ParentLiveLesson({
+    required this.presence,
+    required this.sessionId,
+  });
+
+  factory ParentLiveLesson.fromJson(Map<String, dynamic> json) {
+    return ParentLiveLesson(
+      presence: parentLiveLessonPresenceFromJson(json['presence'] as String?),
+      sessionId: json['sessionId'] as String,
+    );
+  }
+
+  final ParentLiveLessonPresence presence;
+  final String sessionId;
+
+  ParentLiveLesson copyWith({ParentLiveLessonPresence? presence}) {
+    return ParentLiveLesson(
+      presence: presence ?? this.presence,
+      sessionId: sessionId,
+    );
+  }
+}
+
 class ParentChild {
   const ParentChild({
     required this.id,
@@ -10,9 +51,11 @@ class ParentChild {
     this.dateOfBirth,
     this.gender,
     this.ageYears,
+    this.liveLesson,
   });
 
   factory ParentChild.fromJson(Map<String, dynamic> json) {
+    final live = json['liveLesson'];
     return ParentChild(
       id: json['id'] as String,
       firstName: json['firstName'] as String,
@@ -22,6 +65,9 @@ class ParentChild {
       dateOfBirth: json['dateOfBirth'] as String?,
       gender: json['gender'] as String?,
       ageYears: (json['ageYears'] as num?)?.toInt(),
+      liveLesson: live is Map
+          ? ParentLiveLesson.fromJson(Map<String, dynamic>.from(live))
+          : null,
     );
   }
 
@@ -33,6 +79,21 @@ class ParentChild {
   final String? dateOfBirth;
   final String? gender;
   final int? ageYears;
+  final ParentLiveLesson? liveLesson;
+
+  ParentChild copyWith({ParentLiveLesson? liveLesson}) {
+    return ParentChild(
+      id: id,
+      firstName: firstName,
+      cardColor: cardColor,
+      lastName: lastName,
+      patronymic: patronymic,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+      ageYears: ageYears,
+      liveLesson: liveLesson ?? this.liveLesson,
+    );
+  }
 }
 
 class ParentChildDetail {

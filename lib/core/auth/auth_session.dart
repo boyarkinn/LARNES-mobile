@@ -11,6 +11,7 @@ import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
 import 'package:larnes_mobile/core/api/family_setup_api.dart';
 import 'package:larnes_mobile/core/api/guardians_api.dart';
+import 'package:larnes_mobile/core/api/lesson_invite_guest_api.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -67,6 +68,8 @@ class AuthSession extends ChangeNotifier {
   GuardiansApi get guardiansApi => _client.guardiansApi;
 
   FamilyInvitesApi get familyInvitesApi => _client.familyInvitesApi;
+
+  LessonInviteGuestApi get lessonInviteGuestApi => _client.lessonInviteGuestApi;
 
   FamilyAdultClaimApi get familyAdultClaimApi => _client.familyAdultClaimApi;
 

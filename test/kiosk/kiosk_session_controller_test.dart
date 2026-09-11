@@ -118,7 +118,7 @@ void main() {
       controller.dispose();
     });
 
-    test('sync cycle handles open_scan command and ack heartbeat', () async {
+    test('sync cycle acks leftover open_scan without opening the camera', () async {
       final api = FakeKioskSessionApi(
         pollResponses: [
           KioskCommandsResponse(
@@ -145,9 +145,9 @@ void main() {
 
       await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.scan);
-      expect(api.childLogoutCalls, 1);
-      expect(await childStorage.hasToken(), isFalse);
+      expect(controller.mode, KioskSessionMode.idle);
+      expect(api.childLogoutCalls, 0);
+      expect(await childStorage.hasToken(), isTrue);
       expect(api.heartbeatCalls, 1);
       expect(api.lastHeartbeatAck, 2);
 
@@ -195,7 +195,7 @@ void main() {
       controller.dispose();
     });
 
-    test('sync cycle reconciles scan from devices/me when poll skips command', () async {
+    test('sync cycle stays idle for leftover waiting_scan when QR is frozen', () async {
       final api = FakeKioskSessionApi(
         pollResponses: [
           const KioskCommandsResponse(
@@ -222,7 +222,7 @@ void main() {
 
       await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.scan);
+      expect(controller.mode, KioskSessionMode.idle);
       expect(api.getDeviceMeCalls, 1);
       expect(api.heartbeatCalls, 1);
 
@@ -331,7 +331,7 @@ void main() {
       controller.dispose();
     });
 
-    test('reset_child command during play switches to scan and clears child',
+    test('reset_child command during play switches to idle and clears child',
         () async {
       final api = FakeKioskSessionApi(
         pollResponses: [
@@ -371,7 +371,7 @@ void main() {
 
       await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.scan);
+      expect(controller.mode, KioskSessionMode.idle);
       expect(controller.scanResult, isNull);
       expect(controller.activeProgramId, isNull);
       expect(await childStorage.hasToken(), isFalse);

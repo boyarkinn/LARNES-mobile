@@ -375,6 +375,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentAddChild => 'Add a child';
 
   @override
+  String get parentLiveLessonJoin => 'Join the lesson';
+
+  @override
+  String get parentLiveLessonJoining => 'Joining…';
+
+  @override
+  String get parentLiveLessonJoined => 'In the lesson';
+
+  @override
+  String get parentLiveLessonAtDesk => 'At a desk now';
+
+  @override
+  String get parentLiveLessonJoinFailed => 'Could not join the lesson.';
+
+  @override
+  String get parentLiveLessonUntitled => 'Lesson';
+
+  @override
+  String get parentLiveLessonWaitingTitle => 'Waiting for a task';
+
+  @override
+  String get parentLiveLessonLoadFailed => 'Could not open the lesson.';
+
+  @override
+  String get parentLiveLessonLeaveFailed => 'Could not leave the lesson.';
+
+  @override
   String get parentAccount => 'Account';
 
   @override
@@ -1585,6 +1612,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteInvalidTitle => 'Invalid invitation';
 
   @override
+  String get inviteLessonTitle => 'Join the lesson';
+
+  @override
+  String get inviteLessonSubtitle => 'Choose a child who is on this lesson.';
+
+  @override
+  String inviteLessonJoinChild(String name) => 'Join the lesson: $name';
+
+  @override
+  String inviteLessonOpenChild(String name) => 'Open the lesson: $name';
+
+  @override
+  String get inviteLessonJoining => 'Joining…';
+
+  @override
+  String get inviteLessonAtDesk => 'At a desk now';
+
+  @override
+  String get inviteLessonNoChildren => 'Your children are not on this lesson.';
+
+  @override
+  String get inviteLessonLoginTitle => 'Sign in to open the lesson';
+
+  @override
+  String get inviteLessonLoginSubtitle =>
+      'This link opens a live lesson. Sign in to the parent cabinet.';
+
+  @override
+  String get inviteLessonLogin => 'Sign in';
+
+  @override
+  String get inviteLessonRegister => 'Register';
+
+  @override
+  String get inviteLessonWrongAccountTitle => 'Parent cabinet required';
+
+  @override
+  String get inviteLessonWrongAccountSubtitle =>
+      'This link is for a parent. Sign in with another account.';
+
+  @override
+  String get inviteLessonExpiredTitle => 'This lesson has already ended';
+
+  @override
+  String get inviteLessonExpiredMessage => 'This link is no longer valid.';
+
+  @override
+  String get inviteLessonContinueAsGuest => 'Continue without signing in';
+
+  @override
+  String get inviteLessonContinuingAsGuest => 'Joining…';
+
+  @override
+  String get inviteLessonGuestJoined =>
+      'You are in the lesson. The teacher sees “Someone”. You can still sign in to the parent cabinet.';
+
+  @override
   String get inviteFamilyJoinRequestTitle => 'Family join request';
 
   @override
@@ -2062,7 +2146,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kioskIdleSubtitle =>
-      'The teacher will start the lesson. Then hold the child\'s QR code up to this device.';
+      'The teacher will start the lesson, then assign a child to this seat.';
 
   @override
   String get kioskIdleSettings => 'Settings';
@@ -2072,6 +2156,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kioskIdleWaiting => 'Waiting for the lesson to start';
+
+  @override
+  String get kioskAwaitingChildTitle => 'No child assigned';
+
+  @override
+  String get kioskAwaitingChildEyebrow => 'Lesson in progress';
+
+  @override
+  String get kioskAwaitingChildSubtitle =>
+      'The lesson has started. The teacher will assign a child to this seat.';
+
+  @override
+  String get kioskAwaitingChildWaiting => 'Waiting for assignment';
 
   @override
   String get kioskUnplacedTitle => 'No seat assigned';

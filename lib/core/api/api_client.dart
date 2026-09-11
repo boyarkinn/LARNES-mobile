@@ -9,6 +9,7 @@ import 'package:larnes_mobile/core/api/family_invites_api.dart';
 import 'package:larnes_mobile/core/api/family_join_dedup_api.dart';
 import 'package:larnes_mobile/core/api/family_setup_api.dart';
 import 'package:larnes_mobile/core/api/guardians_api.dart';
+import 'package:larnes_mobile/core/api/lesson_invite_guest_api.dart';
 import 'package:larnes_mobile/core/api/network_api.dart';
 import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -65,6 +66,7 @@ class ApiClient {
   FamilySetupApi? _familySetupApi;
   GuardiansApi? _guardiansApi;
   FamilyInvitesApi? _familyInvitesApi;
+  LessonInviteGuestApi? _lessonInviteGuestApi;
   FamilyAdultClaimApi? _familyAdultClaimApi;
   ConfirmFamilyChildrenApi? _confirmFamilyChildrenApi;
   FamilyJoinDedupApi? _familyJoinDedupApi;
@@ -94,6 +96,9 @@ class ApiClient {
   GuardiansApi get guardiansApi => _guardiansApi ??= GuardiansApi(this);
 
   FamilyInvitesApi get familyInvitesApi => _familyInvitesApi ??= FamilyInvitesApi(this);
+
+  LessonInviteGuestApi get lessonInviteGuestApi =>
+      _lessonInviteGuestApi ??= LessonInviteGuestApi(this);
 
   FamilyAdultClaimApi get familyAdultClaimApi =>
       _familyAdultClaimApi ??= FamilyAdultClaimApi(this);

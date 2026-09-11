@@ -14,10 +14,18 @@ class ChildProfileCard extends StatelessWidget {
     super.key,
     required this.child,
     required this.onTap,
+    this.liveError = false,
+    this.liveLabel,
+    this.livePulse = false,
+    this.onLongPress,
   });
 
   final ParentChild child;
+  final bool liveError;
+  final String? liveLabel;
+  final bool livePulse;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -32,10 +40,14 @@ class ChildProfileCard extends StatelessWidget {
       height: 1.1,
       color: ParentColors.ink,
     );
+    final showFooter = age != null || liveLabel != null;
 
     return ParentScaleTap(
       onTap: onTap,
-      child: ClipRRect(
+      onLongPress: onLongPress,
+      child: _LiveCallShell(
+        active: livePulse && !liveError,
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(ParentRadii.card),
         child: Container(
           width: double.infinity,
@@ -87,18 +99,29 @@ class ChildProfileCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        if (age != null) ...[
+                        if (showFooter) ...[
                           const Spacer(),
                           Padding(
                             padding: const EdgeInsets.only(
                               top: ParentChildCardMetrics.footerTopPadding,
                             ),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: _AgePill(
-                                label: formatChildAgeYears(age, locale).toUpperCase(),
-                                tokens: tokens,
-                              ),
+                            child: Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                if (age != null)
+                                  _AgePill(
+                                    label: formatChildAgeYears(age, locale).toUpperCase(),
+                                    tokens: tokens,
+                                  ),
+                                if (liveLabel != null)
+                                  _LiveLessonPill(
+                                    error: liveError,
+                                    label: liveLabel!,
+                                    sentenceCase: livePulse || liveError,
+                                  ),
+                              ],
                             ),
                           ),
                         ],
@@ -108,6 +131,134 @@ class ChildProfileCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LiveCallShell extends StatefulWidget {
+  const _LiveCallShell({
+    required this.active,
+    required this.child,
+  });
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_LiveCallShell> createState() => _LiveCallShellState();
+}
+
+class _LiveCallShellState extends State<_LiveCallShell>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1100),
+      vsync: this,
+    );
+    if (widget.active) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _LiveCallShell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.active && _controller.isAnimating) {
+      _controller
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    if (!widget.active || reduceMotion) {
+      return DecoratedBox(
+        decoration: widget.active
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(ParentRadii.card),
+                border: Border.all(color: ParentColors.shell, width: 3),
+              )
+            : const BoxDecoration(),
+        child: widget.child,
+      );
+    }
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = _controller.value;
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(ParentRadii.card),
+            border: Border.all(color: ParentColors.shell, width: 2 + t * 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: ParentColors.shell.withValues(alpha: 0.22 + t * 0.28),
+                blurRadius: 10 + t * 18,
+                spreadRadius: 1 + t * 3,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: widget.child,
+    );
+  }
+}
+
+class _LiveLessonPill extends StatelessWidget {
+  const _LiveLessonPill({
+    required this.error,
+    required this.label,
+    required this.sentenceCase,
+  });
+
+  final bool error;
+  final String label;
+  final bool sentenceCase;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: error ? const Color(0xFFC0392B) : ParentColors.shell,
+        borderRadius: BorderRadius.circular(7),
+        boxShadow: [
+          BoxShadow(
+            color: error ? const Color(0xFF8E2A20) : ParentColors.shellDeep,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        child: Text(
+          sentenceCase ? label : label.toUpperCase(),
+          style: GoogleFonts.onest(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: sentenceCase ? 0.01 * 12 : 0.03 * 12,
+            color: Colors.white,
           ),
         ),
       ),

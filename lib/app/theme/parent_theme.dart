@@ -94,9 +94,11 @@ class ParentScaleTap extends StatefulWidget {
     super.key,
     required this.onTap,
     required this.child,
+    this.onLongPress,
   });
 
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final Widget child;
 
   @override
@@ -114,6 +116,7 @@ class _ParentScaleTapState extends State<ParentScaleTap> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       child: AnimatedScale(
         scale: _pressed ? 0.98 : 1,
         duration: ParentMotion.tapDuration,

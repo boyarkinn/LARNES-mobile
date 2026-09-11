@@ -2,9 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
+import 'package:larnes_mobile/core/auth/lesson_guest_key_storage.dart';
 import 'package:larnes_mobile/features/parent/models/child_classroom_qr.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
+import 'package:larnes_mobile/features/parent/models/parent_lesson_invite.dart';
+import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
 import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/models/parent_activity.dart';
 import 'package:larnes_mobile/features/parent/models/parent_reward.dart';
@@ -88,7 +91,10 @@ class ParentApi {
   Future<List<ParentChild>> listChildren({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
-      final response = await _client.dio.get('/api/mobile/parent/children');
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children',
+        queryParameters: {'locale': locale},
+      );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw ParentApiException(_messageFromBody(data, l10n, fallback: l10n.parentLoadChildrenFailed));
@@ -101,6 +107,195 @@ class ParentApi {
             ),
           )
           .toList();
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> joinLiveLesson({
+    required String childId,
+    required String sessionId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/live-lesson/join',
+        data: {
+          'locale': locale,
+          'sessionId': sessionId,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentLiveLessonJoinFailed),
+        );
+      }
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<String> peekLessonInvite({
+    required String token,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/invite/lesson',
+        queryParameters: {'token': token},
+      );
+      final data = _asJsonMap(response.data);
+      final status = data?['status'] as String?;
+      if (status == 'active' || status == 'expired' || status == 'invalid') {
+        return status!;
+      }
+
+      throw ParentApiException(
+        _messageFromBody(data, l10n, fallback: l10n.inviteInvalid),
+      );
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentLessonInvite> fetchLessonInvite({
+    required String token,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/lesson-invite',
+        queryParameters: {'locale': locale, 'token': token},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.inviteInvalid),
+        );
+      }
+
+      return ParentLessonInvite.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> joinLessonInvite({
+    required String childId,
+    required String token,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final guestKey = await LessonGuestKeyStorage().readKey();
+      final response = await _client.dio.post(
+        '/api/mobile/parent/lesson-invite/join',
+        data: {
+          'childId': childId,
+          'locale': locale,
+          'token': token,
+          if (guestKey != null && guestKey.isNotEmpty) 'guestKey': guestKey,
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentLiveLessonJoinFailed),
+        );
+      }
+    } on DioException catch (error) {
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<ParentLiveLessonRoomState> fetchLiveLessonRoom({
+    required String childId,
+    String locale = 'ru',
+    bool poll = false,
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/live-lesson',
+        queryParameters: {
+          'locale': locale,
+          if (poll) 'poll': '1',
+        },
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null) {
+        throw ParentApiException(l10n.parentLiveLessonLoadFailed);
+      }
+
+      final room = ParentLiveLessonRoomState.fromJson(data);
+      if (!room.isOk && !room.isGone) {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentLiveLessonLoadFailed),
+        );
+      }
+
+      return room;
+    } on DioException catch (error) {
+      final statusCode = error.response?.statusCode;
+      if (statusCode == 401 || statusCode == 403 || statusCode == 404) {
+        throw ParentApiException(
+          _messageFromBody(
+            error.response?.data,
+            l10n,
+            fallback: l10n.parentLiveLessonLoadFailed,
+          ),
+          code: 'gone',
+        );
+      }
+
+      throw _parentApiException(
+        error.response?.data,
+        l10n,
+        fallback: _networkMessage(error, l10n),
+      );
+    }
+  }
+
+  Future<void> leaveLiveLesson({
+    required String childId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/live-lesson/leave',
+        data: {'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'ok') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.parentLiveLessonLeaveFailed),
+        );
+      }
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,

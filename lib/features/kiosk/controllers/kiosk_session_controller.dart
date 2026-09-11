@@ -60,6 +60,11 @@ class KioskSessionController extends ChangeNotifier {
 
   KioskDeviceContext get deviceContext => _deviceContext;
   KioskSessionMode get mode => _mode;
+  KioskStandbyKind get standbyKind => resolveKioskStandbyKind(
+        hasActiveLesson: _deviceContext.lesson != null,
+        hasAssignedChild:
+            _deviceContext.activeChild != null || _scanResult != null,
+      );
   KioskScanResult? get scanResult => _scanResult;
   String? get scanError => _scanError;
   String? get scanErrorCode => _scanErrorCode;
@@ -185,6 +190,11 @@ class KioskSessionController extends ChangeNotifier {
           commandProcessed = true;
           await _activatePlayTrainer(payload.commandSeq);
           ackAlreadySent = true;
+        } else if (kioskQrScanFrozen &&
+            latest.command == KioskDeviceCommandKind.openScan) {
+          await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
+          ackAlreadySent = true;
+          _since = payload.commandSeq;
         } else if (await _tryApplySupersededResetGuard(
           latest,
           payload.commandSeq,
@@ -221,9 +231,10 @@ class KioskSessionController extends ChangeNotifier {
       if (!commandProcessed) {
         if (await _reconcileLessonEndedDuringRuntime()) {
           // Lesson ended while child was in program or trainer player.
-        } else if (_mode == KioskSessionMode.scan &&
+        } else if ((_mode == KioskSessionMode.scan ||
+                _mode == KioskSessionMode.idle) &&
             await _reconcileTeacherAssignedChild()) {
-          // Teacher assigned a child while the tablet was waiting for QR.
+          // Teacher assigned a child while the tablet was idle or waiting for QR.
         } else if (_mode != KioskSessionMode.play &&
             _mode != KioskSessionMode.trainer) {
           final skipRefreshInResult =
@@ -347,7 +358,8 @@ class KioskSessionController extends ChangeNotifier {
   }
 
   Future<bool> _reconcileTeacherAssignedChild() async {
-    if (_mode != KioskSessionMode.scan || _scanResult != null) {
+    if ((_mode != KioskSessionMode.scan && _mode != KioskSessionMode.idle) ||
+        _scanResult != null) {
       return false;
     }
 
@@ -360,8 +372,9 @@ class KioskSessionController extends ChangeNotifier {
       return false;
     }
 
-    if (lesson.pendingCommand == 'open_scan' ||
-        lesson.pendingCommand == 'reset_child') {
+    if (!kioskQrScanFrozen &&
+        (lesson.pendingCommand == 'open_scan' ||
+            lesson.pendingCommand == 'reset_child')) {
       return false;
     }
 
@@ -396,6 +409,7 @@ class KioskSessionController extends ChangeNotifier {
 
   Future<bool> _refreshDeviceContextAndReconcileMode() async {
     final device = await _kioskApi.getDeviceMe();
+    final previousLessonId = _deviceContext.lesson?.lessonSessionId;
     _deviceContext = device;
 
     final lesson = device.lesson;
@@ -419,6 +433,9 @@ class KioskSessionController extends ChangeNotifier {
 
     final resolved = resolveInitialModeFromLesson(lesson);
     if (resolved == _mode) {
+      if (device.lesson?.lessonSessionId != previousLessonId) {
+        notifyListeners();
+      }
       return false;
     }
 

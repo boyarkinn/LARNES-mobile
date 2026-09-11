@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
-import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -13,6 +14,7 @@ import 'package:larnes_mobile/features/parent/widgets/child_profile_card.dart';
 import 'package:larnes_mobile/features/parent/utils/family_setup_guard.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_panel_error_panel.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_scaffold.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 class ChildPickerScreen extends StatefulWidget {
@@ -31,6 +33,10 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   String? _errorCode;
   List<ParentChild> _children = const [];
   bool _wasInactive = false;
+  String? _joiningChildId;
+  String? _joinErrorChildId;
+  String? _joinErrorMessage;
+  Timer? _livePoll;
 
   @override
   void initState() {
@@ -133,12 +139,134 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
 
   @override
   void dispose() {
+    _livePoll?.cancel();
     _authSession?.removeListener(_handleAuthSessionChanged);
     super.dispose();
   }
 
-  Future<void> _load({bool refreshing = false}) async {
-    if (refreshing) {
+  void _ensureLivePoll() {
+    _livePoll ??= Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!mounted || _joiningChildId != null) {
+        return;
+      }
+
+      _load(refreshing: true, silent: true);
+    });
+  }
+
+  Future<void> _openChildHub(String childId) async {
+    await ParentChildRoutes.openChild(context, childId);
+    if (mounted) {
+      await _load(refreshing: true);
+    }
+  }
+
+  Future<void> _openLesson(String childId) async {
+    await ParentChildRoutes.openLesson(context, childId);
+    if (mounted) {
+      await _load(refreshing: true);
+    }
+  }
+
+  String? _liveLabelFor(ParentChild child, AppLocalizations l10n) {
+    final live = child.liveLesson;
+
+    if (live == null) {
+      return null;
+    }
+
+    if (_joinErrorChildId == child.id && _joinErrorMessage != null) {
+      return _joinErrorMessage;
+    }
+
+    if (_joiningChildId == child.id) {
+      return l10n.parentLiveLessonJoining;
+    }
+
+    switch (live.presence) {
+      case ParentLiveLessonPresence.online:
+        return l10n.parentLiveLessonJoined;
+      case ParentLiveLessonPresence.classroom:
+        return l10n.parentLiveLessonAtDesk;
+      case ParentLiveLessonPresence.none:
+        return l10n.parentLiveLessonJoin;
+    }
+  }
+
+  Future<void> _onChildTap(ParentChild child) async {
+    final live = child.liveLesson;
+
+    if (live == null || live.presence == ParentLiveLessonPresence.classroom) {
+      await _openChildHub(child.id);
+      return;
+    }
+
+    if (live.presence == ParentLiveLessonPresence.online) {
+      await _openLesson(child.id);
+      return;
+    }
+
+    if (_joiningChildId != null) {
+      return;
+    }
+
+    setState(() {
+      _joiningChildId = child.id;
+      _joinErrorChildId = null;
+      _joinErrorMessage = null;
+    });
+
+    try {
+      final locale = LocaleScope.read(context).localeCode;
+      await AuthScope.of(context).parentApi.joinLiveLesson(
+            childId: child.id,
+            locale: locale,
+            sessionId: live.sessionId,
+          );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _children = _children
+            .map(
+              (item) => item.id == child.id
+                  ? item.copyWith(
+                      liveLesson: live.copyWith(
+                        presence: ParentLiveLessonPresence.online,
+                      ),
+                    )
+                  : item,
+            )
+            .toList();
+        _joiningChildId = null;
+      });
+      await _openLesson(child.id);
+    } on ParentApiException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _joiningChildId = null;
+        _joinErrorChildId = child.id;
+        _joinErrorMessage = error.message;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _joiningChildId = null;
+        _joinErrorChildId = child.id;
+        _joinErrorMessage = context.l10n.parentLiveLessonJoinFailed;
+      });
+    }
+  }
+
+  Future<void> _load({bool refreshing = false, bool silent = false}) async {
+    if (refreshing && !silent) {
       setState(() => _isRefreshing = true);
     } else if (_children.isEmpty) {
       setState(() {
@@ -161,6 +289,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
         _error = null;
         _errorCode = null;
       });
+      _ensureLivePoll();
     } on ParentApiException catch (error) {
       if (mounted && redirectToFamilySetupIfRequired(context, code: error.code)) {
         return;
@@ -249,11 +378,17 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
                   for (final child in _children) ...[
                     ChildProfileCard(
                       child: child,
-                      onTap: () async {
-                        await ParentChildRoutes.openChild(context, child.id);
-                        if (mounted) {
-                          await _load(refreshing: true);
-                        }
+                      liveError: _joinErrorChildId == child.id,
+                      liveLabel: _liveLabelFor(child, l10n),
+                      livePulse: child.liveLesson?.presence ==
+                              ParentLiveLessonPresence.none &&
+                          _joiningChildId != child.id &&
+                          _joinErrorChildId != child.id,
+                      onLongPress: () {
+                        unawaited(_openChildHub(child.id));
+                      },
+                      onTap: () {
+                        unawaited(_onChildTap(child));
                       },
                     ),
                     const SizedBox(height: ParentChildCardMetrics.pickerListGap),

@@ -28,6 +28,7 @@ String? mapInviteUriToAppPath(Uri uri) {
     'family-adult-claim',
     'family-guardian',
     'family-join-request',
+    'lesson',
   };
   if (!allowed.contains(kind)) {
     return null;

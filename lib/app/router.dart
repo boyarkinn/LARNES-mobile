@@ -41,6 +41,8 @@ import 'package:larnes_mobile/features/parent/screens/account/account_edit_child
 import 'package:larnes_mobile/features/invite/screens/family_adult_claim_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_guardian_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_join_request_invite_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/lesson_invite_guest_room_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/lesson_invite_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/confirm_family_children_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/family_join_dedup_screen.dart';
@@ -54,6 +56,7 @@ import 'package:larnes_mobile/features/parent/screens/child_profile_screen.dart'
 import 'package:larnes_mobile/features/parent/screens/direction_programs_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/homework_list_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/homework_player_screen.dart';
+import 'package:larnes_mobile/features/parent/screens/live_lesson_room_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/program_player_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/study_hub_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/courses_directions_screen.dart';
@@ -344,6 +347,16 @@ GoRouter createAppRouter({
                             childId: childId,
                             origin: childProfileOriginFromQuery(state.uri.queryParameters['from']),
                           );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'lesson',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return LiveLessonRoomScreen(childId: childId);
                         },
                       ),
                       GoRoute(
@@ -704,6 +717,20 @@ GoRouter createAppRouter({
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/invite/lesson/room',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return LessonInviteGuestRoomScreen(token: token);
+        },
+      ),
+      GoRoute(
+        path: '/invite/lesson',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return LessonInviteScreen(token: token);
+        },
       ),
       GoRoute(
         path: '/invite/family-join-request',

@@ -94,6 +94,7 @@ class AuthInviteLoginGate extends StatelessWidget {
     required this.registerLead,
     required this.registerLabel,
     required this.onRegister,
+    this.extra,
   });
 
   final String loginLabel;
@@ -101,6 +102,7 @@ class AuthInviteLoginGate extends StatelessWidget {
   final String registerLead;
   final String registerLabel;
   final VoidCallback onRegister;
+  final Widget? extra;
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +114,10 @@ class AuthInviteLoginGate extends StatelessWidget {
           useWebAuthStyle: true,
           onPressed: onLogin,
         ),
+        if (extra != null) ...[
+          const SizedBox(height: 10),
+          extra!,
+        ],
         AuthFormFoot(
           leadText: registerLead,
           linkLabel: registerLabel,

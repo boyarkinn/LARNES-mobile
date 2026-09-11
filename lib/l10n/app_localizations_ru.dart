@@ -376,6 +376,33 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentAddChild => 'Добавить ребёнка';
 
   @override
+  String get parentLiveLessonJoin => 'Зайдите в урок';
+
+  @override
+  String get parentLiveLessonJoining => 'Входим…';
+
+  @override
+  String get parentLiveLessonJoined => 'На уроке';
+
+  @override
+  String get parentLiveLessonAtDesk => 'Сейчас в кабинете';
+
+  @override
+  String get parentLiveLessonJoinFailed => 'Не удалось войти на урок.';
+
+  @override
+  String get parentLiveLessonUntitled => 'Урок';
+
+  @override
+  String get parentLiveLessonWaitingTitle => 'Ждём задание';
+
+  @override
+  String get parentLiveLessonLoadFailed => 'Не удалось открыть урок.';
+
+  @override
+  String get parentLiveLessonLeaveFailed => 'Не удалось выйти из урока.';
+
+  @override
   String get parentAccount => 'Аккаунт';
 
   @override
@@ -1593,6 +1620,64 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inviteInvalidTitle => 'Недействительное приглашение';
 
   @override
+  String get inviteLessonTitle => 'Вход на урок';
+
+  @override
+  String get inviteLessonSubtitle =>
+      'Выберите ребёнка, который записан на этот урок.';
+
+  @override
+  String inviteLessonJoinChild(String name) => 'Зайдите в урок: $name';
+
+  @override
+  String inviteLessonOpenChild(String name) => 'Открыть урок: $name';
+
+  @override
+  String get inviteLessonJoining => 'Входим…';
+
+  @override
+  String get inviteLessonAtDesk => 'Сейчас в кабинете';
+
+  @override
+  String get inviteLessonNoChildren => 'Ваши дети не записаны на этот урок.';
+
+  @override
+  String get inviteLessonLoginTitle => 'Войдите, чтобы открыть урок';
+
+  @override
+  String get inviteLessonLoginSubtitle =>
+      'Ссылка ведёт на идущий урок. Войдите в кабинет родителя.';
+
+  @override
+  String get inviteLessonLogin => 'Войти';
+
+  @override
+  String get inviteLessonRegister => 'Регистрация';
+
+  @override
+  String get inviteLessonWrongAccountTitle => 'Нужен кабинет родителя';
+
+  @override
+  String get inviteLessonWrongAccountSubtitle =>
+      'Эта ссылка для родителя. Войдите другим аккаунтом.';
+
+  @override
+  String get inviteLessonExpiredTitle => 'Урок уже закончился';
+
+  @override
+  String get inviteLessonExpiredMessage => 'Эта ссылка больше не действует.';
+
+  @override
+  String get inviteLessonContinueAsGuest => 'Продолжить без входа';
+
+  @override
+  String get inviteLessonContinuingAsGuest => 'Входим…';
+
+  @override
+  String get inviteLessonGuestJoined =>
+      'Вы в уроке. Педагог видит «Кто-то». Можно войти в кабинет родителя.';
+
+  @override
   String get inviteFamilyJoinRequestTitle => 'Запрос в семью';
 
   @override
@@ -2076,7 +2161,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get kioskIdleSubtitle =>
-      'Педагог начнёт занятие. После этого поднесите QR-код к этому устройству.';
+      'Педагог начнёт занятие. Потом назначит ребёнка на это место.';
 
   @override
   String get kioskIdleSettings => 'Настройки';
@@ -2086,6 +2171,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get kioskIdleWaiting => 'Ожидаем начала занятия';
+
+  @override
+  String get kioskAwaitingChildTitle => 'Ребёнок не назначен';
+
+  @override
+  String get kioskAwaitingChildEyebrow => 'Занятие идёт';
+
+  @override
+  String get kioskAwaitingChildSubtitle =>
+      'Занятие уже начато. Педагог назначит ребёнка на это место.';
+
+  @override
+  String get kioskAwaitingChildWaiting => 'Ожидаем назначения';
 
   @override
   String get kioskUnplacedTitle => 'Место не назначено';

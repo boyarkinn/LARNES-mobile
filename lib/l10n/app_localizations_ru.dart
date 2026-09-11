@@ -1627,10 +1627,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Выберите ребёнка, который записан на этот урок.';
 
   @override
-  String inviteLessonJoinChild(String name) => 'Зайдите в урок: $name';
+  String inviteLessonJoinChild(String name) {
+    return 'Зайдите в урок: $name';
+  }
 
   @override
-  String inviteLessonOpenChild(String name) => 'Открыть урок: $name';
+  String inviteLessonOpenChild(String name) {
+    return 'Открыть урок: $name';
+  }
 
   @override
   String get inviteLessonJoining => 'Входим…';

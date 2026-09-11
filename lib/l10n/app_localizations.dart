@@ -4066,7 +4066,7 @@ abstract class AppLocalizations {
   /// No description provided for @kioskIdleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'The teacher will start the lesson. Then hold the child\'s QR code up to this device.'**
+  /// **'The teacher will start the lesson, then assign a child to this seat.'**
   String get kioskIdleSubtitle;
 
   /// No description provided for @kioskIdleSettings.
@@ -4087,12 +4087,28 @@ abstract class AppLocalizations {
   /// **'Waiting for the lesson to start'**
   String get kioskIdleWaiting;
 
+  /// No description provided for @kioskAwaitingChildTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No child assigned'**
   String get kioskAwaitingChildTitle;
 
+  /// No description provided for @kioskAwaitingChildEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson in progress'**
   String get kioskAwaitingChildEyebrow;
 
+  /// No description provided for @kioskAwaitingChildSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The lesson has started. The teacher will assign a child to this seat.'**
   String get kioskAwaitingChildSubtitle;
 
+  /// No description provided for @kioskAwaitingChildWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for assignment'**
   String get kioskAwaitingChildWaiting;
 
   /// No description provided for @kioskUnplacedTitle.

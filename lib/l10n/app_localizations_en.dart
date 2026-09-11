@@ -1618,10 +1618,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteLessonSubtitle => 'Choose a child who is on this lesson.';
 
   @override
-  String inviteLessonJoinChild(String name) => 'Join the lesson: $name';
+  String inviteLessonJoinChild(String name) {
+    return 'Join the lesson: $name';
+  }
 
   @override
-  String inviteLessonOpenChild(String name) => 'Open the lesson: $name';
+  String inviteLessonOpenChild(String name) {
+    return 'Open the lesson: $name';
+  }
 
   @override
   String get inviteLessonJoining => 'Joining…';

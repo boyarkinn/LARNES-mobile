@@ -2,6 +2,7 @@
 enum FlyTrackPhase {
   instruction,
   countdown,
+  memorize,
   tracking,
   answer,
   replay,

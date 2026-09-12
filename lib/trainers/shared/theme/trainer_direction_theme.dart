@@ -47,11 +47,11 @@ const trainerDirectionThemes = <TrainerDirection, TrainerDirectionTheme>{
   ),
   TrainerDirection.intel: TrainerDirectionTheme(
     base: Color(0xFF2F66D0),
-    deep: Color(0xFF2855B2),
-    soft: Color(0x3D32B6D8),
+    deep: Color(0xFF173B73),
+    soft: Color(0x33F2B84B),
     glow: Color(0x4D2F66D0),
-    secondary: Color(0xFF32B6D8),
-    surface: Color(0xFFEDF5FF),
+    secondary: Color(0xFFF2B84B),
+    surface: Color(0xFFEEF6FF),
   ),
 };
 
@@ -241,6 +241,33 @@ class _TrainerDirectionStaticPainter extends CustomPainter {
           ..strokeWidth = routeWidth,
       );
     }
+
+    if (direction == TrainerDirection.intel) {
+      canvas.drawRect(
+        bounds,
+        Paint()
+          ..shader =
+              const RadialGradient(
+                colors: [Color(0xC2FFFFFF), Color(0x00FFFFFF)],
+              ).createShader(
+                Rect.fromCircle(
+                  center: Offset(size.width * 0.5, size.height * 0.48),
+                  radius: size.shortestSide * 0.6,
+                ),
+              ),
+      );
+      for (final route in _intelRoutes(size)) {
+        canvas.drawPath(
+          route,
+          Paint()
+            ..color = theme.base.withValues(alpha: 0.045)
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..strokeWidth = 18,
+        );
+      }
+    }
   }
 
   @override
@@ -264,6 +291,10 @@ class _TrainerDirectionAmbientPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (direction == TrainerDirection.mental) {
       _drawMentalRoutes(canvas, size);
+      return;
+    }
+    if (direction == TrainerDirection.intel) {
+      _drawIntelNetwork(canvas, size);
       return;
     }
 
@@ -347,6 +378,36 @@ class _TrainerDirectionAmbientPainter extends CustomPainter {
       canvas,
       rightRoute,
       progress: 1 - eased,
+      color: theme.secondary,
+      radius: 4,
+    );
+  }
+
+  void _drawIntelNetwork(Canvas canvas, Size size) {
+    final routes = _intelRoutes(size);
+    for (var index = 0; index < routes.length; index++) {
+      _drawDashedRoute(
+        canvas,
+        routes[index],
+        color: (index.isEven ? theme.base : theme.secondary).withValues(
+          alpha: 0.2,
+        ),
+        offset: (index.isEven ? progress : -progress) * (66 + index * 7),
+        dash: index.isEven ? 3 : 2,
+        gap: index.isEven ? 13 : 16,
+      );
+    }
+    _drawRouteNode(
+      canvas,
+      routes.first,
+      progress: Curves.easeInOut.transform(progress),
+      color: theme.base,
+      radius: 4.5,
+    );
+    _drawRouteNode(
+      canvas,
+      routes.last,
+      progress: 1 - Curves.easeInOut.transform(progress),
       color: theme.secondary,
       radius: 4,
     );
@@ -487,4 +548,33 @@ Path _mentalRightRoute(Size size) {
       size.width * 0.735,
       size.height * 1.06,
     );
+}
+
+List<Path> _intelRoutes(Size size) {
+  return [
+    Path()
+      ..moveTo(-size.width * 0.035, size.height * 0.19)
+      ..lineTo(size.width * 0.08, size.height * 0.19)
+      ..lineTo(size.width * 0.135, size.height * 0.28)
+      ..lineTo(size.width * 0.225, size.height * 0.28)
+      ..lineTo(size.width * 0.275, size.height * 0.37),
+    Path()
+      ..moveTo(-size.width * 0.03, size.height * 0.83)
+      ..lineTo(size.width * 0.07, size.height * 0.83)
+      ..lineTo(size.width * 0.12, size.height * 0.75)
+      ..lineTo(size.width * 0.12, size.height * 0.66)
+      ..lineTo(size.width * 0.2, size.height * 0.66),
+    Path()
+      ..moveTo(size.width * 1.035, size.height * 0.17)
+      ..lineTo(size.width * 0.925, size.height * 0.17)
+      ..lineTo(size.width * 0.87, size.height * 0.26)
+      ..lineTo(size.width * 0.87, size.height * 0.37)
+      ..lineTo(size.width * 0.79, size.height * 0.37),
+    Path()
+      ..moveTo(size.width * 1.03, size.height * 0.84)
+      ..lineTo(size.width * 0.92, size.height * 0.84)
+      ..lineTo(size.width * 0.865, size.height * 0.75)
+      ..lineTo(size.width * 0.77, size.height * 0.75)
+      ..lineTo(size.width * 0.725, size.height * 0.67),
+  ];
 }

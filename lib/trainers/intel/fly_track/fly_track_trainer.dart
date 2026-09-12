@@ -14,11 +14,7 @@ import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 /// Web: `platform/src/trainers/intel/fly-track/component.tsx`
 class FlyTrackTrainer extends StatefulWidget {
-  const FlyTrackTrainer({
-    super.key,
-    required this.params,
-    this.onComplete,
-  });
+  const FlyTrackTrainer({super.key, required this.params, this.onComplete});
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -32,8 +28,12 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       'Отследи движение мухи и нажми на поле, где она приземлилась.';
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
+  static const _memorizeStartMs = 1500;
+  static const _flyDepartureDelayMs = 280;
+  static const _flyDepartureMs = 600;
+  static const _replayMoveMs = 420;
   static const _feedbackMs = 1600;
-  static const _countdownColor = Color(0xFFDC2626);
+  static const _countdownColor = Color(0xFF2B59C3);
 
   late List<FlyTrackRound> _rounds;
   FlyTrackPhase _phase = FlyTrackPhase.instruction;
@@ -41,6 +41,8 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   var _instructionLength = 0;
   var _roundIndex = 0;
   FlyCell? _selectedCell;
+  Offset? _departingFlyPosition;
+  var _departingFlyOpacity = 1.0;
   var _replayPathIndex = 0;
   var _fireworksKey = 0;
   var _completeCalled = false;
@@ -53,12 +55,23 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
 
   FlyTrackRound get _round => _rounds[_roundIndex];
 
-  FlyCell get _visibleCell {
+  FlyCell? get _visibleCell {
     if (_phase == FlyTrackPhase.replay || _phase == FlyTrackPhase.feedback) {
       return _round.path[_replayPathIndex];
     }
 
-    return _round.start;
+    if (_phase == FlyTrackPhase.memorize) {
+      return _round.start;
+    }
+
+    return null;
+  }
+
+  Offset? get _visiblePosition {
+    if (_phase == FlyTrackPhase.tracking) {
+      return _departingFlyPosition;
+    }
+    return null;
   }
 
   @override
@@ -117,10 +130,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
   }
 
   List<FlyTrackRound> _generateRounds() {
-    final snapshotSeed = readTrainerSnapshotSeed(
-      'fly-track',
-      widget.params,
-    );
+    final snapshotSeed = readTrainerSnapshotSeed('fly-track', widget.params);
     return generateFlyTrackRounds(
       GenerateFlyTrackRoundsInput(
         gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
@@ -145,6 +155,8 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       _rounds = _generateRounds();
       _roundIndex = 0;
       _selectedCell = null;
+      _departingFlyPosition = null;
+      _departingFlyOpacity = 1;
       _replayPathIndex = 0;
       _fireworksKey = 0;
       _completeCalled = false;
@@ -208,8 +220,24 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() => _phase = FlyTrackPhase.tracking);
-        unawaited(_runTracking(runToken));
+        setState(() => _phase = FlyTrackPhase.memorize);
+        _countdownTimer = Timer(
+          const Duration(milliseconds: _memorizeStartMs),
+          () {
+            if (!mounted || !identical(runToken, _runToken)) {
+              return;
+            }
+            setState(() {
+              _departingFlyPosition = Offset(
+                _round.start.column.toDouble(),
+                _round.start.row.toDouble(),
+              );
+              _departingFlyOpacity = 1;
+              _phase = FlyTrackPhase.tracking;
+            });
+            unawaited(_runTracking(runToken));
+          },
+        );
         return;
       }
 
@@ -237,13 +265,41 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       }
 
       final step = round.steps[stepIndex];
-      await playFlyTrackAudio(
+      final audioFuture = playFlyTrackAudio(
         getFlyTrackMoveAudioAssets(
           step.direction,
           step.distance,
           includeFlyMoved: stepIndex == 0,
         ),
       );
+
+      if (stepIndex == 0) {
+        await Future<void>.delayed(
+          const Duration(milliseconds: _flyDepartureDelayMs),
+        );
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+
+        final firstTarget = round.path[1];
+        setState(() {
+          _departingFlyPosition = Offset(
+            round.start.column +
+                _sign(firstTarget.column - round.start.column) * 0.72,
+            round.start.row + _sign(firstTarget.row - round.start.row) * 0.72,
+          );
+          _departingFlyOpacity = 0;
+        });
+        await Future.wait([
+          audioFuture,
+          Future<void>.delayed(const Duration(milliseconds: _flyDepartureMs)),
+        ]);
+        if (mounted && identical(runToken, _runToken)) {
+          setState(() => _departingFlyPosition = null);
+        }
+      } else {
+        await audioFuture;
+      }
 
       if (!mounted || !identical(runToken, _runToken)) {
         return;
@@ -298,6 +354,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       }
 
       setState(() => _replayPathIndex = stepIndex + 1);
+      await Future<void>.delayed(const Duration(milliseconds: _replayMoveMs));
     }
 
     if (!mounted || !identical(runToken, _runToken)) {
@@ -349,6 +406,12 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
     return left.row == right.row && left.column == right.column;
   }
 
+  double _sign(int value) => value == 0
+      ? 0
+      : value.isNegative
+      ? -1
+      : 1;
+
   @override
   Widget build(BuildContext context) {
     if (_phase == FlyTrackPhase.instruction) {
@@ -375,14 +438,49 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
     }
 
     return TrainerSceneFill(
-      child: FlyTrackGrid(
-        fireworksKey: _fireworksKey,
-        gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
-        onCellSelect: _onCellSelect,
-        phase: _phase,
-        round: _round,
-        selectedCell: _selectedCell,
-        visibleCell: _visibleCell,
+      child: Stack(
+        children: [
+          FlyTrackGrid(
+            fireworksKey: _fireworksKey,
+            gridSize: _readIntParam('gridSize', kFlyTrackGridSizeDefault),
+            onCellSelect: _onCellSelect,
+            phase: _phase,
+            replayPathIndex: _replayPathIndex,
+            round: _round,
+            selectedCell: _selectedCell,
+            flyOpacity: _phase == FlyTrackPhase.tracking
+                ? _departingFlyOpacity
+                : 1,
+            visibleCell: _visibleCell,
+            visiblePosition: _visiblePosition,
+          ),
+          if (_rounds.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 16,
+              child: IgnorePointer(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _rounds.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index <= _roundIndex
+                            ? const Color(0xFF2B59C3)
+                            : const Color(0x242B59C3),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

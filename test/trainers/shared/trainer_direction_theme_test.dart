@@ -21,6 +21,10 @@ void main() {
         trainerDirectionThemes[TrainerDirection.mental]!.secondary,
         const Color(0xFF5BC4D6),
       );
+      expect(
+        trainerDirectionThemes[TrainerDirection.intel]!.secondary,
+        const Color(0xFFF2B84B),
+      );
     });
 
     testWidgets('provides direction and disables ambient motion', (

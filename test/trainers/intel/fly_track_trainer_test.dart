@@ -11,7 +11,9 @@ import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 void main() {
   group('FlyTrackTrainer', () {
-    testWidgets('starts in instruction phase inside TrainerScene', (tester) async {
+    testWidgets('starts in instruction phase inside TrainerScene', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -39,7 +41,9 @@ void main() {
       expect(find.text('СТАРТ'), findsNothing);
     });
 
-    testWidgets('bottom row cells stay inside the square field', (tester) async {
+    testWidgets('bottom row cells stay inside the square field', (
+      tester,
+    ) async {
       const fieldKey = Key('fly-track-grid-field');
 
       await tester.pumpWidget(
@@ -53,6 +57,7 @@ void main() {
                 gridSize: 3,
                 onCellSelect: (_) {},
                 phase: FlyTrackPhase.answer,
+                replayPathIndex: 0,
                 round: generateFlyTrackRound(
                   GenerateFlyTrackRoundInput(
                     gridSize: 3,
@@ -61,7 +66,9 @@ void main() {
                   ),
                 ),
                 selectedCell: null,
+                flyOpacity: 1,
                 visibleCell: const FlyCell(row: 1, column: 1),
+                visiblePosition: null,
               ),
             ),
           ),
@@ -108,36 +115,42 @@ void main() {
 
   group('fly-track scene QA (progon 1.3)', () {
     test('trainer implements web session phases and timings', () {
-      final trainerSource =
-          File('lib/trainers/intel/fly_track/fly_track_trainer.dart')
-              .readAsStringSync();
-      final gridSource =
-          File('lib/trainers/intel/fly_track/fly_track_grid.dart')
-              .readAsStringSync();
+      final trainerSource = File(
+        'lib/trainers/intel/fly_track/fly_track_trainer.dart',
+      ).readAsStringSync();
+      final gridSource = File(
+        'lib/trainers/intel/fly_track/fly_track_grid.dart',
+      ).readAsStringSync();
 
       expect(trainerSource, contains('FlyTrackPhase.instruction'));
       expect(trainerSource, contains('FlyTrackPhase.countdown'));
+      expect(trainerSource, contains('FlyTrackPhase.memorize'));
       expect(trainerSource, contains('FlyTrackPhase.tracking'));
       expect(trainerSource, contains('FlyTrackPhase.answer'));
       expect(trainerSource, contains('FlyTrackPhase.replay'));
       expect(trainerSource, contains('FlyTrackPhase.feedback'));
       expect(trainerSource, contains('_countdownStepMs = 750'));
+      expect(trainerSource, contains('_memorizeStartMs = 1500'));
+      expect(trainerSource, contains('_flyDepartureDelayMs = 280'));
+      expect(trainerSource, contains('_flyDepartureMs = 600'));
+      expect(trainerSource, contains('_replayMoveMs = 420'));
       expect(trainerSource, contains('_feedbackMs = 1600'));
       expect(trainerSource, contains('includeFlyMoved: stepIndex == 0'));
       expect(trainerSource, contains('getFlyTrackReplayAudioAssets'));
       expect(trainerSource, contains('TrainerInstructionScene'));
       expect(trainerSource, contains('loadTrainerInstructionDurationMs'));
       expect(trainerSource, contains('_fireworksKey'));
-      expect(
-        trainerSource,
-        contains("readTrainerSnapshotSeed(\n      'fly-track'"),
-      );
+      expect(trainerSource, contains('readTrainerSnapshotSeed'));
+      expect(trainerSource, contains("'fly-track'"));
       expect(
         trainerSource,
         contains('TrainerSnapshotRandom(snapshotSeed).nextDouble'),
       );
       expect(gridSource, contains('AnswerFireworksBurst'));
       expect(gridSource, contains('FlyGlyph'));
+      expect(gridSource, contains('AnimatedPositioned'));
+      expect(gridSource, contains('_FlyRoutePainter'));
+      expect(gridSource, contains('Color(0xD9F2B84B)'));
     });
   });
 }

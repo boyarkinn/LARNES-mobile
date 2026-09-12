@@ -18,7 +18,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-enum LetterFindBySoundPhase { instruction, countdown, play }
+enum LetterFindBySoundPhase { instruction, countdown, listen, play }
 
 /// Web v2: `platform/src/trainers/reading/letter-find-by-sound/component.tsx`
 class LetterFindBySoundTrainer extends StatefulWidget {
@@ -40,7 +40,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
   static const _instructionText = 'Найди букву';
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
-  static const _countdownColor = Color(0xFFDC2626);
+  static const _countdownColor = Color(0xFF249B73);
 
   late final int? _snapshotSeed;
   late final int _layoutSalt;
@@ -57,6 +57,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
   String? _wrongId;
   var _isCompleted = false;
   var _isRevealComplete = false;
+  var _isSoundPlaying = false;
   var _completeCalled = false;
   Object _runToken = Object();
 
@@ -131,6 +132,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
       _wrongId = null;
       _isCompleted = false;
       _isRevealComplete = false;
+      _isSoundPlaying = false;
       _completeCalled = false;
     });
 
@@ -157,12 +159,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
             ),
           )
         : TrainerSnapshotRandom(
-            hashParamsSeed([
-              _snapshotSeed!,
-              targetLetter,
-              _roundIndex,
-              'sound',
-            ]),
+            hashParamsSeed([_snapshotSeed, targetLetter, _roundIndex, 'sound']),
           ).nextDouble;
     final tokens = buildSoundFindTokens(
       BuildSoundFindFieldInput(
@@ -221,9 +218,8 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() => _phase = LetterFindBySoundPhase.play);
-        _scheduleReveal();
-        unawaited(_playTargetLetter());
+        setState(() => _phase = LetterFindBySoundPhase.listen);
+        unawaited(_playTargetLetter(revealAfter: true));
         return;
       }
 
@@ -259,9 +255,19 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
     );
   }
 
-  Future<void> _playTargetLetter() async {
+  Future<void> _playTargetLetter({bool revealAfter = false}) async {
+    setState(() => _isSoundPlaying = true);
     final played = await playLetterSyllableAudio(_targetLetter);
-    if (played || !mounted || _isCompleted) {
+    if (!mounted || _isCompleted) {
+      return;
+    }
+    setState(() => _isSoundPlaying = false);
+
+    if (played) {
+      if (revealAfter) {
+        setState(() => _phase = LetterFindBySoundPhase.play);
+        _scheduleReveal();
+      }
       return;
     }
 
@@ -274,11 +280,16 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
   }
 
   void _handlePlaySound() {
-    if (_isCompleted || _phase != LetterFindBySoundPhase.play) {
+    if (_isCompleted ||
+        _isSoundPlaying ||
+        (_phase != LetterFindBySoundPhase.play &&
+            _phase != LetterFindBySoundPhase.listen)) {
       return;
     }
 
-    unawaited(_playTargetLetter());
+    unawaited(
+      _playTargetLetter(revealAfter: _phase == LetterFindBySoundPhase.listen),
+    );
   }
 
   void _handleTap(String id) {
@@ -328,9 +339,10 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
       _wrongId = null;
       _isCompleted = false;
       _isRevealComplete = false;
+      _isSoundPlaying = false;
+      _phase = LetterFindBySoundPhase.listen;
     });
-    _scheduleReveal();
-    unawaited(_playTargetLetter());
+    unawaited(_playTargetLetter(revealAfter: true));
   }
 
   void _scheduleComplete() {
@@ -385,6 +397,53 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
     final padding = MediaQuery.paddingOf(context);
     final left = padding.left > 14 ? 0.0 : 14.0;
     final bottom = padding.bottom > 14 ? 0.0 : 14.0;
+    final progress = Positioned(
+      left: 28,
+      right: 28,
+      top: 20,
+      child: Semantics(
+        label: 'Буква ${_roundIndex + 1} из ${_practiceLetters.length}',
+        child: Row(
+          children: List.generate(
+            _practiceLetters.length,
+            (progressIndex) => Expanded(
+              child: Container(
+                height: 6,
+                margin: EdgeInsets.only(
+                  right: progressIndex == _practiceLetters.length - 1 ? 0 : 6,
+                ),
+                decoration: BoxDecoration(
+                  color: progressIndex <= _roundIndex
+                      ? const Color(0xFF249B73)
+                      : const Color(0x29249B73),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (_phase == LetterFindBySoundPhase.listen) {
+      return TrainerSceneFill(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            progress,
+            Center(
+              child: SoundPlayButton(
+                active: _isSoundPlaying,
+                disabled: _isSoundPlaying,
+                onPressed: _handlePlaySound,
+                size: 80,
+                variant: SoundPlayButtonVariant.reading,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return TrainerSceneFill(
       child: Stack(
@@ -395,15 +454,18 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
             disabled: _isCompleted || !_isRevealComplete,
             foundIds: _foundIds,
             onTap: _handleTap,
+            presentation: LetterFieldPresentation.readingToken,
             wrongId: _wrongId,
           ),
+          progress,
           Positioned(
             left: left,
             bottom: bottom,
             child: SoundPlayButton(
-              disabled: _isCompleted,
+              active: _isSoundPlaying,
+              disabled: _isCompleted || _isSoundPlaying,
               onPressed: _handlePlaySound,
-              variant: SoundPlayButtonVariant.chrome,
+              variant: SoundPlayButtonVariant.reading,
             ),
           ),
         ],

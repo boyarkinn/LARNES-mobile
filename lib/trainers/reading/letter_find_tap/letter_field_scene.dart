@@ -8,6 +8,8 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_found_burs
 
 enum LetterChipState { normal, found, wrong }
 
+enum LetterFieldPresentation { plain, readingToken }
+
 Color letterDisplayColorFromHex(String? hex) {
   const fallback = Color(0xFF7C3AED);
   if (hex == null || hex.isEmpty) {
@@ -36,6 +38,7 @@ class LetterFieldScene extends StatelessWidget {
     required this.foundIds,
     required this.onTap,
     required this.wrongId,
+    this.presentation = LetterFieldPresentation.plain,
   });
 
   final List<PlacedLetter> letters;
@@ -43,6 +46,7 @@ class LetterFieldScene extends StatelessWidget {
   final Set<String> foundIds;
   final ValueChanged<String> onTap;
   final String? wrongId;
+  final LetterFieldPresentation presentation;
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +73,9 @@ class LetterFieldScene extends StatelessWidget {
                   state: foundIds.contains(letters[index].id)
                       ? LetterChipState.found
                       : wrongId == letters[index].id
-                          ? LetterChipState.wrong
-                          : LetterChipState.normal,
+                      ? LetterChipState.wrong
+                      : LetterChipState.normal,
+                  presentation: presentation,
                   onTap: () => onTap(letters[index].id),
                 ),
               ),
@@ -90,6 +95,7 @@ class _LetterChip extends StatefulWidget {
     required this.disabled,
     required this.enterDelayMs,
     required this.state,
+    required this.presentation,
     required this.onTap,
   });
 
@@ -99,13 +105,15 @@ class _LetterChip extends StatefulWidget {
   final bool disabled;
   final int enterDelayMs;
   final LetterChipState state;
+  final LetterFieldPresentation presentation;
   final VoidCallback onTap;
 
   @override
   State<_LetterChip> createState() => _LetterChipState();
 }
 
-class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin {
+class _LetterChipState extends State<_LetterChip>
+    with TickerProviderStateMixin {
   late final AnimationController _shakeController;
   late final Animation<double> _shakeOffset;
   late final AnimationController _enterController;
@@ -123,13 +131,16 @@ class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin 
       vsync: this,
       duration: const Duration(milliseconds: 450),
     );
-    _shakeOffset = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -7.0, end: 7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 7.0, end: -5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 5.0, end: 0.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut));
+    _shakeOffset =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: -7.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -7.0, end: 7.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 7.0, end: -5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 5.0, end: 0.0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+        );
 
     _enterController = AnimationController(
       vsync: this,
@@ -204,7 +215,15 @@ class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin 
   @override
   Widget build(BuildContext context) {
     final isFound = widget.state == LetterChipState.found;
+    final isReadingToken =
+        widget.presentation == LetterFieldPresentation.readingToken;
     final half = widget.chipSize / 2;
+    final enterOffset = isReadingToken
+        ? Offset(
+            (50 - widget.letter.xPercent) * 0.72,
+            (50 - widget.letter.yPercent) * 0.72,
+          )
+        : Offset.zero;
 
     return Transform.translate(
       offset: Offset(-half, -half),
@@ -216,10 +235,7 @@ class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin 
           alignment: Alignment.center,
           children: [
             if (isFound)
-              LetterFoundBurst(
-                color: _baseColor,
-                size: widget.chipSize,
-              ),
+              LetterFoundBurst(color: _baseColor, size: widget.chipSize),
             AnimatedBuilder(
               animation: Listenable.merge([
                 _shakeController,
@@ -229,19 +245,23 @@ class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin 
               builder: (context, child) {
                 final enterT = _enterProgress.value.clamp(0.0, 1.0);
                 final foundT = _foundProgress.value.clamp(0.0, 1.0);
-                final opacity = isFound ? (1 - foundT).clamp(0.0, 1.0) : enterT;
+                final opacity = isFound && !isReadingToken
+                    ? (1 - foundT).clamp(0.0, 1.0)
+                    : enterT;
                 final scale = isFound
-                    ? 1 + 0.15 * foundT
-                    : 0.88 + 0.12 * enterT;
+                    ? 1 + (isReadingToken ? 0.08 : 0.15) * foundT
+                    : 0.9 + 0.1 * enterT;
+                final revealOffset = enterOffset * (1 - enterT);
+                final foundLift = isReadingToken ? -6 * foundT : 0.0;
 
                 return Opacity(
                   opacity: opacity,
                   child: Transform.translate(
-                    offset: Offset(_shakeOffset.value, 0),
-                    child: Transform.scale(
-                      scale: scale,
-                      child: child,
+                    offset: Offset(
+                      revealOffset.dx + _shakeOffset.value,
+                      revealOffset.dy + foundLift,
                     ),
+                    child: Transform.scale(scale: scale, child: child),
                   ),
                 );
               },
@@ -249,20 +269,66 @@ class _LetterChipState extends State<_LetterChip> with TickerProviderStateMixin 
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: widget.disabled || isFound ? null : widget.onTap,
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
+                  borderRadius: isReadingToken
+                      ? BorderRadius.circular(18)
+                      : null,
+                  customBorder: isReadingToken ? null : const CircleBorder(),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
                     width: widget.chipSize,
                     height: widget.chipSize,
-                    child: Center(
-                      child: Text(
-                        widget.letter.letter,
-                        style: TextStyle(
-                          fontSize: widget.fontSize,
-                          fontWeight: FontWeight.w700,
-                          color: _textColor,
-                          height: 1,
+                    alignment: Alignment.center,
+                    decoration: isReadingToken
+                        ? BoxDecoration(
+                            color: const Color(0xF2FFFDF4),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: widget.state == LetterChipState.wrong
+                                  ? const Color(0xFFF43F5E)
+                                  : isFound
+                                  ? const Color(0xFF249B73)
+                                  : const Color(0x40249B73),
+                              width: 2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isFound
+                                    ? const Color(0x38249B73)
+                                    : const Color(0x1F187B5A),
+                                blurRadius: isFound ? 28 : 22,
+                                offset: Offset(0, isFound ? 12 : 8),
+                              ),
+                            ],
+                          )
+                        : null,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (isFound && isReadingToken)
+                          Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: const Color(0x8C249B73),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        Center(
+                          child: Text(
+                            widget.letter.letter,
+                            style: TextStyle(
+                              fontSize: widget.fontSize,
+                              fontWeight: FontWeight.w700,
+                              color: _textColor,
+                              height: 1,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),

@@ -11,7 +11,9 @@ import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
 void main() {
   group('LetterFindBySoundTrainer', () {
-    testWidgets('starts in instruction phase inside TrainerScene', (tester) async {
+    testWidgets('starts in instruction phase inside TrainerScene', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -77,12 +79,15 @@ void main() {
       ).readAsStringSync();
 
       expect(trainerSource, contains('LetterFindBySoundPhase.countdown'));
+      expect(trainerSource, contains('LetterFindBySoundPhase.listen'));
       expect(trainerSource, contains("_countdownStepMs = 750"));
       expect(trainerSource, contains('TrainerInstructionScene'));
       expect(trainerSource, contains('Найди букву'));
       expect(trainerSource, contains('playLetterSyllableAudio'));
       expect(trainerSource, contains('playLetterFindBySoundInstruction'));
-      expect(trainerSource, contains('SoundPlayButtonVariant.chrome'));
+      expect(trainerSource, contains('SoundPlayButtonVariant.reading'));
+      expect(trainerSource, contains('LetterFieldPresentation.readingToken'));
+      expect(trainerSource, contains('_isSoundPlaying'));
       expect(trainerSource, contains('Positioned'));
       expect(trainerSource, contains('resolveSoundPracticeLetters'));
       expect(trainerSource, contains('_roundIndex'));

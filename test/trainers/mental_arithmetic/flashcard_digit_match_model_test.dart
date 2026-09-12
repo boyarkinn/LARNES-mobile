@@ -20,8 +20,19 @@ void main() {
       );
 
       expect(first.length, 2);
-      expect(first, second);
-      expect(first[0]!.values, isNot(first[1]!.values));
+      expect(
+        first.map((round) => round.values).toList(),
+        second.map((round) => round.values).toList(),
+      );
+      expect(
+        first
+            .map((round) => round.leftItems.map((item) => item.id).toList())
+            .toList(),
+        second
+            .map((round) => round.leftItems.map((item) => item.id).toList())
+            .toList(),
+      );
+      expect(first[0].values, isNot(first[1].values));
     });
 
     test('assigns different left and right colors per pair', () {
@@ -100,12 +111,7 @@ void main() {
           targetMode: 'dots',
           totalRods: 2,
         ),
-        {
-          'pairCount': 3,
-          'rounds': 2,
-          'targetMode': 'dots',
-          'totalRods': 2,
-        },
+        {'pairCount': 3, 'rounds': 2, 'targetMode': 'dots', 'totalRods': 2},
       );
     });
   });

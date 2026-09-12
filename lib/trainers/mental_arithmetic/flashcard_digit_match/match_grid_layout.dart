@@ -62,41 +62,43 @@ const _paddingBottomFraction = 0.08;
 const _rowGapSvh = 0.05;
 const _columnGapSvh = 0.03;
 
-const _leftGridPositions = <int, List<({int col, int row, int colSpan, int rowSpan})>>{
-  2: [
-    (col: 0, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 0, row: 1, colSpan: 1, rowSpan: 1),
-  ],
-  3: [
-    (col: 0, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 0, row: 1, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 0, colSpan: 1, rowSpan: 2),
-  ],
-  4: [
-    (col: 0, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 0, row: 1, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 1, colSpan: 1, rowSpan: 1),
-  ],
-};
+const _leftGridPositions =
+    <int, List<({int col, int row, int colSpan, int rowSpan})>>{
+      2: [
+        (col: 0, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 0, row: 1, colSpan: 1, rowSpan: 1),
+      ],
+      3: [
+        (col: 0, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 0, row: 1, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 0, colSpan: 1, rowSpan: 2),
+      ],
+      4: [
+        (col: 0, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 0, row: 1, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 1, colSpan: 1, rowSpan: 1),
+      ],
+    };
 
-const _rightGridPositions = <int, List<({int col, int row, int colSpan, int rowSpan})>>{
-  2: [
-    (col: 1, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 1, colSpan: 1, rowSpan: 1),
-  ],
-  3: [
-    (col: 1, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 1, colSpan: 1, rowSpan: 1),
-    (col: 0, row: 0, colSpan: 1, rowSpan: 2),
-  ],
-  4: [
-    (col: 0, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 0, row: 1, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 0, colSpan: 1, rowSpan: 1),
-    (col: 1, row: 1, colSpan: 1, rowSpan: 1),
-  ],
-};
+const _rightGridPositions =
+    <int, List<({int col, int row, int colSpan, int rowSpan})>>{
+      2: [
+        (col: 1, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 1, colSpan: 1, rowSpan: 1),
+      ],
+      3: [
+        (col: 1, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 1, colSpan: 1, rowSpan: 1),
+        (col: 0, row: 0, colSpan: 1, rowSpan: 2),
+      ],
+      4: [
+        (col: 0, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 0, row: 1, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 0, colSpan: 1, rowSpan: 1),
+        (col: 1, row: 1, colSpan: 1, rowSpan: 1),
+      ],
+    };
 
 MatchBoardLayout computeMatchBoardLayout({
   required double viewportWidth,
@@ -107,14 +109,8 @@ MatchBoardLayout computeMatchBoardLayout({
   final usableHeight = math.max(viewportHeight - paddingTop - paddingBottom, 0);
   final sideWidth = math.max(viewportWidth / 2, 0);
 
-  final rowGap = math.min(
-    viewportHeight * _rowGapSvh,
-    usableHeight * 0.06,
-  );
-  final columnGap = math.min(
-    viewportHeight * _columnGapSvh,
-    sideWidth * 0.04,
-  );
+  final rowGap = math.min(viewportHeight * _rowGapSvh, usableHeight * 0.06);
+  final columnGap = math.min(viewportHeight * _columnGapSvh, sideWidth * 0.04);
 
   final svhRowCap = _minSvh(viewportHeight, _rowHeightSvh, _rowHeightMaxPx);
   final fitRowHeight = usableHeight > rowGap
@@ -162,7 +158,9 @@ MatchGridSlotLayout getMatchGridSlotLayout({
     return MatchGridSlotLayout(
       column: 0,
       row: 0,
-      alignment: side == MatchSide.left ? Alignment.centerLeft : Alignment.centerRight,
+      alignment: side == MatchSide.left
+          ? Alignment.centerLeft
+          : Alignment.centerRight,
     );
   }
 
@@ -208,7 +206,8 @@ double matchDigitFontSize(double viewportWidth, double viewportHeight) {
   ).digitFontSize;
 }
 
-double matchSidePaddingTop(double viewportHeight) => viewportHeight * _paddingTopFraction;
+double matchSidePaddingTop(double viewportHeight) =>
+    viewportHeight * _paddingTopFraction;
 
 double matchSidePaddingBottom(double viewportHeight) =>
     viewportHeight * _paddingBottomFraction;

@@ -31,10 +31,7 @@ class _ActiveDraw {
 }
 
 class _WrongFlash {
-  const _WrongFlash({
-    required this.from,
-    required this.to,
-  });
+  const _WrongFlash({required this.from, required this.to});
 
   final Offset from;
   final Offset to;
@@ -69,6 +66,7 @@ class _MatchBoardState extends State<MatchBoard> {
 
   _ActiveDraw? _activeDraw;
   _WrongFlash? _wrongFlash;
+  String? _selectedLeftId;
   Timer? _wrongFlashTimer;
   var _layoutVersion = 0;
 
@@ -83,6 +81,7 @@ class _MatchBoardState extends State<MatchBoard> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.round != widget.round) {
       _ensureKeys();
+      _selectedLeftId = null;
     }
     if (oldWidget.connections != widget.connections) {
       _scheduleLineRelayout();
@@ -161,7 +160,9 @@ class _MatchBoardState extends State<MatchBoard> {
           .firstOrNull;
 
       colors.add(
-        leftItem == null ? const Color(0xFF34D399) : Color(leftItem.leftDisplayColor),
+        leftItem == null
+            ? const Color(0xFF34D399)
+            : Color(leftItem.leftDisplayColor),
       );
     }
 
@@ -241,7 +242,10 @@ class _MatchBoardState extends State<MatchBoard> {
 
     final point = _relativePoint(event.position);
     if (point != null) {
-      _finishDraw(point);
+      final connected = _finishDraw(point);
+      if (!connected && mounted) {
+        setState(() => _selectedLeftId = leftId);
+      }
     }
   }
 
@@ -264,10 +268,10 @@ class _MatchBoardState extends State<MatchBoard> {
     });
   }
 
-  void _finishDraw(Offset releasePoint) {
+  bool _finishDraw(Offset releasePoint) {
     final activeDraw = _activeDraw;
     if (activeDraw == null) {
-      return;
+      return false;
     }
 
     setState(() => _activeDraw = null);
@@ -277,16 +281,25 @@ class _MatchBoardState extends State<MatchBoard> {
         .firstOrNull;
 
     if (leftItem == null) {
-      return;
+      return false;
     }
 
     final rightItem = _findRightTarget([releasePoint, activeDraw.to]);
 
     if (rightItem == null) {
-      return;
+      return false;
     }
 
+    return _attemptConnection(leftItem, rightItem, activeDraw.from);
+  }
+
+  bool _attemptConnection(
+    MatchItem leftItem,
+    MatchItem rightItem,
+    Offset from,
+  ) {
     if (isCorrectConnection(leftItem.value, rightItem.value)) {
+      setState(() => _selectedLeftId = null);
       widget.onConnect(
         MatchConnection(
           leftId: leftItem.id,
@@ -294,17 +307,18 @@ class _MatchBoardState extends State<MatchBoard> {
           value: leftItem.value,
         ),
       );
-      return;
+      return true;
     }
 
     final rightKey = _rightKeys[rightItem.id];
-    final wrongTo =
-        rightKey == null ? null : _getAnchor(rightKey, rightSide: false);
+    final wrongTo = rightKey == null
+        ? null
+        : _getAnchor(rightKey, rightSide: false);
 
     if (wrongTo != null) {
       _wrongFlashTimer?.cancel();
       setState(() {
-        _wrongFlash = _WrongFlash(from: activeDraw.from, to: wrongTo);
+        _wrongFlash = _WrongFlash(from: from, to: wrongTo);
       });
       _wrongFlashTimer = Timer(
         const Duration(milliseconds: TrainerTimings.wrongConnectionFlashMs),
@@ -314,6 +328,32 @@ class _MatchBoardState extends State<MatchBoard> {
           }
         },
       );
+    }
+    return false;
+  }
+
+  void _handleRightTap(String rightId) {
+    final leftId = _selectedLeftId;
+    if (leftId == null ||
+        widget.disabled ||
+        _connectedRightIds.contains(rightId)) {
+      return;
+    }
+
+    final leftItem = widget.round.leftItems
+        .where((item) => item.id == leftId)
+        .firstOrNull;
+    final rightItem = widget.round.rightItems
+        .where((item) => item.id == rightId)
+        .firstOrNull;
+    final leftKey = _leftKeys[leftId];
+    if (leftItem == null || rightItem == null || leftKey == null) {
+      return;
+    }
+
+    final from = _getAnchor(leftKey, rightSide: true);
+    if (from != null) {
+      _attemptConnection(leftItem, rightItem, from);
     }
   }
 
@@ -391,16 +431,15 @@ class _MatchBoardState extends State<MatchBoard> {
     required double columnGap,
     required Widget Function(MatchItem item, GlobalKey key) buildItem,
   }) {
-    final slot = getMatchGridSlotLayout(
-      index: index,
-      count: count,
-      side: side,
-    );
-    final key = side == MatchSide.left ? _leftKeys[item.id]! : _rightKeys[item.id]!;
+    final slot = getMatchGridSlotLayout(index: index, count: count, side: side);
+    final key = side == MatchSide.left
+        ? _leftKeys[item.id]!
+        : _rightKeys[item.id]!;
 
     final left = slot.column * (columnWidth + columnGap);
     final top = slot.row * (rowHeight + rowGap);
-    final width = columnWidth * slot.columnSpan + columnGap * (slot.columnSpan - 1);
+    final width =
+        columnWidth * slot.columnSpan + columnGap * (slot.columnSpan - 1);
     final height = rowHeight * slot.rowSpan + rowGap * (slot.rowSpan - 1);
 
     return Positioned(
@@ -413,10 +452,7 @@ class _MatchBoardState extends State<MatchBoard> {
         child: FittedBox(
           fit: BoxFit.scaleDown,
           alignment: slot.alignment,
-          child: KeyedSubtree(
-            key: key,
-            child: buildItem(item, key),
-          ),
+          child: KeyedSubtree(key: key, child: buildItem(item, key)),
         ),
       ),
     );
@@ -426,7 +462,8 @@ class _MatchBoardState extends State<MatchBoard> {
   Widget build(BuildContext context) {
     final lockedLines = _lockedLines();
     final lockedLineColors = _lockedLineColors();
-    final missingAnchors = widget.connections.isNotEmpty &&
+    final missingAnchors =
+        widget.connections.isNotEmpty &&
         lockedLines.length < widget.connections.length;
 
     if (missingAnchors) {
@@ -474,6 +511,7 @@ class _MatchBoardState extends State<MatchBoard> {
                             activeBeadColor: Color(item.leftDisplayColor),
                             connected: _connectedLeftIds.contains(item.id),
                             disabled: widget.disabled,
+                            selected: _selectedLeftId == item.id,
                             onPointerDown: (event) =>
                                 _handleLeftPointerDown(item.id, event),
                             onPointerUp: (event) =>
@@ -489,20 +527,76 @@ class _MatchBoardState extends State<MatchBoard> {
                           items: widget.round.rightItems,
                           count: pairCount,
                           layout: layout,
-                          buildItem: (item, _) => widget.targetMode == FlashcardTargetMode.dots
-                              ? DotTarget(
-                                  color: Color(item.rightDisplayColor),
-                                  connected: _connectedRightIds.contains(item.id),
-                                  count: item.value,
-                                  size: layout.digitSize,
-                                )
-                              : DigitTarget(
-                                  color: Color(item.rightDisplayColor),
-                                  connected: _connectedRightIds.contains(item.id),
-                                  digit: item.value,
-                                  fontSize: layout.digitFontSize,
-                                  size: layout.digitSize,
-                                ),
+                          buildItem: (item, _) {
+                            final connected = _connectedRightIds.contains(
+                              item.id,
+                            );
+                            return GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: _selectedLeftId == null || connected
+                                  ? null
+                                  : () => _handleRightTap(item.id),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  widget.targetMode == FlashcardTargetMode.dots
+                                      ? DotTarget(
+                                          color: Color(item.rightDisplayColor),
+                                          connected: connected,
+                                          count: item.value,
+                                          size: layout.digitSize,
+                                        )
+                                      : DigitTarget(
+                                          color: Color(item.rightDisplayColor),
+                                          connected: connected,
+                                          digit: item.value,
+                                          fontSize: layout.digitFontSize,
+                                          size: layout.digitSize,
+                                        ),
+                                  Positioned(
+                                    left: -9,
+                                    top: 0,
+                                    bottom: 0,
+                                    child: Center(
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 150,
+                                        ),
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: connected
+                                              ? const Color(0xFF10B981)
+                                              : _selectedLeftId != null
+                                              ? const Color(0xFFE45B4E)
+                                              : const Color(0xFF7759D6),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (connected)
+                                    const Positioned(
+                                      right: 6,
+                                      top: 6,
+                                      child: CircleAvatar(
+                                        radius: 12,
+                                        backgroundColor: Color(0xFF10B981),
+                                        child: Icon(
+                                          Icons.check_rounded,
+                                          color: Colors.white,
+                                          size: 17,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -517,7 +611,10 @@ class _MatchBoardState extends State<MatchBoard> {
                             ? const Color(0xFFFB923C)
                             : Color(
                                 widget.round.leftItems
-                                        .where((item) => item.id == _activeDraw!.leftId)
+                                        .where(
+                                          (item) =>
+                                              item.id == _activeDraw!.leftId,
+                                        )
                                         .firstOrNull
                                         ?.leftDisplayColor ??
                                     0xFFFB923C,
@@ -564,14 +661,13 @@ class _ConnectionLinesPainter extends CustomPainter {
         ..strokeWidth = 4
         ..strokeCap = StrokeCap.round;
 
-      canvas.drawLine(line.from, line.to, paint);
+      canvas.drawPath(_connectionPath(line.from, line.to), paint);
     }
 
     if (activeDraw != null) {
-      _drawDashedLine(
+      _drawDashedPath(
         canvas,
-        activeDraw!.from,
-        activeDraw!.to,
+        _connectionPath(activeDraw!.from, activeDraw!.to),
         Paint()
           ..color = activeDrawColor
           ..strokeWidth = 4
@@ -580,9 +676,8 @@ class _ConnectionLinesPainter extends CustomPainter {
     }
 
     if (wrongFlash != null) {
-      canvas.drawLine(
-        wrongFlash!.from,
-        wrongFlash!.to,
+      canvas.drawPath(
+        _connectionPath(wrongFlash!.from, wrongFlash!.to),
         Paint()
           ..color = const Color(0xFFF87171)
           ..strokeWidth = 4
@@ -591,11 +686,14 @@ class _ConnectionLinesPainter extends CustomPainter {
     }
   }
 
-  void _drawDashedLine(Canvas canvas, Offset from, Offset to, Paint paint) {
-    final path = Path()
+  Path _connectionPath(Offset from, Offset to) {
+    final bend = math.max(28.0, (to.dx - from.dx).abs() * 0.38);
+    return Path()
       ..moveTo(from.dx, from.dy)
-      ..lineTo(to.dx, to.dy);
+      ..cubicTo(from.dx + bend, from.dy, to.dx - bend, to.dy, to.dx, to.dy);
+  }
 
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
     const dashWidth = 8.0;
     const dashSpace = 6.0;
 

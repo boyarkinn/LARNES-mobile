@@ -13,7 +13,9 @@ const maxMatchRounds = 10;
 enum FlashcardTargetMode { digits, dots }
 
 FlashcardTargetMode normalizeTargetMode(Object? value) {
-  return value == 'dots' ? FlashcardTargetMode.dots : FlashcardTargetMode.digits;
+  return value == 'dots'
+      ? FlashcardTargetMode.dots
+      : FlashcardTargetMode.digits;
 }
 
 class MatchItem {
@@ -62,11 +64,18 @@ int clampRounds(int rounds) {
   return math.max(minMatchRounds, math.min(maxMatchRounds, rounds));
 }
 
-List<int> generateRandomValues(int pairCount, int totalRods, double Function() rng) {
+List<int> generateRandomValues(
+  int pairCount,
+  int totalRods,
+  double Function() rng,
+) {
   final maxValue = getMaxValueForRods(totalRods);
   final pool = List<int>.generate(maxValue + 1, (index) => index);
 
-  return _shuffleItems(pool, rng).take(clampPairCount(pairCount)).toList(growable: false);
+  return _shuffleItems(
+    pool,
+    rng,
+  ).take(clampPairCount(pairCount)).toList(growable: false);
 }
 
 List<T> _shuffleItems<T>(List<T> items, double Function() rng) {
@@ -91,18 +100,16 @@ MatchRound buildMatchRound(
   final items = values
       .asMap()
       .entries
-      .map(
-        (entry) {
-          final pair = colorPairs[entry.key];
+      .map((entry) {
+        final pair = colorPairs[entry.key];
 
-          return MatchItem(
-            id: 'pair-${entry.key}',
-            value: entry.value,
-            leftDisplayColor: pair.left,
-            rightDisplayColor: pair.right,
-          );
-        },
-      )
+        return MatchItem(
+          id: 'pair-${entry.key}',
+          value: entry.value,
+          leftDisplayColor: pair.left,
+          rightDisplayColor: pair.right,
+        );
+      })
       .toList(growable: false);
 
   return MatchRound(
@@ -155,7 +162,8 @@ bool isRoundComplete(List<MatchConnection> connections, int pairCount) {
   final rightIds = <String>{};
 
   for (final connection in connections) {
-    if (leftIds.contains(connection.leftId) || rightIds.contains(connection.rightId)) {
+    if (leftIds.contains(connection.leftId) ||
+        rightIds.contains(connection.rightId)) {
       return false;
     }
 
@@ -173,9 +181,15 @@ Map<String, dynamic> parseFlashcardMatchParamsFromInput({
   Object? totalRods,
 }) {
   return {
-    'pairCount': clampPairCount((num.tryParse('$pairCount') ?? minMatchPairs).truncate()),
-    'rounds': clampRounds((num.tryParse('$rounds') ?? minMatchRounds).truncate()),
-    'targetMode': normalizeTargetMode(targetMode) == FlashcardTargetMode.dots ? 'dots' : 'digits',
+    'pairCount': clampPairCount(
+      (num.tryParse('$pairCount') ?? minMatchPairs).truncate(),
+    ),
+    'rounds': clampRounds(
+      (num.tryParse('$rounds') ?? minMatchRounds).truncate(),
+    ),
+    'targetMode': normalizeTargetMode(targetMode) == FlashcardTargetMode.dots
+        ? 'dots'
+        : 'digits',
     'totalRods': math.max(1, (num.tryParse('$totalRods') ?? 1).truncate()),
   };
 }

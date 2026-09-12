@@ -29,10 +29,11 @@ class FlashcardDigitMatchTrainer extends StatefulWidget {
       _FlashcardDigitMatchTrainerState();
 }
 
-class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer> {
+class _FlashcardDigitMatchTrainerState
+    extends State<FlashcardDigitMatchTrainer> {
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
-  static const _countdownColor = Color(0xFFDC2626);
+  static const _countdownColor = Color(0xFFE45B4E);
   static const _roundPauseMs = 700;
 
   late final int _pairCount;
@@ -53,8 +54,9 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
   Timer? _countdownTimer;
   Timer? _roundTimer;
 
-  MatchRound? get _currentRound =>
-      _rounds.isEmpty ? null : _rounds[_roundIndex.clamp(0, _rounds.length - 1)];
+  MatchRound? get _currentRound => _rounds.isEmpty
+      ? null
+      : _rounds[_roundIndex.clamp(0, _rounds.length - 1)];
 
   @override
   void initState() {
@@ -251,13 +253,58 @@ class _FlashcardDigitMatchTrainerState extends State<FlashcardDigitMatchTrainer>
     }
 
     return TrainerScene(
-      child: MatchBoard(
-        connections: _connections,
-        disabled: _isRoundComplete,
-        onConnect: _handleConnect,
-        round: currentRound,
-        targetMode: _targetMode,
-        totalRods: _totalRods,
+      child: Stack(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: const Cubic(0.23, 1, 0.32, 1),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0.03, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: MatchBoard(
+              key: ValueKey(_roundIndex),
+              connections: _connections,
+              disabled: _isRoundComplete,
+              onConnect: _handleConnect,
+              round: currentRound,
+              targetMode: _targetMode,
+              totalRods: _totalRods,
+            ),
+          ),
+          if (_rounds.length > 1)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 16,
+              child: IgnorePointer(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _rounds.length,
+                    (index) => AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index <= _roundIndex
+                            ? const Color(0xFFE45B4E)
+                            : const Color(0x247759D6),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1,4 +1,4 @@
-/// Web: `platform/src/trainers/mental-arithmetic/flashcard-digit-match/audio.ts`
+// Web: `platform/src/trainers/mental-arithmetic/flashcard-digit-match/audio.ts`
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
@@ -13,10 +13,9 @@ String getFlashcardDigitMatchInstructionAudioAsset() =>
     '$kFlashcardDigitMatchAudioAssetBase/instruction.mp3';
 
 Future<void> playFlashcardDigitMatchInstruction() {
-  return getSharedClipPlayer().play(
-    [getFlashcardDigitMatchInstructionAudioAsset()],
-    playbackRate: kFlashcardDigitMatchInstructionPlaybackRate,
-  );
+  return getSharedClipPlayer().play([
+    getFlashcardDigitMatchInstructionAudioAsset(),
+  ], playbackRate: kFlashcardDigitMatchInstructionPlaybackRate);
 }
 
 Future<void> cancelFlashcardDigitMatchAudio() {

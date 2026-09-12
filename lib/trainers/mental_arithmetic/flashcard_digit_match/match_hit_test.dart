@@ -21,7 +21,8 @@ bool isPointInsideBoardRect(
   final left = targetOrigin.dx - boardOrigin.dx - padding;
   final right = targetOrigin.dx - boardOrigin.dx + target.size.width + padding;
   final top = targetOrigin.dy - boardOrigin.dy - padding;
-  final bottom = targetOrigin.dy - boardOrigin.dy + target.size.height + padding;
+  final bottom =
+      targetOrigin.dy - boardOrigin.dy + target.size.height + padding;
 
   return point.x >= left &&
       point.x <= right &&
@@ -85,4 +86,5 @@ T? pickTargetAtPoints<T extends Object>({
 
 Offset boardPointToOffset(BoardPoint point) => Offset(point.x, point.y);
 
-BoardPoint offsetToBoardPoint(Offset offset) => BoardPoint(offset.dx, offset.dy);
+BoardPoint offsetToBoardPoint(Offset offset) =>
+    BoardPoint(offset.dx, offset.dy);

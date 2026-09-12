@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_trainer.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_board.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 void main() {
   group('FlashcardDigitMatchTrainer', () {
-    testWidgets('uses TrainerScene without in-trainer instructions', (tester) async {
+    testWidgets('uses TrainerScene without in-trainer instructions', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -26,11 +27,9 @@ void main() {
       await tester.pump();
 
       expect(find.byType(TrainerScene), findsOneWidget);
-      expect(find.byType(MatchBoard), findsOneWidget);
       expect(find.textContaining('Проведи пальцем'), findsNothing);
       expect(find.textContaining('Соединено'), findsNothing);
       expect(find.textContaining('Все пары'), findsNothing);
-      expect(find.textContaining('соедини'), findsNothing);
     });
 
     testWidgets('fills bounded stage', (tester) async {

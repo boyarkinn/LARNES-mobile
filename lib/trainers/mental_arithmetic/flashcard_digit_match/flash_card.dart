@@ -12,6 +12,7 @@ class FlashCard extends StatelessWidget {
     required this.activeBeadColor,
     this.connected = false,
     this.disabled = false,
+    this.selected = false,
     this.onPointerDown,
     this.onPointerUp,
   });
@@ -22,6 +23,7 @@ class FlashCard extends StatelessWidget {
   final Color activeBeadColor;
   final bool connected;
   final bool disabled;
+  final bool selected;
   final void Function(PointerDownEvent event)? onPointerDown;
   final void Function(PointerUpEvent event)? onPointerUp;
 
@@ -32,48 +34,99 @@ class FlashCard extends StatelessWidget {
       onPointerDown: disabled || connected ? null : onPointerDown,
       onPointerUp: disabled || connected ? null : onPointerUp,
       child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: connected ? 0.7 : disabled ? 0.4 : 1,
-        child: DecoratedBox(
+        duration: const Duration(milliseconds: 150),
+        opacity: connected
+            ? 0.85
+            : disabled
+            ? 0.4
+            : 1,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: connected
-                  ? const Color(0xFF6EE7B7)
+                  ? const Color(0xFF34D399)
+                  : selected
+                  ? const Color(0xFFE45B4E)
                   : disabled
-                      ? const Color(0xFFE5E7EB)
-                      : const Color(0xFFFED7AA),
+                  ? const Color(0xFFE5E7EB)
+                  : const Color(0x337759D6),
               width: 2,
             ),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFF7ED),
-                Colors.white,
-              ],
-            ),
-            boxShadow: const [
+            color: const Color(0x80FFFFFF),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x0D000000),
-                blurRadius: 4,
-                offset: Offset(0, 1),
+                color: selected
+                    ? const Color(0x1FE45B4E)
+                    : const Color(0x1A7759D6),
+                blurRadius: selected ? 30 : 24,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: SizedBox(
-              height: abacusHeight,
-              child: IgnorePointer(
-                child: AbacusWidget(
-                  activeBeadColor: activeBeadColor,
-                  animate: false,
-                  rods: numberToAbacus(value, totalRods),
-                  totalRods: totalRods,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: SizedBox(
+                  height: abacusHeight,
+                  child: IgnorePointer(
+                    child: AbacusWidget(
+                      activeBeadColor: activeBeadColor,
+                      animate: false,
+                      rods: numberToAbacus(value, totalRods),
+                      totalRods: totalRods,
+                    ),
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                right: -9,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: connected
+                          ? const Color(0xFF10B981)
+                          : selected
+                          ? const Color(0xFFE45B4E)
+                          : const Color(0xFF7759D6),
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: selected
+                          ? const [
+                              BoxShadow(
+                                color: Color(0x33E45B4E),
+                                blurRadius: 10,
+                                spreadRadius: 4,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                ),
+              ),
+              if (connected)
+                const Positioned(
+                  right: 6,
+                  top: 6,
+                  child: CircleAvatar(
+                    radius: 12,
+                    backgroundColor: Color(0xFF10B981),
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

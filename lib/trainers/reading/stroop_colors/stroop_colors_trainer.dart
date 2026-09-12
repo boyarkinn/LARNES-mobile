@@ -12,9 +12,11 @@ import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_sc
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
-enum StroopPhase { instruction, play }
+enum StroopPhase { instruction, countdown, play }
 
 const kStroopColorsInstructionText = 'Назови цвет слова';
+const _countdownLabels = ['3', '2', '1'];
+const _countdownStepMs = 620;
 
 /// Web: `platform/src/trainers/reading/stroop-colors/component.tsx`
 class StroopColorsTrainer extends StatefulWidget {
@@ -32,6 +34,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   late int _displayMs;
 
   var _phase = StroopPhase.instruction;
+  var _countdownLabel = _countdownLabels.first;
   var _instructionLength = 0;
   var _index = 0;
   var _isFinished = false;
@@ -40,6 +43,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
 
   final _instructionTypewriter = TrainerInstructionTypewriter();
   Timer? _slideTimer;
+  Timer? _countdownTimer;
   Timer? _completeTimer;
 
   @override
@@ -63,6 +67,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
   void dispose() {
     _instructionTypewriter.cancel();
     _slideTimer?.cancel();
+    _countdownTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStroopColorsAudio());
     super.dispose();
@@ -95,6 +100,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
     _runToken = runToken;
     _instructionTypewriter.cancel();
     _slideTimer?.cancel();
+    _countdownTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStroopColorsAudio());
 
@@ -119,6 +125,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       );
       _displayMs = (displaySeconds * 1000).round();
       _phase = StroopPhase.instruction;
+      _countdownLabel = _countdownLabels.first;
       _instructionLength = 0;
       _index = 0;
       _isFinished = false;
@@ -158,9 +165,34 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
     _instructionTypewriter.cancel();
     setState(() {
       _instructionLength = kStroopColorsInstructionText.length;
-      _phase = StroopPhase.play;
+      _phase = StroopPhase.countdown;
     });
-    _scheduleSlide();
+    _runCountdown(runToken);
+  }
+
+  void _runCountdown(Object runToken) {
+    _countdownTimer?.cancel();
+    var labelIndex = 0;
+
+    void advance() {
+      if (!mounted || !identical(runToken, _runToken)) {
+        return;
+      }
+      if (labelIndex >= _countdownLabels.length) {
+        setState(() => _phase = StroopPhase.play);
+        _scheduleSlide();
+        return;
+      }
+
+      setState(() => _countdownLabel = _countdownLabels[labelIndex]);
+      labelIndex += 1;
+      _countdownTimer = Timer(
+        const Duration(milliseconds: _countdownStepMs),
+        advance,
+      );
+    }
+
+    advance();
   }
 
   void _scheduleSlide() {
@@ -212,16 +244,84 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       );
     }
 
+    if (_phase == StroopPhase.countdown) {
+      return TrainerScene(
+        child: Center(
+          child: Text(
+            _countdownLabel,
+            style: const TextStyle(
+              color: Color(0xFF249B73),
+              fontSize: 96,
+              fontWeight: FontWeight.w800,
+              height: 1,
+            ),
+          ),
+        ),
+      );
+    }
+
     final current = _items.isEmpty ? null : _items[_index];
 
     return TrainerScene(
-      child: current != null
-          ? StroopColorsScene(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (current != null && !_isFinished)
+            StroopColorsScene(
               inkHex: stroopColors[current.ink]!.hex,
+              itemIndex: _index,
               word: stroopColors[current.word]!.label,
               wordKey: '${current.word}-${current.ink}-$_index',
             )
-          : const SizedBox.expand(),
+          else
+            const Center(
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color(0x59FFFFFF),
+                    shape: BoxShape.circle,
+                    border: Border.fromBorderSide(
+                      BorderSide(color: Color(0x59249B73), width: 3),
+                    ),
+                    boxShadow: [
+                      BoxShadow(color: Color(0x21249B73), blurRadius: 36),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (_items.isNotEmpty)
+            Positioned(
+              left: 28,
+              right: 28,
+              top: 20,
+              child: Semantics(
+                label: 'Слово ${_index + 1} из ${_items.length}',
+                child: Row(
+                  children: List.generate(
+                    _items.length,
+                    (progressIndex) => Expanded(
+                      child: Container(
+                        height: 6,
+                        margin: EdgeInsets.only(
+                          right: progressIndex == _items.length - 1 ? 0 : 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: progressIndex <= _index
+                              ? const Color(0xFF249B73)
+                              : const Color(0x29249B73),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -13,22 +13,19 @@ void main() {
     test('validates agreed defaults and bounds', () {
       final defaults = validateTrainerParams('stroop-colors', {});
       expect(defaults.ok, isTrue, reason: defaults.error);
-      expect(defaults.params, {
-        'displaySeconds': 3.0,
-        'wordCount': 8,
-      });
+      expect(defaults.params, {'displaySeconds': 3.0, 'wordCount': 8});
 
       final custom = validateTrainerParams('stroop-colors', {
         'displaySeconds': 2.5,
         'wordCount': 12,
       });
       expect(custom.ok, isTrue, reason: custom.error);
-      expect(custom.params, {
-        'displaySeconds': 2.5,
-        'wordCount': 12,
-      });
+      expect(custom.params, {'displaySeconds': 2.5, 'wordCount': 12});
 
-      expect(validateTrainerParams('stroop-colors', {'wordCount': 0}).ok, isFalse);
+      expect(
+        validateTrainerParams('stroop-colors', {'wordCount': 0}).ok,
+        isFalse,
+      );
       expect(
         validateTrainerParams('stroop-colors', {'displaySeconds': 11}).ok,
         isFalse,
@@ -42,16 +39,9 @@ void main() {
         'title': 'Струп-тест',
         'direction': 'reading',
         'isInteractive': true,
-        'defaultParams': {
-          'wordCount': 8,
-          'displaySeconds': 3,
-        },
+        'defaultParams': {'wordCount': 8, 'displaySeconds': 3},
         'fields': [
-          {
-            'key': 'wordCount',
-            'labelKey': 'wordCountLabel',
-            'type': 'number',
-          },
+          {'key': 'wordCount', 'labelKey': 'wordCountLabel', 'type': 'number'},
           {
             'key': 'displaySeconds',
             'labelKey': 'stroopDisplaySecondsLabel',
@@ -65,10 +55,7 @@ void main() {
         'displaySeconds': '4',
       });
 
-      expect(payload, {
-        'wordCount': 6,
-        'displaySeconds': 4,
-      });
+      expect(payload, {'wordCount': 6, 'displaySeconds': 4});
 
       final validated = validateTrainerParams('stroop-colors', payload);
       expect(validated.ok, isTrue, reason: validated.error);
@@ -92,23 +79,26 @@ void main() {
         'audio/ru/reading/stroop-colors/instruction.mp3',
       );
       expect(
-        File('assets/audio/ru/reading/stroop-colors/instruction.mp3').existsSync(),
+        File(
+          'assets/audio/ru/reading/stroop-colors/instruction.mp3',
+        ).existsSync(),
         isTrue,
       );
     });
 
     test('scene has no on-screen instruction chrome', () {
-      final trainerSource =
-          File('lib/trainers/reading/stroop_colors/stroop_colors_trainer.dart')
-              .readAsStringSync();
+      final trainerSource = File(
+        'lib/trainers/reading/stroop_colors/stroop_colors_trainer.dart',
+      ).readAsStringSync();
 
       expect(trainerSource, contains('StroopPhase.instruction'));
+      expect(trainerSource, contains('StroopPhase.countdown'));
       expect(trainerSource, contains('playStroopColorsInstruction'));
       expect(trainerSource, contains('TrainerInstructionScene'));
       expect(trainerSource, contains('Назови цвет слова'));
       expect(trainerSource, isNot(contains('Colors.white')));
       expect(trainerSource, isNot(contains('Молодец')));
-      expect(trainerSource, isNot(contains('countdown')));
+      expect(trainerSource, contains('_countdownStepMs = 620'));
     });
   });
 }

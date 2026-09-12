@@ -3,7 +3,7 @@ import 'dart:ui';
 
 /// Web: `platform/src/trainers/reading/stroop-colors/stroop-colors-sizes.ts`
 
-const stroopFinishDelayMs = 180;
+const stroopFinishDelayMs = 360;
 
 const _boxHeightFraction = 0.72;
 const _boxMaxWidthFraction = 0.92;

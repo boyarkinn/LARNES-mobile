@@ -8,7 +8,9 @@ import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
 void main() {
   group('StroopColorsTrainer', () {
-    testWidgets('starts in instruction phase without the word scene', (tester) async {
+    testWidgets('starts in instruction phase without the word scene', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -16,10 +18,7 @@ void main() {
               width: 360,
               height: 640,
               child: StroopColorsTrainer(
-                params: {
-                  'wordCount': 3,
-                  'displaySeconds': 3,
-                },
+                params: {'wordCount': 3, 'displaySeconds': 3},
               ),
             ),
           ),
@@ -47,10 +46,7 @@ void main() {
               width: 320,
               height: 480,
               child: StroopColorsTrainer(
-                params: {
-                  'wordCount': 2,
-                  'displaySeconds': 2,
-                },
+                params: {'wordCount': 2, 'displaySeconds': 2},
               ),
             ),
           ),

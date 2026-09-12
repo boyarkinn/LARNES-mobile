@@ -209,6 +209,32 @@ class _TrainerDirectionStaticPainter extends CustomPainter {
           );
     canvas.drawRect(bounds, secondGlowPaint);
 
+    if (direction == TrainerDirection.reading) {
+      canvas.drawRect(
+        bounds,
+        Paint()
+          ..shader =
+              const RadialGradient(
+                colors: [Color(0xC7FFFFFF), Color(0x00FFFFFF)],
+              ).createShader(
+                Rect.fromCircle(
+                  center: Offset(size.width * 0.5, size.height * 0.48),
+                  radius: size.shortestSide * 0.6,
+                ),
+              ),
+      );
+      for (final route in _readingRoutes(size)) {
+        canvas.drawPath(
+          route,
+          Paint()
+            ..color = theme.base.withValues(alpha: 0.04)
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeWidth = 16,
+        );
+      }
+    }
+
     if (direction == TrainerDirection.mental) {
       canvas.drawRect(
         bounds,
@@ -291,6 +317,10 @@ class _TrainerDirectionAmbientPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (direction == TrainerDirection.mental) {
       _drawMentalRoutes(canvas, size);
+      return;
+    }
+    if (direction == TrainerDirection.reading) {
+      _drawReadingFlow(canvas, size);
       return;
     }
     if (direction == TrainerDirection.intel) {
@@ -408,6 +438,41 @@ class _TrainerDirectionAmbientPainter extends CustomPainter {
       canvas,
       routes.last,
       progress: 1 - Curves.easeInOut.transform(progress),
+      color: theme.secondary,
+      radius: 4,
+    );
+  }
+
+  void _drawReadingFlow(Canvas canvas, Size size) {
+    final routes = _readingRoutes(size);
+    _drawDashedRoute(
+      canvas,
+      routes.first,
+      color: theme.base.withValues(alpha: 0.2),
+      offset: progress * 88,
+      dash: 22,
+      gap: 12,
+    );
+    _drawDashedRoute(
+      canvas,
+      routes.last,
+      color: theme.secondary.withValues(alpha: 0.24),
+      offset: -progress * 96,
+      dash: 18,
+      gap: 13,
+    );
+    final eased = Curves.easeInOut.transform(progress);
+    _drawRouteNode(
+      canvas,
+      routes.first,
+      progress: eased,
+      color: theme.base,
+      radius: 4.5,
+    );
+    _drawRouteNode(
+      canvas,
+      routes.last,
+      progress: 1 - eased,
       color: theme.secondary,
       radius: 4,
     );
@@ -576,5 +641,44 @@ List<Path> _intelRoutes(Size size) {
       ..lineTo(size.width * 0.865, size.height * 0.75)
       ..lineTo(size.width * 0.77, size.height * 0.75)
       ..lineTo(size.width * 0.725, size.height * 0.67),
+  ];
+}
+
+List<Path> _readingRoutes(Size size) {
+  return [
+    Path()
+      ..moveTo(-size.width * 0.035, size.height * 0.18)
+      ..lineTo(size.width * 0.255, size.height * 0.18)
+      ..quadraticBezierTo(
+        size.width * 0.275,
+        size.height * 0.18,
+        size.width * 0.275,
+        size.height * 0.23,
+      )
+      ..lineTo(-size.width * 0.015, size.height * 0.23)
+      ..quadraticBezierTo(
+        -size.width * 0.035,
+        size.height * 0.23,
+        -size.width * 0.035,
+        size.height * 0.28,
+      )
+      ..lineTo(size.width * 0.275, size.height * 0.28),
+    Path()
+      ..moveTo(size.width * 1.035, size.height * 0.72)
+      ..lineTo(size.width * 0.76, size.height * 0.72)
+      ..quadraticBezierTo(
+        size.width * 0.74,
+        size.height * 0.72,
+        size.width * 0.74,
+        size.height * 0.77,
+      )
+      ..lineTo(size.width * 1.015, size.height * 0.77)
+      ..quadraticBezierTo(
+        size.width * 1.035,
+        size.height * 0.77,
+        size.width * 1.035,
+        size.height * 0.82,
+      )
+      ..lineTo(size.width * 0.735, size.height * 0.82),
   ];
 }

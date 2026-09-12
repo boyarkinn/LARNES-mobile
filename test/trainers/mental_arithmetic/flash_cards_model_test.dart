@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
 
@@ -19,10 +21,10 @@ void main() {
     });
 
     test('builds params from homework input', () {
-      expect(
-        parseFlashCardParamsFromInput(totalRods: 2, values: '3, 12'),
-        {'totalRods': 2, 'values': '3,12'},
-      );
+      expect(parseFlashCardParamsFromInput(totalRods: 2, values: '3, 12'), {
+        'totalRods': 2,
+        'values': '3,12',
+      });
     });
 
     test('keeps all comma-separated rounds', () {
@@ -30,6 +32,40 @@ void main() {
         parseFlashCardParamsFromInput(totalRods: 2, values: '10, 5, 14, 2'),
         {'totalRods': 2, 'values': '10,5,14,2'},
       );
+    });
+
+    test('builds four nearby unique answers of the same digit count', () {
+      final options = buildFlashCardAnswerOptions(42, random: math.Random(17));
+
+      expect(options, hasLength(4));
+      expect(options.toSet(), hasLength(4));
+      expect(options, contains(42));
+      expect(options.every((value) => value >= 10 && value <= 99), isTrue);
+      expect(
+        options
+            .where((value) => value != 42)
+            .every((value) => (value - 42).abs() <= 8),
+        isTrue,
+      );
+    });
+
+    test('keeps distractors in range at digit boundaries', () {
+      for (final expected in [0, 9, 10, 99, 100, 999]) {
+        final options = buildFlashCardAnswerOptions(
+          expected,
+          random: math.Random(23),
+        );
+
+        expect(options, hasLength(4));
+        expect(options.toSet(), hasLength(4));
+        expect(options, contains(expected));
+        expect(
+          options.every(
+            (value) => value.toString().length == expected.toString().length,
+          ),
+          isTrue,
+        );
+      }
     });
   });
 }

@@ -20,6 +20,23 @@ void main() {
       );
     });
 
+    test('keeps snapshot-seeded edge plans deterministic for 0, 1, 5, 9', () {
+      for (final value in [0, 1, 5, 9]) {
+        final first = buildMatchTaskPlan(value, 0xA11CE);
+        final second = buildMatchTaskPlan(value, 0xA11CE);
+
+        expect(
+          first.digitItems.map((item) => item.id),
+          orderedEquals(second.digitItems.map((item) => item.id)),
+        );
+        expect(
+          first.abacusItems.map((item) => item.id),
+          orderedEquals(second.abacusItems.map((item) => item.id)),
+        );
+        expect(first.targetValue, value);
+      }
+    });
+
     test('includes target value and distractors in both columns', () {
       final plan = buildMatchTaskPlan(4, 11);
 
@@ -51,6 +68,26 @@ void main() {
         );
       }
     });
+
+    test(
+      'randomizes target digit position and color across seeded sessions',
+      () {
+        final positions = <int>{};
+        final colors = <int>{};
+
+        for (var seed = 0; seed < 100; seed++) {
+          final plan = buildMatchTaskPlan(5, seed);
+          final targetIndex = plan.digitItems.indexWhere(
+            (item) => item.isTarget,
+          );
+          positions.add(targetIndex);
+          colors.add(plan.digitItems[targetIndex].displayColor);
+        }
+
+        expect(positions, {0, 1, 2});
+        expect(colors.length, greaterThan(1));
+      },
+    );
   });
 
   group('match task flow', () {

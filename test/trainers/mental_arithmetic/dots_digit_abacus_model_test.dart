@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_model.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_sizes.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/dot_layout.dart';
 
@@ -24,6 +23,19 @@ void main() {
   });
 
   group('getTripleRepresentation', () {
+    test('maps edge and bead-boundary values 0, 1, 5, 9', () {
+      for (final value in [0, 1, 5, 9]) {
+        final result = getTripleRepresentation(
+          value,
+          kDotsDigitAbacusTotalRods,
+        );
+
+        expect(result.dotCount, value);
+        expect(result.value, value);
+        expect(beadsToDigit(result.rods.single), value);
+      }
+    });
+
     test('maps value 2 to two dots and one rod with digit 2', () {
       final result = getTripleRepresentation(2, kDotsDigitAbacusTotalRods);
 

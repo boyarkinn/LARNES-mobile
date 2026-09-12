@@ -70,13 +70,20 @@ void main() {
       await tester.pump(const Duration(milliseconds: 3000));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('Повторить'), findsNothing);
+      expect(find.text('Повторить цепочку'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), '99999');
-      await tester.tap(find.text('Проверить'));
       await tester.pump();
+      final checkButton = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Проверить'),
+      );
+      expect(checkButton.onPressed, isNotNull);
+      await tester.tap(find.widgetWithText(FilledButton, 'Проверить'));
+      await tester.pump();
+      expect(find.text('Повторить цепочку'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Повторить'), findsOneWidget);
+      expect(find.text('Повторить цепочку'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 150));
     });
   });
 }

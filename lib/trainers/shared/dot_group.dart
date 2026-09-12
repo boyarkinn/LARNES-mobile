@@ -12,10 +12,7 @@ enum DotGroupSize {
   auto,
 }
 
-enum DotGroupTone {
-  orange,
-  indigo,
-}
+enum DotGroupTone { orange, indigo }
 
 /// Web: `DOT_REVEAL_INTERVAL_MS` in dots-digit-abacus/dot-reveal.ts
 const _dotRevealIntervalMs = 500;
@@ -31,6 +28,8 @@ class DotGroup extends StatefulWidget {
     this.frameWidth,
     this.frameHeight,
     this.dotColor,
+    this.framed = true,
+    this.materialChips = false,
   });
 
   final int count;
@@ -43,6 +42,8 @@ class DotGroup extends StatefulWidget {
   final double? frameWidth;
   final double? frameHeight;
   final Color? dotColor;
+  final bool framed;
+  final bool materialChips;
 
   @override
   State<DotGroup> createState() => _DotGroupState();
@@ -117,30 +118,34 @@ class _DotGroupState extends State<DotGroup> {
     final height = widget.frameHeight ?? spec.frameSize;
     final positions = getDotPositionsForValue(widget.count);
     final effectiveVisibleCount = _effectiveVisibleCount;
-    final visiblePositions = widget.revealProgressively || widget.visibleCount != null
+    final visiblePositions =
+        widget.revealProgressively || widget.visibleCount != null
         ? positions.take(effectiveVisibleCount).toList(growable: false)
         : positions;
 
     return Container(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
+      decoration: widget.framed
+          ? BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.border, width: 2),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ],
+            )
+          : null,
       child: CustomPaint(
         painter: _DotGroupPainter(
           positions: visiblePositions,
           dotRadius: spec.dotRadius,
           dotColor: colors.dot,
+          materialChips: widget.materialChips,
         ),
       ),
     );
@@ -192,20 +197,14 @@ class _DotGroupState extends State<DotGroup> {
 }
 
 class _DotGroupSizeSpec {
-  const _DotGroupSizeSpec({
-    required this.frameSize,
-    required this.dotRadius,
-  });
+  const _DotGroupSizeSpec({required this.frameSize, required this.dotRadius});
 
   final double frameSize;
   final double dotRadius;
 }
 
 class _DotGroupColors {
-  const _DotGroupColors({
-    required this.border,
-    required this.dot,
-  });
+  const _DotGroupColors({required this.border, required this.dot});
 
   final Color border;
   final Color dot;
@@ -216,22 +215,33 @@ class _DotGroupPainter extends CustomPainter {
     required this.positions,
     required this.dotRadius,
     required this.dotColor,
+    required this.materialChips,
   });
 
   final List<DotPosition> positions;
   final double dotRadius;
   final Color dotColor;
+  final bool materialChips;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = dotColor;
-
     for (final position in positions) {
-      canvas.drawCircle(
-        Offset(position.x * size.width, position.y * size.height),
-        dotRadius,
-        paint,
-      );
+      final center = Offset(position.x * size.width, position.y * size.height);
+      if (materialChips) {
+        canvas.drawCircle(
+          center + const Offset(0, 1.5),
+          dotRadius,
+          Paint()..color = const Color(0x387F1D1D),
+        );
+      }
+      canvas.drawCircle(center, dotRadius, Paint()..color = dotColor);
+      if (materialChips) {
+        canvas.drawCircle(
+          center - Offset(dotRadius * 0.28, dotRadius * 0.3),
+          dotRadius * 0.22,
+          Paint()..color = const Color(0x66FFFFFF),
+        );
+      }
     }
   }
 
@@ -239,6 +249,7 @@ class _DotGroupPainter extends CustomPainter {
   bool shouldRepaint(covariant _DotGroupPainter oldDelegate) {
     return oldDelegate.positions != positions ||
         oldDelegate.dotRadius != dotRadius ||
-        oldDelegate.dotColor != dotColor;
+        oldDelegate.dotColor != dotColor ||
+        oldDelegate.materialChips != materialChips;
   }
 }

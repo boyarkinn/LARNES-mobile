@@ -13,6 +13,7 @@ class AbacusMatchCard extends StatelessWidget {
     this.width,
     this.height,
     this.totalRods = kDotsDigitAbacusTotalRods,
+    this.framed = true,
   });
 
   final int value;
@@ -21,47 +22,52 @@ class AbacusMatchCard extends StatelessWidget {
   final double? width;
   final double? height;
   final int totalRods;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
     final rods = numberToAbacus(value, totalRods);
     final borderColor = shake
-        ? const Color(0xFFFCA5A5)
+        ? const Color(kDotsDigitAbacusWrongLineColor)
         : connected
-        ? const Color(0xFF6EE7B7)
-        : const Color(0xFFFED7AA);
+        ? const Color(kDotsDigitAbacusLockedLineColor)
+        : const Color(0xFFCBD5E1);
 
     final card = Container(
       width: width,
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(framed ? 8 : 0),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFF7ED), Colors.white],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
+        color: !framed
+            ? Colors.transparent
+            : shake
+            ? const Color(0x40FEE2E2)
+            : connected
+            ? const Color(0x4074E5A0)
+            : const Color(0x59F8FAFC),
+        borderRadius: BorderRadius.circular(framed ? 16 : 0),
+        border: framed ? Border.all(color: borderColor, width: 2) : null,
+        boxShadow: framed
+            ? const [
+                BoxShadow(
+                  color: Color(0x0D000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            : null,
       ),
       child: SizedBox(
         height: height,
         child: AbacusWidget(
-          activeBeadColor: const Color(kDotsDigitAbacusActiveBeadColor),
+          activeBeadColor: const Color(kDotsDigitAbacusObjectColor),
           rods: rods,
           totalRods: totalRods,
         ),
       ),
     );
 
-    if (!shake) {
-      return Opacity(opacity: connected ? 0.8 : 1, child: card);
+    if (!shake || MediaQuery.disableAnimationsOf(context)) {
+      return card;
     }
 
     return _ShakeWrapper(active: shake, child: card);

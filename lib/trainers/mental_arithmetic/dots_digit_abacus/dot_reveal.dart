@@ -1,4 +1,4 @@
-/// Web v2: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/dot-reveal.ts`
+// Web v2: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/dot-reveal.ts`
 
 /// Интервал между появлением точек для счёта вслух.
 const dotRevealIntervalMs = 500;

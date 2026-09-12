@@ -5,6 +5,7 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/runtime/unimplemented_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
+import 'package:larnes_mobile/trainers/shared/theme/trainer_direction_theme.dart';
 
 class TrainerPlayer extends StatelessWidget {
   const TrainerPlayer({
@@ -53,22 +54,26 @@ class TrainerPlayer extends StatelessWidget {
             l10n: l10n,
           );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SizedBox(
-          width: constraints.maxWidth,
-          height: constraints.maxHeight,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: trainerWidget,
+    return TrainerDirectionThemeScope(
+      direction: definition.direction,
+      child: TrainerDirectionStage(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: trainerWidget),
+                  if (stepChrome != null)
+                    TrainerStepChromeBar(chrome: stepChrome!),
+                ],
               ),
-              if (stepChrome != null) TrainerStepChromeBar(chrome: stepChrome!),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 }
@@ -90,10 +95,7 @@ class _TrainerPlayerError extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: const TextStyle(
-          fontSize: 14,
-          color: Color(0xFFB91C1C),
-        ),
+        style: const TextStyle(fontSize: 14, color: Color(0xFFB91C1C)),
       ),
     );
   }

@@ -1,4 +1,4 @@
-/// Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/audio.ts`
+// Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/audio.ts`
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';

@@ -1,28 +1,27 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_audio.dart';
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_experience_scene.dart';
+
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_model.dart';
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_sizes.dart';
-
-import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/match_task_board.dart';
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/match_task_model.dart';
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/triple_scene.dart';
 
-import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
-
-import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
@@ -37,12 +36,8 @@ enum DotsDigitAbacusPhase {
 
   taskInstruction,
 
-  taskCountdown,
-
   match,
 }
-
-enum _CountdownTarget { explain, match }
 
 /// Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/component.tsx`
 
@@ -68,11 +63,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
   static const _countdownStepMs = 750;
 
-  static const _countdownColor = Color(0xFFEA580C);
-
   var _phase = DotsDigitAbacusPhase.instruction;
-
-  var _countdownTarget = _CountdownTarget.explain;
 
   var _countdownLabel = _countdownLabels.first;
 
@@ -86,8 +77,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
   var _matchDisabled = false;
 
-  var _fireworksKey = 0;
-
   var _visibility = const TripleSceneVisibility();
 
   final _connections = <MatchTaskConnection>[];
@@ -96,8 +85,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
   final _instructionTypewriter = TrainerInstructionTypewriter();
 
-  final _taskInstructionTypewriter = TrainerInstructionTypewriter();
-
   Timer? _countdownTimer;
 
   Timer? _completeTimer;
@@ -105,12 +92,18 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   int get _value => normalizeDotsDigitAbacusValue(widget.params['value']);
 
   late MatchTaskPlan _matchPlan;
+  final _sessionMatchSeed = math.Random().nextInt(0x7FFFFFFF);
+
+  MatchTaskPlan _buildPlan() {
+    final seed = readTrainerSnapshotSeed('dots-digit-abacus', widget.params);
+    return buildMatchTaskPlan(_value, seed ?? _sessionMatchSeed);
+  }
 
   @override
   void initState() {
     super.initState();
 
-    _matchPlan = buildMatchTaskPlan(_value);
+    _matchPlan = _buildPlan();
 
     _startSession();
   }
@@ -120,7 +113,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.params != widget.params) {
-      _matchPlan = buildMatchTaskPlan(_value);
+      _matchPlan = _buildPlan();
 
       _startSession();
     }
@@ -129,8 +122,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   @override
   void dispose() {
     _instructionTypewriter.cancel();
-
-    _taskInstructionTypewriter.cancel();
 
     _countdownTimer?.cancel();
 
@@ -148,8 +139,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
     _instructionTypewriter.cancel();
 
-    _taskInstructionTypewriter.cancel();
-
     _countdownTimer?.cancel();
 
     _completeTimer?.cancel();
@@ -159,13 +148,11 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     setState(() {
       _phase = DotsDigitAbacusPhase.instruction;
 
-      _countdownTarget = _CountdownTarget.explain;
+      _countdownLabel = _countdownLabels.first;
 
       _instructionLength = 0;
 
       _taskInstructionLength = 0;
-
-      _countdownLabel = _countdownLabels.first;
 
       _completeCalled = false;
 
@@ -173,13 +160,11 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
       _matchDisabled = false;
 
-      _fireworksKey = 0;
-
       _visibility = const TripleSceneVisibility();
 
       _connections.clear();
 
-      _matchPlan = buildMatchTaskPlan(_value);
+      _matchPlan = _buildPlan();
     });
 
     unawaited(_runInstruction(runToken));
@@ -188,9 +173,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   Future<void> _runInstruction(Object runToken) async {
     final durationMs = await loadTrainerInstructionDurationMs(
       assetPath: getDotsDigitAbacusInstructionAudioAsset(),
-
       playbackRate: kDotsDigitAbacusAudioPlaybackRate,
-
       fallbackMs: kDotsDigitAbacusInstructionDurationFallbackMs,
     );
 
@@ -200,17 +183,12 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
     _instructionTypewriter.start(
       text: kDotsDigitAbacusInstructionText,
-
       durationMs: durationMs,
-
       isCurrent: () => mounted && identical(runToken, _runToken),
-
       onLength: (length) {
-        if (!mounted || !identical(runToken, _runToken)) {
-          return;
+        if (mounted && identical(runToken, _runToken)) {
+          setState(() => _instructionLength = length);
         }
-
-        setState(() => _instructionLength = length);
       },
     );
 
@@ -224,9 +202,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
     setState(() {
       _instructionLength = kDotsDigitAbacusInstructionText.length;
-
-      _countdownTarget = _CountdownTarget.explain;
-
       _phase = DotsDigitAbacusPhase.countdown;
     });
 
@@ -236,9 +211,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   Future<void> _runTaskInstruction(Object runToken) async {
     final durationMs = await loadTrainerInstructionDurationMs(
       assetPath: getDotsDigitAbacusTaskInstructionAudioAsset(),
-
       playbackRate: kDotsDigitAbacusAudioPlaybackRate,
-
       fallbackMs: kDotsDigitAbacusTaskInstructionDurationFallbackMs,
     );
 
@@ -246,19 +219,17 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       return;
     }
 
-    _taskInstructionTypewriter.start(
+    _instructionTypewriter.start(
       text: kDotsDigitAbacusTaskInstructionText,
-
       durationMs: durationMs,
-
-      isCurrent: () => mounted && identical(runToken, _runToken),
-
+      isCurrent: () =>
+          mounted &&
+          identical(runToken, _runToken) &&
+          _phase == DotsDigitAbacusPhase.taskInstruction,
       onLength: (length) {
-        if (!mounted || !identical(runToken, _runToken)) {
-          return;
+        if (mounted && identical(runToken, _runToken)) {
+          setState(() => _taskInstructionLength = length);
         }
-
-        setState(() => _taskInstructionLength = length);
       },
     );
 
@@ -268,17 +239,11 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       return;
     }
 
-    _taskInstructionTypewriter.cancel();
-
+    _instructionTypewriter.cancel();
     setState(() {
       _taskInstructionLength = kDotsDigitAbacusTaskInstructionText.length;
-
-      _countdownTarget = _CountdownTarget.match;
-
-      _phase = DotsDigitAbacusPhase.taskCountdown;
+      _phase = DotsDigitAbacusPhase.match;
     });
-
-    _startCountdown(runToken);
   }
 
   void _startCountdown(Object runToken) {
@@ -292,15 +257,8 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() {
-          _phase = _countdownTarget == _CountdownTarget.explain
-              ? DotsDigitAbacusPhase.explain
-              : DotsDigitAbacusPhase.match;
-        });
-
-        if (_countdownTarget == _CountdownTarget.explain) {
-          unawaited(_runExplain(runToken));
-        }
+        setState(() => _phase = DotsDigitAbacusPhase.explain);
+        unawaited(_runExplain(runToken));
 
         return;
       }
@@ -388,11 +346,16 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       return;
     }
 
+    DateTime? abacusShownAt;
     await playDotsDigitAbacusAbacusMatchBridge(
       onStarted: () {
+        abacusShownAt = DateTime.now();
         _patchVisibility(
-          (current) =>
-              current.copyWith(showAbacusEquals: true, showAbacus: true),
+          (current) => current.copyWith(
+            showAbacusEquals: true,
+            showAbacus: true,
+            showAbacusValue: true,
+          ),
         );
       },
     );
@@ -403,12 +366,19 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
     _patchVisibility((current) => current.copyWith(abacusPulseActive: true));
 
-    await Future<void>.delayed(Duration(milliseconds: dotsDigitAbacusPulseMs));
+    final abacusElapsedMs = abacusShownAt == null
+        ? 0
+        : DateTime.now().difference(abacusShownAt!).inMilliseconds;
+    final abacusRemainingMs = kDotsDigitAbacusAbacusDisplayMs - abacusElapsedMs;
+    await Future<void>.delayed(
+      Duration(milliseconds: abacusRemainingMs > 0 ? abacusRemainingMs : 0),
+    );
 
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
+    _patchVisibility((current) => current.copyWith(abacusPulseActive: false));
     setState(() => _phase = DotsDigitAbacusPhase.taskInstruction);
 
     unawaited(_runTaskInstruction(runToken));
@@ -427,8 +397,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
 
     setState(() {
       _matchDisabled = true;
-
-      _fireworksKey += 1;
     });
 
     _completeTimer?.cancel();
@@ -470,23 +438,15 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       );
     }
 
-    if (_phase == DotsDigitAbacusPhase.taskInstruction) {
-      return TrainerInstructionScene(
-        length: _taskInstructionLength,
-        text: kDotsDigitAbacusTaskInstructionText,
-      );
-    }
-
-    if (_phase == DotsDigitAbacusPhase.countdown ||
-        _phase == DotsDigitAbacusPhase.taskCountdown) {
+    if (_phase == DotsDigitAbacusPhase.countdown) {
       return TrainerScene(
         child: Center(
           child: Text(
             _countdownLabel,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 96,
               fontWeight: FontWeight.w700,
-              color: _countdownColor,
+              color: const Color(kDotsDigitAbacusObjectColor),
               height: 1,
             ),
           ),
@@ -494,23 +454,20 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       );
     }
 
-    if (_phase == DotsDigitAbacusPhase.match) {
-      return TrainerScene(
-        child: AnswerFireworksBurst(
-          burstKey: _fireworksKey,
-          child: MatchTaskBoard(
-            connections: List.unmodifiable(_connections),
-            disabled: _matchDisabled,
-            onAllConnected: _handleMatchComplete,
-            onConnect: _handleConnect,
-            plan: _matchPlan,
-          ),
-        ),
-      );
-    }
-
     return TrainerScene(
-      child: TripleScene(value: _value, visibility: _visibility),
+      child: DotsDigitAbacusExperienceScene(
+        completed: _matchDisabled,
+        connections: List.unmodifiable(_connections),
+        disabled:
+            _matchDisabled || _phase == DotsDigitAbacusPhase.taskInstruction,
+        onAllConnected: _handleMatchComplete,
+        onConnect: _handleConnect,
+        plan: _matchPlan,
+        practice: _phase != DotsDigitAbacusPhase.explain,
+        taskInstructionLength: _taskInstructionLength,
+        taskInstructionVisible: _phase == DotsDigitAbacusPhase.taskInstruction,
+        visibility: _visibility,
+      ),
     );
   }
 }

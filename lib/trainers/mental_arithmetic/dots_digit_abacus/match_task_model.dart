@@ -1,5 +1,5 @@
-/// Модель части 2: точки → цифра → абакус (3 колонки, отвлекающие).
-/// Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/match-task-model.ts`
+// Модель части 2: точки → цифра → абакус (3 колонки, отвлекающие).
+// Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/match-task-model.ts`
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_colors.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';

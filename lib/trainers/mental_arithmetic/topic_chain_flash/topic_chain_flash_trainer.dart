@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
@@ -32,10 +33,14 @@ enum _Phase { boot, instruction, countdown, flash, answer, error }
 class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     with SingleTickerProviderStateMixin {
   static const _wrongFeedbackMs = 450;
-  /// Пауза после верного ответа — успеть увидеть фейерверки (мок A).
+
+  /// Пауза после верного ответа — успеть увидеть feedback.
   static const _successFeedbackMs = 900;
   static const _wrongColor = Color(0xFFDC2626);
-  static const _okSoft = Color(0xFFDCE8FF);
+  static const _successColor = Color(0xFF16A34A);
+  static const _okSoft = Color(0xB8DCFCE7);
+  static const _objectColor = Color(0xFFE45B4E);
+  static const _objectDeep = Color(0xFFB93F38);
 
   /// Пауза между вспышками — иначе подряд одинаковые шаги (+1 +1) сливаются в одно.
   static const _interFlashBlankMs = 120;
@@ -43,18 +48,17 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   /// Обратный отсчёт перед каждым примером — ребёнок успевает взять абакус.
   static const _countdownStepMs = 750;
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
-  static const _countdownColor = Color(0xFFDC2626);
-  static const _flashColor = Color(0xFF2B59C3);
+  static const _flashColor = _objectColor;
 
   _Phase _phase = _Phase.boot;
   Chain? _chain;
   var _exampleIndex = 0;
   String? _flashLabel;
+  var _flashStepIndex = -1;
   String _answerDraft = '';
   bool _isWrong = false;
   bool _isCorrect = false;
   var _fireworksKey = 0;
-  bool _hasFailedAttempt = false;
   bool _isSubmitting = false;
   String? _errorMessage;
   bool _completeCalled = false;
@@ -73,18 +77,29 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
 
   Chain? _fixedChain(int index) {
-    final payload = readTrainerRuntimeSnapshot('topic-chain-flash', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'topic-chain-flash',
+      widget.params,
+    );
     final rawChains = payload?['chains'];
-    if (rawChains is! List || index < 0 || index >= rawChains.length) return null;
+    if (rawChains is! List || index < 0 || index >= rawChains.length) {
+      return null;
+    }
     final rawChain = rawChains[index];
-    if (rawChain is! Map) return null;
+    if (rawChain is! Map) {
+      return null;
+    }
     final map = Map<String, dynamic>.from(rawChain);
     final rawSteps = map['steps'];
     final rawIntermediates = map['intermediates'];
-    if (rawSteps is! List || rawIntermediates is! List) return null;
+    if (rawSteps is! List || rawIntermediates is! List) {
+      return null;
+    }
     return Chain(
       answer: (map['answer'] as num).toInt(),
-      intermediates: rawIntermediates.map((value) => (value as num).toInt()).toList(),
+      intermediates: rawIntermediates
+          .map((value) => (value as num).toInt())
+          .toList(),
       steps: rawSteps.map((raw) {
         final step = Map<String, dynamic>.from(raw as Map);
         return ChainStep(
@@ -175,20 +190,19 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _chain = null;
       _exampleIndex = 0;
       _flashLabel = solveModeInstructionLabel(solveMode);
+      _flashStepIndex = -1;
       _errorMessage = null;
       _phase = _Phase.instruction;
       _answerDraft = '';
       _isWrong = false;
       _isCorrect = false;
-      _hasFailedAttempt = false;
       _isSubmitting = false;
     });
 
     if (shouldPlayFlashAudio(stepPauseSec)) {
-      await getSharedClipPlayer().play(
-        [getInstructionAudioAsset(solveMode)],
-        playbackRate: kInstructionPlaybackRate,
-      );
+      await getSharedClipPlayer().play([
+        getInstructionAudioAsset(solveMode),
+      ], playbackRate: kInstructionPlaybackRate);
       if (!mounted || !identical(runToken, _runToken)) {
         return;
       }
@@ -226,9 +240,9 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _answerDraft = '';
     _isWrong = false;
     _isCorrect = false;
-    _hasFailedAttempt = false;
     _isSubmitting = false;
     _flashLabel = null;
+    _flashStepIndex = -1;
     _errorMessage = null;
     _exampleIndex = nextIndex;
 
@@ -236,7 +250,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _runToken = runToken;
 
     try {
-      final chain = _fixedChain(nextIndex) ??
+      final chain =
+          _fixedChain(nextIndex) ??
           generateChain(
             GenerateConfig(
               topicId: widget.params['topicId'] as String? ?? 'simple-1',
@@ -302,6 +317,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       if (index >= _countdownLabels.length) {
         setState(() {
           _flashLabel = null;
+          _flashStepIndex = -1;
           _phase = _Phase.flash;
         });
         _runFlash(runToken, chain);
@@ -332,6 +348,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       unawaited(cancelStepAudio());
       setState(() {
         _flashLabel = null;
+        _flashStepIndex = -1;
         _phase = _Phase.answer;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -352,7 +369,10 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       }
 
       final step = chain.steps[index];
-      setState(() => _flashLabel = formatChainStep(step));
+      setState(() {
+        _flashLabel = formatChainStep(step);
+        _flashStepIndex = index;
+      });
       index += 1;
 
       void startStepTimer() {
@@ -415,6 +435,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _isCorrect = false;
       _isSubmitting = false;
       _flashLabel = null;
+      _flashStepIndex = -1;
       _phase = _Phase.countdown;
     });
     _runCountdown(runToken, chain);
@@ -443,7 +464,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       setState(() {
         _isWrong = true;
         _isCorrect = false;
-        _hasFailedAttempt = true;
       });
       _shakeController.forward(from: 0);
       _wrongTimer?.cancel();
@@ -465,25 +485,30 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _isWrong = false;
       _isCorrect = true;
       _isSubmitting = true;
-      _fireworksKey += 1;
+      if (_exampleIndex + 1 >= _totalExamples) {
+        _fireworksKey += 1;
+      }
     });
     _completeTimer?.cancel();
-    _completeTimer = Timer(const Duration(milliseconds: _successFeedbackMs), () {
-      if (!mounted) {
-        return;
-      }
+    _completeTimer = Timer(
+      const Duration(milliseconds: _successFeedbackMs),
+      () {
+        if (!mounted) {
+          return;
+        }
 
-      if (_exampleIndex + 1 < _totalExamples) {
-        _startExample(_exampleIndex + 1);
-        return;
-      }
+        if (_exampleIndex + 1 < _totalExamples) {
+          _startExample(_exampleIndex + 1);
+          return;
+        }
 
-      if (_completeCalled) {
-        return;
-      }
-      _completeCalled = true;
-      widget.onComplete?.call();
-    });
+        if (_completeCalled) {
+          return;
+        }
+        _completeCalled = true;
+        widget.onComplete?.call();
+      },
+    );
   }
 
   Color _fieldBorderColor({bool focused = false}) {
@@ -491,12 +516,12 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       return _wrongColor;
     }
     if (_isCorrect) {
-      return _flashColor;
+      return _successColor;
     }
     if (focused) {
-      return _flashColor;
+      return _objectColor.withValues(alpha: 0.55);
     }
-    return const Color(0xFFD5CFC4);
+    return const Color(0x337759D6);
   }
 
   Widget _progressDots() {
@@ -520,8 +545,11 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: index < _exampleIndex
-                    ? const Color(0xFF262626)
-                    : const Color(0xFFD6D3D1),
+                    ? _objectColor
+                    : const Color(0x247759D6),
+                border: index < _exampleIndex
+                    ? null
+                    : Border.all(color: const Color(0x55E45B4E)),
               ),
             ),
           ],
@@ -535,6 +563,15 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     return TrainerScene(
       child: Stack(
         children: [
+          if (_phase == _Phase.flash && _flashLabel != null)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: _RouteEnergyPulse(
+                  pulseKey: _flashStepIndex,
+                  reduceMotion: MediaQuery.disableAnimationsOf(context),
+                ),
+              ),
+            ),
           Center(
             child: switch (_phase) {
               _Phase.error => Padding(
@@ -551,24 +588,22 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
               _Phase.boot ||
               _Phase.instruction ||
               _Phase.countdown ||
-              _Phase.flash => AnimatedOpacity(
-                opacity: _flashLabel == null ? 0 : 1,
-                duration: const Duration(milliseconds: 150),
-                child: Text(
-                  _flashLabel ?? ' ',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: MediaQuery.sizeOf(context).shortestSide *
-                        (_phase == _Phase.instruction ? 0.12 : 0.26),
-                    height: 1,
-                    fontFeatures: _phase == _Phase.instruction
-                        ? null
-                        : const [FontFeature.tabularFigures()],
-                    color: _phase == _Phase.countdown
-                        ? _countdownColor
-                        : _flashColor,
+              _Phase.flash => AnimatedSwitcher(
+                duration: Duration(
+                  milliseconds: MediaQuery.disableAnimationsOf(context)
+                      ? 0
+                      : 120,
+                ),
+                child: _FlashValueStage(
+                  key: ValueKey(
+                    '${_phase.name}-${_flashLabel ?? 'blank'}-$_flashStepIndex',
                   ),
+                  actionCount: _chain?.steps.length ?? 0,
+                  actionIndex: _flashStepIndex,
+                  flashMode: _phase == _Phase.flash,
+                  instructionMode: _phase == _Phase.instruction,
+                  label: _flashLabel,
+                  reduceMotion: MediaQuery.disableAnimationsOf(context),
                 ),
               ),
               _Phase.answer => AnimatedBuilder(
@@ -586,108 +621,160 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                     children: [
                       AnswerFireworksBurst(
                         burstKey: _fireworksKey,
-                        child: TextField(
-                          controller: _inputController,
-                          focusNode: _inputFocus,
-                          enabled: !_isSubmitting,
-                          keyboardType: TextInputType.number,
-                          textAlign: TextAlign.center,
-                          autofocus: true,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize:
-                                MediaQuery.sizeOf(context).shortestSide * 0.14,
-                            height: 1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                            color: _isWrong ? _wrongColor : _flashColor,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    (_isCorrect
+                                            ? _successColor
+                                            : const Color(0xFF7759D6))
+                                        .withValues(alpha: 0.1),
+                                blurRadius: 38,
+                                offset: const Offset(0, 14),
+                              ),
+                            ],
                           ),
-                          cursorColor: _isWrong ? _wrongColor : _flashColor,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: _isCorrect
-                                ? _okSoft
-                                : const Color(0xFFFFFCF8),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
+                          child: TextField(
+                            controller: _inputController,
+                            focusNode: _inputFocus,
+                            enabled: !_isSubmitting,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            autofocus: true,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize:
+                                  MediaQuery.sizeOf(context).shortestSide *
+                                  0.14,
+                              height: 1,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                              color: _isWrong
+                                  ? _wrongColor
+                                  : _isCorrect
+                                  ? _successColor
+                                  : _objectDeep,
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(
-                                width: 1.5,
-                                color: _fieldBorderColor(),
+                            cursorColor: _isWrong ? _wrongColor : _flashColor,
+                            decoration: InputDecoration(
+                              hintText: '?',
+                              hintStyle: TextStyle(
+                                color: _objectColor.withValues(alpha: 0.28),
+                              ),
+                              filled: true,
+                              fillColor: _isCorrect
+                                  ? _okSoft
+                                  : const Color(0x75FFFFFF),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 20,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  width: 2,
+                                  color: _fieldBorderColor(),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  width: 2,
+                                  color: _fieldBorderColor(),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  width: 2,
+                                  color: _fieldBorderColor(focused: true),
+                                ),
+                              ),
+                              disabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide(
+                                  width: 2,
+                                  color: _fieldBorderColor(),
+                                ),
                               ),
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(
-                                width: 1.5,
-                                color: _fieldBorderColor(),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(
-                                width: 1.5,
-                                color: _fieldBorderColor(focused: true),
-                              ),
-                            ),
-                            disabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(
-                                width: 1.5,
-                                color: _fieldBorderColor(),
-                              ),
-                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                _isWrong = false;
+                                _answerDraft = value;
+                              });
+                            },
+                            onSubmitted: (_) => _submit(),
                           ),
-                          onChanged: (value) {
-                            setState(() {
-                              _isWrong = false;
-                              _answerDraft = value;
-                            });
-                          },
-                          onSubmitted: (_) => _submit(),
                         ),
                       ),
                       const SizedBox(height: 20),
-                      FilledButton(
-                        onPressed: _isSubmitting || _answerDraft.trim().isEmpty
-                            ? null
-                            : _submit,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _flashColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Проверить'),
-                      ),
-                      if (_hasFailedAttempt) ...[
-                        const SizedBox(height: 12),
-                        OutlinedButton(
-                          onPressed: _isSubmitting ? null : _replayExample,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF1A1D2E),
-                            side: const BorderSide(
-                              width: 1.5,
-                              color: Color(0xFFD5CFC4),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed:
+                              _isSubmitting || _answerDraft.trim().isEmpty
+                              ? null
+                              : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _objectColor,
+                            disabledBackgroundColor: _objectColor.withValues(
+                              alpha: 0.15,
                             ),
+                            disabledForegroundColor: _objectDeep.withValues(
+                              alpha: 0.35,
+                            ),
+                            foregroundColor: Colors.white,
+                            elevation: 3,
+                            shadowColor: _objectDeep.withValues(alpha: 0.24),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
-                              vertical: 12,
+                              vertical: 16,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(18),
                             ),
                           ),
-                          child: const Text('Повторить'),
+                          child: const Text(
+                            'Проверить',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isSubmitting ? null : _replayExample,
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0x59FFFFFF),
+                            foregroundColor: const Color(0xFF5F43BA),
+                            side: const BorderSide(color: Color(0x337759D6)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          icon: const Icon(Icons.replay_rounded, size: 21),
+                          label: const Text(
+                            'Повторить цепочку',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -698,5 +785,231 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
         ],
       ),
     );
+  }
+}
+
+class _FlashValueStage extends StatelessWidget {
+  const _FlashValueStage({
+    super.key,
+    required this.actionCount,
+    required this.actionIndex,
+    required this.flashMode,
+    required this.instructionMode,
+    required this.label,
+    required this.reduceMotion,
+  });
+
+  final int actionCount;
+  final int actionIndex;
+  final bool flashMode;
+  final bool instructionMode;
+  final String? label;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = label;
+    if (value == null) {
+      return const SizedBox(width: 240, height: 180);
+    }
+
+    final negative = flashMode && value.trimLeft().startsWith('-');
+    final fontSize =
+        MediaQuery.sizeOf(context).shortestSide *
+        (instructionMode ? 0.12 : 0.26);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: Duration(milliseconds: reduceMotion ? 0 : 260),
+          curve: Curves.easeOutCubic,
+          builder: (context, progress, child) {
+            final offset = flashMode
+                ? (negative ? -42.0 : 42.0) * (1 - progress)
+                : 20.0 * (1 - progress);
+            return Opacity(
+              opacity: progress.clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, offset),
+                child: Transform.scale(
+                  scale: 0.94 + 0.06 * progress,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (flashMode && !reduceMotion)
+                        SizedBox(
+                          key: const ValueKey('topic-chain-light-wave-burst'),
+                          width: fontSize * 1.75,
+                          height: fontSize * 1.75,
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0, end: 1),
+                            duration: const Duration(milliseconds: 460),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, waveProgress, child) =>
+                                CustomPaint(
+                                  painter: _LightWaveBurstPainter(waveProgress),
+                                ),
+                          ),
+                        ),
+                      Text(
+                        value,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _TopicChainFlashTrainerState._objectColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: fontSize,
+                          height: 1,
+                          fontFeatures: instructionMode
+                              ? null
+                              : const [FontFeature.tabularFigures()],
+                          shadows: const [
+                            Shadow(
+                              color: Color(0x1FB93F38),
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        if (flashMode && actionCount > 0) ...[
+          const SizedBox(height: 28),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var index = 0; index < actionCount; index++) ...[
+                if (index > 0) SizedBox(width: actionCount > 10 ? 4 : 8),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: reduceMotion ? 0 : 220),
+                  width:
+                      (220 / actionCount).clamp(8.0, 20.0) +
+                      (index == actionIndex ? 4 : 0),
+                  height: index == actionIndex ? 12 : 10,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(99),
+                    color: index <= actionIndex
+                        ? _TopicChainFlashTrainerState._objectColor
+                        : const Color(0x1F7759D6),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _LightWaveBurstPainter extends CustomPainter {
+  const _LightWaveBurstPainter(this.progress);
+
+  static const _angles = <double>[-160, -128, -52, -20, 20, 52, 128, 160];
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final shortest = size.shortestSide;
+    final opacity = (math.sin(progress * math.pi) * 0.22).clamp(0.0, 1.0);
+    final startRadius = shortest * (0.27 + progress * 0.16);
+    final segmentLength = shortest * 0.17 * math.sin(progress * math.pi);
+
+    for (var index = 0; index < _angles.length; index++) {
+      final angle = _angles[index] * math.pi / 180;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      final start = center + direction * startRadius;
+      final end = center + direction * (startRadius + segmentLength);
+      final color = index.isEven
+          ? const Color(0xFF7759D6)
+          : const Color(0xFF5BC4D6);
+
+      canvas.drawLine(
+        start,
+        end,
+        Paint()
+          ..color = color.withValues(alpha: opacity)
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 3,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LightWaveBurstPainter oldDelegate) {
+    return progress != oldDelegate.progress;
+  }
+}
+
+class _RouteEnergyPulse extends StatelessWidget {
+  const _RouteEnergyPulse({required this.pulseKey, required this.reduceMotion});
+
+  final int pulseKey;
+  final bool reduceMotion;
+
+  @override
+  Widget build(BuildContext context) {
+    if (reduceMotion) {
+      return const SizedBox.shrink();
+    }
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('chain-route-pulse-$pulseKey'),
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeInOutCubic,
+      builder: (context, progress, child) =>
+          CustomPaint(painter: _RouteEnergyPulsePainter(progress)),
+    );
+  }
+}
+
+class _RouteEnergyPulsePainter extends CustomPainter {
+  const _RouteEnergyPulsePainter(this.progress);
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final opacity = (math.sin(progress * math.pi) * 0.82).clamp(0.0, 1.0);
+    _drawPulse(
+      canvas,
+      Offset(size.width * 0.057, size.height * (0.78 - progress * 0.6)),
+      const Color(0xFFE45B4E),
+      opacity,
+    );
+    _drawPulse(
+      canvas,
+      Offset(size.width * 0.941, size.height * (0.22 + progress * 0.56)),
+      const Color(0xFF5BC4D6),
+      opacity,
+    );
+  }
+
+  void _drawPulse(Canvas canvas, Offset center, Color color, double opacity) {
+    canvas.drawCircle(
+      center,
+      17,
+      Paint()
+        ..color = color.withValues(alpha: opacity * 0.12)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawCircle(
+      center,
+      5,
+      Paint()..color = color.withValues(alpha: opacity),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RouteEnergyPulsePainter oldDelegate) {
+    return progress != oldDelegate.progress;
   }
 }

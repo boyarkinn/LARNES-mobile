@@ -4,6 +4,8 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/unimplemented_trainer.dart';
+import 'package:larnes_mobile/trainers/catalog/trainer_direction.dart';
+import 'package:larnes_mobile/trainers/shared/theme/trainer_direction_theme.dart';
 
 void main() {
   group('TrainerPlayer fly-track', () {
@@ -38,6 +40,11 @@ void main() {
       expect(find.byType(FlyTrackTrainer), findsOneWidget);
       expect(find.byType(UnimplementedTrainer), findsNothing);
       expect(find.textContaining('не зарегистрирован'), findsNothing);
+      final trainerContext = tester.element(find.byType(FlyTrackTrainer));
+      expect(
+        TrainerDirectionThemeScope.of(trainerContext).direction,
+        TrainerDirection.intel,
+      );
     });
 
     testWidgets('shows validation error for out-of-range grid', (tester) async {

@@ -11,6 +11,16 @@ class OmitResolution {
 
   final int omitIndex;
   final String omitLetter;
+
+  @override
+  bool operator ==(Object other) {
+    return other is OmitResolution &&
+        other.omitIndex == omitIndex &&
+        other.omitLetter == omitLetter;
+  }
+
+  @override
+  int get hashCode => Object.hash(omitIndex, omitLetter);
 }
 
 class FillGapTask {
@@ -53,16 +63,16 @@ class LetterPoolTile {
 
 OmitResolution? resolveOmitForWord(String label, List<String> practiceLetters) {
   for (final practiceLetter in practiceLetters) {
-    final normalizedPractice = normalizeTargetLetter(practiceLetter);
+    final normalizedPractice = practiceLetter.toUpperCase();
 
     for (var index = 0; index < label.length; index++) {
       final char = label[index];
 
-      if (!isRussianLetterWithoutYo(char)) {
+      if (!parseFillGapPracticeLetters(char).contains(char.toUpperCase())) {
         continue;
       }
 
-      if (normalizeTargetLetter(char) == normalizedPractice) {
+      if (char.toUpperCase() == normalizedPractice) {
         return OmitResolution(omitIndex: index, omitLetter: normalizedPractice);
       }
     }
@@ -84,20 +94,28 @@ List<String> pickWordsForRound({
   required List<String> practiceLetters,
   required double Function() rng,
 }) {
-  final eligible = fillGapWordSlugs
-      .where(
-        (slug) => isWordEligibleForPractice(
-          getFillGapWordLabel(slug),
-          practiceLetters,
-        ),
-      )
-      .toList();
+  final shuffledEligible = _shuffleItems(
+    fillGapWordSlugs
+        .where(
+          (slug) => isWordEligibleForPractice(
+            getFillGapWordLabel(slug),
+            practiceLetters,
+          ),
+        )
+        .toList(),
+    rng,
+  );
+  final seenLabels = <String>{};
+  final eligible = shuffledEligible.where((slug) {
+    final label = getFillGapWordLabel(slug).toLowerCase();
+    return seenLabels.add(label);
+  }).toList();
 
   if (eligible.length < entityCount) {
     return const [];
   }
 
-  return _shuffleItems(eligible, rng).take(entityCount).toList();
+  return eligible.take(entityCount).toList();
 }
 
 FillGapTask buildFillGapTask(
@@ -167,7 +185,11 @@ List<LetterPoolTile> buildLetterPoolTiles({
 
   final usedLetters = correctTiles.map((tile) => tile.letter).toSet();
   final distractorPool = [
-    for (final letter in russianLettersUpper)
+    for (final letter in [
+      ...russianLettersUpper.take(6),
+      'Ё',
+      ...russianLettersUpper.skip(6),
+    ])
       if (!usedLetters.contains(applyLetterCase(letter, letterCase)))
         applyLetterCase(letter, letterCase),
   ];

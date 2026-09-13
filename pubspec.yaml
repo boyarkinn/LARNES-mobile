@@ -90,6 +90,7 @@ flutter:
     - assets/audio/ru/reading/wedge-tables/
     - assets/audio/ru/reading/letter-find-by-sound/
     - assets/audio/ru/reading/letter-first-by-sound/
+    - assets/audio/ru/reading/letter-place-in-word/
     - assets/audio/ru/letters-syllables/1-10-А-Е/
     - assets/audio/ru/letters-syllables/11-Б/
     - assets/audio/ru/letters-syllables/12-П/

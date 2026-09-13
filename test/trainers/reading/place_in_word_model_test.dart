@@ -11,6 +11,10 @@ void main() {
       expect(parsePracticeLetters('Д, А, М'), ['Д', 'А', 'М']);
       expect(parsePracticeLetters('д а м'), ['Д', 'А', 'М']);
     });
+
+    test('supports Ё for fill-gap words', () {
+      expect(parseFillGapPracticeLetters('ё, е'), ['Ё', 'Е']);
+    });
   });
 
   group('resolveOmitForWord', () {
@@ -64,7 +68,7 @@ void main() {
 
   group('buildFillGapTask', () {
     test('splits word into before/after gap', () {
-      final task = buildFillGapTask('watermelon', ['А'], 'lower', 'lower');
+      final task = buildFillGapTask('1_арбуз', ['А'], 'lower', 'lower');
 
       expect(task.before, '');
       expect(task.after, 'рбуз');
@@ -87,9 +91,20 @@ void main() {
   });
 
   group('getFillGapWordImageSrc', () {
-    test('returns null until assets are wired', () {
-      expect(getFillGapWordImageSrc('door'), isNull);
-      expect(getFillGapWordImageSrc('duck'), isNull);
+    test('resolves shared first-words assets', () {
+      expect(
+        getFillGapWordImageSrc('17_дверь'),
+        'assets/images/ru/first-words/17-Д/17_дверь.png',
+      );
+      expect(
+        getFillGapWordImageSrc('3_утка'),
+        'assets/images/ru/first-words/3-У/3_утка.png',
+      );
+    });
+
+    test('removes technical image variant suffixes', () {
+      expect(normalizeFillGapWordLabel('замок1'), 'замок');
+      expect(normalizeFillGapWordLabel('замок2'), 'замок');
     });
   });
 

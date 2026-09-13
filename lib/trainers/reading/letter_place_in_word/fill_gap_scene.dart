@@ -3,24 +3,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
-import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/gap_word_row.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_sizes.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/word_card_with_gap.dart';
+import 'package:larnes_mobile/trainers/shared/first_words/play_first_word_audio.dart';
 
 const _popCurve = Cubic(0.34, 1.2, 0.64, 1);
 const _poolTileSize = 56.0;
 
 class _TaskFillState {
-  const _TaskFillState({
-    this.filledColor,
-    this.filledLetter,
-  });
+  const _TaskFillState({this.filledLetter});
 
-  final Color? filledColor;
   final String? filledLetter;
 }
 
@@ -35,15 +30,8 @@ class _FillGapDragState {
   final double x;
   final double y;
 
-  _FillGapDragState copyWith({
-    double? x,
-    double? y,
-  }) {
-    return _FillGapDragState(
-      tileId: tileId,
-      x: x ?? this.x,
-      y: y ?? this.y,
-    );
+  _FillGapDragState copyWith({double? x, double? y}) {
+    return _FillGapDragState(tileId: tileId, x: x ?? this.x, y: y ?? this.y);
   }
 }
 
@@ -53,16 +41,18 @@ class FillGapScene extends StatefulWidget {
     super.key,
     this.disabled = false,
     required this.onComplete,
+    required this.onCorrect,
+    required this.onWrong,
     required this.poolTiles,
     required this.tasks,
-    required this.tileColors,
   });
 
   final bool disabled;
   final VoidCallback onComplete;
+  final ValueChanged<int> onCorrect;
+  final ValueChanged<int> onWrong;
   final List<LetterPoolTile> poolTiles;
   final List<FillGapTask> tasks;
-  final Map<String, String> tileColors;
 
   @override
   State<FillGapScene> createState() => _FillGapSceneState();
@@ -81,6 +71,7 @@ class _FillGapSceneState extends State<FillGapScene> {
 
   String? _selectedTileId;
   int? _wrongSlotIndex;
+  var _activeIndex = 0;
   var _isCompleted = false;
   var _isTrayRevealComplete = false;
   var _isInteractionReady = false;
@@ -123,14 +114,14 @@ class _FillGapSceneState extends State<FillGapScene> {
     _dragState = null;
     _dragMoved = false;
     _wrongSlotIndex = null;
+    _activeIndex = 0;
     _isCompleted = false;
     _isTrayRevealComplete = false;
     _isInteractionReady = false;
     _scheduleTrayReveal();
   }
 
-  bool get _isLocked =>
-      widget.disabled || _isCompleted || !_isInteractionReady;
+  bool get _isLocked => widget.disabled || _isCompleted || !_isInteractionReady;
 
   void _scheduleTrayReveal() {
     _trayRevealTimer?.cancel();
@@ -157,18 +148,28 @@ class _FillGapSceneState extends State<FillGapScene> {
     );
   }
 
-  void _tryComplete(List<_TaskFillState> nextFills) {
-    if (nextFills.every((fill) => fill.filledLetter != null)) {
-      setState(() => _isCompleted = true);
-      _completeTimer = Timer(
-        const Duration(milliseconds: fillGapCompleteDelayMs),
-        () {
-          if (mounted) {
-            widget.onComplete();
-          }
-        },
-      );
-    }
+  void _advanceAfterCorrect() {
+    final completedWords = _activeIndex + 1;
+    widget.onCorrect(completedWords);
+    _completeTimer?.cancel();
+    _completeTimer = Timer(
+      const Duration(milliseconds: fillGapCompleteDelayMs),
+      () {
+        if (!mounted) {
+          return;
+        }
+        if (completedWords < widget.tasks.length) {
+          setState(() {
+            _activeIndex = completedWords;
+            _selectedTileId = null;
+            _wrongSlotIndex = null;
+          });
+          return;
+        }
+        setState(() => _isCompleted = true);
+        widget.onComplete();
+      },
+    );
   }
 
   bool _attemptPlace(String tileId, int targetIndex) {
@@ -185,13 +186,15 @@ class _FillGapSceneState extends State<FillGapScene> {
       return false;
     }
 
-    if (_fills[targetIndex].filledLetter != null) {
+    if (targetIndex != _activeIndex ||
+        _fills[targetIndex].filledLetter != null) {
       return false;
     }
 
     final expected = widget.tasks[targetIndex].correctLetter;
 
     if (tile.letter != expected) {
+      widget.onWrong(_activeIndex);
       setState(() => _wrongSlotIndex = targetIndex);
       _wrongTimer?.cancel();
       _wrongTimer = Timer(
@@ -209,15 +212,10 @@ class _FillGapSceneState extends State<FillGapScene> {
       return false;
     }
 
-    final tileColorHex = widget.tileColors[tileId] ?? '#1F2937';
-    final tileColor = letterDisplayColorFromHex(tileColorHex);
     final nextFills = [
       for (var index = 0; index < _fills.length; index++)
         index == targetIndex
-            ? _TaskFillState(
-                filledColor: tileColor,
-                filledLetter: tile.letter,
-              )
+            ? _TaskFillState(filledLetter: tile.letter)
             : _fills[index],
     ];
 
@@ -232,7 +230,7 @@ class _FillGapSceneState extends State<FillGapScene> {
       }
     });
 
-    _tryComplete(nextFills);
+    _advanceAfterCorrect();
     return true;
   }
 
@@ -378,10 +376,7 @@ class _FillGapSceneState extends State<FillGapScene> {
 
     final local = box.globalToLocal(Offset(dragState.x, dragState.y));
 
-    return Offset(
-      local.dx - _poolTileSize / 2,
-      local.dy - _poolTileSize / 2,
-    );
+    return Offset(local.dx - _poolTileSize / 2, local.dy - _poolTileSize / 2);
   }
 
   LetterPoolTile? get _activeDragTile {
@@ -399,26 +394,6 @@ class _FillGapSceneState extends State<FillGapScene> {
     return null;
   }
 
-  int _gridCrossAxisCount(double width) {
-    if (widget.tasks.length == 1) {
-      return 1;
-    }
-
-    if (widget.tasks.length == 2) {
-      return width >= 640 ? 2 : 1;
-    }
-
-    if (width >= 1024) {
-      return 3;
-    }
-
-    if (width >= 640) {
-      return 2;
-    }
-
-    return 1;
-  }
-
   @override
   void dispose() {
     _trayRevealTimer?.cancel();
@@ -432,20 +407,45 @@ class _FillGapSceneState extends State<FillGapScene> {
   Widget build(BuildContext context) {
     final dragGhostPosition = _dragGhostLocalPosition();
     final activeTile = _activeDragTile;
-    final activeColor = activeTile == null
-        ? const Color(0xFF1F2937)
-        : letterDisplayColorFromHex(widget.tileColors[activeTile.id]);
+    final task = widget.tasks[_activeIndex];
+    final fill = _fills[_activeIndex];
+    final availableTiles = _tiles.where((tile) => !tile.used).toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = _gridCrossAxisCount(constraints.maxWidth);
-
         return Stack(
           key: _sceneKey,
           clipBehavior: Clip.none,
           children: [
             Column(
               children: [
+                if (widget.tasks.length > 1)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: Row(
+                      children: [
+                        for (
+                          var index = 0;
+                          index < widget.tasks.length;
+                          index++
+                        )
+                          Expanded(
+                            child: Container(
+                              height: 6,
+                              margin: EdgeInsets.only(
+                                right: index == widget.tasks.length - 1 ? 0 : 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: index <= _activeIndex
+                                    ? const Color(0xFF2F7D59)
+                                    : const Color(0x292F7D59),
+                                borderRadius: BorderRadius.circular(99),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
@@ -454,47 +454,31 @@ class _FillGapSceneState extends State<FillGapScene> {
                     ),
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 896),
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.95,
-                          ),
-                          itemCount: widget.tasks.length,
-                          itemBuilder: (context, index) {
-                            final task = widget.tasks[index];
-                            final fill = _fills[index];
-
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                WordCardWithGap(
-                                  displayWord: task.displayWord,
-                                  enterDelayMs: getFruitRevealDelayMs(
-                                    index,
-                                    widget.tasks.length,
-                                  ),
-                                  slug: task.slug,
-                                ),
-                                const SizedBox(height: 12),
-                                GapWordRow(
-                                  after: task.after,
-                                  before: task.before,
-                                  filledColor: fill.filledColor,
-                                  filledLetter: fill.filledLetter,
-                                  isAwaitingPlacement: _selectedTileId != null &&
-                                      fill.filledLetter == null,
-                                  onSlotClick: () => _handleSlotTap(index),
-                                  slotKey: _slotKeys[index],
-                                  wrongFlash: _wrongSlotIndex == index,
-                                ),
-                              ],
-                            );
-                          },
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            WordCardWithGap(
+                              displayWord: task.displayWord,
+                              enterDelayMs: getFruitRevealDelayMs(0, 1),
+                              onPlay: () =>
+                                  unawaited(playFirstWordAudio(task.slug)),
+                              slug: task.slug,
+                              success: fill.filledLetter != null,
+                            ),
+                            const SizedBox(height: 8),
+                            GapWordRow(
+                              after: task.after,
+                              before: task.before,
+                              filledLetter: fill.filledLetter,
+                              isAwaitingPlacement:
+                                  _selectedTileId != null &&
+                                  fill.filledLetter == null,
+                              onSlotClick: () => _handleSlotTap(_activeIndex),
+                              slotKey: _slotKeys[_activeIndex],
+                              wrongFlash: _wrongSlotIndex == _activeIndex,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -508,25 +492,31 @@ class _FillGapSceneState extends State<FillGapScene> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        for (var index = 0; index < _tiles.length; index++)
+                        for (
+                          var index = 0;
+                          index < availableTiles.length;
+                          index++
+                        )
                           _FillGapPoolTile(
-                            color: letterDisplayColorFromHex(
-                              widget.tileColors[_tiles[index].id],
-                            ),
-                            isDragging: _dragState?.tileId == _tiles[index].id,
+                            isDragging:
+                                _dragState?.tileId == availableTiles[index].id,
                             isLocked: _isLocked,
-                            isSelected: _selectedTileId == _tiles[index].id,
+                            isSelected:
+                                _selectedTileId == availableTiles[index].id,
                             onPointerCancel: _handlePointerEnd,
-                            onPointerDown: (event) =>
-                                _handlePointerDown(event, _tiles[index].id),
+                            onPointerDown: (event) => _handlePointerDown(
+                              event,
+                              availableTiles[index].id,
+                            ),
                             onPointerMove: _handlePointerMove,
                             onPointerUp: _handlePointerEnd,
-                            onTap: () => _handleTileTap(_tiles[index].id),
+                            onTap: () =>
+                                _handleTileTap(availableTiles[index].id),
                             revealDelayMs: getAnswerRevealDelayMs(
                               index,
-                              _tiles.length,
+                              availableTiles.length,
                             ),
-                            tile: _tiles[index],
+                            tile: availableTiles[index],
                           ),
                       ],
                     ),
@@ -539,7 +529,6 @@ class _FillGapSceneState extends State<FillGapScene> {
                 top: dragGhostPosition.dy,
                 child: IgnorePointer(
                   child: _FillGapPoolTileVisual(
-                    color: activeColor,
                     isSelected: false,
                     letter: activeTile.letter,
                     opacity: 1,
@@ -555,7 +544,6 @@ class _FillGapSceneState extends State<FillGapScene> {
 
 class _FillGapPoolTile extends StatefulWidget {
   const _FillGapPoolTile({
-    required this.color,
     required this.isDragging,
     required this.isLocked,
     required this.isSelected,
@@ -568,7 +556,6 @@ class _FillGapPoolTile extends StatefulWidget {
     required this.tile,
   });
 
-  final Color color;
   final bool isDragging;
   final bool isLocked;
   final bool isSelected;
@@ -617,8 +604,8 @@ class _FillGapPoolTileState extends State<_FillGapPoolTile>
     final opacity = widget.tile.used
         ? 0.3
         : widget.isDragging
-            ? 0.35
-            : 1.0;
+        ? 0.35
+        : 1.0;
 
     return AnimatedBuilder(
       animation: _progress,
@@ -651,9 +638,8 @@ class _FillGapPoolTileState extends State<_FillGapPoolTile>
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.tile.used || widget.isLocked ? null : widget.onTap,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             child: _FillGapPoolTileVisual(
-              color: widget.color,
               isSelected: widget.isSelected,
               letter: widget.tile.letter,
               opacity: 1,
@@ -667,13 +653,11 @@ class _FillGapPoolTileState extends State<_FillGapPoolTile>
 
 class _FillGapPoolTileVisual extends StatelessWidget {
   const _FillGapPoolTileVisual({
-    required this.color,
     required this.isSelected,
     required this.letter,
     required this.opacity,
   });
 
-  final Color color;
   final bool isSelected;
   final String letter;
   final double opacity;
@@ -685,17 +669,17 @@ class _FillGapPoolTileVisual extends StatelessWidget {
       height: _poolTileSize,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95 * opacity),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFFFFDF7).withValues(alpha: 0.95 * opacity),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isSelected ? ParentColors.shell : const Color(0xFFE5E7EB),
+          color: isSelected ? const Color(0xFF2F7D59) : const Color(0x24274F3C),
           width: isSelected ? 2 : 1,
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color.fromRGBO(15, 23, 42, 0.08),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: const Color(0xFF234C38).withValues(alpha: 0.10),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -703,8 +687,8 @@ class _FillGapPoolTileVisual extends StatelessWidget {
         letter,
         style: GoogleFonts.onest(
           fontSize: 28,
-          fontWeight: FontWeight.w700,
-          color: color,
+          fontWeight: FontWeight.w800,
+          color: const Color(0xFF20352D),
         ),
       ),
     );

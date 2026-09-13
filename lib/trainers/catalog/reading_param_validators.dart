@@ -24,7 +24,9 @@ ValidateTrainerParamsResult _validateSingleLetterField(
   bool requireRussian = true,
 }) {
   final letterRaw = raw['letter'];
-  if (letterRaw is! String || letterRaw.trim().isEmpty || letterRaw.trim().length > 8) {
+  if (letterRaw is! String ||
+      letterRaw.trim().isEmpty ||
+      letterRaw.trim().length > 8) {
     return _fail('Некорректные параметры.');
   }
   if (requireRussian && !isRussianLetterWithoutYo(letterRaw)) {
@@ -47,7 +49,9 @@ ValidateTrainerParamsResult _withLetterCase(
   });
 }
 
-ValidateTrainerParamsResult validateLetterFindTapParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterFindTapParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -61,7 +65,9 @@ ValidateTrainerParamsResult validateLetterFindTapParams(Map<String, dynamic> raw
     return _fail('Некорректные параметры.');
   }
   if (!canFitLetterField(targetCount, distractorCount)) {
-    return _fail('Слишком много букв на экране (максимум $maxLetterFieldTokens).');
+    return _fail(
+      'Слишком много букв на экране (максимум $maxLetterFieldTokens).',
+    );
   }
   final letterCaseResult = _withLetterCase(raw, {
     'letter': normalizeTargetLetter(raw['letter'] as String),
@@ -71,7 +77,9 @@ ValidateTrainerParamsResult validateLetterFindTapParams(Map<String, dynamic> raw
   return letterCaseResult;
 }
 
-ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterFindBySoundParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
   final legacyLetter = raw['letter'];
   final source = (practiceRaw is String && practiceRaw.trim().isNotEmpty)
@@ -81,7 +89,8 @@ ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic>
     return _fail('Некорректные параметры.');
   }
   final practiceLetters = parsePracticeLetters(source);
-  if (practiceLetters.isEmpty || practiceLetters.length > maxPracticeLettersNameAloud) {
+  if (practiceLetters.isEmpty ||
+      practiceLetters.length > maxPracticeLettersNameAloud) {
     return _fail(_practiceLettersMessage);
   }
   final distractorCount = coerceInt(raw['distractorCount']);
@@ -89,7 +98,9 @@ ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic>
     return _fail('Некорректные параметры.');
   }
   if (!canFitSoundFindField(distractorCount)) {
-    return _fail('Слишком много букв на экране (максимум $maxLetterFieldTokens).');
+    return _fail(
+      'Слишком много букв на экране (максимум $maxLetterFieldTokens).',
+    );
   }
   return _withLetterCase(raw, {
     'distractorCount': distractorCount,
@@ -97,7 +108,9 @@ ValidateTrainerParamsResult validateLetterFindBySoundParams(Map<String, dynamic>
   });
 }
 
-ValidateTrainerParamsResult validateLetterTraceParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterTraceParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -107,15 +120,21 @@ ValidateTrainerParamsResult validateLetterTraceParams(Map<String, dynamic> raw) 
   });
 }
 
-ValidateTrainerParamsResult validateLetterHalfDrawParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterHalfDrawParams(
+  Map<String, dynamic> raw,
+) {
   return validateLetterTraceParams(raw);
 }
 
-ValidateTrainerParamsResult validateLetterColorParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterColorParams(
+  Map<String, dynamic> raw,
+) {
   return validateLetterTraceParams(raw);
 }
 
-ValidateTrainerParamsResult validateLetterCaseColorParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterCaseColorParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -125,7 +144,9 @@ ValidateTrainerParamsResult validateLetterCaseColorParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterConnectDotsParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterConnectDotsParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -140,7 +161,9 @@ ValidateTrainerParamsResult validateLetterConnectDotsParams(Map<String, dynamic>
   });
 }
 
-ValidateTrainerParamsResult validateLetterBuildParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterBuildParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -152,9 +175,13 @@ ValidateTrainerParamsResult validateLetterBuildParams(Map<String, dynamic> raw) 
   return _withLetterCase(raw, {'letter': letter});
 }
 
-ValidateTrainerParamsResult validateLetterDrawShowParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterDrawShowParams(
+  Map<String, dynamic> raw,
+) {
   final letterRaw = raw['letter'];
-  if (letterRaw is! String || letterRaw.trim().isEmpty || letterRaw.trim().length > 8) {
+  if (letterRaw is! String ||
+      letterRaw.trim().isEmpty ||
+      letterRaw.trim().length > 8) {
     return _fail('Некорректные параметры.');
   }
   final rounds = coerceInt(raw['rounds']) ?? 1;
@@ -165,22 +192,25 @@ ValidateTrainerParamsResult validateLetterDrawShowParams(Map<String, dynamic> ra
   if (!isSupportedDrawShowLetter(letter)) {
     return _fail('Для этой буквы пока нет графического образа.');
   }
-  return _withLetterCase(raw, {
-    'letter': letter,
-    'rounds': rounds,
-  });
+  return _withLetterCase(raw, {'letter': letter, 'rounds': rounds});
 }
 
-ValidateTrainerParamsResult validateLetterCompleteParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterCompleteParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
   }
   final letter = normalizeTargetLetter(raw['letter'] as String);
   if (!isCompletableLetter(letter)) {
-    return _fail('Букву «$letter» пока нельзя дописать (нужно минимум 2 штриха).');
+    return _fail(
+      'Букву «$letter» пока нельзя дописать (нужно минимум 2 штриха).',
+    );
   }
-  final missingSegment = normalizeMissingSegmentParam(raw['missingSegment'] ?? 'random');
+  final missingSegment = normalizeMissingSegmentParam(
+    raw['missingSegment'] ?? 'random',
+  );
   if (!isValidMissingSegment(letter, missingSegment)) {
     return _fail('Укажите номер штриха от 0 или random.');
   }
@@ -190,7 +220,9 @@ ValidateTrainerParamsResult validateLetterCompleteParams(Map<String, dynamic> ra
   });
 }
 
-ValidateTrainerParamsResult validateLetterOrientationPickParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterOrientationPickParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -201,15 +233,16 @@ ValidateTrainerParamsResult validateLetterOrientationPickParams(Map<String, dyna
   }
   final letter = normalizeTargetLetter(raw['letter'] as String);
   if (!isOrientationPickableLetter(letter)) {
-    return _fail('Букву «$letter» пока нельзя использовать (поворот не отличим от эталона).');
+    return _fail(
+      'Букву «$letter» пока нельзя использовать (поворот не отличим от эталона).',
+    );
   }
-  return _withLetterCase(raw, {
-    'entityCount': entityCount,
-    'letter': letter,
-  });
+  return _withLetterCase(raw, {'entityCount': entityCount, 'letter': letter});
 }
 
-ValidateTrainerParamsResult validateLetterOddOneOutParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterOddOneOutParams(
+  Map<String, dynamic> raw,
+) {
   final letterResult = _validateSingleLetterField(raw);
   if (!letterResult.ok) {
     return letterResult;
@@ -223,7 +256,8 @@ ValidateTrainerParamsResult validateLetterOddOneOutParams(Map<String, dynamic> r
   final oddLetter = oddRaw == 'random'
       ? 'random'
       : normalizeTargetLetter(oddRaw.toString());
-  if (oddLetter != 'random' && !isRussianLetterWithoutYo(oddLetter.toString())) {
+  if (oddLetter != 'random' &&
+      !isRussianLetterWithoutYo(oddLetter.toString())) {
     return _fail('Укажите одну русскую букву (А–Я, без Ё) или random.');
   }
   if (!isValidOddLetterParam(letter, oddLetter)) {
@@ -236,7 +270,9 @@ ValidateTrainerParamsResult validateLetterOddOneOutParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterFirstBySoundParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterFirstBySoundParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters']?.toString();
   if (practiceRaw != null &&
       practiceRaw.trim().isNotEmpty &&
@@ -258,7 +294,9 @@ ValidateTrainerParamsResult validateLetterFirstBySoundParams(Map<String, dynamic
     return _fail('Некорректные параметры.');
   }
   if (!canFitFirstBySoundChoices(distractorCount)) {
-    return _fail('Слишком много кнопок с буквами (максимум $maxLetterChoices).');
+    return _fail(
+      'Слишком много кнопок с буквами (максимум $maxLetterChoices).',
+    );
   }
   final rounds = coerceInt(raw['rounds']) ?? defaultFirstBySoundRounds;
   if (rounds < minFirstBySoundRounds || rounds > maxFirstBySoundRounds) {
@@ -271,7 +309,9 @@ ValidateTrainerParamsResult validateLetterFirstBySoundParams(Map<String, dynamic
   });
 }
 
-ValidateTrainerParamsResult validateLetterWordLinkParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterWordLinkParams(
+  Map<String, dynamic> raw,
+) {
   final entityCount = coerceInt(raw['entityCount']) ?? 4;
   if (entityCount < minWordLinkItems || entityCount > maxWordLinkItems) {
     return _fail('Некорректные параметры.');
@@ -295,14 +335,20 @@ ValidateTrainerParamsResult validateLetterWordLinkParams(Map<String, dynamic> ra
   });
 }
 
-ValidateTrainerParamsResult validateLetterPlaceInWordParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterPlaceInWordParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
-  if (practiceRaw is! String || practiceRaw.trim().isEmpty || practiceRaw.trim().length > 64) {
+  if (practiceRaw is! String ||
+      practiceRaw.trim().isEmpty ||
+      practiceRaw.trim().length > 64) {
     return _fail('Некорректные параметры.');
   }
-  final practiceLetters = parsePracticeLetters(practiceRaw);
+  final practiceLetters = parseFillGapPracticeLetters(practiceRaw);
   if (practiceLetters.isEmpty) {
-    return _fail(_practiceLettersMessage);
+    return _fail(
+      'Укажите хотя бы одну русскую букву (А–Я, включая Ё), через запятую.',
+    );
   }
   final distractorCount = coerceInt(raw['distractorCount']) ?? 3;
   final entityCount = coerceInt(raw['entityCount']) ?? 1;
@@ -335,9 +381,13 @@ ValidateTrainerParamsResult validateLetterPlaceInWordParams(Map<String, dynamic>
   });
 }
 
-ValidateTrainerParamsResult validateLetterCaseMatchParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterCaseMatchParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
-  if (practiceRaw is! String || practiceRaw.trim().isEmpty || practiceRaw.trim().length > 64) {
+  if (practiceRaw is! String ||
+      practiceRaw.trim().isEmpty ||
+      practiceRaw.trim().length > 64) {
     return _fail('Некорректные параметры.');
   }
   final practiceLetters = parsePracticeLetters(practiceRaw);
@@ -359,9 +409,13 @@ ValidateTrainerParamsResult validateLetterCaseMatchParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterGridMatchParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterGridMatchParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
-  if (practiceRaw is! String || practiceRaw.trim().isEmpty || practiceRaw.trim().length > 64) {
+  if (practiceRaw is! String ||
+      practiceRaw.trim().isEmpty ||
+      practiceRaw.trim().length > 64) {
     return _fail('Некорректные параметры.');
   }
   final practiceLetters = parsePracticeLetters(practiceRaw);
@@ -375,7 +429,9 @@ ValidateTrainerParamsResult validateLetterGridMatchParams(Map<String, dynamic> r
     return _fail('Размер сетки: 2 или 3.');
   }
   if (!isValidFilledCount(gridSize, filledCount)) {
-    return _fail('Ячеек с буквами: от $minGridFilledCount до ${getMaxFilledCount(gridSize)}.');
+    return _fail(
+      'Ячеек с буквами: от $minGridFilledCount до ${getMaxFilledCount(gridSize)}.',
+    );
   }
   final letterCase = parseLetterCase(raw['letterCase']);
   if (letterCase == null) {
@@ -389,13 +445,18 @@ ValidateTrainerParamsResult validateLetterGridMatchParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterNameAloudParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterNameAloudParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
-  if (practiceRaw is! String || practiceRaw.trim().isEmpty || practiceRaw.trim().length > 64) {
+  if (practiceRaw is! String ||
+      practiceRaw.trim().isEmpty ||
+      practiceRaw.trim().length > 64) {
     return _fail('Некорректные параметры.');
   }
   final practiceLetters = parsePracticeLetters(practiceRaw);
-  if (practiceLetters.isEmpty || practiceLetters.length > maxPracticeLettersNameAloud) {
+  if (practiceLetters.isEmpty ||
+      practiceLetters.length > maxPracticeLettersNameAloud) {
     return _fail(_practiceLettersMessage);
   }
   final displaySeconds = coerceInt(raw['displaySeconds']) ?? 3;
@@ -413,9 +474,13 @@ ValidateTrainerParamsResult validateLetterNameAloudParams(Map<String, dynamic> r
   });
 }
 
-ValidateTrainerParamsResult validateLetterMarqueeTapParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateLetterMarqueeTapParams(
+  Map<String, dynamic> raw,
+) {
   final practiceRaw = raw['practiceLetters'];
-  if (practiceRaw is! String || practiceRaw.trim().isEmpty || practiceRaw.trim().length > 64) {
+  if (practiceRaw is! String ||
+      practiceRaw.trim().isEmpty ||
+      practiceRaw.trim().length > 64) {
     return _fail('Некорректные параметры.');
   }
   final practiceLetters = parsePracticeLetters(practiceRaw);
@@ -442,7 +507,9 @@ ValidateTrainerParamsResult validateLetterMarqueeTapParams(Map<String, dynamic> 
   });
 }
 
-ValidateTrainerParamsResult validateStroopColorsParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateStroopColorsParams(
+  Map<String, dynamic> raw,
+) {
   final wordCount = coerceInt(raw['wordCount']) ?? kStroopWordCountDefault;
   final displaySeconds =
       coerceDouble(raw['displaySeconds']) ?? kStroopDisplaySecondsDefault;
@@ -476,10 +543,14 @@ String? _parseSchulteChoice(
   return null;
 }
 
-ValidateTrainerParamsResult validateSchulteTableParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateSchulteTableParams(
+  Map<String, dynamic> raw,
+) {
   final rounds = coerceInt(raw['rounds']) ?? kSchulteRoundsDefault;
   final gridSize =
-      coerceInt(raw['gridSize']) ?? coerceInt(raw['digit']) ?? kSchulteGridSizeDefault;
+      coerceInt(raw['gridSize']) ??
+      coerceInt(raw['digit']) ??
+      kSchulteGridSizeDefault;
   final category = _parseSchulteChoice(
     raw['category'] ?? raw['wordSlug'],
     kSchulteCategoryValues,
@@ -524,10 +595,14 @@ ValidateTrainerParamsResult validateSchulteTableParams(Map<String, dynamic> raw)
   });
 }
 
-ValidateTrainerParamsResult validateWedgeTablesParams(Map<String, dynamic> raw) {
+ValidateTrainerParamsResult validateWedgeTablesParams(
+  Map<String, dynamic> raw,
+) {
   final rounds = coerceInt(raw['rounds']) ?? kWedgeRoundsDefault;
   final rowCount =
-      coerceInt(raw['rowCount']) ?? coerceInt(raw['digit']) ?? kWedgeRowCountDefault;
+      coerceInt(raw['rowCount']) ??
+      coerceInt(raw['digit']) ??
+      kWedgeRowCountDefault;
   final displaySeconds =
       coerceDouble(raw['displaySeconds']) ?? kWedgeDisplaySecondsDefault;
   final category = _parseSchulteChoice(

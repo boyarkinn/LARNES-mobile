@@ -1,54 +1,20 @@
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
+import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
+import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
 
-const fillGapWordLabels = {
-  'apple': 'Яблоко',
-  'bear': 'Мишка',
-  'bridge': 'Мост',
-  'cat': 'Кот',
-  'door': 'Дверь',
-  'duck': 'Утка',
-  'fish': 'Рыба',
-  'hand': 'Рука',
-  'house': 'Дом',
-  'juice': 'Сок',
-  'lemon': 'Лимон',
-  'mama': 'Мама',
-  'nose': 'Нос',
-  'owl': 'Сова',
-  'puddle': 'Лужа',
-  'rose': 'Роза',
-  'stork': 'Аист',
-  'watermelon': 'Арбуз',
-};
+final fillGapWordSlugs = [for (final word in firstWords) word.slug];
 
-const fillGapWordSlugs = [
-  'stork',
-  'watermelon',
-  'house',
-  'door',
-  'mama',
-  'cat',
-  'juice',
-  'duck',
-  'lemon',
-  'fish',
-  'owl',
-  'apple',
-  'nose',
-  'hand',
-  'bear',
-  'puddle',
-  'bridge',
-  'rose',
-];
-
-String getFillGapWordLabel(String slug) {
-  return fillGapWordLabels[slug] ?? 'Аист';
+String normalizeFillGapWordLabel(String label) {
+  return label.replaceFirst(RegExp(r'\d+$'), '');
 }
 
-/// Путь к изображению слова; null — режим заглушки (текст на экране).
+String getFillGapWordLabel(String slug) {
+  final word = getFirstWord(slug);
+  return word == null ? 'аист' : normalizeFillGapWordLabel(word.label);
+}
+
 String? getFillGapWordImageSrc(String slug) {
-  return null;
+  return getFirstWordImageWidgetAsset(slug);
 }
 
 const wordLinkLabels = {
@@ -160,15 +126,72 @@ bool isValidFilledCount(int gridSize, int filledCount) {
   return filledCount >= minGridFilledCount && filledCount <= maxFilled;
 }
 
+const _fillGapRussianLettersUpper = [
+  'А',
+  'Б',
+  'В',
+  'Г',
+  'Д',
+  'Е',
+  'Ё',
+  'Ж',
+  'З',
+  'И',
+  'Й',
+  'К',
+  'Л',
+  'М',
+  'Н',
+  'О',
+  'П',
+  'Р',
+  'С',
+  'Т',
+  'У',
+  'Ф',
+  'Х',
+  'Ц',
+  'Ч',
+  'Ш',
+  'Щ',
+  'Ъ',
+  'Ы',
+  'Ь',
+  'Э',
+  'Ю',
+  'Я',
+];
+
+String _normalizeFillGapLetter(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? '' : trimmed[0].toUpperCase();
+}
+
+bool _isFillGapRussianLetter(String value) {
+  return _fillGapRussianLettersUpper.contains(_normalizeFillGapLetter(value));
+}
+
+List<String> parseFillGapPracticeLetters(String raw) {
+  final letters = <String>[];
+  final seen = <String>{};
+  for (final part in raw.split(RegExp(r'[,;\s]+'))) {
+    final normalized = _normalizeFillGapLetter(part);
+    if (_isFillGapRussianLetter(normalized) && seen.add(normalized)) {
+      letters.add(normalized);
+    }
+  }
+  return letters;
+}
+
 bool _isWordEligibleForPractice(String label, List<String> practiceLetters) {
   for (final practiceLetter in practiceLetters) {
-    final normalizedPractice = normalizeTargetLetter(practiceLetter);
+    final normalizedPractice = _normalizeFillGapLetter(practiceLetter);
     for (var index = 0; index < label.length; index++) {
       final char = label[index];
-      if (!isRussianLetterWithoutYo(char)) {
+      if (!_isFillGapRussianLetter(char)) {
         continue;
       }
-      if (normalizeTargetLetter(char) == normalizedPractice) {
+      if (_normalizeFillGapLetter(char) == normalizedPractice) {
         return true;
       }
     }
@@ -177,13 +200,14 @@ bool _isWordEligibleForPractice(String label, List<String> practiceLetters) {
 }
 
 int countEligibleFillGapWords(List<String> practiceLetters) {
-  var count = 0;
-  for (final label in fillGapWordLabels.values) {
+  final eligibleLabels = <String>{};
+  for (final word in firstWords) {
+    final label = normalizeFillGapWordLabel(word.label);
     if (_isWordEligibleForPractice(label, practiceLetters)) {
-      count += 1;
+      eligibleLabels.add(label.toLowerCase());
     }
   }
-  return count;
+  return eligibleLabels.length;
 }
 
 String getWordLinkFirstLetter(String slug) {
@@ -221,7 +245,9 @@ List<String> getWordsNotStartingWith(String letter) {
 
 int countCorrectWordLinkItems(int entityCount, int correctPoolSize) {
   final desired = entityCount - 1;
-  final target = desired < minWordLinkCorrectItems ? minWordLinkCorrectItems : desired;
+  final target = desired < minWordLinkCorrectItems
+      ? minWordLinkCorrectItems
+      : desired;
   return correctPoolSize < target ? correctPoolSize : target;
 }
 
@@ -231,7 +257,10 @@ bool canBuildWordLinkRound(String letter, int entityCount) {
   }
   final normalized = normalizeTargetLetter(letter);
   final correctPool = getWordsByFirstLetter(normalized);
-  final correctCount = countCorrectWordLinkItems(entityCount, correctPool.length);
+  final correctCount = countCorrectWordLinkItems(
+    entityCount,
+    correctPool.length,
+  );
   final distractorPool = getWordsNotStartingWith(normalized);
   return correctPool.length >= minWordLinkCorrectItems &&
       distractorPool.length >= entityCount - correctCount;

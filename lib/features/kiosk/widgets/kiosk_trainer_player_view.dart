@@ -9,6 +9,7 @@ import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 
 class KioskTrainerPlayerView extends StatefulWidget {
   const KioskTrainerPlayerView({
@@ -148,14 +149,24 @@ class _KioskTrainerPlayerViewState extends State<KioskTrainerPlayerView> {
     final nextStepIndex = _stepIndex + 1;
 
     if (nextStepIndex >= totalSteps) {
-      _exit();
+      _exit(completed: true);
       return;
     }
 
     setState(() => _stepIndex = nextStepIndex);
   }
 
-  void _exit() {
+  void _exit({bool completed = false}) {
+    final telemetry = _snapshot?.telemetry;
+    if (!completed && telemetry != null) {
+      unawaited(
+        reportTrainerAbandoned(
+          descriptor: telemetry,
+          sender: widget.trainerApi.reportLessonTrainerEvent,
+          stepIndex: _stepIndex,
+        ).catchError((_) {}),
+      );
+    }
     widget.onExit?.call();
   }
 
@@ -190,6 +201,35 @@ class _KioskTrainerPlayerViewState extends State<KioskTrainerPlayerView> {
     final step = snapshot.steps[_stepIndex];
     final isLast = _stepIndex >= totalSteps - 1;
     final isInteractive = isTrainerInteractive(step.trainerKey);
+    Widget buildPlayer() {
+      return Builder(
+        builder: (telemetryContext) {
+          void completeStep() {
+            TrainerTelemetryScope.maybeOf(telemetryContext)?.complete();
+            _handleAdvance();
+          }
+
+          return TrainerPlayer(
+            key: ValueKey('${snapshot.assignmentId}-${widget.reloadToken}-${step.id}'),
+            trainerKey: step.trainerKey,
+            params: step.params,
+            runtimeSnapshot: step.runtimeSnapshot,
+            l10n: l10n,
+            onComplete: isInteractive ? completeStep : null,
+            stepChrome: TrainerStepChrome(
+              finishLabel: l10n.parentHomeworkPlayFinish,
+              isInteractive: isInteractive,
+              isLast: isLast,
+              isPending: false,
+              nextLabel: l10n.parentHomeworkPlayNext,
+              onAdvance: completeStep,
+            ),
+          );
+        },
+      );
+    }
+
+    final telemetry = snapshot.telemetry;
 
     return TrainerPlayShell(
       currentStep: _stepIndex + 1,
@@ -198,22 +238,18 @@ class _KioskTrainerPlayerViewState extends State<KioskTrainerPlayerView> {
       menuExitLabel: l10n.kioskTrainerCompletedBack,
       edgeToEdge: true,
       onExit: _exit,
-      child: TrainerPlayer(
-        key: ValueKey('${snapshot.assignmentId}-${widget.reloadToken}-${step.id}'),
-        trainerKey: step.trainerKey,
-        params: step.params,
-        runtimeSnapshot: step.runtimeSnapshot,
-        l10n: l10n,
-        onComplete: isInteractive ? _handleAdvance : null,
-        stepChrome: TrainerStepChrome(
-          finishLabel: l10n.parentHomeworkPlayFinish,
-          isInteractive: isInteractive,
-          isLast: isLast,
-          isPending: false,
-          nextLabel: l10n.parentHomeworkPlayNext,
-          onAdvance: _handleAdvance,
-        ),
-      ),
+      child: telemetry == null
+          ? buildPlayer()
+          : TrainerTelemetryScope(
+              key: ValueKey('${telemetry.runId}-$_stepIndex'),
+              descriptor: telemetry,
+              sender: widget.trainerApi.reportLessonTrainerEvent,
+              stepIndex: _stepIndex,
+              totalSteps: totalSteps,
+              trainerKey: step.trainerKey,
+              trainerTitle: trainerTitleForKey(step.trainerKey),
+              child: buildPlayer(),
+            ),
     );
   }
 }

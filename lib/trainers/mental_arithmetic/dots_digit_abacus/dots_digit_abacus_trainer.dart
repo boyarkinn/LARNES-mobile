@@ -24,6 +24,7 @@ import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_sc
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
@@ -385,6 +386,11 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   }
 
   void _handleConnect(MatchTaskConnection connection) {
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: true,
+      progressCurrent: _connections.length + 1,
+      progressTotal: 2,
+    );
     setState(() => _connections.add(connection));
   }
 
@@ -462,6 +468,14 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
             _matchDisabled || _phase == DotsDigitAbacusPhase.taskInstruction,
         onAllConnected: _handleMatchComplete,
         onConnect: _handleConnect,
+        onWrongAttempt: () {
+          TrainerTelemetryScope.maybeOf(context)?.interaction(
+            correct: false,
+            errorCode: 'wrong_match',
+            progressCurrent: _connections.length,
+            progressTotal: 2,
+          );
+        },
         plan: _matchPlan,
         practice: _phase != DotsDigitAbacusPhase.explain,
         taskInstructionLength: _taskInstructionLength,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_board.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -185,6 +186,11 @@ class _FlashcardDigitMatchTrainerState
       return;
     }
 
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: true,
+      progressCurrent: _roundIndex * _pairCount + _connections.length + 1,
+      progressTotal: _rounds.length * _pairCount,
+    );
     setState(() => _connections.add(connection));
 
     if (isRoundComplete(_connections, _pairCount)) {
@@ -273,6 +279,15 @@ class _FlashcardDigitMatchTrainerState
               connections: _connections,
               disabled: _isRoundComplete,
               onConnect: _handleConnect,
+              onWrongAttempt: () {
+                TrainerTelemetryScope.maybeOf(context)?.interaction(
+                  correct: false,
+                  errorCode: 'wrong_match',
+                  progressCurrent:
+                      _roundIndex * _pairCount + _connections.length,
+                  progressTotal: _rounds.length * _pairCount,
+                );
+              },
               round: currentRound,
               targetMode: _targetMode,
               totalRods: _totalRods,

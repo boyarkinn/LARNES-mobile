@@ -280,6 +280,20 @@ class ParentApi {
     }
   }
 
+  Future<void> reportLessonTrainerEvent(
+    LessonTrainerTelemetryDescriptor descriptor,
+    Map<String, dynamic> event,
+  ) async {
+    await _client.dio.post(
+      descriptor.reportUrl,
+      data: {
+        'events': [event],
+        'reportToken': descriptor.reportToken,
+        'runId': descriptor.runId,
+      },
+    );
+  }
+
   Future<void> leaveLiveLesson({
     required String childId,
     String locale = 'ru',

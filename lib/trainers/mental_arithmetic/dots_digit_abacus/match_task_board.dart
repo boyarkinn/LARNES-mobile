@@ -99,6 +99,7 @@ class MatchTaskBoard extends StatefulWidget {
     this.renderSharedObjects = true,
     required this.onConnect,
     required this.onAllConnected,
+    this.onWrongAttempt,
   });
 
   final MatchTaskPlan plan;
@@ -109,6 +110,7 @@ class MatchTaskBoard extends StatefulWidget {
   final bool renderSharedObjects;
   final ValueChanged<MatchTaskConnection> onConnect;
   final VoidCallback onAllConnected;
+  final VoidCallback? onWrongAttempt;
 
   @override
   State<MatchTaskBoard> createState() => _MatchTaskBoardState();
@@ -366,6 +368,7 @@ class _MatchTaskBoardState extends State<MatchTaskBoard>
           : _getAnchor(digitKey, rightSide: false);
 
       if (digitItem.id != widget.plan.targetDigitId) {
+        widget.onWrongAttempt?.call();
         if (wrongTo != null) {
           _flashWrongTarget(
             digitItem.id,
@@ -399,6 +402,7 @@ class _MatchTaskBoardState extends State<MatchTaskBoard>
           : _getAnchor(abacusKey, rightSide: false);
 
       if (abacusItem.id != widget.plan.targetAbacusId) {
+        widget.onWrongAttempt?.call();
         if (wrongTo != null) {
           _flashWrongTarget(
             abacusItem.id,

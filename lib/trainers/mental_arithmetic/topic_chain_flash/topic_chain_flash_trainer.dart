@@ -11,6 +11,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.d
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/check_answer.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 /// Web v2: `platform/src/trainers/mental-arithmetic/topic-chain-flash/component.tsx`
@@ -461,6 +462,12 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     }
 
     if (!isCorrectAnswer(_answerDraft, chain.answer)) {
+      TrainerTelemetryScope.maybeOf(context)?.interaction(
+        correct: false,
+        errorCode: 'wrong_answer',
+        progressCurrent: _exampleIndex,
+        progressTotal: _totalExamples,
+      );
       setState(() {
         _isWrong = true;
         _isCorrect = false;
@@ -481,6 +488,11 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       return;
     }
 
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: true,
+      progressCurrent: _exampleIndex + 1,
+      progressTotal: _totalExamples,
+    );
     setState(() {
       _isWrong = false;
       _isCorrect = true;

@@ -3,11 +3,13 @@ import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_session_api.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_commands_response.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_initial_mode.dart';
 import 'package:larnes_mobile/features/network/models/network_device.dart';
+import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
 import 'memory_child_session_token_storage.dart';
 
@@ -75,7 +77,10 @@ class FakeKioskSessionApi implements KioskSessionApi {
   }
 
   @override
-  Future<KioskScanResult> scan({required String token, String locale = 'ru'}) async {
+  Future<KioskScanResult> scan({
+    required String token,
+    String locale = 'ru',
+  }) async {
     scanCalls += 1;
     lastScanToken = token;
     if (scanError != null) {
@@ -93,10 +98,14 @@ class FakeKioskSessionApi implements KioskSessionApi {
   }
 }
 
-KioskDeviceContext _deviceContext({KioskDeviceLessonBinding? lesson}) {
+KioskDeviceContext _deviceContext({
+  KioskActiveChild? activeChild,
+  KioskDeviceLessonBinding? lesson,
+}) {
   return KioskDeviceContext(
     deviceId: '55555555-5555-4555-8555-555555555555',
     kind: NetworkDeviceKind.phone,
+    activeChild: activeChild,
     centerName: 'Center A',
     classroomTitle: 'Room 1',
     slotLabel: 'M1',
@@ -118,116 +127,117 @@ void main() {
       controller.dispose();
     });
 
-    test('sync cycle acks leftover open_scan without opening the camera', () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          KioskCommandsResponse(
-            since: 0,
-            commandSeq: 2,
-            commands: const [
-              KioskDeviceCommand(
-                command: KioskDeviceCommandKind.openScan,
-                seq: 2,
-              ),
-            ],
+    test(
+      'sync cycle acks leftover open_scan without opening the camera',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            KioskCommandsResponse(
+              since: 0,
+              commandSeq: 2,
+              commands: const [
+                KioskDeviceCommand(
+                  command: KioskDeviceCommandKind.openScan,
+                  seq: 2,
+                ),
+              ],
+            ),
+          ],
+        );
+        final childStorage = MemoryChildSessionTokenStorage();
+        await childStorage.writeToken('existing-child-token');
+
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: childStorage,
+          deviceContext: _deviceContext(),
+          onDeviceUnauthorized: () {},
+        );
+
+        await controller.runSyncCycle();
+
+        expect(controller.mode, KioskSessionMode.idle);
+        expect(api.childLogoutCalls, 0);
+        expect(await childStorage.hasToken(), isTrue);
+        expect(api.heartbeatCalls, 1);
+        expect(api.lastHeartbeatAck, 2);
+
+        controller.dispose();
+      },
+    );
+
+    test(
+      'sync cycle advances since without command and sends heartbeat',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            const KioskCommandsResponse(since: 1, commandSeq: 3, commands: []),
+          ],
+          deviceMeResponse: _deviceContext(
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 3,
+              lessonSessionId: 'lesson-id',
+              status: 'idle_child',
+            ),
           ),
-        ],
-      );
-      final childStorage = MemoryChildSessionTokenStorage();
-      await childStorage.writeToken('existing-child-token');
+        );
 
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: childStorage,
-        deviceContext: _deviceContext(),
-        onDeviceUnauthorized: () {},
-      );
-
-      await controller.runSyncCycle();
-
-      expect(controller.mode, KioskSessionMode.idle);
-      expect(api.childLogoutCalls, 0);
-      expect(await childStorage.hasToken(), isTrue);
-      expect(api.heartbeatCalls, 1);
-      expect(api.lastHeartbeatAck, 2);
-
-      controller.dispose();
-    });
-
-    test('sync cycle advances since without command and sends heartbeat', () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          const KioskCommandsResponse(
-            since: 1,
-            commandSeq: 3,
-            commands: [],
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+          deviceContext: _deviceContext(
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 1,
+              lessonSessionId: 'lesson-id',
+              status: 'idle_child',
+            ),
           ),
-        ],
-        deviceMeResponse: _deviceContext(
-          lesson: const KioskDeviceLessonBinding(
-            commandSeq: 3,
-            lessonSessionId: 'lesson-id',
-            status: 'idle_child',
+          onDeviceUnauthorized: () {},
+        );
+
+        await controller.runSyncCycle();
+
+        expect(controller.mode, KioskSessionMode.idle);
+        expect(api.childLogoutCalls, 0);
+        expect(api.heartbeatCalls, 1);
+        expect(api.lastHeartbeatAck, isNull);
+
+        controller.dispose();
+      },
+    );
+
+    test(
+      'sync cycle stays idle for leftover waiting_scan when QR is frozen',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            const KioskCommandsResponse(since: 0, commandSeq: 1, commands: []),
+          ],
+          deviceMeResponse: _deviceContext(
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 1,
+              lessonSessionId: 'lesson-id',
+              status: 'waiting_scan',
+            ),
           ),
-        ),
-      );
+        );
 
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
-        deviceContext: _deviceContext(
-          lesson: const KioskDeviceLessonBinding(
-            commandSeq: 1,
-            lessonSessionId: 'lesson-id',
-            status: 'idle_child',
-          ),
-        ),
-        onDeviceUnauthorized: () {},
-      );
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+          deviceContext: _deviceContext(),
+          onDeviceUnauthorized: () {},
+        );
 
-      await controller.runSyncCycle();
+        await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.idle);
-      expect(api.childLogoutCalls, 0);
-      expect(api.heartbeatCalls, 1);
-      expect(api.lastHeartbeatAck, isNull);
+        expect(controller.mode, KioskSessionMode.idle);
+        expect(api.getDeviceMeCalls, 1);
+        expect(api.heartbeatCalls, 1);
 
-      controller.dispose();
-    });
-
-    test('sync cycle stays idle for leftover waiting_scan when QR is frozen', () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          const KioskCommandsResponse(
-            since: 0,
-            commandSeq: 1,
-            commands: [],
-          ),
-        ],
-        deviceMeResponse: _deviceContext(
-          lesson: const KioskDeviceLessonBinding(
-            commandSeq: 1,
-            lessonSessionId: 'lesson-id',
-            status: 'waiting_scan',
-          ),
-        ),
-      );
-
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
-        deviceContext: _deviceContext(),
-        onDeviceUnauthorized: () {},
-      );
-
-      await controller.runSyncCycle();
-
-      expect(controller.mode, KioskSessionMode.idle);
-      expect(api.getDeviceMeCalls, 1);
-      expect(api.heartbeatCalls, 1);
-
-      controller.dispose();
-    });
+        controller.dispose();
+      },
+    );
 
     test('submitScan stores child token and switches to result', () async {
       final api = FakeKioskSessionApi(
@@ -256,7 +266,10 @@ void main() {
       expect(api.lastScanToken, 'qr-token');
       expect(await childStorage.readToken(), 'child-jwt-token');
       expect(controller.mode, KioskSessionMode.play);
-      expect(controller.activeProgramId, '77777777-7777-4777-8777-777777777777');
+      expect(
+        controller.activeProgramId,
+        '77777777-7777-4777-8777-777777777777',
+      );
       expect(controller.scanResult?.childDisplayName, 'Anna');
 
       controller.dispose();
@@ -294,10 +307,7 @@ void main() {
             since: 2,
             commandSeq: 3,
             commands: const [
-              KioskDeviceCommand(
-                command: KioskDeviceCommandKind.idle,
-                seq: 3,
-              ),
+              KioskDeviceCommand(command: KioskDeviceCommandKind.idle, seq: 3),
             ],
           ),
         ],
@@ -331,55 +341,102 @@ void main() {
       controller.dispose();
     });
 
-    test('reset_child command during play switches to idle and clears child',
-        () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          KioskCommandsResponse(
-            since: 2,
-            commandSeq: 4,
-            commands: const [
-              KioskDeviceCommand(
-                command: KioskDeviceCommandKind.resetChild,
-                seq: 4,
-              ),
-            ],
+    test(
+      'reset_child command during play switches to idle and clears child',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            KioskCommandsResponse(
+              since: 2,
+              commandSeq: 4,
+              commands: const [
+                KioskDeviceCommand(
+                  command: KioskDeviceCommandKind.resetChild,
+                  seq: 4,
+                ),
+              ],
+            ),
+          ],
+          scanResult: const KioskScanResult(
+            outcome: KioskScanOutcome.play,
+            childId: '88888888-8888-4888-8888-888888888888',
+            childDisplayName: 'Anna',
+            childSessionToken: 'child-jwt-token',
+            programId: '77777777-7777-4777-8777-777777777777',
           ),
-        ],
-        scanResult: const KioskScanResult(
-          outcome: KioskScanOutcome.play,
-          childId: '88888888-8888-4888-8888-888888888888',
-          childDisplayName: 'Anna',
-          childSessionToken: 'child-jwt-token',
-          programId: '77777777-7777-4777-8777-777777777777',
-        ),
-      );
-      final childStorage = MemoryChildSessionTokenStorage();
+        );
+        final childStorage = MemoryChildSessionTokenStorage();
 
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: childStorage,
-        deviceContext: _deviceContext(),
-        initialMode: KioskSessionMode.scan,
-        initialCommandSeq: 2,
-        onDeviceUnauthorized: () {},
-      );
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: childStorage,
+          deviceContext: _deviceContext(),
+          initialMode: KioskSessionMode.scan,
+          initialCommandSeq: 2,
+          onDeviceUnauthorized: () {},
+        );
 
-      await controller.submitScan('qr-token');
-      expect(controller.mode, KioskSessionMode.play);
-      expect(await childStorage.hasToken(), isTrue);
+        await controller.submitScan('qr-token');
+        expect(controller.mode, KioskSessionMode.play);
+        expect(await childStorage.hasToken(), isTrue);
 
-      await controller.runSyncCycle();
+        await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.idle);
-      expect(controller.scanResult, isNull);
-      expect(controller.activeProgramId, isNull);
-      expect(await childStorage.hasToken(), isFalse);
-      expect(api.childLogoutCalls, 1);
-      expect(api.getDeviceMeCalls, 0);
+        expect(controller.mode, KioskSessionMode.idle);
+        expect(controller.scanResult, isNull);
+        expect(controller.activeProgramId, isNull);
+        expect(await childStorage.hasToken(), isFalse);
+        expect(api.childLogoutCalls, 1);
+        expect(api.getDeviceMeCalls, 0);
 
-      controller.dispose();
-    });
+        controller.dispose();
+      },
+    );
+
+    test(
+      'teacher-assigned idle child resumes into the waiting screen',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            const KioskCommandsResponse(since: 0, commandSeq: 0, commands: []),
+          ],
+          scanResult: const KioskScanResult(
+            outcome: KioskScanOutcome.noProgram,
+            childId: '88888888-8888-4888-8888-888888888888',
+            childDisplayName: 'Anna',
+            childSessionToken: 'child-jwt-token',
+          ),
+          deviceMeResponse: _deviceContext(
+            activeChild: const KioskActiveChild(
+              childId: '88888888-8888-4888-8888-888888888888',
+              childDisplayName: 'Anna',
+              childCardColor: ChildCardColor.orange,
+              lessonSessionId: 'lesson-id',
+            ),
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 0,
+              lessonSessionId: 'lesson-id',
+              status: 'idle_child',
+            ),
+          ),
+        );
+        final childStorage = MemoryChildSessionTokenStorage();
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: childStorage,
+          deviceContext: _deviceContext(),
+          initialMode: KioskSessionMode.idle,
+          onDeviceUnauthorized: () {},
+        );
+
+        await controller.runSyncCycle();
+
+        expect(controller.mode, KioskSessionMode.result);
+        expect(controller.scanResult?.childDisplayName, 'Anna');
+        expect(await childStorage.hasToken(), isTrue);
+        controller.dispose();
+      },
+    );
 
     test('play_trainer command opens trainer without child logout', () async {
       final api = FakeKioskSessionApi(
@@ -477,56 +534,58 @@ void main() {
       controller.dispose();
     });
 
-    test('stale open_scan is acked without logout when child already bound',
-        () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          KioskCommandsResponse(
-            since: 0,
-            commandSeq: 1,
-            commands: const [
-              KioskDeviceCommand(
-                command: KioskDeviceCommandKind.openScan,
-                seq: 1,
-              ),
-            ],
+    test(
+      'stale open_scan is acked without logout when child already bound',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            KioskCommandsResponse(
+              since: 0,
+              commandSeq: 1,
+              commands: const [
+                KioskDeviceCommand(
+                  command: KioskDeviceCommandKind.openScan,
+                  seq: 1,
+                ),
+              ],
+            ),
+          ],
+          scanResult: const KioskScanResult(
+            outcome: KioskScanOutcome.noProgram,
+            childId: '88888888-8888-4888-8888-888888888888',
+            childDisplayName: 'Anna',
+            childSessionToken: 'child-jwt-token',
           ),
-        ],
-        scanResult: const KioskScanResult(
-          outcome: KioskScanOutcome.noProgram,
-          childId: '88888888-8888-4888-8888-888888888888',
-          childDisplayName: 'Anna',
-          childSessionToken: 'child-jwt-token',
-        ),
-        deviceMeResponse: _deviceContext(
-          lesson: const KioskDeviceLessonBinding(
-            commandSeq: 1,
-            lessonSessionId: 'lesson-id',
-            status: 'child_active',
+          deviceMeResponse: _deviceContext(
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 1,
+              lessonSessionId: 'lesson-id',
+              status: 'child_active',
+            ),
           ),
-        ),
-      );
-      final childStorage = MemoryChildSessionTokenStorage();
-      await childStorage.writeToken('child-jwt-token');
+        );
+        final childStorage = MemoryChildSessionTokenStorage();
+        await childStorage.writeToken('child-jwt-token');
 
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: childStorage,
-        deviceContext: _deviceContext(),
-        initialMode: KioskSessionMode.result,
-        onDeviceUnauthorized: () {},
-      );
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: childStorage,
+          deviceContext: _deviceContext(),
+          initialMode: KioskSessionMode.result,
+          onDeviceUnauthorized: () {},
+        );
 
-      await controller.runSyncCycle();
+        await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.result);
-      expect(controller.scanResult?.childDisplayName, 'Anna');
-      expect(api.childLogoutCalls, 0);
-      expect(await childStorage.hasToken(), isTrue);
-      expect(api.lastHeartbeatAck, 1);
+        expect(controller.mode, KioskSessionMode.result);
+        expect(controller.scanResult?.childDisplayName, 'Anna');
+        expect(api.childLogoutCalls, 0);
+        expect(await childStorage.hasToken(), isTrue);
+        expect(api.lastHeartbeatAck, 1);
 
-      controller.dispose();
-    });
+        controller.dispose();
+      },
+    );
 
     test('second play_trainer reloads trainer without child logout', () async {
       final api = FakeKioskSessionApi(
@@ -591,62 +650,56 @@ void main() {
       controller.dispose();
     });
 
-    test('sync cycle reconciles play_trainer from devices/me on result screen',
-        () async {
-      final api = FakeKioskSessionApi(
-        pollResponses: [
-          const KioskCommandsResponse(
-            since: 4,
-            commandSeq: 5,
-            commands: [],
+    test(
+      'sync cycle reconciles play_trainer from devices/me on result screen',
+      () async {
+        final api = FakeKioskSessionApi(
+          pollResponses: [
+            const KioskCommandsResponse(since: 4, commandSeq: 5, commands: []),
+          ],
+          scanResult: const KioskScanResult(
+            outcome: KioskScanOutcome.noProgram,
+            childId: '88888888-8888-4888-8888-888888888888',
+            childDisplayName: 'Anna',
+            childSessionToken: 'child-jwt-token',
           ),
-        ],
-        scanResult: const KioskScanResult(
-          outcome: KioskScanOutcome.noProgram,
-          childId: '88888888-8888-4888-8888-888888888888',
-          childDisplayName: 'Anna',
-          childSessionToken: 'child-jwt-token',
-        ),
-        deviceMeResponse: _deviceContext(
-          lesson: const KioskDeviceLessonBinding(
-            commandSeq: 5,
-            lessonSessionId: 'lesson-id',
-            pendingCommand: 'play_trainer',
-            status: 'no_program',
+          deviceMeResponse: _deviceContext(
+            lesson: const KioskDeviceLessonBinding(
+              commandSeq: 5,
+              lessonSessionId: 'lesson-id',
+              pendingCommand: 'play_trainer',
+              status: 'no_program',
+            ),
           ),
-        ),
-      );
-      final childStorage = MemoryChildSessionTokenStorage();
+        );
+        final childStorage = MemoryChildSessionTokenStorage();
 
-      final controller = KioskSessionController(
-        kioskApi: api,
-        childSessionTokenStorage: childStorage,
-        deviceContext: _deviceContext(),
-        initialMode: KioskSessionMode.scan,
-        initialCommandSeq: 5,
-        onDeviceUnauthorized: () {},
-      );
+        final controller = KioskSessionController(
+          kioskApi: api,
+          childSessionTokenStorage: childStorage,
+          deviceContext: _deviceContext(),
+          initialMode: KioskSessionMode.scan,
+          initialCommandSeq: 5,
+          onDeviceUnauthorized: () {},
+        );
 
-      await controller.submitScan('qr-token');
-      expect(controller.mode, KioskSessionMode.result);
+        await controller.submitScan('qr-token');
+        expect(controller.mode, KioskSessionMode.result);
 
-      await controller.runSyncCycle();
+        await controller.runSyncCycle();
 
-      expect(controller.mode, KioskSessionMode.trainer);
-      expect(api.getDeviceMeCalls, 1);
-      expect(api.lastHeartbeatAck, 5);
+        expect(controller.mode, KioskSessionMode.trainer);
+        expect(api.getDeviceMeCalls, 1);
+        expect(api.lastHeartbeatAck, 5);
 
-      controller.dispose();
-    });
+        controller.dispose();
+      },
+    );
 
     test('sync cycle resets play mode when lesson ended on server', () async {
       final api = FakeKioskSessionApi(
         pollResponses: [
-          const KioskCommandsResponse(
-            since: 2,
-            commandSeq: 2,
-            commands: [],
-          ),
+          const KioskCommandsResponse(since: 2, commandSeq: 2, commands: []),
         ],
         scanResult: const KioskScanResult(
           outcome: KioskScanOutcome.play,

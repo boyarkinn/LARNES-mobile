@@ -104,3 +104,7 @@ class _TrainerPlayerError extends StatelessWidget {
 bool isTrainerInteractive(String trainerKey) {
   return getTrainerDefinition(trainerKey)?.isInteractive ?? false;
 }
+
+String trainerTitleForKey(String trainerKey) {
+  return getTrainerDefinition(trainerKey)?.title ?? trainerKey;
+}

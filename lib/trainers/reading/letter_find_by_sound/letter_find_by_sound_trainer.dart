@@ -10,6 +10,7 @@ import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_find_tap_l
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/sound_play_button.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -307,6 +308,12 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
     final token = _letters[tokenIndex];
 
     if (!token.isTarget) {
+      TrainerTelemetryScope.maybeOf(context)?.interaction(
+        correct: false,
+        errorCode: 'wrong_letter',
+        progressCurrent: _roundIndex,
+        progressTotal: _practiceLetters.length,
+      );
       setState(() => _wrongId = id);
       Future<void>.delayed(
         const Duration(milliseconds: TrainerTimings.wrongFeedbackMs),
@@ -324,6 +331,11 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
       return;
     }
 
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: true,
+      progressCurrent: _roundIndex + 1,
+      progressTotal: _practiceLetters.length,
+    );
     setState(() {
       _foundIds.add(id);
       _isCompleted = true;

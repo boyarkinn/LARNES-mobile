@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/lesson_guest_key_storage.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
+import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 const lessonGuestKeyHeader = 'X-Larnes-Lesson-Guest-Key';
@@ -103,6 +104,20 @@ class LessonInviteGuestApi {
     } on DioException catch (error) {
       throw _parentApiException(error, l10n, fallback: l10n.parentLiveLessonLeaveFailed);
     }
+  }
+
+  Future<void> reportLessonTrainerEvent(
+    LessonTrainerTelemetryDescriptor descriptor,
+    Map<String, dynamic> event,
+  ) async {
+    await _client.dio.post(
+      descriptor.reportUrl,
+      data: {
+        'events': [event],
+        'reportToken': descriptor.reportToken,
+        'runId': descriptor.runId,
+      },
+    );
   }
 
   Future<Options> _guestOptions([String? knownKey]) async {

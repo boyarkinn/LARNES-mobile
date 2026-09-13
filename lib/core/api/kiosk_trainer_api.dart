@@ -69,6 +69,20 @@ class KioskTrainerApi {
       );
     }
   }
+
+  Future<void> reportLessonTrainerEvent(
+    LessonTrainerTelemetryDescriptor descriptor,
+    Map<String, dynamic> event,
+  ) async {
+    await _client.dio.post(
+      descriptor.reportUrl,
+      data: {
+        'events': [event],
+        'reportToken': descriptor.reportToken,
+        'runId': descriptor.runId,
+      },
+    );
+  }
 }
 
 class KioskTrainerApiException implements Exception {

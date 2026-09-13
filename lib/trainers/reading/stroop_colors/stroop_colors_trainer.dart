@@ -7,6 +7,7 @@ import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_audio
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_scene.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/stroop_colors_sizes.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -202,6 +203,10 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       return;
     }
 
+    TrainerTelemetryScope.maybeOf(context)?.progress(
+      current: _index,
+      total: _items.length,
+    );
     _slideTimer = Timer(Duration(milliseconds: _displayMs), () {
       if (!mounted) {
         return;

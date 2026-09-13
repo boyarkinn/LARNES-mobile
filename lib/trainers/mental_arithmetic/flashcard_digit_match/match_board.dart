@@ -46,6 +46,7 @@ class MatchBoard extends StatefulWidget {
     required this.connections,
     this.disabled = false,
     required this.onConnect,
+    this.onWrongAttempt,
   });
 
   final MatchRound round;
@@ -54,6 +55,7 @@ class MatchBoard extends StatefulWidget {
   final List<MatchConnection> connections;
   final bool disabled;
   final ValueChanged<MatchConnection> onConnect;
+  final VoidCallback? onWrongAttempt;
 
   @override
   State<MatchBoard> createState() => _MatchBoardState();
@@ -310,6 +312,7 @@ class _MatchBoardState extends State<MatchBoard> {
       return true;
     }
 
+    widget.onWrongAttempt?.call();
     final rightKey = _rightKeys[rightItem.id];
     final wrongTo = rightKey == null
         ? null

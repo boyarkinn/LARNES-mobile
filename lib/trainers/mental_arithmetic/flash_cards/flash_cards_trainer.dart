@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
@@ -258,6 +259,12 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
     setState(() => _selectedAnswer = answer);
 
     if (answer != _currentValue) {
+      TrainerTelemetryScope.maybeOf(context)?.interaction(
+        correct: false,
+        errorCode: 'wrong_number',
+        progressCurrent: _cardIndex,
+        progressTotal: _cardValues.length,
+      );
       final nextAttempts = _failedAttempts + 1;
       setState(() {
         _failedAttempts = nextAttempts;
@@ -287,6 +294,11 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
       return;
     }
 
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: true,
+      progressCurrent: _cardIndex + 1,
+      progressTotal: _cardValues.length,
+    );
     setState(() {
       _isWrong = false;
       _isCorrect = true;

@@ -33,10 +33,10 @@ class KioskSessionController extends ChangeNotifier {
         _onDeviceUnauthorized = onDeviceUnauthorized,
         _syncInterval = syncInterval,
         _scanResult = initialScanResult,
-        _mode = initialMode ??
-            resolveInitialModeFromLesson(deviceContext.lesson),
-        _since = initialCommandSeq ??
-            resolveInitialCommandSeq(deviceContext.lesson);
+        _mode =
+            initialMode ?? resolveInitialModeFromLesson(deviceContext.lesson),
+        _since =
+            initialCommandSeq ?? resolveInitialCommandSeq(deviceContext.lesson);
 
   final KioskSessionApi _kioskApi;
   final ChildSessionTokenStorage _childSessionTokenStorage;
@@ -378,7 +378,9 @@ class KioskSessionController extends ChangeNotifier {
       return false;
     }
 
-    if (lesson.status != 'no_program' && lesson.status != 'child_active') {
+    if (lesson.status != 'idle_child' &&
+        lesson.status != 'no_program' &&
+        lesson.status != 'child_active') {
       return false;
     }
 
@@ -427,7 +429,9 @@ class KioskSessionController extends ChangeNotifier {
       }
     }
 
-    if (lesson != null && lesson.commandSeq > _since && lesson.pendingCommand == null) {
+    if (lesson != null &&
+        lesson.commandSeq > _since &&
+        lesson.pendingCommand == null) {
       _since = lesson.commandSeq;
     }
 

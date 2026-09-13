@@ -143,6 +143,7 @@ class ParentHomeworkPlaySnapshot {
     this.cancelledAt,
     required this.currentStepIndex,
     required this.steps,
+    this.telemetry,
   });
 
   factory ParentHomeworkPlaySnapshot.fromJson(Map<String, dynamic> json) {
@@ -166,6 +167,11 @@ class ParentHomeworkPlaySnapshot {
           : DateTime.parse(json['cancelledAt'] as String),
       currentStepIndex: json['currentStepIndex'] as int? ?? 0,
       steps: steps,
+      telemetry: json['telemetry'] is Map
+          ? LessonTrainerTelemetryDescriptor.fromJson(
+              Map<String, dynamic>.from(json['telemetry'] as Map),
+            )
+          : null,
     );
   }
 
@@ -178,6 +184,27 @@ class ParentHomeworkPlaySnapshot {
   final DateTime? cancelledAt;
   final int currentStepIndex;
   final List<ParentHomeworkPlayStep> steps;
+  final LessonTrainerTelemetryDescriptor? telemetry;
 
   bool get isCompleted => status == 'completed';
+}
+
+class LessonTrainerTelemetryDescriptor {
+  const LessonTrainerTelemetryDescriptor({
+    required this.reportToken,
+    required this.reportUrl,
+    required this.runId,
+  });
+
+  factory LessonTrainerTelemetryDescriptor.fromJson(Map<String, dynamic> json) {
+    return LessonTrainerTelemetryDescriptor(
+      reportToken: json['reportToken'] as String,
+      reportUrl: json['reportUrl'] as String,
+      runId: json['runId'] as String,
+    );
+  }
+
+  final String reportToken;
+  final String reportUrl;
+  final String runId;
 }

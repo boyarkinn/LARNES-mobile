@@ -7,6 +7,7 @@ import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_grid.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_phase.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -325,6 +326,13 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       return;
     }
 
+    final correct = _sameCell(cell, _round.finish);
+    TrainerTelemetryScope.maybeOf(context)?.interaction(
+      correct: correct,
+      errorCode: correct ? null : 'wrong_cell',
+      progressCurrent: _roundIndex + 1,
+      progressTotal: _rounds.length,
+    );
     setState(() {
       _selectedCell = cell;
       _replayPathIndex = 0;

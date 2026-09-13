@@ -26,6 +26,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
     required this.disabled,
     required this.onAllConnected,
     required this.onConnect,
+    this.onWrongAttempt,
     required this.plan,
     required this.practice,
     required this.taskInstructionLength,
@@ -38,6 +39,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
   final bool disabled;
   final VoidCallback onAllConnected;
   final ValueChanged<MatchTaskConnection> onConnect;
+  final VoidCallback? onWrongAttempt;
   final MatchTaskPlan plan;
   final bool practice;
   final int taskInstructionLength;
@@ -63,6 +65,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
             disabled: disabled || !practice,
             onAllConnected: onAllConnected,
             onConnect: onConnect,
+            onWrongAttempt: onWrongAttempt,
             plan: plan,
             preview: !practice || taskInstructionVisible,
             renderSharedObjects: false,

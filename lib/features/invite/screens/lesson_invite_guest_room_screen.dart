@@ -13,6 +13,7 @@ import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 
 class LessonInviteGuestRoomScreen extends StatefulWidget {
   const LessonInviteGuestRoomScreen({super.key, required this.token});
@@ -193,12 +194,24 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     }
   }
 
-  void _dismissPlayer() {
+  void _dismissPlayer({bool completed = false}) {
     final room = _room;
     if (room == null) {
       return;
     }
 
+    final telemetry = room.snapshot?.telemetry;
+    if (!completed && telemetry != null) {
+      unawaited(
+        reportTrainerAbandoned(
+          descriptor: telemetry,
+          sender: AuthScope.of(context)
+              .lessonInviteGuestApi
+              .reportLessonTrainerEvent,
+          stepIndex: _stepIndex,
+        ).catchError((_) {}),
+      );
+    }
     setState(() {
       _dismissedSeq = room.commandSeq;
     });
@@ -212,7 +225,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
 
     final nextStepIndex = _stepIndex + 1;
     if (nextStepIndex >= snapshot.steps.length) {
-      _dismissPlayer();
+      _dismissPlayer(completed: true);
       return;
     }
 
@@ -304,6 +317,36 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     final step = snapshot.steps[_stepIndex];
     final isLast = _stepIndex >= totalSteps - 1;
     final isInteractive = isTrainerInteractive(step.trainerKey);
+    final guestApi = AuthScope.of(context).lessonInviteGuestApi;
+    Widget buildPlayer() {
+      return Builder(
+        builder: (telemetryContext) {
+          void completeStep() {
+            TrainerTelemetryScope.maybeOf(telemetryContext)?.complete();
+            _advanceStep();
+          }
+
+          return TrainerPlayer(
+            key: ValueKey(step.id),
+            trainerKey: step.trainerKey,
+            params: step.params,
+            runtimeSnapshot: step.runtimeSnapshot,
+            l10n: l10n,
+            onComplete: isInteractive ? completeStep : null,
+            stepChrome: TrainerStepChrome(
+              finishLabel: l10n.parentHomeworkPlayFinish,
+              isInteractive: isInteractive,
+              isLast: isLast,
+              isPending: false,
+              nextLabel: l10n.parentHomeworkPlayNext,
+              onAdvance: completeStep,
+            ),
+          );
+        },
+      );
+    }
+
+    final telemetry = snapshot.telemetry;
 
     return TrainerPlayShell(
       key: ValueKey(room.commandSeq),
@@ -312,22 +355,18 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
       menuContinueLabel: l10n.parentHomeworkPlayMenuContinue,
       menuExitLabel: l10n.parentHomeworkPlayExit,
       onExit: _dismissPlayer,
-      child: TrainerPlayer(
-        key: ValueKey(step.id),
-        trainerKey: step.trainerKey,
-        params: step.params,
-        runtimeSnapshot: step.runtimeSnapshot,
-        l10n: l10n,
-        onComplete: isInteractive ? _advanceStep : null,
-        stepChrome: TrainerStepChrome(
-          finishLabel: l10n.parentHomeworkPlayFinish,
-          isInteractive: isInteractive,
-          isLast: isLast,
-          isPending: false,
-          nextLabel: l10n.parentHomeworkPlayNext,
-          onAdvance: _advanceStep,
-        ),
-      ),
+      child: telemetry == null
+          ? buildPlayer()
+          : TrainerTelemetryScope(
+              key: ValueKey('${telemetry.runId}-$_stepIndex'),
+              descriptor: telemetry,
+              sender: guestApi.reportLessonTrainerEvent,
+              stepIndex: _stepIndex,
+              totalSteps: totalSteps,
+              trainerKey: step.trainerKey,
+              trainerTitle: trainerTitleForKey(step.trainerKey),
+              child: buildPlayer(),
+            ),
     );
   }
 }

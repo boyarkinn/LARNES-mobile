@@ -264,6 +264,15 @@ List<TopicMeta> _buildTopicCatalog() {
         totalRods: 3,
       ),
     );
+    topics.add(
+      TopicMeta(
+        block: TopicBlock.friendBrother,
+        id: 'friend-brother-$n-3digit',
+        label: 'Друг + брат $n трёхзначные',
+        status: TopicStatus.mvp,
+        totalRods: 3,
+      ),
+    );
   }
 
   topics.addAll(const [

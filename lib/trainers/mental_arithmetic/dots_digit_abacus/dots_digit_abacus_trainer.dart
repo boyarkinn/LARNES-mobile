@@ -93,18 +93,24 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
   int get _value => normalizeDotsDigitAbacusValue(widget.params['value']);
 
   late MatchTaskPlan _matchPlan;
+  late ExplainColorPlan _explainColors;
   final _sessionMatchSeed = math.Random().nextInt(0x7FFFFFFF);
 
-  MatchTaskPlan _buildPlan() {
-    final seed = readTrainerSnapshotSeed('dots-digit-abacus', widget.params);
-    return buildMatchTaskPlan(_value, seed ?? _sessionMatchSeed);
+  int get _sessionSeed =>
+      readTrainerSnapshotSeed('dots-digit-abacus', widget.params) ??
+      _sessionMatchSeed;
+
+  void _rebuildSessionModels() {
+    final seed = _sessionSeed;
+    _matchPlan = buildMatchTaskPlan(_value, seed);
+    _explainColors = buildExplainColorPlan(_value, seed);
   }
 
   @override
   void initState() {
     super.initState();
 
-    _matchPlan = _buildPlan();
+    _rebuildSessionModels();
 
     _startSession();
   }
@@ -114,7 +120,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     super.didUpdateWidget(oldWidget);
 
     if (oldWidget.params != widget.params) {
-      _matchPlan = _buildPlan();
+      _rebuildSessionModels();
 
       _startSession();
     }
@@ -476,6 +482,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
             progressTotal: 2,
           );
         },
+        explainColors: _explainColors,
         plan: _matchPlan,
         practice: _phase != DotsDigitAbacusPhase.explain,
         taskInstructionLength: _taskInstructionLength,

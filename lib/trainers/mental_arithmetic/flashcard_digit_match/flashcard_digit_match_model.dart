@@ -1,11 +1,17 @@
 import 'dart:math' as math;
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_colors.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
 export 'package:larnes_mobile/trainers/shared/trainer_constants.dart'
     show maxMatchPairs, minMatchPairs;
+export 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart'
+    show
+        defaultMatchTopicId,
+        resolveMatchTopicId,
+        resolveMatchTotalRods;
 
 const minMatchRounds = 1;
 const maxMatchRounds = 10;
@@ -78,6 +84,50 @@ List<int> generateRandomValues(
   ).take(clampPairCount(pairCount)).toList(growable: false);
 }
 
+List<int> generateTopicMatchValues(
+  int pairCount,
+  String topicId,
+  double Function() rng,
+) {
+  final count = clampPairCount(pairCount);
+  final pools = buildMatchValuePools(topicId);
+  final selected = <int>[];
+
+  final focusShuffled = _shuffleItems(pools.focus, rng);
+  selected.add(focusShuffled.first);
+
+  final preferred = [
+    ..._shuffleItems(
+      pools.prior.where((value) => !selected.contains(value)).toList(),
+      rng,
+    ),
+    ..._shuffleItems(
+      pools.focus.where((value) => !selected.contains(value)).toList(),
+      rng,
+    ),
+  ];
+
+  for (final value in preferred) {
+    if (selected.length >= count) {
+      break;
+    }
+    selected.add(value);
+  }
+
+  if (selected.length < count) {
+    for (var value = 0; value <= pools.maxValue; value++) {
+      if (!selected.contains(value)) {
+        selected.add(value);
+      }
+      if (selected.length >= count) {
+        break;
+      }
+    }
+  }
+
+  return _shuffleItems(selected.take(count).toList(), rng);
+}
+
 List<T> _shuffleItems<T>(List<T> items, double Function() rng) {
   final next = [...items];
 
@@ -126,7 +176,7 @@ int buildRoundSeed(int masterSeed, int roundIndex) {
 List<MatchRound> buildFlashcardMatchPlan({
   required int pairCount,
   required int rounds,
-  required int totalRods,
+  required String topicId,
   required int masterSeed,
 }) {
   final safePairCount = clampPairCount(pairCount);
@@ -136,9 +186,9 @@ List<MatchRound> buildFlashcardMatchPlan({
   for (var roundIndex = 0; roundIndex < safeRounds; roundIndex++) {
     final roundSeed = buildRoundSeed(masterSeed, roundIndex);
     final colorSeed = buildMatchColorSeed(masterSeed, roundIndex);
-    final values = generateRandomValues(
+    final values = generateTopicMatchValues(
       safePairCount,
-      totalRods,
+      topicId,
       createSeededRng(roundSeed),
     );
     final colorPairs = colorPairsForRound(safePairCount, colorSeed);
@@ -175,9 +225,11 @@ bool isRoundComplete(List<MatchConnection> connections, int pairCount) {
 }
 
 Map<String, dynamic> parseFlashcardMatchParamsFromInput({
+  Object? chainTopicId,
   Object? pairCount,
   Object? rounds,
   Object? targetMode,
+  Object? topicId,
   Object? totalRods,
 }) {
   return {
@@ -190,6 +242,6 @@ Map<String, dynamic> parseFlashcardMatchParamsFromInput({
     'targetMode': normalizeTargetMode(targetMode) == FlashcardTargetMode.dots
         ? 'dots'
         : 'digits',
-    'totalRods': math.max(1, (num.tryParse('$totalRods') ?? 1).truncate()),
+    'topicId': resolveMatchTopicId(topicId ?? chainTopicId, totalRods),
   };
 }

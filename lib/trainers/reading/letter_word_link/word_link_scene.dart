@@ -8,6 +8,7 @@ import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_model.
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_size.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/shared/match_connection/connection_lines_painter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 class _DrawLine {
@@ -400,10 +401,30 @@ class _WordLinkSceneState extends State<WordLinkScene> {
                       Positioned.fill(
                         child: IgnorePointer(
                           child: CustomPaint(
-                            painter: _WordLinkLinesPainter(
-                              activeDraw: _activeDraw,
-                              lockedLines: lockedLines,
-                              wrongFlash: _wrongFlash,
+                            painter: MatchConnectionLinesPainter(
+                              draft: _activeDraw == null
+                                  ? null
+                                  : MatchConnectionDraftSegment(
+                                      from: _activeDraw!.from,
+                                      stroke: wordLinkLineDraftColor,
+                                      to: _activeDraw!.to,
+                                    ),
+                              lockedLines: lockedLines
+                                  .map(
+                                    (line) => MatchConnectionLineSegment(
+                                      from: line.from,
+                                      stroke: wordLinkLineLockedColor,
+                                      to: line.to,
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                              wrong: _wrongFlash == null
+                                  ? null
+                                  : MatchConnectionWrongSegment(
+                                      from: _wrongFlash!.from,
+                                      to: _wrongFlash!.to,
+                                    ),
+                              wrongStroke: wordLinkLineWrongColor,
                             ),
                           ),
                         ),
@@ -420,74 +441,3 @@ class _WordLinkSceneState extends State<WordLinkScene> {
   }
 }
 
-class _WordLinkLinesPainter extends CustomPainter {
-  _WordLinkLinesPainter({
-    required this.lockedLines,
-    required this.activeDraw,
-    required this.wrongFlash,
-  });
-
-  final List<_DrawLine> lockedLines;
-  final _ActiveDraw? activeDraw;
-  final _WrongFlash? wrongFlash;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final lockedPaint = Paint()
-      ..color = wordLinkLineLockedColor
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-
-    for (final line in lockedLines) {
-      canvas.drawLine(line.from, line.to, lockedPaint);
-    }
-
-    if (activeDraw != null) {
-      _drawDashedLine(
-        canvas,
-        activeDraw!.from,
-        activeDraw!.to,
-        Paint()
-          ..color = wordLinkLineDraftColor
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    if (wrongFlash != null) {
-      canvas.drawLine(
-        wrongFlash!.from,
-        wrongFlash!.to,
-        Paint()
-          ..color = wordLinkLineWrongColor
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  void _drawDashedLine(Canvas canvas, Offset from, Offset to, Paint paint) {
-    final path = Path()
-      ..moveTo(from.dx, from.dy)
-      ..lineTo(to.dx, to.dy);
-
-    const dashWidth = 8.0;
-    const dashSpace = 6.0;
-
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + dashWidth, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _WordLinkLinesPainter oldDelegate) {
-    return oldDelegate.lockedLines != lockedLines ||
-        oldDelegate.activeDraw != activeDraw ||
-        oldDelegate.wrongFlash != wrongFlash;
-  }
-}

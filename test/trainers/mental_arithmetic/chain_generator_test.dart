@@ -82,6 +82,7 @@ void main() {
         ('transition-100', 'mix', 'topic'),
         ('friend-brother-6-1digit', 'mix', 'topic'),
         ('friend-brother-8-2digit', 'mix', 'topic'),
+        ('friend-brother-9-3digit', 'mix', 'topic'),
         ('anzan-1digit-mix', 'mix', 'topic'),
         ('anzan-2digit', 'mix', 'topic'),
         ('anzan-2digit-1digit', 'mix', 'topic'),

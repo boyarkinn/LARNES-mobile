@@ -39,6 +39,7 @@ class _FlashcardDigitMatchTrainerState
 
   late final int _pairCount;
   late final FlashcardTargetMode _targetMode;
+  late final String _topicId;
   late final int _totalRods;
   late final List<MatchRound> _rounds;
 
@@ -92,22 +93,26 @@ class _FlashcardDigitMatchTrainerState
 
     _pairCount = widget.params['pairCount'] as int? ?? minMatchPairs;
     _targetMode = normalizeTargetMode(widget.params['targetMode']);
-    _totalRods = widget.params['totalRods'] as int? ?? 1;
+    _topicId = resolveMatchTopicId(
+    widget.params['topicId'] ?? widget.params['chainTopicId'],
+    widget.params['totalRods'],
+    );
+    _totalRods = resolveMatchTotalRods(_topicId);
     final rounds = widget.params['rounds'] as int? ?? minMatchRounds;
     final masterSeed = hashParamsSeed([
-      _pairCount,
-      rounds,
-      _targetMode == FlashcardTargetMode.dots ? 'dots' : 'digits',
-      _totalRods,
-      'flashcard-digit-match',
+    _pairCount,
+    rounds,
+    _targetMode == FlashcardTargetMode.dots ? 'dots' : 'digits',
+    _topicId,
+    'flashcard-digit-match',
     ]);
     _rounds = buildFlashcardMatchPlan(
-      pairCount: _pairCount,
-      rounds: rounds,
-      totalRods: _totalRods,
-      masterSeed: masterSeed,
+    pairCount: _pairCount,
+    rounds: rounds,
+    topicId: _topicId,
+    masterSeed: masterSeed,
     );
-    _roundIndex = 0;
+_roundIndex = 0;
     _connections.clear();
 
     setState(() {

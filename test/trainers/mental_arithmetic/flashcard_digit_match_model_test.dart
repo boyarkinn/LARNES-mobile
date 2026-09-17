@@ -9,13 +9,13 @@ void main() {
       final first = buildFlashcardMatchPlan(
         pairCount: 3,
         rounds: 2,
-        totalRods: 1,
+        topicId: 'simple-1',
         masterSeed: 42,
       );
       final second = buildFlashcardMatchPlan(
         pairCount: 3,
         rounds: 2,
-        totalRods: 1,
+        topicId: 'simple-1',
         masterSeed: 42,
       );
 
@@ -39,7 +39,7 @@ void main() {
       final round = buildFlashcardMatchPlan(
         pairCount: 4,
         rounds: 1,
-        totalRods: 1,
+        topicId: 'simple-1',
         masterSeed: 7,
       ).first;
 
@@ -109,9 +109,9 @@ void main() {
           pairCount: 3,
           rounds: 2,
           targetMode: 'dots',
-          totalRods: 2,
+          topicId: 'simple-2digit',
         ),
-        {'pairCount': 3, 'rounds': 2, 'targetMode': 'dots', 'totalRods': 2},
+        {'pairCount': 3, 'rounds': 2, 'targetMode': 'dots', 'topicId': 'simple-2digit'},
       );
     });
   });

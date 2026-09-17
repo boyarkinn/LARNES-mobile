@@ -46,6 +46,9 @@ List<int> _placeAmounts(int n, int totalRods) {
   if (totalRods >= 2) {
     amounts.add(n * 10);
   }
+  if (totalRods >= 3) {
+    amounts.add(n * 100);
+  }
   return amounts;
 }
 
@@ -142,7 +145,9 @@ List<int> _candidatesForFriendBrother(
   required bool includeOnes,
 }) {
   if (!includeOnes) {
-    return _rangeInclusive(10, 99);
+    return placeWidth >= 3
+        ? _rangeInclusive(100, 999)
+        : _rangeInclusive(10, 99);
   }
 
   final amounts = {..._rangeInclusive(1, 9)};
@@ -163,8 +168,9 @@ List<int> _candidatesForFriendBrother(
 }
 
 ({int n, String width})? _parseFriendBrotherTopic(String topicId) {
-  final match =
-      RegExp(r'^friend-brother-([6-9])-(1digit|2digit)$').firstMatch(topicId);
+  final match = RegExp(
+    r'^friend-brother-([6-9])-(1digit|2digit|3digit)$',
+  ).firstMatch(topicId);
   if (match == null) {
     return null;
   }
@@ -194,9 +200,10 @@ TopicRule? createFriendBrotherTopicRule(
 
   final n = parsed.n;
   final width = parsed.width;
-  final placeWidth = width == '1digit' ? 1 : 2;
+  // 1digit → 2 rods; 2digit/3digit → 3 rods (коридор до 999).
+  final placeWidth = width == '1digit' ? 1 : width == '2digit' ? 2 : 3;
   final rods = width == '1digit' ? 2 : 3;
-  final includeOnes = width != '2digit';
+  final includeOnes = width == '1digit';
   final priorNs = _priorFriendBrotherNs(n);
   final candidates = _candidatesForFriendBrother(
     n,
@@ -211,7 +218,9 @@ TopicRule? createFriendBrotherTopicRule(
   );
   final TopicChainValidator widthValidator = width == '2digit'
       ? (steps, _) => chainIsOnlyTwoDigitAmounts(steps)
-      : (_, __) => true;
+      : width == '3digit'
+          ? (steps, _) => chainIsOnlyThreeDigitAmounts(steps)
+          : (_, __) => true;
 
   return _rule(
     rods,

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_sizes.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/match_task_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/triple_scene_layout.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
@@ -59,8 +60,14 @@ class TripleSceneVisibility {
 
 /// Web v2: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/triple-scene.tsx`
 class TripleScene extends StatelessWidget {
-  const TripleScene({super.key, required this.value, required this.visibility});
+  const TripleScene({
+    super.key,
+    required this.colors,
+    required this.value,
+    required this.visibility,
+  });
 
+  final ExplainColorPlan colors;
   final int value;
   final TripleSceneVisibility visibility;
 
@@ -86,6 +93,7 @@ class TripleScene extends StatelessWidget {
                     visible: visibility.showDots,
                     pulseActive: false,
                     child: DotsDigitAbacusAnimatedDots(
+                      color: Color(colors.dotsColor),
                       count: value,
                       width: layout.dotFrameWidth,
                       height: layout.dotFrameHeight,
@@ -99,7 +107,7 @@ class TripleScene extends StatelessWidget {
                 child: _SceneBlock(
                   visible: visibility.showDigitEquals,
                   pulseActive: false,
-                  child: const _EqualsSign(),
+                  child: _EqualsSign(color: Color(colors.digitColor)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -117,7 +125,7 @@ class TripleScene extends StatelessWidget {
                 child: _SceneBlock(
                   visible: visibility.showAbacusEquals,
                   pulseActive: false,
-                  child: const _EqualsSign(),
+                  child: _EqualsSign(color: Color(colors.abacusColor)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -150,7 +158,10 @@ class TripleScene extends StatelessWidget {
       key: const Key('triple-digit'),
       width: cardSize,
       height: cardSize,
-      child: DotsDigitAbacusDrawnDigit(value: value),
+      child: DotsDigitAbacusDrawnDigit(
+        color: Color(colors.digitColor),
+        value: value,
+      ),
     );
   }
 
@@ -164,7 +175,7 @@ class TripleScene extends StatelessWidget {
       width: width,
       height: height,
       child: AbacusWidget(
-        activeBeadColor: const Color(kDotsDigitAbacusObjectColor),
+        activeBeadColor: Color(colors.abacusColor),
         animate: !MediaQuery.disableAnimationsOf(context),
         rods: rods,
         totalRods: kDotsDigitAbacusTotalRods,
@@ -174,7 +185,9 @@ class TripleScene extends StatelessWidget {
 }
 
 class _EqualsSign extends StatelessWidget {
-  const _EqualsSign();
+  const _EqualsSign({required this.color});
+
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
@@ -182,9 +195,7 @@ class _EqualsSign extends StatelessWidget {
       key: const Key('triple-equals-sign'),
       width: 34,
       height: 28,
-      child: DotsDigitAbacusDrawnEquals(
-        color: const Color(kDotsDigitAbacusObjectColor),
-      ),
+      child: DotsDigitAbacusDrawnEquals(color: color),
     );
   }
 }
@@ -325,12 +336,14 @@ class _SceneBlockState extends State<_SceneBlock>
 class DotsDigitAbacusAnimatedDots extends StatefulWidget {
   const DotsDigitAbacusAnimatedDots({
     super.key,
+    this.color = const Color(kDotsDigitAbacusObjectColor),
     required this.count,
     required this.height,
     required this.visibleCount,
     required this.width,
   });
 
+  final Color color;
   final int count;
   final double height;
   final int visibleCount;
@@ -381,7 +394,6 @@ class _DotsDigitAbacusAnimatedDotsState
   @override
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    const color = Color(kDotsDigitAbacusObjectColor);
     return SizedBox(
       key: const Key('triple-dots'),
       width: widget.width,
@@ -389,7 +401,7 @@ class _DotsDigitAbacusAnimatedDotsState
       child: CustomPaint(
         painter: _TravelingDotsPainter(
           arrivingIndex: reduceMotion ? null : _arrivingIndex,
-          color: color,
+          color: widget.color,
           count: widget.count,
           progress: reduceMotion
               ? 1

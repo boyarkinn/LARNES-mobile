@@ -69,6 +69,7 @@ void main() {
                 width: 320,
                 height: 480,
                 child: TripleScene(
+                  colors: buildExplainColorPlan(value, 42),
                   value: value,
                   visibility: TripleSceneVisibility(
                     showAbacus: true,
@@ -97,6 +98,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: TripleScene(
+            colors: buildExplainColorPlan(5, 42),
             value: 5,
             visibility: TripleSceneVisibility(
               showAbacus: true,
@@ -180,6 +182,7 @@ void main() {
       'keeps shared objects mounted while moving explain into practice',
       (tester) async {
         final plan = buildMatchTaskPlan(5, 42);
+        final explainColors = buildExplainColorPlan(5, 42);
         const visibility = TripleSceneVisibility(
           showAbacus: true,
           showAbacusEquals: true,
@@ -203,6 +206,7 @@ void main() {
                   disabled: instruction,
                   onAllConnected: () {},
                   onConnect: (_) {},
+                  explainColors: explainColors,
                   plan: plan,
                   practice: practice,
                   taskInstructionLength: instruction ? 8 : 0,
@@ -257,6 +261,7 @@ void main() {
       tester,
     ) async {
       final plan = buildMatchTaskPlan(1, 7);
+      final explainColors = buildExplainColorPlan(1, 7);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -271,6 +276,7 @@ void main() {
                 disabled: true,
                 onAllConnected: () {},
                 onConnect: (_) {},
+                explainColors: explainColors,
                 plan: plan,
                 practice: true,
                 taskInstructionLength: 0,

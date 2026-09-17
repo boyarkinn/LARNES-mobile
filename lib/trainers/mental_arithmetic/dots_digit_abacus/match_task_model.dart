@@ -42,6 +42,18 @@ class MatchTaskPlan {
   final int targetValue;
 }
 
+class ExplainColorPlan {
+  const ExplainColorPlan({
+    required this.abacusColor,
+    required this.digitColor,
+    required this.dotsColor,
+  });
+
+  final int abacusColor;
+  final int digitColor;
+  final int dotsColor;
+}
+
 class MatchTaskConnection {
   const MatchTaskConnection({
     required this.fromId,
@@ -107,6 +119,26 @@ int buildMatchTaskSeed(int value, [int? masterSeed]) {
     value,
     'dots-digit-abacus-match-task',
   ]);
+}
+
+int buildExplainColorSeed(int value, [int? masterSeed]) {
+  return hashParamsSeed([
+    masterSeed ?? value,
+    value,
+    'dots-digit-abacus-explain-colors',
+  ]);
+}
+
+ExplainColorPlan buildExplainColorPlan(int value, [int? seed]) {
+  final targetValue = value.clamp(0, 9);
+  final rng = createSeededRng(buildExplainColorSeed(targetValue, seed));
+  final colors = pickUniqueMatchColors(3, rng);
+
+  return ExplainColorPlan(
+    abacusColor: colors[2],
+    digitColor: colors[1],
+    dotsColor: colors[0],
+  );
 }
 
 MatchTaskPlan buildMatchTaskPlan(int value, [int? seed]) {

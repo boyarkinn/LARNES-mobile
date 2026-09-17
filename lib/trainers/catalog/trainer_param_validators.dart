@@ -410,7 +410,6 @@ ValidateTrainerParamsResult validateTopicChainTableParams(Map<String, dynamic> r
 }
 
 ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynamic> raw) {
-  final totalRods = coerceInt(raw['totalRods']);
   var pairCount = coerceInt(raw['pairCount']);
   var rounds = coerceInt(raw['rounds']);
   final legacyValues = coerceIntList(raw['values']);
@@ -421,10 +420,11 @@ ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynami
 
   rounds ??= minMatchRounds;
   final targetMode = normalizeTargetMode(raw['targetMode']);
+  final topicId = resolveMatchTopicId(
+    raw['topicId'] ?? raw['chainTopicId'],
+    raw['totalRods'],
+  );
 
-  if (totalRods == null || totalRods < 1 || totalRods > 21) {
-    return _fail('Некорректные параметры.');
-  }
   if (pairCount == null ||
       pairCount < minMatchPairs ||
       pairCount > maxMatchPairs) {
@@ -435,7 +435,7 @@ ValidateTrainerParamsResult validateFlashcardDigitMatchParams(Map<String, dynami
   }
 
   return ValidateTrainerParamsResult.success({
-    'totalRods': totalRods,
+    'topicId': topicId,
     'pairCount': pairCount,
     'rounds': rounds,
     'targetMode':

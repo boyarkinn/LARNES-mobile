@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 
 String stringifyTrainerFormValue(dynamic value) {
   if (value is List) {
@@ -25,8 +26,12 @@ Map<String, String> mergeStoredParamsIntoFormValues(
     if (params.containsKey('targetMode')) {
       values['targetMode'] = stringifyTrainerFormValue(params['targetMode']);
     }
-    if (params.containsKey('totalRods')) {
-      values['totalRods'] = stringifyTrainerFormValue(params['totalRods']);
+    if (params.containsKey('topicId')) {
+      values['chainTopicId'] = stringifyTrainerFormValue(params['topicId']);
+    } else if (params.containsKey('chainTopicId')) {
+      values['chainTopicId'] = stringifyTrainerFormValue(params['chainTopicId']);
+    } else if (params.containsKey('totalRods')) {
+      values['chainTopicId'] = resolveMatchTopicId(null, params['totalRods']);
     }
     return values;
   }

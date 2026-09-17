@@ -12,6 +12,158 @@ class ScatterPosition {
   final double yPercent;
 }
 
+const scatterChipMinWidthPercent = 20.0;
+const scatterChipMinHeightPercent = 32.0;
+const _scatterPlacementMaxAttempts = 48;
+
+({double height, double width}) scatterChipFootprint(int count) {
+  if (count <= 5) {
+    return (width: scatterChipMinWidthPercent, height: scatterChipMinHeightPercent);
+  }
+  if (count <= 7) {
+    return (width: 18, height: 28);
+  }
+  return (width: 14, height: 22);
+}
+
+List<T> _shuffleScatterCandidates<T>(List<T> items, double Function() rng) {
+  final next = [...items];
+
+  for (var index = next.length - 1; index > 0; index--) {
+    final swapIndex = (rng() * (index + 1)).floor();
+    final temp = next[index];
+    next[index] = next[swapIndex];
+    next[swapIndex] = temp;
+  }
+
+  return next;
+}
+
+List<ScatterPosition> _buildReserveScatterCandidates(
+  int count,
+  double Function() rng,
+) {
+  final footprint = scatterChipFootprint(count);
+  final candidates = <ScatterPosition>[];
+
+  for (var y = 10.0; y <= 86.0; y += footprint.height * 0.92) {
+    for (var x = 12.0; x <= 88.0; x += footprint.width * 0.92) {
+      candidates.add(
+        ScatterPosition(
+          xPercent: x + (rng() - 0.5) * 5,
+          yPercent: y + (rng() - 0.5) * 5,
+        ),
+      );
+    }
+  }
+
+  return _shuffleScatterCandidates(candidates, rng);
+}
+
+bool scatterPositionsOverlap(
+  ScatterPosition first,
+  ScatterPosition second, {
+  double chipWidthPercent = scatterChipMinWidthPercent,
+  double chipHeightPercent = scatterChipMinHeightPercent,
+}) {
+  return (first.xPercent - second.xPercent).abs() < chipWidthPercent &&
+      (first.yPercent - second.yPercent).abs() < chipHeightPercent;
+}
+
+bool _hasScatterOverlap(
+  ScatterPosition candidate,
+  List<ScatterPosition> placed,
+  double chipWidthPercent,
+  double chipHeightPercent,
+) {
+  for (final position in placed) {
+    if (scatterPositionsOverlap(
+      candidate,
+      position,
+      chipWidthPercent: chipWidthPercent,
+      chipHeightPercent: chipHeightPercent,
+    )) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool _pickScatterBand(int index, List<ScatterPosition> placed) {
+  final aboveCount = placed.where((position) => position.yPercent < 50).length;
+  final belowCount = placed.length - aboveCount;
+
+  if (aboveCount < belowCount) {
+    return true;
+  }
+  if (belowCount < aboveCount) {
+    return false;
+  }
+  return index.isEven;
+}
+
+ScatterPosition _randomScatterPosition(bool above, double Function() rng) {
+  return ScatterPosition(
+    xPercent: 10 + rng() * 80,
+    yPercent: above ? 8 + rng() * 24 : 68 + rng() * 20,
+  );
+}
+
+ScatterPosition? _tryRandomScatterPosition(
+  bool above,
+  List<ScatterPosition> placed,
+  double Function() rng,
+  double chipWidthPercent,
+  double chipHeightPercent,
+) {
+  for (var attempt = 0; attempt < _scatterPlacementMaxAttempts; attempt++) {
+    final candidate = _randomScatterPosition(above, rng);
+    if (!_hasScatterOverlap(
+      candidate,
+      placed,
+      chipWidthPercent,
+      chipHeightPercent,
+    )) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+ScatterPosition? _forceScatterPosition(
+  List<ScatterPosition> placed,
+  List<ScatterPosition> reserveCandidates,
+  double chipWidthPercent,
+  double chipHeightPercent,
+) {
+  for (final candidate in reserveCandidates) {
+    if (!_hasScatterOverlap(
+      candidate,
+      placed,
+      chipWidthPercent,
+      chipHeightPercent,
+    )) {
+      return candidate;
+    }
+  }
+
+  for (var y = 8.0; y <= 88.0; y += 1) {
+    for (var x = 10.0; x <= 90.0; x += 1) {
+      final candidate = ScatterPosition(xPercent: x, yPercent: y);
+      if (!_hasScatterOverlap(
+        candidate,
+        placed,
+        chipWidthPercent,
+        chipHeightPercent,
+      )) {
+        return candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
 int normalizeStudyDigit(num digit) {
   if (!digit.isFinite) {
     return minStudyDigit;
@@ -61,21 +213,60 @@ List<ScatterPosition> buildScatterPositions(int count, int seed) {
   }
 
   var rngState = seed;
+  double rng() {
+    rngState = (rngState * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return rngState / 4294967296;
+  }
+
   final positions = <ScatterPosition>[];
+  final footprint = scatterChipFootprint(count);
+  final reserveCandidates = _buildReserveScatterCandidates(count, rng);
+  final usedReserve = <int>{};
 
   for (var index = 0; index < count; index++) {
-    rngState = (rngState * 1664525 + 1013904223) & 0xFFFFFFFF;
-    final xRng = rngState / 4294967296;
-    rngState = (rngState * 1664525 + 1013904223) & 0xFFFFFFFF;
-    final yRng = rngState / 4294967296;
-    final above = index.isEven;
+    final above = _pickScatterBand(index, positions);
+    var candidate =
+        _tryRandomScatterPosition(
+          above,
+          positions,
+          rng,
+          footprint.width,
+          footprint.height,
+        ) ??
+        _forceScatterPosition(
+          positions,
+          [
+            for (var reserveIndex = 0; reserveIndex < reserveCandidates.length; reserveIndex++)
+              if (!usedReserve.contains(reserveIndex))
+                reserveCandidates[reserveIndex],
+          ],
+          footprint.width,
+          footprint.height,
+        );
 
-    positions.add(
-      ScatterPosition(
-        xPercent: 10 + xRng * 80,
-        yPercent: above ? 8 + yRng * 24 : 68 + yRng * 20,
-      ),
-    );
+    if (candidate == null) {
+      for (var reserveIndex = 0; reserveIndex < reserveCandidates.length; reserveIndex++) {
+        final reserve = reserveCandidates[reserveIndex];
+        if (!usedReserve.contains(reserveIndex) &&
+            !_hasScatterOverlap(
+              reserve,
+              positions,
+              footprint.width,
+              footprint.height,
+            )) {
+          candidate = reserve;
+          break;
+        }
+      }
+      candidate ??= reserveCandidates[index % reserveCandidates.length];
+    }
+
+    final reserveIndex = reserveCandidates.indexOf(candidate);
+    if (reserveIndex >= 0) {
+      usedReserve.add(reserveIndex);
+    }
+
+    positions.add(candidate);
   }
 
   return positions;

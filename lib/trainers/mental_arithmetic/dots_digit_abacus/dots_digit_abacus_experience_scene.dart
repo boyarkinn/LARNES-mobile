@@ -27,6 +27,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
     required this.onAllConnected,
     required this.onConnect,
     this.onWrongAttempt,
+    required this.explainColors,
     required this.plan,
     required this.practice,
     required this.taskInstructionLength,
@@ -40,6 +41,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
   final VoidCallback onAllConnected;
   final ValueChanged<MatchTaskConnection> onConnect;
   final VoidCallback? onWrongAttempt;
+  final ExplainColorPlan explainColors;
   final MatchTaskPlan plan;
   final bool practice;
   final int taskInstructionLength;
@@ -73,6 +75,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
           IgnorePointer(
             child: _SharedRepresentationLayer(
               connections: connections,
+              explainColors: explainColors,
               plan: plan,
               practice: practice,
               visibility: visibility,
@@ -96,6 +99,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
 class _SharedRepresentationLayer extends StatelessWidget {
   const _SharedRepresentationLayer({
     required this.connections,
+    required this.explainColors,
     required this.plan,
     required this.practice,
     required this.visibility,
@@ -104,6 +108,7 @@ class _SharedRepresentationLayer extends StatelessWidget {
   static const _transitionDuration = Duration(milliseconds: 680);
 
   final List<MatchTaskConnection> connections;
+  final ExplainColorPlan explainColors;
   final MatchTaskPlan plan;
   final bool practice;
   final TripleSceneVisibility visibility;
@@ -120,7 +125,9 @@ class _SharedRepresentationLayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     final duration = reduceMotion ? Duration.zero : _transitionDuration;
-    const objectColor = Color(kDotsDigitAbacusObjectColor);
+    final explainDotsColor = Color(explainColors.dotsColor);
+    final explainDigitColor = Color(explainColors.digitColor);
+    final explainAbacusColor = Color(explainColors.abacusColor);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -144,7 +151,7 @@ class _SharedRepresentationLayer extends StatelessWidget {
           (item) => item.isTarget,
         );
         final targetDigitColor = targetDigitIndex < 0
-            ? objectColor
+            ? explainDigitColor
             : Color(plan.digitItems[targetDigitIndex].displayColor);
         final targetAbacusIndex = plan.abacusItems.indexWhere(
           (item) => item.isTarget,
@@ -212,6 +219,9 @@ class _SharedRepresentationLayer extends StatelessWidget {
                 opacity: practice || visibility.showDots ? 1 : 0,
                 duration: duration,
                 child: DotsDigitAbacusAnimatedDots(
+                  color: practice
+                      ? const Color(kDotsDigitAbacusObjectColor)
+                      : explainDotsColor,
                   count: plan.dotsValue,
                   height: dotsRect.height,
                   visibleCount: practice
@@ -249,7 +259,7 @@ class _SharedRepresentationLayer extends StatelessWidget {
                   ),
                   padding: EdgeInsets.all(practice ? 8 : 0),
                   child: DotsDigitAbacusDrawnDigit(
-                    color: practice ? targetDigitColor : objectColor,
+                    color: practice ? targetDigitColor : explainDigitColor,
                     value: plan.targetValue,
                   ),
                 ),
@@ -264,6 +274,9 @@ class _SharedRepresentationLayer extends StatelessWidget {
                 opacity: practice || visibility.showAbacus ? 1 : 0,
                 duration: duration,
                 child: AbacusMatchCard(
+                  activeBeadColor: practice
+                      ? const Color(kDotsDigitAbacusObjectColor)
+                      : explainAbacusColor,
                   connected: _abacusConnected,
                   framed: practice,
                   height: math.max(0, abacusRect.height - (practice ? 18 : 0)),
@@ -295,7 +308,11 @@ class _SharedRepresentationLayer extends StatelessWidget {
                 child: AnimatedOpacity(
                   opacity: !practice && equals.visible ? 1 : 0,
                   duration: duration,
-                  child: const DotsDigitAbacusDrawnEquals(color: objectColor),
+                  child: DotsDigitAbacusDrawnEquals(
+                    color: equals.key == const Key('shared-left-equals')
+                        ? explainDigitColor
+                        : explainAbacusColor,
+                  ),
                 ),
               ),
           ],

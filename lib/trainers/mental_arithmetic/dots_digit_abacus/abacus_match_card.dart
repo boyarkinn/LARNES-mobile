@@ -8,6 +8,7 @@ class AbacusMatchCard extends StatelessWidget {
   const AbacusMatchCard({
     super.key,
     required this.value,
+    this.activeBeadColor = kDotsDigitAbacusObjectColor,
     this.connected = false,
     this.shake = false,
     this.width,
@@ -17,6 +18,7 @@ class AbacusMatchCard extends StatelessWidget {
   });
 
   final int value;
+  final int activeBeadColor;
   final bool connected;
   final bool shake;
   final double? width;
@@ -59,7 +61,7 @@ class AbacusMatchCard extends StatelessWidget {
       child: SizedBox(
         height: height,
         child: AbacusWidget(
-          activeBeadColor: const Color(kDotsDigitAbacusObjectColor),
+          activeBeadColor: Color(activeBeadColor),
           rods: rods,
           totalRods: totalRods,
         ),

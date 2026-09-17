@@ -8,6 +8,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/match
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_hit_test.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_hud_inset.dart';
 import 'package:larnes_mobile/trainers/shared/dot_group.dart';
+import 'package:larnes_mobile/trainers/shared/match_connection/connection_lines_painter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 class _DrawLine {
@@ -713,21 +714,31 @@ class _MatchTaskBoardState extends State<MatchTaskBoard>
                   Positioned.fill(
                     child: IgnorePointer(
                       child: CustomPaint(
-                        painter: _ConnectionLinesPainter(
-                          activeDraw: _activeDraw,
-                          activeDrawColor: const Color(
-                            kDotsDigitAbacusDraftLineColor,
-                          ),
-                          lockedLines: lockedLines,
-                          lockedProgress: reduceMotion
-                              ? 1
-                              : Curves.easeInOut.transform(
-                                  _lockedLineController.value,
+                        painter: MatchConnectionLinesPainter(
+                          draft: _activeDraw == null
+                              ? null
+                              : MatchConnectionDraftSegment(
+                                  from: _activeDraw!.from,
+                                  stroke: const Color(
+                                    kDotsDigitAbacusDraftLineColor,
+                                  ),
+                                  to: _activeDraw!.to,
                                 ),
-                          wrongFlash: _wrongFlash,
-                          wrongProgress: reduceMotion
-                              ? 0.5
-                              : _wrongLineController.value,
+                          lockedLines: lockedLines
+                              .map(
+                                (entry) => MatchConnectionLineSegment(
+                                  from: entry.line.from,
+                                  stroke: entry.color,
+                                  to: entry.line.to,
+                                ),
+                              )
+                              .toList(growable: false),
+                          wrong: _wrongFlash == null
+                              ? null
+                              : MatchConnectionWrongSegment(
+                                  from: _wrongFlash!.from,
+                                  to: _wrongFlash!.to,
+                                ),
                         ),
                       ),
                     ),
@@ -947,109 +958,6 @@ class _ShakeDigitState extends State<_ShakeDigit>
       },
       child: widget.child,
     );
-  }
-}
-
-class _ConnectionLinesPainter extends CustomPainter {
-  _ConnectionLinesPainter({
-    required this.lockedLines,
-    required this.lockedProgress,
-    required this.activeDraw,
-    required this.activeDrawColor,
-    required this.wrongFlash,
-    required this.wrongProgress,
-  });
-
-  final List<({Color color, _DrawLine line})> lockedLines;
-  final double lockedProgress;
-  final _ActiveDraw? activeDraw;
-  final Color activeDrawColor;
-  final _WrongFlash? wrongFlash;
-  final double wrongProgress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final entry in lockedLines) {
-      final endpoint = Offset.lerp(
-        entry.line.from,
-        entry.line.to,
-        lockedProgress,
-      )!;
-      canvas.drawLine(
-        entry.line.from,
-        endpoint,
-        Paint()
-          ..color = entry.color
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    if (activeDraw != null) {
-      _drawDashedLine(
-        canvas,
-        activeDraw!.from,
-        activeDraw!.to,
-        Paint()
-          ..color = activeDrawColor
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    if (wrongFlash != null) {
-      final to = _wrongEndpoint(wrongFlash!, wrongProgress);
-      canvas.drawLine(
-        wrongFlash!.from,
-        to,
-        Paint()
-          ..color = const Color(kDotsDigitAbacusWrongLineColor).withValues(
-            alpha: wrongProgress > 0.76 ? (1 - wrongProgress) / 0.24 : 1,
-          )
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  Offset _wrongEndpoint(_WrongFlash flash, double progress) {
-    if (progress <= 0.42) {
-      return Offset.lerp(flash.from, flash.to, progress / 0.42)!;
-    }
-    if (progress <= 0.76) {
-      final phase = (progress - 0.42) / 0.34;
-      final shake = math.sin(phase * math.pi * 4) * (1 - phase) * 9;
-      return flash.to + Offset(shake, -shake * 0.45);
-    }
-    return Offset.lerp(flash.to, flash.from, (progress - 0.76) / 0.24)!;
-  }
-
-  void _drawDashedLine(Canvas canvas, Offset from, Offset to, Paint paint) {
-    final path = Path()
-      ..moveTo(from.dx, from.dy)
-      ..lineTo(to.dx, to.dy);
-
-    const dashWidth = 8.0;
-    const dashSpace = 6.0;
-
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + dashWidth, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectionLinesPainter oldDelegate) {
-    return oldDelegate.lockedLines != lockedLines ||
-        oldDelegate.lockedProgress != lockedProgress ||
-        oldDelegate.activeDraw != activeDraw ||
-        oldDelegate.activeDrawColor != activeDrawColor ||
-        oldDelegate.wrongFlash != wrongFlash ||
-        oldDelegate.wrongProgress != wrongProgress;
   }
 }
 

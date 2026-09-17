@@ -9,6 +9,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/f
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_grid_layout.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_hit_test.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_hud_inset.dart';
+import 'package:larnes_mobile/trainers/shared/match_connection/connection_lines_painter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 class _DrawLine {
@@ -608,23 +609,39 @@ class _MatchBoardState extends State<MatchBoard> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: CustomPaint(
-                      painter: _ConnectionLinesPainter(
-                        activeDraw: _activeDraw,
-                        activeDrawColor: _activeDraw == null
-                            ? const Color(0xFFFB923C)
-                            : Color(
-                                widget.round.leftItems
-                                        .where(
-                                          (item) =>
-                                              item.id == _activeDraw!.leftId,
-                                        )
-                                        .firstOrNull
-                                        ?.leftDisplayColor ??
-                                    0xFFFB923C,
+                      painter: MatchConnectionLinesPainter(
+                        draft: _activeDraw == null
+                            ? null
+                            : MatchConnectionDraftSegment(
+                                from: _activeDraw!.from,
+                                stroke: Color(
+                                  widget.round.leftItems
+                                          .where(
+                                            (item) =>
+                                                item.id == _activeDraw!.leftId,
+                                          )
+                                          .firstOrNull
+                                          ?.leftDisplayColor ??
+                                      0xFFFB923C,
+                                ),
+                                to: _activeDraw!.to,
                               ),
-                        lockedLineColors: lockedLineColors,
-                        lockedLines: lockedLines,
-                        wrongFlash: _wrongFlash,
+                        lockedLines: [
+                          for (var index = 0; index < lockedLines.length; index++)
+                            MatchConnectionLineSegment(
+                              from: lockedLines[index].from,
+                              stroke: index < lockedLineColors.length
+                                  ? lockedLineColors[index]
+                                  : const Color(0xFF34D399),
+                              to: lockedLines[index].to,
+                            ),
+                        ],
+                        wrong: _wrongFlash == null
+                            ? null
+                            : MatchConnectionWrongSegment(
+                                from: _wrongFlash!.from,
+                                to: _wrongFlash!.to,
+                              ),
                       ),
                     ),
                   ),
@@ -635,88 +652,6 @@ class _MatchBoardState extends State<MatchBoard> {
         );
       },
     );
-  }
-}
-
-class _ConnectionLinesPainter extends CustomPainter {
-  _ConnectionLinesPainter({
-    required this.lockedLines,
-    required this.lockedLineColors,
-    required this.activeDraw,
-    required this.activeDrawColor,
-    required this.wrongFlash,
-  });
-
-  final List<_DrawLine> lockedLines;
-  final List<Color> lockedLineColors;
-  final _ActiveDraw? activeDraw;
-  final Color activeDrawColor;
-  final _WrongFlash? wrongFlash;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (var index = 0; index < lockedLines.length; index++) {
-      final line = lockedLines[index];
-      final paint = Paint()
-        ..color = index < lockedLineColors.length
-            ? lockedLineColors[index]
-            : const Color(0xFF34D399)
-        ..strokeWidth = 4
-        ..strokeCap = StrokeCap.round;
-
-      canvas.drawPath(_connectionPath(line.from, line.to), paint);
-    }
-
-    if (activeDraw != null) {
-      _drawDashedPath(
-        canvas,
-        _connectionPath(activeDraw!.from, activeDraw!.to),
-        Paint()
-          ..color = activeDrawColor
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-
-    if (wrongFlash != null) {
-      canvas.drawPath(
-        _connectionPath(wrongFlash!.from, wrongFlash!.to),
-        Paint()
-          ..color = const Color(0xFFF87171)
-          ..strokeWidth = 4
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  Path _connectionPath(Offset from, Offset to) {
-    final bend = math.max(28.0, (to.dx - from.dx).abs() * 0.38);
-    return Path()
-      ..moveTo(from.dx, from.dy)
-      ..cubicTo(from.dx + bend, from.dy, to.dx - bend, to.dy, to.dx, to.dy);
-  }
-
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 8.0;
-    const dashSpace = 6.0;
-
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final end = math.min(distance + dashWidth, metric.length);
-        canvas.drawPath(metric.extractPath(distance, end), paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectionLinesPainter oldDelegate) {
-    return oldDelegate.lockedLines != lockedLines ||
-        oldDelegate.lockedLineColors != lockedLineColors ||
-        oldDelegate.activeDraw != activeDraw ||
-        oldDelegate.activeDrawColor != activeDrawColor ||
-        oldDelegate.wrongFlash != wrongFlash;
   }
 }
 

@@ -64,12 +64,12 @@ void main() {
         'pairCount': '3',
         'rounds': '2',
         'targetMode': 'dots',
-        'totalRods': '1',
+        'chainTopicId': 'simple-5',
       });
 
       expect(result.ok, isTrue);
       expect(result.params, {
-        'totalRods': 1,
+        'topicId': 'simple-5',
         'pairCount': 3,
         'rounds': 2,
         'targetMode': 'dots',
@@ -84,7 +84,7 @@ void main() {
 
       expect(result.ok, isTrue);
       expect(result.params?['pairCount'], 2);
-      expect(result.params?['totalRods'], 2);
+      expect(result.params?['topicId'], 'simple-2digit');
     });
 
     test('accepts fly-track params with defaults', () {

@@ -202,9 +202,11 @@ Map<String, dynamic> buildPlayParamsPayload(
 
   if (config.trainerKey == 'flashcard-digit-match') {
     return parseFlashcardMatchParamsFromInput(
+      chainTopicId: values['chainTopicId'],
       pairCount: values['pairCount'],
       rounds: values['rounds'],
       targetMode: values['targetMode'],
+      topicId: values['topicId'],
       totalRods: values['totalRods'],
     );
   }

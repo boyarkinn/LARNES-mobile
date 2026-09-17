@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
@@ -116,11 +118,28 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
     _advanceTimer?.cancel();
     unawaited(cancelFlashCardsAudio());
 
-    _totalRods = widget.params['totalRods'] as int? ?? 1;
-    final valuesRaw = widget.params['values'];
-    _cardValues = valuesRaw is String
-        ? parseFlashCardValues(valuesRaw)
-        : const [3, 7, 15];
+    final topicId = resolveMatchTopicId(
+      widget.params['topicId'],
+      widget.params['totalRods'],
+    );
+    _totalRods = resolveMatchTotalRods(topicId);
+    final cardCount = clampFlashCardCount(
+      widget.params['cardCount'] as int? ??
+          int.tryParse('${widget.params['rounds']}') ??
+          defaultFlashCardCount,
+    );
+    final snapshotSeed = readTrainerSnapshotSeed('flash-cards', widget.params);
+    final masterSeed = buildFlashCardSessionSeed(
+      cardCount: cardCount,
+      topicId: topicId,
+      snapshotSeed: snapshotSeed,
+    );
+    _cardValues = buildFlashCardSessionValues(
+      cardCount: cardCount,
+      topicId: topicId,
+      values: widget.params['values']?.toString(),
+      masterSeed: masterSeed,
+    );
     _cardIndex = 0;
     _answerOptions = buildFlashCardAnswerOptions(_currentValue);
     _failedAttempts = 0;

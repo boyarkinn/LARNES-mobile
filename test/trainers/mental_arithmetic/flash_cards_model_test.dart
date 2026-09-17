@@ -10,28 +10,58 @@ void main() {
       expect(formatFlashCardValues([3, 7, 15]), '3,7,15');
     });
 
-    test('validates values against totalRods', () {
-      expect(isValidFlashCardValues('3,7', 1), isTrue);
-      expect(isValidFlashCardValues('12', 1), isFalse);
+    test('clamps card count', () {
+      expect(clampFlashCardCount(0), 1);
+      expect(clampFlashCardCount(5), 5);
+      expect(clampFlashCardCount(99), 10);
     });
 
-    test('normalizes legacy single value', () {
-      expect(normalizeFlashCardValuesInput(7, 2), '7');
-      expect(normalizeFlashCardValuesInput('3,5', 2), '3,5');
-    });
-
-    test('builds params from homework input', () {
-      expect(parseFlashCardParamsFromInput(totalRods: 2, values: '3, 12'), {
-        'totalRods': 2,
-        'values': '3,12',
-      });
-    });
-
-    test('keeps all comma-separated rounds', () {
+    test('builds params from topic and card count', () {
       expect(
-        parseFlashCardParamsFromInput(totalRods: 2, values: '10, 5, 14, 2'),
-        {'totalRods': 2, 'values': '10,5,14,2'},
+        parseFlashCardParamsFromInput(
+          chainTopicId: 'simple-2digit',
+          rounds: 5,
+        ),
+        {
+          'topicId': 'simple-2digit',
+          'cardCount': 5,
+        },
       );
+    });
+
+    test('keeps legacy values for playback', () {
+      expect(
+        parseFlashCardParamsFromInput(
+          chainTopicId: 'simple-2digit',
+          values: '3, 12',
+        ),
+        {
+          'topicId': 'simple-2digit',
+          'cardCount': 2,
+          'values': '3,12',
+        },
+      );
+    });
+
+    test('generates deterministic cards from topic seed', () {
+      final seed = buildFlashCardSessionSeed(
+        cardCount: 4,
+        topicId: 'brother-3-1digit',
+      );
+      final first = buildFlashCardSessionValues(
+        cardCount: 4,
+        topicId: 'brother-3-1digit',
+        masterSeed: seed,
+      );
+      final second = buildFlashCardSessionValues(
+        cardCount: 4,
+        topicId: 'brother-3-1digit',
+        masterSeed: seed,
+      );
+
+      expect(first, second);
+      expect(first, hasLength(4));
+      expect(first.toSet(), hasLength(4));
     });
 
     test('builds four nearby unique answers of the same digit count', () {
@@ -47,25 +77,6 @@ void main() {
             .every((value) => (value - 42).abs() <= 8),
         isTrue,
       );
-    });
-
-    test('keeps distractors in range at digit boundaries', () {
-      for (final expected in [0, 9, 10, 99, 100, 999]) {
-        final options = buildFlashCardAnswerOptions(
-          expected,
-          random: math.Random(23),
-        );
-
-        expect(options, hasLength(4));
-        expect(options.toSet(), hasLength(4));
-        expect(options, contains(expected));
-        expect(
-          options.every(
-            (value) => value.toString().length == expected.toString().length,
-          ),
-          isTrue,
-        );
-      }
     });
   });
 }

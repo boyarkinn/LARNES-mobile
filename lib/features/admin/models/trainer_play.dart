@@ -213,6 +213,9 @@ Map<String, dynamic> buildPlayParamsPayload(
 
   if (config.trainerKey == 'flash-cards') {
     return parseFlashCardParamsFromInput(
+      cardCount: values['cardCount'] ?? values['rounds'],
+      chainTopicId: values['chainTopicId'],
+      topicId: values['topicId'],
       totalRods: values['totalRods'],
       values: values['values'],
       value: values['value'],

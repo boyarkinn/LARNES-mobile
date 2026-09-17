@@ -2,8 +2,14 @@
 
 import 'dart:math' as math;
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
+import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
+
+const minFlashCardCount = 1;
+const maxFlashCardCount = 10;
+const defaultFlashCardCount = 5;
 
 int _pow10(int exponent) {
   var result = 1;
@@ -11,6 +17,14 @@ int _pow10(int exponent) {
     result *= 10;
   }
   return result;
+}
+
+int clampFlashCardCount(int cardCount) {
+  return math.max(minFlashCardCount, math.min(maxFlashCardCount, cardCount));
+}
+
+int getFlashCardMaxValueForTopic(String topicId) {
+  return buildMatchValuePools(topicId).maxValue;
 }
 
 int _distractorWindow(int digitCount) {
@@ -21,6 +35,90 @@ int _distractorWindow(int digitCount) {
     return 8;
   }
   return 2 * _pow10(digitCount - 2);
+}
+
+List<T> _shuffled<T>(List<T> values, double Function() random) {
+  final result = List<T>.from(values);
+  for (var index = result.length - 1; index > 0; index -= 1) {
+    final swapIndex = (random() * (index + 1)).floor().clamp(0, index);
+    final temp = result[index];
+    result[index] = result[swapIndex];
+    result[swapIndex] = temp;
+  }
+  return result;
+}
+
+List<int> generateTopicFlashCardValues(
+  int cardCount,
+  String topicId,
+  double Function() random,
+) {
+  final count = clampFlashCardCount(cardCount);
+  final pools = buildMatchValuePools(topicId);
+  final selected = <int>[];
+
+  final focusShuffled = _shuffled(pools.focus, random);
+  selected.add(focusShuffled.first);
+
+  final preferred = [
+    ..._shuffled(
+      pools.prior.where((value) => !selected.contains(value)).toList(growable: false),
+      random,
+    ),
+    ..._shuffled(
+      pools.focus.where((value) => !selected.contains(value)).toList(growable: false),
+      random,
+    ),
+  ];
+
+  for (final value in preferred) {
+    if (selected.length >= count) {
+      break;
+    }
+    selected.add(value);
+  }
+
+  if (selected.length < count) {
+    for (var value = 0; value <= pools.maxValue; value += 1) {
+      if (!selected.contains(value)) {
+        selected.add(value);
+      }
+      if (selected.length >= count) {
+        break;
+      }
+    }
+  }
+
+  return _shuffled(selected.take(count).toList(growable: false), random);
+}
+
+int buildFlashCardSessionSeed({
+  required int cardCount,
+  required String topicId,
+  int? snapshotSeed,
+}) {
+  return snapshotSeed ??
+      hashParamsSeed([topicId, cardCount, 'flash-cards']);
+}
+
+List<int> buildFlashCardSessionValues({
+  required int cardCount,
+  required String topicId,
+  String? values,
+  required int masterSeed,
+}) {
+  if (values != null && values.trim().isNotEmpty) {
+    final legacy = parseFlashCardValues(values);
+    if (legacy.isNotEmpty) {
+      return legacy;
+    }
+  }
+
+  return generateTopicFlashCardValues(
+    cardCount,
+    topicId,
+    createSeededRng(masterSeed),
+  );
 }
 
 List<int> buildFlashCardAnswerOptions(int expected, {math.Random? random}) {
@@ -75,13 +173,13 @@ String formatFlashCardValues(List<int> values) {
   return values.join(',');
 }
 
-bool isValidFlashCardValues(String raw, int totalRods) {
+bool isValidFlashCardValuesForTopic(String raw, String topicId) {
   final values = parseFlashCardValues(raw);
   if (values.isEmpty) {
     return false;
   }
 
-  final maxValue = getMaxValueForRods(totalRods);
+  final maxValue = getFlashCardMaxValueForTopic(topicId);
   return values.every((value) => value <= maxValue);
 }
 
@@ -117,20 +215,42 @@ String normalizeFlashCardValuesInput(Object? values, int totalRods) {
 }
 
 Map<String, dynamic> parseFlashCardParamsFromInput({
+  Object? cardCount,
+  Object? chainTopicId,
+  Object? rounds,
+  Object? topicId,
   Object? totalRods,
   Object? value,
   Object? values,
 }) {
-  final rods = coerceInt(totalRods);
-  final resolvedRods = rods != null && rods > 0 ? rods : 1;
-  final valuesRaw = values is String && values.trim().isNotEmpty
+  final resolvedTopicId = resolveMatchTopicId(
+    topicId ?? chainTopicId,
+    totalRods,
+  );
+  final rods = resolveMatchTotalRods(resolvedTopicId);
+  final legacyValuesRaw = values is String && values.trim().isNotEmpty
       ? values
       : value != null && value.toString().trim().isNotEmpty
       ? value.toString()
-      : '3,7,15';
+      : '';
+
+  if (legacyValuesRaw.isNotEmpty) {
+    final normalized = normalizeFlashCardValuesInput(legacyValuesRaw, rods);
+    final parsed = parseFlashCardValues(normalized);
+
+    return {
+      'topicId': resolvedTopicId,
+      'cardCount': clampFlashCardCount(
+        parsed.isEmpty ? defaultFlashCardCount : parsed.length,
+      ),
+      'values': normalized,
+    };
+  }
+
+  final resolvedCount = coerceInt(cardCount ?? rounds) ?? defaultFlashCardCount;
 
   return {
-    'totalRods': resolvedRods,
-    'values': normalizeFlashCardValuesInput(valuesRaw, resolvedRods),
+    'topicId': resolvedTopicId,
+    'cardCount': clampFlashCardCount(resolvedCount),
   };
 }

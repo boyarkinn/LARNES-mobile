@@ -20,6 +20,12 @@ enum RegisterAccountType {
     }
     return null;
   }
+
+  /// Hub `/register`: network owner hidden while school panel is WIP; deep link still works.
+  static const hubVisibleTypes = <RegisterAccountType>[
+    RegisterAccountType.parent,
+    RegisterAccountType.teacher,
+  ];
 }
 
 enum RegisterContactChannel { sms, email }

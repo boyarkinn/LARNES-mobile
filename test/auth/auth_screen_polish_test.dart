@@ -7,7 +7,7 @@ import 'package:larnes_mobile/features/auth/widgets/auth_role_card.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 void main() {
-  testWidgets('RegisterTypeScreen shows three web auth role cards', (tester) async {
+  testWidgets('RegisterTypeScreen shows parent and teacher auth role cards', (tester) async {
     final localeController = LocaleController();
 
     await tester.pumpWidget(
@@ -22,9 +22,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(AuthRoleCard), findsNWidgets(3));
+    expect(find.byType(AuthRoleCard), findsNWidgets(2));
     expect(find.text("I'm a parent / guardian"), findsOneWidget);
     expect(find.text("I'm a teacher / tutor"), findsOneWidget);
-    expect(find.text('I represent a school / center network'), findsOneWidget);
+    expect(find.text('I represent a school / center network'), findsNothing);
   });
 }

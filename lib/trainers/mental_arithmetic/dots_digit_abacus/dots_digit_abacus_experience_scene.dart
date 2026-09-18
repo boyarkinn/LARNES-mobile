@@ -275,8 +275,8 @@ class _SharedRepresentationLayer extends StatelessWidget {
                 duration: duration,
                 child: AbacusMatchCard(
                   activeBeadColor: practice
-                      ? const Color(kDotsDigitAbacusObjectColor)
-                      : explainAbacusColor,
+                      ? kDotsDigitAbacusObjectColor
+                      : explainColors.abacusColor,
                   connected: _abacusConnected,
                   framed: practice,
                   height: math.max(0, abacusRect.height - (practice ? 18 : 0)),

@@ -170,8 +170,6 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       _visibility = const TripleSceneVisibility();
 
       _connections.clear();
-
-      _matchPlan = _buildPlan();
     });
 
     unawaited(_runInstruction(runToken));

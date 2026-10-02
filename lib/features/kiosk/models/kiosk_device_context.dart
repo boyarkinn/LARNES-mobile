@@ -6,6 +6,7 @@ class KioskDeviceLessonBinding {
     required this.commandSeq,
     required this.lessonSessionId,
     required this.status,
+    this.classroomCallEnabled = false,
     this.pendingCommand,
   });
 
@@ -14,6 +15,7 @@ class KioskDeviceLessonBinding {
       commandSeq: json['commandSeq'] as int,
       lessonSessionId: json['lessonSessionId'] as String,
       status: json['status'] as String,
+      classroomCallEnabled: json['classroomCallEnabled'] == true,
       pendingCommand: json['pendingCommand'] as String?,
     );
   }
@@ -21,6 +23,7 @@ class KioskDeviceLessonBinding {
   final int commandSeq;
   final String lessonSessionId;
   final String status;
+  final bool classroomCallEnabled;
   final String? pendingCommand;
 }
 

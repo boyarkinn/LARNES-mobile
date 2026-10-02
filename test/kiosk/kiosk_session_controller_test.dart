@@ -33,6 +33,7 @@ class FakeKioskSessionApi implements KioskSessionApi {
   int heartbeatCalls = 0;
   int? lastHeartbeatAck;
   int childLogoutCalls = 0;
+  int leaveDeskCalls = 0;
   int scanCalls = 0;
   String? lastScanToken;
 
@@ -74,6 +75,11 @@ class FakeKioskSessionApi implements KioskSessionApi {
   @override
   Future<void> childLogout({String locale = 'ru'}) async {
     childLogoutCalls += 1;
+  }
+
+  @override
+  Future<void> leaveDesk({String locale = 'ru'}) async {
+    leaveDeskCalls += 1;
   }
 
   @override

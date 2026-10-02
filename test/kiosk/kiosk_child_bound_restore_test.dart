@@ -39,6 +39,9 @@ class _RestoreFakeApi implements KioskSessionApi {
   Future<void> childLogout({String locale = 'ru'}) async {}
 
   @override
+  Future<void> leaveDesk({String locale = 'ru'}) async {}
+
+  @override
   Future<KioskScanResult> scan({required String token, String locale = 'ru'}) {
     throw UnimplementedError();
   }

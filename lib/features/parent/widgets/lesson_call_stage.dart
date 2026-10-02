@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
+import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -24,6 +25,8 @@ class LessonCallStage extends StatefulWidget {
     required this.onLeave,
     required this.trainerOpen,
     this.inviteToken,
+    this.fetchPass,
+    this.claimRoster,
   });
 
   final Widget? body;
@@ -31,6 +34,11 @@ class LessonCallStage extends StatefulWidget {
   final VoidCallback onLeave;
   final bool trainerOpen;
   final String? inviteToken;
+  final Future<LessonCallPass?> Function(String locale)? fetchPass;
+  final Future<LessonCallTeachers> Function({
+    required String endpointId,
+    required String locale,
+  })? claimRoster;
 
   @override
   State<LessonCallStage> createState() => _LessonCallStageState();
@@ -82,6 +90,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
   Future<LessonCallPass?> _fetchPass() async {
     final locale = LocaleScope.read(context).localeCode;
+    final injected = widget.fetchPass;
+    if (injected != null) {
+      return injected(locale);
+    }
     final invite = widget.inviteToken;
     if (invite == null) {
       return AuthScope.of(context).parentApi.fetchLessonCallPass(
@@ -108,14 +120,20 @@ class _LessonCallStageState extends State<LessonCallStage> {
       });
       _tryStart();
     } on ParentApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _loading = false;
-        _link = error.code == 'inactive' ? _LessonCallLink.closed : _LessonCallLink.failed;
-      });
+      _failOpen(error.code);
+    } on KioskApiException catch (error) {
+      _failOpen(error.code);
     }
+  }
+
+  void _failOpen(String? code) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _loading = false;
+      _link = code == 'inactive' ? _LessonCallLink.closed : _LessonCallLink.failed;
+    });
   }
 
   Future<void> _renewPass() async {
@@ -154,14 +172,34 @@ class _LessonCallStageState extends State<LessonCallStage> {
       }
       await web.evaluateJavascript(source: 'acceptPass(${jsonEncode(pass.toStageJson())})');
     } on ParentApiException catch (error) {
-      if (!_renewStill(callGen)) {
-        return;
-      }
-      final closed = error.code == 'inactive';
-      setState(() => _link = closed ? _LessonCallLink.closed : _LessonCallLink.failed);
-      await _web?.evaluateJavascript(source: 'renewFailed(${jsonEncode(closed ? "inactive" : "failed")})');
+      await _failRenew(error.code, callGen);
+    } on KioskApiException catch (error) {
+      await _failRenew(error.code, callGen);
     } finally {
       _renewing = false;
+    }
+  }
+
+  Future<void> _failRenew(String? code, int callGen) async {
+    if (!_renewStill(callGen)) {
+      return;
+    }
+    final closed = code == 'inactive';
+    setState(() => _link = closed ? _LessonCallLink.closed : _LessonCallLink.failed);
+    await _web?.evaluateJavascript(source: 'renewFailed(${jsonEncode(closed ? "inactive" : "failed")})');
+  }
+
+  void _stopRoster(String? code) {
+    if (code == 'inactive' || code == 'forbidden') {
+      _roster?.cancel();
+      _roster = null;
+    }
+    if (code == 'inactive' && mounted) {
+      setState(() {
+        _retireCall();
+        _link = _LessonCallLink.closed;
+      });
+      unawaited(_stopSession());
     }
   }
 
@@ -235,16 +273,18 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
     _claiming = true;
     final locale = Localizations.localeOf(context).languageCode;
-    final invite = widget.inviteToken;
+    final claim = widget.claimRoster;
     try {
-      final teachers = invite == null
+      final teachers = claim != null
+          ? await claim(endpointId: endpointId, locale: locale)
+          : widget.inviteToken == null
           ? await AuthScope.of(context).parentApi.claimLessonCallRoster(
               childId: widget.childId,
               endpointId: endpointId,
               locale: locale,
             )
           : await AuthScope.of(context).lessonInviteGuestApi.claimLessonCallRoster(
-              token: invite,
+              token: widget.inviteToken!,
               endpointId: endpointId,
               locale: locale,
             );
@@ -255,17 +295,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
         source: 'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)})',
       );
     } on ParentApiException catch (error) {
-      if (error.code == 'inactive' || error.code == 'forbidden') {
-        _roster?.cancel();
-        _roster = null;
-      }
-      if (error.code == 'inactive' && mounted) {
-        setState(() {
-          _retireCall();
-          _link = _LessonCallLink.closed;
-        });
-        unawaited(_stopSession());
-      }
+      _stopRoster(error.code);
+    } on KioskApiException catch (error) {
+      _stopRoster(error.code);
     } finally {
       _claiming = false;
     }

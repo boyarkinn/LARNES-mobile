@@ -17,6 +17,8 @@ abstract class KioskSessionApi {
 
   Future<void> childLogout({String locale = 'ru'});
 
+  Future<void> leaveDesk({String locale = 'ru'});
+
   Future<KioskScanResult> scan({
     required String token,
     String locale = 'ru',

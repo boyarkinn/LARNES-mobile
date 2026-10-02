@@ -8,6 +8,7 @@ import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/kiosk/api/kiosk_lesson_call_api.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
@@ -18,6 +19,7 @@ import 'package:larnes_mobile/features/kiosk/utils/kiosk_scan_error_message.dart
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_trainer_player_view.dart';
+import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_scan_result_view.dart';
@@ -440,20 +442,42 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
-    final switchKey = switch (controller.mode) {
-      KioskSessionMode.play =>
-        '${controller.mode.name}-${controller.activeProgramId}',
-      KioskSessionMode.trainer =>
-        '${controller.mode.name}-${controller.trainerReloadToken}',
-      _ => controller.mode.name,
-    };
+    final switchKey = controller.classroomCallOn
+        ? 'classroom-call'
+        : switch (controller.mode) {
+            KioskSessionMode.play =>
+              '${controller.mode.name}-${controller.activeProgramId}',
+            KioskSessionMode.trainer =>
+              '${controller.mode.name}-${controller.trainerReloadToken}',
+            _ => controller.mode.name,
+          };
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 220),
       child: KeyedSubtree(
         key: ValueKey(switchKey),
-        child: _buildModeContent(context, controller, l10n, theme),
+        child: controller.classroomCallOn
+            ? _classroomCall(controller)
+            : _buildModeContent(context, controller, l10n, theme),
       ),
+    );
+  }
+
+  Widget _classroomCall(KioskSessionController controller) {
+    final callApi = KioskLessonCallApi(_childSessionApiClient);
+    final childId = controller.deviceContext.activeChild?.childId ?? '';
+    return LessonCallStage(
+      body: null,
+      childId: childId,
+      trainerOpen: false,
+      fetchPass: (locale) => callApi.fetchPass(locale: locale),
+      claimRoster: ({required endpointId, required locale}) => callApi.claimRoster(
+        endpointId: endpointId,
+        locale: locale,
+      ),
+      onLeave: () {
+        unawaited(controller.leaveDesk());
+      },
     );
   }
 

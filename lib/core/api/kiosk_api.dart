@@ -142,6 +142,19 @@ class KioskApi implements KioskSessionApi {
     }
   }
 
+  Future<void> leaveDesk({String locale = 'ru'}) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post('/api/classroom/devices/me/lesson/leave');
+      final data = _asJsonMap(response.data);
+      if (data?['ok'] != true) {
+        throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);
+      }
+    } on DioException catch (error) {
+      throw _apiExceptionFromDio(error, l10n);
+    }
+  }
+
   Future<KioskScanResult> scan({
     required String token,
     String locale = 'ru',

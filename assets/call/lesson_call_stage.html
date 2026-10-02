@@ -108,6 +108,7 @@
       var opening = { video: false, audio: false };
       var wishMuted = { video: true, audio: true };
       var captureGen = { video: 0, audio: 0 };
+      var pending = { video: null, audio: null };
       var tileNodes = {};
       var renewing = false;
       var libraryReady = false;
@@ -756,6 +757,7 @@
         }
         passHold = pass;
         joining = true;
+        var thisAttempt = attempt;
         if (window.JitsiMeetJS) {
           start(pass);
           return;
@@ -763,9 +765,16 @@
         var script = document.createElement("script");
         script.src = "https://" + pass.domain + "/libs/lib-jitsi-meet.min.js";
         script.onload = function () {
+          if (thisAttempt !== attempt || leaving) {
+            return;
+          }
           start(pass);
         };
         script.onerror = function () {
+          if (thisAttempt !== attempt || leaving) {
+            return;
+          }
+          joining = false;
           post("failed");
         };
         document.head.appendChild(script);
@@ -792,18 +801,22 @@
           clientNode: "http://jitsi.org/jitsimeet",
         });
         connection.addEventListener(meet.events.connection.CONNECTION_FAILED, function () {
-          if (!leaving && thisAttempt === attempt) {
-            noteRoomFailure();
+          if (thisAttempt !== attempt || leaving) {
+            return;
           }
+          noteRoomFailure();
         });
         connection.addEventListener(meet.events.connection.CONNECTION_ESTABLISHED, function () {
+          if (thisAttempt !== attempt || leaving) {
+            return;
+          }
           room = connection.initJitsiConference(pass.room, { p2p: { enabled: false } });
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
           }
           ensurePerson("local", true);
           room.on(meet.events.conference.TRACK_ADDED, function (track) {
-            if (!track) {
+            if (thisAttempt !== attempt || !track) {
               return;
             }
             if (track.getType() === "video") {
@@ -815,7 +828,7 @@
             }
           });
           room.on(meet.events.conference.TRACK_REMOVED, function (track) {
-            if (!track || track.getType() !== "video") {
+            if (thisAttempt !== attempt || !track || track.getType() !== "video") {
               return;
             }
             var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
@@ -834,7 +847,7 @@
             render();
           });
           room.on(meet.events.conference.TRACK_MUTE_CHANGED, function (track) {
-            if (!track) {
+            if (thisAttempt !== attempt || !track) {
               return;
             }
             var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
@@ -853,7 +866,7 @@
             }
           });
           room.on(meet.events.conference.USER_JOINED, function (id, participant) {
-            if (typeof id !== "string" || !id || id === room.myUserId()) {
+            if (thisAttempt !== attempt || typeof id !== "string" || !id || id === room.myUserId()) {
               return;
             }
             var person = ensurePerson(id, false);
@@ -864,12 +877,18 @@
             render();
           });
           room.on(meet.events.conference.USER_LEFT, function (id) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               render();
             }
           });
           room.on(meet.events.conference.DISPLAY_NAME_CHANGED, function (id, name) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
             var person = id === room.myUserId() ? people.local : people[id];
             if (person && !person.local && typeof name === "string") {
               person.name = name;
@@ -879,15 +898,21 @@
           var endpointEvent =
             meet.events.conference.ENDPOINT_MESSAGE_RECEIVED || "conference.endpoint_message_received";
           room.on(endpointEvent, function (from, payload) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
             onEndpointMessage(from, payload);
           });
           room.addCommandListener("larnes-workspace", function (payload, participantId) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
             applyWorkspace(participantId, payload);
           });
           var speakerEvent = meet.events.conference.DOMINANT_SPEAKER_CHANGED;
           if (speakerEvent) {
             room.on(speakerEvent, function (id) {
-              if (typeof id !== "string" || !id) {
+              if (thisAttempt !== attempt || typeof id !== "string" || !id) {
                 return;
               }
               speakerId = id === room.myUserId() ? "local" : id;
@@ -897,14 +922,15 @@
             });
           }
           room.on(meet.events.conference.CONFERENCE_FAILED, function () {
-            if (!leaving && thisAttempt === attempt) {
-              noteRoomFailure();
+            if (thisAttempt !== attempt || leaving) {
+              return;
             }
+            noteRoomFailure();
           });
           var interruptedEvent = meet.events.conference.CONNECTION_INTERRUPTED;
           if (interruptedEvent) {
             room.on(interruptedEvent, function () {
-              if (leaving || !callJoined) {
+              if (thisAttempt !== attempt || leaving || !callJoined) {
                 return;
               }
               var interrupted = linkInterrupted();
@@ -916,7 +942,7 @@
           var restoredEvent = meet.events.conference.CONNECTION_RESTORED;
           if (restoredEvent) {
             room.on(restoredEvent, function () {
-              if (leaving) {
+              if (thisAttempt !== attempt || leaving) {
                 return;
               }
               var restored = linkRestored();
@@ -926,6 +952,9 @@
             });
           }
           room.on(meet.events.conference.CONFERENCE_JOINED, function () {
+            if (thisAttempt !== attempt || leaving) {
+              return;
+            }
             callJoined = true;
             applyLink(linkJoined());
             localEndpoint = room.myUserId() || "";
@@ -955,6 +984,12 @@
         render();
       }
 
+      function finishCapture(kind, gen) {
+        if (gen === captureGen[kind]) {
+          opening[kind] = false;
+        }
+      }
+
       function beginCapture(kind) {
         var meet = window.JitsiMeetJS;
         if (opening[kind] || !room || !meet) {
@@ -968,49 +1003,73 @@
             : meet.createLocalTracks({ devices: ["audio"] });
         request
           .then(function (tracks) {
-            opening[kind] = false;
             var created = takeTrack(tracks, kind);
             if (!created) {
+              finishCapture(kind, gen);
               if (gen === captureGen[kind] && !leaving) {
                 post(failKind(kind), "failed");
               }
               return;
             }
             if (gen !== captureGen[kind] || leaving || wishMuted[kind] || !room) {
+              finishCapture(kind, gen);
               releaseTrack(created);
               if (gen === captureGen[kind] && wishMuted[kind] && !leaving) {
                 applyMute(kind, true);
               }
               return;
             }
+            pending[kind] = created;
             var heldRoom = room;
-            return heldRoom.addTrack(created).then(function () {
-              if (gen !== captureGen[kind] || leaving || wishMuted[kind]) {
-                try {
-                  if (heldRoom.removeTrack) {
-                    heldRoom.removeTrack(created);
-                  }
-                } catch (error) {}
+            var heldAttempt = attempt;
+            return heldRoom.addTrack(created).then(
+              function () {
+                finishCapture(kind, gen);
+                if (pending[kind] === created) {
+                  pending[kind] = null;
+                }
+                if (gen !== captureGen[kind] || leaving || wishMuted[kind] || heldAttempt !== attempt) {
+                  try {
+                    if (heldRoom.removeTrack) {
+                      heldRoom.removeTrack(created);
+                    }
+                  } catch (error) {}
+                  releaseTrack(created);
+                  return;
+                }
+                if (kind === "video") {
+                  localVideo = created;
+                  var person = ensurePerson("local", true);
+                  person.camera = created;
+                } else {
+                  localAudio = created;
+                }
+                applyMute(kind, false);
+              },
+              function () {
+                finishCapture(kind, gen);
+                if (pending[kind] === created) {
+                  pending[kind] = null;
+                }
                 releaseTrack(created);
-                return;
-              }
-              if (kind === "video") {
-                localVideo = created;
-                var person = ensurePerson("local", true);
-                person.camera = created;
-              } else {
-                localAudio = created;
-              }
-              applyMute(kind, false);
-            });
+                if (gen === captureGen[kind] && !leaving && heldAttempt === attempt) {
+                  post(failKind(kind), "failed");
+                }
+              },
+            );
           })
           .catch(function (error) {
-            opening[kind] = false;
+            finishCapture(kind, gen);
             if (gen !== captureGen[kind] || leaving) {
               return;
             }
             post(failKind(kind), blockOf(error));
           });
+      }
+
+      function sameTrack(kind, track, heldAttempt) {
+        var current = kind === "video" ? localVideo : localAudio;
+        return heldAttempt === attempt && !leaving && current === track;
       }
 
       function askDevice(kind, muted) {
@@ -1021,15 +1080,20 @@
         }
         wishMuted[kind] = muted;
         var track = kind === "video" ? localVideo : localAudio;
+        var heldAttempt = attempt;
         if (muted) {
           if (track && track.mute) {
             Promise.resolve(track.mute())
               .then(function () {
-                if (wishMuted[kind]) {
-                  applyMute(kind, true);
+                if (!sameTrack(kind, track, heldAttempt) || !wishMuted[kind]) {
+                  return;
                 }
+                applyMute(kind, true);
               })
               .catch(function (error) {
+                if (!sameTrack(kind, track, heldAttempt)) {
+                  return;
+                }
                 post(failKind(kind), blockOf(error));
               });
           } else {
@@ -1040,11 +1104,15 @@
         if (track && track.unmute) {
           Promise.resolve(track.unmute())
             .then(function () {
-              if (!wishMuted[kind]) {
-                applyMute(kind, false);
+              if (!sameTrack(kind, track, heldAttempt) || wishMuted[kind]) {
+                return;
               }
+              applyMute(kind, false);
             })
             .catch(function (error) {
+              if (!sameTrack(kind, track, heldAttempt)) {
+                return;
+              }
               post(failKind(kind), blockOf(error));
             });
           return;
@@ -1234,11 +1302,13 @@
 
       function renewFailed(code) {
         renewing = false;
+        var wasLive = callJoined || linkPhase === "rejoining" || linkPhase === "reconnecting";
+        dropSession();
         if (code === "inactive") {
           post("closed");
           return;
         }
-        if (callJoined || linkPhase === "rejoining" || linkPhase === "reconnecting") {
+        if (wasLive) {
           applyLink(linkEntranceFailed());
           return;
         }
@@ -1246,6 +1316,7 @@
       }
 
       function dropSession() {
+        attempt += 1;
         captureGen.video += 1;
         captureGen.audio += 1;
         opening.video = false;
@@ -1262,6 +1333,10 @@
         connection = null;
         joining = false;
         callJoined = false;
+        releaseTrack(pending.video);
+        releaseTrack(pending.audio);
+        pending.video = null;
+        pending.audio = null;
         releaseTrack(localVideo);
         releaseTrack(localAudio);
         localVideo = null;

@@ -50,6 +50,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
   bool _awaitingPage = false;
   bool _claiming = false;
   bool _renewing = false;
+  int _callGen = 0;
   int _cameraSeq = 0;
   int _micSeq = 0;
   String? _cameraNote;
@@ -122,10 +123,19 @@ class _LessonCallStageState extends State<LessonCallStage> {
       return;
     }
     _renewing = true;
-    setState(() => _link = _LessonCallLink.reconnecting);
+    var callGen = _callGen;
     try {
+      setState(() {
+        _retireCall();
+        _link = _LessonCallLink.reconnecting;
+      });
+      callGen = _callGen;
+      await _stopSession();
+      if (!_renewStill(callGen)) {
+        return;
+      }
       final pass = await _fetchPass();
-      if (!mounted) {
+      if (!_renewStill(callGen)) {
         return;
       }
       if (pass == null) {
@@ -134,6 +144,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
         return;
       }
       setState(() => _pass = pass);
+      if (!_renewStill(callGen)) {
+        return;
+      }
       final web = _web;
       if (web == null || _html == null || !_starting) {
         _tryStart();
@@ -141,7 +154,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
       }
       await web.evaluateJavascript(source: 'acceptPass(${jsonEncode(pass.toStageJson())})');
     } on ParentApiException catch (error) {
-      if (!mounted) {
+      if (!_renewStill(callGen)) {
         return;
       }
       final closed = error.code == 'inactive';
@@ -150,6 +163,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
     } finally {
       _renewing = false;
     }
+  }
+
+  bool _renewStill(int callGen) {
+    return mounted && callGen == _callGen && _link != _LessonCallLink.closed;
   }
 
   void _tryStart() {
@@ -243,16 +260,44 @@ class _LessonCallStageState extends State<LessonCallStage> {
         _roster = null;
       }
       if (error.code == 'inactive' && mounted) {
-        setState(() => _link = _LessonCallLink.closed);
+        setState(() {
+          _retireCall();
+          _link = _LessonCallLink.closed;
+        });
+        unawaited(_stopSession());
       }
     } finally {
       _claiming = false;
     }
   }
 
+  void _retireCall() {
+    _callGen += 1;
+    _cameraSeq += 1;
+    _micSeq += 1;
+    _inRoom = false;
+    _cameraOn = false;
+    _micOn = false;
+  }
+
+  Future<void> _stopSession() async {
+    try {
+      await _web?.evaluateJavascript(source: 'dropSession()');
+    } catch (_) {}
+  }
+
+  bool _deviceWishCurrent(bool video, int seq, int callGen) {
+    return mounted &&
+        seq == (video ? _cameraSeq : _micSeq) &&
+        callGen == _callGen &&
+        _inRoom &&
+        _link != _LessonCallLink.closed;
+  }
+
   Future<void> _setDeviceWish(String device, bool muted) async {
     final video = device == 'video';
     final seq = video ? ++_cameraSeq : ++_micSeq;
+    final callGen = _callGen;
     setState(() {
       if (video) {
         _cameraNote = null;
@@ -264,7 +309,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
     });
     if (!muted) {
       final permission = await (video ? Permission.camera : Permission.microphone).request();
-      if (!mounted || seq != (video ? _cameraSeq : _micSeq)) {
+      if (!_deviceWishCurrent(video, seq, callGen)) {
         return;
       }
       if (!permission.isGranted) {
@@ -277,11 +322,14 @@ class _LessonCallStageState extends State<LessonCallStage> {
             _micNote = 'denied';
           }
         });
+        if (!_deviceWishCurrent(video, seq, callGen)) {
+          return;
+        }
         await _web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, true)');
         return;
       }
     }
-    if (!mounted || seq != (video ? _cameraSeq : _micSeq)) {
+    if (!_deviceWishCurrent(video, seq, callGen)) {
       return;
     }
     await _web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, $muted)');
@@ -329,6 +377,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
     final kind = message['kind'];
     final detail = message['detail'];
     final block = detail is String && detail.isNotEmpty ? detail : 'failed';
+    var stopSession = false;
     setState(() {
       switch (kind) {
         case 'joined':
@@ -370,8 +419,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
             unawaited(_renewPass());
           }
         case 'closed':
-          _inRoom = false;
+          _retireCall();
           _link = _LessonCallLink.closed;
+          stopSession = true;
         case 'mode':
           if (detail == 'grid' || detail == 'talk' || detail == 'workflow') {
             _mode = detail;
@@ -410,6 +460,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
           _link = _LessonCallLink.failed;
       }
     });
+    if (stopSession) {
+      unawaited(_stopSession());
+    }
   }
 
   @override
@@ -427,6 +480,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
   @override
   void dispose() {
+    _callGen += 1;
+    _cameraSeq += 1;
+    _micSeq += 1;
     _roster?.cancel();
     _chromeTimer?.cancel();
     _web?.evaluateJavascript(source: 'leave()');
@@ -526,7 +582,11 @@ class _LessonCallStageState extends State<LessonCallStage> {
         _keepChrome();
         _resumeHear();
       },
-      onLeave: widget.onLeave,
+      onLeave: () {
+        setState(_retireCall);
+        unawaited(_stopSession());
+        widget.onLeave();
+      },
       onRetry: () {
         _keepChrome();
         _rejoin();

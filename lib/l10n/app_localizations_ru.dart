@@ -460,7 +460,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentLiveLessonLinkLost => 'Связь потеряна.';
 
   @override
-  String get parentLiveLessonLinkReconnecting => 'Связь прервалась. Восстанавливаем.';
+  String get parentLiveLessonLinkReconnecting =>
+      'Связь прервалась. Восстанавливаем.';
 
   @override
   String get parentLiveLessonLinkRetry => 'Войти снова';

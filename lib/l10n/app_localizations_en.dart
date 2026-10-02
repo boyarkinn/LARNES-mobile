@@ -459,7 +459,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentLiveLessonLinkLost => 'The connection was lost.';
 
   @override
-  String get parentLiveLessonLinkReconnecting => 'The connection dropped. Reconnecting.';
+  String get parentLiveLessonLinkReconnecting =>
+      'The connection dropped. Reconnecting.';
 
   @override
   String get parentLiveLessonLinkRetry => 'Join again';

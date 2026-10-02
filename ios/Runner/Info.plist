@@ -67,6 +67,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Камера нужна для сканирования QR-кода ребёнка на занятии.</string>
+	<string>Камера нужна, чтобы сканировать QR-код ребёнка и включать изображение на уроке.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Микрофон нужен, чтобы ребёнок мог говорить на уроке, когда его включают.</string>
 </dict>
 </plist>

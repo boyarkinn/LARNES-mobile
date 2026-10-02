@@ -403,6 +403,90 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentLiveLessonLeaveFailed => 'Не удалось выйти из урока.';
 
   @override
+  String get parentLiveLessonEnableCamera => 'Включить камеру';
+
+  @override
+  String get parentLiveLessonCallFailed => 'Не удалось подключить связь.';
+
+  @override
+  String get parentLiveLessonCameraFailed => 'Камера не включилась.';
+
+  @override
+  String get parentLiveLessonDockLabel => 'Управление уроком';
+
+  @override
+  String get parentLiveLessonCameraOn => 'Камера включена';
+
+  @override
+  String get parentLiveLessonCameraOff => 'Камера выключена';
+
+  @override
+  String get parentLiveLessonMicOn => 'Микрофон включён';
+
+  @override
+  String get parentLiveLessonMicOff => 'Микрофон выключен';
+
+  @override
+  String get parentLiveLessonLeave => 'Выйти';
+
+  @override
+  String get parentLiveLessonHear => 'Включить звук';
+
+  @override
+  String get parentLiveLessonCameraDenied =>
+      'Телефон запретил камеру. Разрешите её в настройках и нажмите кнопку камеры.';
+
+  @override
+  String get parentLiveLessonCameraMissing =>
+      'Камера не найдена. Нажмите кнопку камеры, чтобы спросить ещё раз.';
+
+  @override
+  String get parentLiveLessonCameraAskAgain =>
+      'Камера не включилась. Нажмите кнопку камеры, чтобы спросить ещё раз.';
+
+  @override
+  String get parentLiveLessonMicDenied =>
+      'Телефон запретил микрофон. Разрешите его в настройках и нажмите кнопку микрофона.';
+
+  @override
+  String get parentLiveLessonMicMissing =>
+      'Микрофон не найден. Нажмите кнопку микрофона, чтобы спросить ещё раз.';
+
+  @override
+  String get parentLiveLessonMicAskAgain =>
+      'Микрофон не включился. Нажмите кнопку микрофона, чтобы спросить ещё раз.';
+
+  @override
+  String get parentLiveLessonLinkLost => 'Связь потеряна.';
+
+  @override
+  String get parentLiveLessonLinkReconnecting => 'Связь прервалась. Восстанавливаем.';
+
+  @override
+  String get parentLiveLessonLinkRetry => 'Войти снова';
+
+  @override
+  String get parentLiveLessonLinkClosed => 'Урок уже завершён';
+
+  @override
+  String get parentLiveLessonYou => 'Я';
+
+  @override
+  String get parentLiveLessonCameraOffCaption => 'Камера выключена';
+
+  @override
+  String get parentLiveLessonOnline => 'На связи';
+
+  @override
+  String get parentLiveLessonCall => 'Связь';
+
+  @override
+  String get parentLiveLessonCallShow => 'Показать связь';
+
+  @override
+  String get parentLiveLessonCallHide => 'Скрыть связь';
+
+  @override
   String get parentAccount => 'Аккаунт';
 
   @override

@@ -2,7 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/lesson_guest_key_storage.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -106,6 +108,65 @@ class LessonInviteGuestApi {
     }
   }
 
+  Future<LessonCallPass?> fetchLessonCallPass({
+    required String token,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.get(
+        '/api/invite/lesson/guest/call-pass',
+        queryParameters: {
+          'locale': locale,
+          'token': token,
+        },
+        options: await _guestOptions(),
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null) {
+        throw ParentApiException(l10n.parentLiveLessonCallFailed);
+      }
+      return LessonCallPass.fromJson(data);
+    } on DioException catch (error) {
+      throw _parentApiException(error, l10n, fallback: l10n.parentLiveLessonCallFailed);
+    }
+  }
+
+  Future<LessonCallTeachers> claimLessonCallRoster({
+    required String token,
+    required String endpointId,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.post(
+        '/api/invite/lesson/guest/call-roster',
+        data: {
+          'endpointId': endpointId,
+          'locale': locale,
+          'token': token,
+        },
+        options: await _guestOptions(),
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(l10n.parentLiveLessonCallFailed);
+      }
+      final teachers = data['teacherEndpointIds'];
+      final primary = data['teacherEndpointId'];
+      return LessonCallTeachers(
+        ids: [
+          if (teachers is List)
+            for (final id in teachers)
+              if (id is String && id.isNotEmpty) id,
+        ],
+        primary: primary is String ? primary : '',
+      );
+    } on DioException catch (error) {
+      throw _parentApiException(error, l10n, fallback: l10n.parentLiveLessonCallFailed);
+    }
+  }
+
   Future<void> reportLessonTrainerEvent(
     LessonTrainerTelemetryDescriptor descriptor,
     Map<String, dynamic> event,
@@ -157,5 +218,8 @@ ParentApiException _parentApiException(
           error.type == DioExceptionType.connectionTimeout
       ? l10n.noConnection
       : _messageFromBody(error.response?.data, l10n, fallback: fallback);
-  return ParentApiException(message);
+  return ParentApiException(
+    message,
+    code: parentPanelErrorCode(error.response?.data),
+  );
 }

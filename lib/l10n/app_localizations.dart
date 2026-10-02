@@ -848,6 +848,162 @@ abstract class AppLocalizations {
   /// **'Could not leave the lesson.'**
   String get parentLiveLessonLeaveFailed;
 
+  /// No description provided for @parentLiveLessonEnableCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the camera on'**
+  String get parentLiveLessonEnableCamera;
+
+  /// No description provided for @parentLiveLessonCallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect the call.'**
+  String get parentLiveLessonCallFailed;
+
+  /// No description provided for @parentLiveLessonCameraFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera did not turn on.'**
+  String get parentLiveLessonCameraFailed;
+
+  /// No description provided for @parentLiveLessonDockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson controls'**
+  String get parentLiveLessonDockLabel;
+
+  /// No description provided for @parentLiveLessonCameraOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera on'**
+  String get parentLiveLessonCameraOn;
+
+  /// No description provided for @parentLiveLessonCameraOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera off'**
+  String get parentLiveLessonCameraOff;
+
+  /// No description provided for @parentLiveLessonMicOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone on'**
+  String get parentLiveLessonMicOn;
+
+  /// No description provided for @parentLiveLessonMicOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone off'**
+  String get parentLiveLessonMicOff;
+
+  /// No description provided for @parentLiveLessonLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get parentLiveLessonLeave;
+
+  /// No description provided for @parentLiveLessonHear.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn sound on'**
+  String get parentLiveLessonHear;
+
+  /// No description provided for @parentLiveLessonCameraDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone blocked the camera. Allow it in settings and press the camera button.'**
+  String get parentLiveLessonCameraDenied;
+
+  /// No description provided for @parentLiveLessonCameraMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No camera found. Press the camera button to ask again.'**
+  String get parentLiveLessonCameraMissing;
+
+  /// No description provided for @parentLiveLessonCameraAskAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera did not turn on. Press the camera button to ask again.'**
+  String get parentLiveLessonCameraAskAgain;
+
+  /// No description provided for @parentLiveLessonMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone blocked the microphone. Allow it in settings and press the microphone button.'**
+  String get parentLiveLessonMicDenied;
+
+  /// No description provided for @parentLiveLessonMicMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'No microphone found. Press the microphone button to ask again.'**
+  String get parentLiveLessonMicMissing;
+
+  /// No description provided for @parentLiveLessonMicAskAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'The microphone did not turn on. Press the microphone button to ask again.'**
+  String get parentLiveLessonMicAskAgain;
+
+  /// No description provided for @parentLiveLessonLinkLost.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection was lost.'**
+  String get parentLiveLessonLinkLost;
+
+  /// No description provided for @parentLiveLessonLinkReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection dropped. Reconnecting.'**
+  String get parentLiveLessonLinkReconnecting;
+
+  /// No description provided for @parentLiveLessonLinkRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Join again'**
+  String get parentLiveLessonLinkRetry;
+
+  /// No description provided for @parentLiveLessonLinkClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'The lesson has already ended'**
+  String get parentLiveLessonLinkClosed;
+
+  /// No description provided for @parentLiveLessonYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get parentLiveLessonYou;
+
+  /// No description provided for @parentLiveLessonCameraOffCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera is off'**
+  String get parentLiveLessonCameraOffCaption;
+
+  /// No description provided for @parentLiveLessonOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get parentLiveLessonOnline;
+
+  /// No description provided for @parentLiveLessonCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get parentLiveLessonCall;
+
+  /// No description provided for @parentLiveLessonCallShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Show call controls'**
+  String get parentLiveLessonCallShow;
+
+  /// No description provided for @parentLiveLessonCallHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide call controls'**
+  String get parentLiveLessonCallHide;
+
   /// No description provided for @parentAccount.
   ///
   /// In en, this message translates to:

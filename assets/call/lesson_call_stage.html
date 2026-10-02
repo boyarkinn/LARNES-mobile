@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #111;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      .grid {
+        box-sizing: border-box;
+        display: grid;
+        height: 100%;
+        align-content: start;
+        gap: 12px;
+        overflow-y: auto;
+        padding: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      .grid.cover {
+        display: none;
+      }
+      .tile {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 16px;
+        background: #1d2939;
+      }
+      .grid.talk {
+        display: flex;
+      }
+      .grid.talk .tile {
+        flex: 1 1 auto;
+        width: 100%;
+        height: 100%;
+        aspect-ratio: auto;
+      }
+      .tile video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+      }
+      .dot {
+        position: absolute;
+        top: 0.7rem;
+        inset-inline-end: 0.7rem;
+        z-index: 2;
+        width: 0.7rem;
+        height: 0.7rem;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        background: #12b76a;
+        box-shadow: 0 0 0 1px rgb(0 0 0 / 0.28);
+      }
+      .caption {
+        position: absolute;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 2;
+        padding: 8px 10px;
+        background: linear-gradient(transparent, rgb(0 0 0 / 0.55));
+      }
+      .name,
+      .meta {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .name {
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      .meta {
+        margin-top: 2px;
+        font-size: 12px;
+        line-height: 1.25;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="grid" class="grid"></div>
+    <script>
+      var connection = null;
+      var room = null;
+      var localVideo = null;
+      var localAudio = null;
+      var videoMuted = true;
+      var audioMuted = true;
+      var joining = false;
+      var leaving = false;
+      var callJoined = false;
+      var linkPhase = "idle";
+      var linkAuto = true;
+      var linkAutoAt = 0;
+      var linkTimer = null;
+      var passHold = null;
+      var remoteAudios = [];
+      var opening = { video: false, audio: false };
+      var wishMuted = { video: true, audio: true };
+      var captureGen = { video: 0, audio: 0 };
+      var tileNodes = {};
+      var renewing = false;
+      var libraryReady = false;
+      var attempt = 0;
+      var people = {};
+      var teacherIds = [];
+      var teacherPrimary = "";
+      var shownMode = "grid";
+      var speakerId = "";
+      var workspaceSlots = {};
+      var boardOpen = null;
+      var boardShownSentAt = 0;
+      var boardHeld = [];
+      var localEndpoint = "";
+      var youLabel = "";
+      var cameraOffLabel = "";
+      var onlineLabel = "";
+      var nameLocale = "ru";
+      var band = false;
+      var mediaAppliedAt = { audio: 0, video: 0 };
+      var mediaHold = [];
+      var mediaSkewMs = 15 * 60 * 1000;
+
+      function post(kind, detail) {
+        var bridge = window.flutter_inappwebview;
+        if (bridge && bridge.callHandler) {
+          bridge.callHandler("lessonCall", { kind: kind, detail: detail || "" });
+        }
+      }
+
+      function attach(track, element) {
+        if (!track || !element) {
+          return;
+        }
+        if (typeof track.attach === "function") {
+          track.attach(element);
+        } else if (track.stream) {
+          element.srcObject = track.stream;
+        }
+      }
+
+      function playMedia(element, onBlocked) {
+        if (!element || !element.play) {
+          return;
+        }
+        element.play().catch(function () {
+          if (onBlocked) {
+            onBlocked();
+          }
+        });
+      }
+
+      function attachRemoteAudio(track) {
+        var audio = document.createElement("audio");
+        audio.autoplay = true;
+        audio.setAttribute("playsinline", "");
+        document.body.appendChild(audio);
+        remoteAudios.push(audio);
+        attach(track, audio);
+        playMedia(audio, function () {
+          post("hear-blocked");
+        });
+      }
+
+      function blockOf(error) {
+        var name = error && error.name ? String(error.name) : "";
+        if (
+          name.indexOf("permission_denied") >= 0 ||
+          name === "NotAllowedError" ||
+          name === "PermissionDeniedError" ||
+          name === "SecurityError"
+        ) {
+          return "denied";
+        }
+        if (
+          name.indexOf("not_found") >= 0 ||
+          name === "NotFoundError" ||
+          name === "NotReadableError" ||
+          name === "DevicesNotFoundError"
+        ) {
+          return "missing";
+        }
+        return "failed";
+      }
+
+      function takeTrack(tracks, kind) {
+        var mine = null;
+        var list = tracks || [];
+        for (var i = 0; i < list.length; i++) {
+          var track = list[i];
+          if (!mine && track.getType && track.getType() === kind) {
+            mine = track;
+          } else if (track.dispose) {
+            track.dispose();
+          }
+        }
+        return mine;
+      }
+
+      function ensurePerson(id, local) {
+        if (!people[id]) {
+          people[id] = {
+            id: id,
+            name: "",
+            local: local,
+            camera: null,
+            desktop: null,
+            videoMuted: true,
+          };
+        }
+        return people[id];
+      }
+
+      function shownTrack(person) {
+        return person.desktop || person.camera;
+      }
+
+      function orderedPeople() {
+        var local = null;
+        var remotes = [];
+        for (var id in people) {
+          if (people[id].local) {
+            local = people[id];
+          } else {
+            remotes.push(people[id]);
+          }
+        }
+        remotes.sort(function (left, right) {
+          var leftTeacher = teacherIds.indexOf(left.id) >= 0 ? 0 : 1;
+          var rightTeacher = teacherIds.indexOf(right.id) >= 0 ? 0 : 1;
+          if (leftTeacher !== rightTeacher) {
+            return leftTeacher - rightTeacher;
+          }
+          return (left.name || "").localeCompare(right.name || "", nameLocale);
+        });
+        return local ? [local].concat(remotes) : remotes;
+      }
+
+      function personById(tiles, id) {
+        if (!id) {
+          return null;
+        }
+        for (var i = 0; i < tiles.length; i++) {
+          if (tiles[i].id === id) {
+            return tiles[i];
+          }
+        }
+        return null;
+      }
+
+      function talkTiles(tiles) {
+        if (shownMode !== "talk") {
+          return tiles;
+        }
+        var speaker = personById(tiles, speakerId);
+        if (speaker) {
+          return [speaker];
+        }
+        var teacher = personById(tiles, teacherPrimary);
+        if (teacher) {
+          return [teacher];
+        }
+        var local = personById(tiles, "local");
+        return local ? [local] : [];
+      }
+
+      function releaseTrack(track) {
+        if (!track) {
+          return;
+        }
+        try {
+          if (typeof track.detach === "function") {
+            track.detach();
+          }
+        } catch (error) {}
+        try {
+          if (typeof track.dispose === "function") {
+            track.dispose();
+          }
+        } catch (error) {}
+      }
+
+      function detachVideo(node) {
+        if (!node || !node.video) {
+          return;
+        }
+        var track = node.track;
+        var video = node.video;
+        node.video = null;
+        node.track = null;
+        try {
+          if (track && typeof track.detach === "function") {
+            track.detach(video);
+          }
+        } catch (error) {}
+        if (video.parentNode) {
+          video.parentNode.removeChild(video);
+        }
+      }
+
+      function createTile() {
+        var tile = document.createElement("div");
+        tile.className = "tile";
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.setAttribute("role", "img");
+        var caption = document.createElement("div");
+        caption.className = "caption";
+        var name = document.createElement("div");
+        name.className = "name";
+        caption.appendChild(name);
+        tile.appendChild(dot);
+        tile.appendChild(caption);
+        return { tile: tile, dot: dot, caption: caption, name: name, meta: null, video: null, track: null };
+      }
+
+      function updateTile(node, person) {
+        var label = person.local ? youLabel : person.name || "";
+        if (node.name.textContent !== label) {
+          node.name.textContent = label;
+        }
+        if (node.dot.getAttribute("aria-label") !== onlineLabel) {
+          node.dot.setAttribute("aria-label", onlineLabel);
+        }
+        var videoTrack = shownTrack(person);
+        var show = Boolean(videoTrack) && !person.videoMuted;
+        if (!show) {
+          detachVideo(node);
+          if (!node.meta) {
+            node.meta = document.createElement("div");
+            node.meta.className = "meta";
+            node.caption.appendChild(node.meta);
+          }
+          if (node.meta.textContent !== cameraOffLabel) {
+            node.meta.textContent = cameraOffLabel;
+          }
+          return;
+        }
+        if (node.meta && node.meta.parentNode) {
+          node.meta.parentNode.removeChild(node.meta);
+          node.meta = null;
+        }
+        if (node.track === videoTrack && node.video) {
+          return;
+        }
+        detachVideo(node);
+        var video = document.createElement("video");
+        video.autoplay = true;
+        video.muted = true;
+        video.setAttribute("playsinline", "");
+        node.tile.insertBefore(video, node.tile.firstChild);
+        node.video = video;
+        node.track = videoTrack;
+        attach(videoTrack, video);
+        playMedia(video);
+      }
+
+      function render() {
+        var root = document.getElementById("grid");
+        if (!root) {
+          return;
+        }
+        root.className = "grid" + (band ? " cover" : "") + (shownMode === "talk" && !band ? " talk" : "");
+        var tiles = band ? [] : talkTiles(orderedPeople());
+        var keep = {};
+        for (var i = 0; i < tiles.length; i++) {
+          var person = tiles[i];
+          keep[person.id] = true;
+          var node = tileNodes[person.id];
+          if (!node) {
+            node = createTile();
+            tileNodes[person.id] = node;
+          }
+          updateTile(node, person);
+          var current = root.children[i];
+          if (node.tile.parentNode !== root) {
+            root.appendChild(node.tile);
+          }
+          if (root.children[i] !== node.tile) {
+            root.insertBefore(node.tile, current || null);
+          }
+        }
+        for (var id in tileNodes) {
+          if (keep[id]) {
+            continue;
+          }
+          detachVideo(tileNodes[id]);
+          if (tileNodes[id].tile.parentNode) {
+            tileNodes[id].tile.parentNode.removeChild(tileNodes[id].tile);
+          }
+          delete tileNodes[id];
+        }
+      }
+
+      function rememberVideo(track) {
+        var local = track.isLocal();
+        var id = local ? "local" : track.getParticipantId && track.getParticipantId();
+        if (!id) {
+          return;
+        }
+        var person = ensurePerson(id, local);
+        if (track.getVideoType && track.getVideoType() === "desktop") {
+          person.desktop = track;
+        } else {
+          person.camera = track;
+        }
+        var shown = shownTrack(person);
+        person.videoMuted = shown ? shown.isMuted() : true;
+        if (local && person.camera === track) {
+          localVideo = track;
+          videoMuted = person.videoMuted;
+        }
+        render();
+      }
+
+      function senderId(from) {
+        if (typeof from === "string") {
+          return from;
+        }
+        if (from && from.getId) {
+          var id = from.getId();
+          return typeof id === "string" ? id : "";
+        }
+        return "";
+      }
+
+      function readCommand(payload) {
+        var value = payload;
+        if (typeof value === "string") {
+          try {
+            value = JSON.parse(value);
+          } catch (error) {
+            return null;
+          }
+        }
+        if (!value || typeof value !== "object") {
+          return null;
+        }
+        if (value.kind !== "larnes-media") {
+          return null;
+        }
+        if (value.device !== "audio" && value.device !== "video") {
+          return null;
+        }
+        if (typeof value.muted !== "boolean") {
+          return null;
+        }
+        if (typeof value.sentAt !== "number" || !isFinite(value.sentAt) || Math.floor(value.sentAt) !== value.sentAt || value.sentAt <= 0) {
+          return null;
+        }
+        if (typeof value.target !== "string" || value.target.length < 1 || value.target.length > 128) {
+          return null;
+        }
+        return value;
+      }
+
+      function decideCommand(command, sender) {
+        if (!localEndpoint || !sender || sender === localEndpoint) {
+          return "drop";
+        }
+        if (command.target !== localEndpoint || teacherIds.indexOf(localEndpoint) >= 0) {
+          return "drop";
+        }
+        if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > Date.now() + mediaSkewMs) {
+          return "drop";
+        }
+        if (teacherIds.length === 0) {
+          return "wait";
+        }
+        if (teacherIds.indexOf(sender) < 0) {
+          return "drop";
+        }
+        return "apply";
+      }
+
+      function commandText(payload) {
+        if (typeof payload === "string") {
+          return payload;
+        }
+        if (!payload || typeof payload !== "object") {
+          return "";
+        }
+        if (typeof payload.value === "string") {
+          return payload.value;
+        }
+        if (payload.attributes && typeof payload.attributes.value === "string") {
+          return payload.attributes.value;
+        }
+        return "";
+      }
+
+      function readWorkspace(payload) {
+        var text = commandText(payload);
+        if (!text) {
+          return null;
+        }
+        var parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (error) {
+          return null;
+        }
+        if (!parsed || (parsed.mode !== "grid" && parsed.mode !== "talk" && parsed.mode !== "workflow")) {
+          return null;
+        }
+        if (typeof parsed.sentAt !== "number" || !isFinite(parsed.sentAt)) {
+          return null;
+        }
+        return parsed;
+      }
+
+      function emitWorkspace() {
+        var best = null;
+        for (var id in workspaceSlots) {
+          if (teacherIds.indexOf(id) < 0) {
+            continue;
+          }
+          var slot = workspaceSlots[id];
+          if (!best || slot.sentAt >= best.sentAt) {
+            best = slot;
+          }
+        }
+        var mode = best ? best.mode : "grid";
+        if (mode === shownMode) {
+          return;
+        }
+        shownMode = mode;
+        post("mode", mode);
+        render();
+      }
+
+      function applyWorkspace(participantId, payload) {
+        if (!participantId) {
+          return;
+        }
+        var slot = readWorkspace(payload);
+        if (!slot) {
+          return;
+        }
+        var current = workspaceSlots[participantId];
+        if (current && current.sentAt >= slot.sentAt) {
+          return;
+        }
+        workspaceSlots[participantId] = slot;
+        emitWorkspace();
+      }
+
+      function whole(value) {
+        return typeof value === "number" && isFinite(value) && Math.floor(value) === value;
+      }
+
+      function readBoard(payload) {
+        if (!payload || typeof payload !== "object" || payload.kind !== "larnes-board") {
+          return null;
+        }
+        if (!whole(payload.sentAt) || !whole(payload.index) || !whole(payload.count) || typeof payload.piece !== "string") {
+          return null;
+        }
+        if (
+          payload.sentAt <= 0 ||
+          payload.count < 1 ||
+          payload.count > 40 ||
+          payload.index < 0 ||
+          payload.index >= payload.count ||
+          payload.piece.length > 6000
+        ) {
+          return null;
+        }
+        return payload;
+      }
+
+      function sceneFromPieces(pieces, count, sentAt) {
+        var body = "";
+        for (var index = 0; index < count; index += 1) {
+          if (pieces[index] === undefined) {
+            return null;
+          }
+          body += pieces[index];
+        }
+        try {
+          var parsed = JSON.parse(body);
+          if (!Array.isArray(parsed)) {
+            return null;
+          }
+          return { elements: parsed, sentAt: sentAt };
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function pushBoard(sender, payload) {
+        var at = Date.now();
+        var message = readBoard(payload);
+        if (!sender || !message || message.sentAt <= boardShownSentAt || message.sentAt > at + 15 * 60 * 1000) {
+          return null;
+        }
+        if (boardOpen && at - boardOpen.startedAt > 5000) {
+          boardOpen = null;
+        }
+        if (!boardOpen || message.sentAt > boardOpen.sentAt) {
+          var pieces = {};
+          pieces[message.index] = message.piece;
+          boardOpen = { count: message.count, pieces: pieces, sender: sender, sentAt: message.sentAt, startedAt: at };
+        } else if (message.sentAt < boardOpen.sentAt || sender !== boardOpen.sender || message.count !== boardOpen.count) {
+          return null;
+        } else {
+          boardOpen.pieces[message.index] = message.piece;
+        }
+        var got = 0;
+        for (var key in boardOpen.pieces) {
+          got += 1;
+        }
+        if (got < boardOpen.count) {
+          return null;
+        }
+        var scene = sceneFromPieces(boardOpen.pieces, boardOpen.count, boardOpen.sentAt);
+        boardOpen = null;
+        if (!scene) {
+          return null;
+        }
+        boardShownSentAt = scene.sentAt;
+        return scene;
+      }
+
+      function postBoard(scene) {
+        var bridge = window.flutter_inappwebview;
+        if (!bridge || !bridge.callHandler) {
+          return;
+        }
+        bridge.callHandler("lessonCall", { kind: "board", scene: scene });
+      }
+
+      function onBoard(sender, payload) {
+        if (!sender || sender === localEndpoint) {
+          return;
+        }
+        if (teacherIds.length === 0) {
+          boardHeld.push({ sender: sender, payload: payload });
+          return;
+        }
+        if (teacherIds.indexOf(sender) < 0) {
+          return;
+        }
+        var scene = pushBoard(sender, payload);
+        if (scene) {
+          postBoard(scene);
+        }
+      }
+
+      function flushBoard() {
+        if (teacherIds.length === 0) {
+          return;
+        }
+        var held = boardHeld;
+        boardHeld = [];
+        for (var i = 0; i < held.length; i++) {
+          onBoard(held[i].sender, held[i].payload);
+        }
+      }
+
+      function onEndpointMessage(from, payload) {
+        var raw = payload;
+        if (typeof raw === "string") {
+          try {
+            raw = JSON.parse(raw);
+          } catch (error) {
+            raw = payload;
+          }
+        }
+        if (raw && raw.kind === "larnes-board") {
+          onBoard(senderId(from), raw);
+          return;
+        }
+        var command = readCommand(payload);
+        if (!command) {
+          return;
+        }
+        var sender = senderId(from);
+        var decision = decideCommand(command, sender);
+        if (decision === "wait") {
+          mediaHold.push({ command: command, sender: sender });
+          return;
+        }
+        if (decision !== "apply") {
+          return;
+        }
+        mediaAppliedAt[command.device] = command.sentAt;
+        post("teacher-media", command.device + ":" + (command.muted ? "1" : "0"));
+      }
+
+      function flushHold() {
+        var held = mediaHold;
+        mediaHold = [];
+        for (var i = 0; i < held.length; i++) {
+          onEndpointMessage(held[i].sender, held[i].command);
+        }
+      }
+
+      function setTeachers(ids, primary) {
+        var next = [];
+        var list = ids || [];
+        for (var i = 0; i < list.length; i++) {
+          if (typeof list[i] === "string" && list[i]) {
+            next.push(list[i]);
+          }
+        }
+        var primaryId = typeof primary === "string" ? primary : "";
+        var same = primaryId === teacherPrimary && next.length === teacherIds.length;
+        for (var j = 0; same && j < next.length; j++) {
+          if (next[j] !== teacherIds[j]) {
+            same = false;
+          }
+        }
+        if (same) {
+          return;
+        }
+        teacherIds = next;
+        teacherPrimary = primaryId;
+        flushHold();
+        flushBoard();
+        emitWorkspace();
+        render();
+      }
+
+      function setLabels(labels) {
+        youLabel = labels && labels.you ? String(labels.you) : "";
+        cameraOffLabel = labels && labels.cameraOff ? String(labels.cameraOff) : "";
+        onlineLabel = labels && labels.online ? String(labels.online) : "";
+        nameLocale = labels && labels.locale ? String(labels.locale) : "ru";
+        render();
+      }
+
+      function setBand(next) {
+        band = !!next;
+        render();
+      }
+
+      function hostName(value) {
+        return typeof value === "string" && /^[A-Za-z0-9.-]+$/.test(value);
+      }
+
+      function join(pass) {
+        if (joining || room || !pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
+          post("failed");
+          return;
+        }
+        passHold = pass;
+        joining = true;
+        if (window.JitsiMeetJS) {
+          start(pass);
+          return;
+        }
+        var script = document.createElement("script");
+        script.src = "https://" + pass.domain + "/libs/lib-jitsi-meet.min.js";
+        script.onload = function () {
+          start(pass);
+        };
+        script.onerror = function () {
+          post("failed");
+        };
+        document.head.appendChild(script);
+      }
+
+      function start(pass) {
+        var meet = window.JitsiMeetJS;
+        var thisAttempt = ++attempt;
+        if (!meet) {
+          post("failed");
+          return;
+        }
+        if (!libraryReady) {
+          meet.init();
+          libraryReady = true;
+        }
+        connection = new meet.JitsiConnection(null, pass.jwt, {
+          hosts: {
+            domain: pass.xmppDomain,
+            muc: "muc." + pass.xmppDomain,
+            focus: "focus." + pass.xmppDomain,
+          },
+          serviceUrl: "wss://" + pass.domain + "/xmpp-websocket",
+          clientNode: "http://jitsi.org/jitsimeet",
+        });
+        connection.addEventListener(meet.events.connection.CONNECTION_FAILED, function () {
+          if (!leaving && thisAttempt === attempt) {
+            noteRoomFailure();
+          }
+        });
+        connection.addEventListener(meet.events.connection.CONNECTION_ESTABLISHED, function () {
+          room = connection.initJitsiConference(pass.room, { p2p: { enabled: false } });
+          if (pass.displayName) {
+            room.setDisplayName(pass.displayName);
+          }
+          ensurePerson("local", true);
+          room.on(meet.events.conference.TRACK_ADDED, function (track) {
+            if (!track) {
+              return;
+            }
+            if (track.getType() === "video") {
+              rememberVideo(track);
+              return;
+            }
+            if (track.getType() === "audio" && !track.isLocal()) {
+              attachRemoteAudio(track);
+            }
+          });
+          room.on(meet.events.conference.TRACK_REMOVED, function (track) {
+            if (!track || track.getType() !== "video") {
+              return;
+            }
+            var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
+            var person = id ? people[id] : null;
+            if (!person) {
+              return;
+            }
+            if (person.camera === track) {
+              person.camera = null;
+            }
+            if (person.desktop === track) {
+              person.desktop = null;
+            }
+            var shown = shownTrack(person);
+            person.videoMuted = shown ? shown.isMuted() : true;
+            render();
+          });
+          room.on(meet.events.conference.TRACK_MUTE_CHANGED, function (track) {
+            if (!track) {
+              return;
+            }
+            var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
+            var person = id ? people[id] : null;
+            if (track.getType() === "video" && person && shownTrack(person) === track) {
+              person.videoMuted = track.isMuted();
+              if (track.isLocal()) {
+                videoMuted = person.videoMuted;
+                post(videoMuted ? "camera-off" : "camera-on");
+              }
+              render();
+            }
+            if (track.getType() === "audio" && track.isLocal()) {
+              audioMuted = track.isMuted();
+              post(audioMuted ? "mic-off" : "mic-on");
+            }
+          });
+          room.on(meet.events.conference.USER_JOINED, function (id, participant) {
+            if (typeof id !== "string" || !id || id === room.myUserId()) {
+              return;
+            }
+            var person = ensurePerson(id, false);
+            var name = participant && participant.getDisplayName ? participant.getDisplayName() : "";
+            if (name) {
+              person.name = name;
+            }
+            render();
+          });
+          room.on(meet.events.conference.USER_LEFT, function (id) {
+            if (typeof id === "string" && people[id] && !people[id].local) {
+              delete people[id];
+              render();
+            }
+          });
+          room.on(meet.events.conference.DISPLAY_NAME_CHANGED, function (id, name) {
+            var person = id === room.myUserId() ? people.local : people[id];
+            if (person && !person.local && typeof name === "string") {
+              person.name = name;
+              render();
+            }
+          });
+          var endpointEvent =
+            meet.events.conference.ENDPOINT_MESSAGE_RECEIVED || "conference.endpoint_message_received";
+          room.on(endpointEvent, function (from, payload) {
+            onEndpointMessage(from, payload);
+          });
+          room.addCommandListener("larnes-workspace", function (payload, participantId) {
+            applyWorkspace(participantId, payload);
+          });
+          var speakerEvent = meet.events.conference.DOMINANT_SPEAKER_CHANGED;
+          if (speakerEvent) {
+            room.on(speakerEvent, function (id) {
+              if (typeof id !== "string" || !id) {
+                return;
+              }
+              speakerId = id === room.myUserId() ? "local" : id;
+              if (shownMode === "talk") {
+                render();
+              }
+            });
+          }
+          room.on(meet.events.conference.CONFERENCE_FAILED, function () {
+            if (!leaving && thisAttempt === attempt) {
+              noteRoomFailure();
+            }
+          });
+          var interruptedEvent = meet.events.conference.CONNECTION_INTERRUPTED;
+          if (interruptedEvent) {
+            room.on(interruptedEvent, function () {
+              if (leaving || !callJoined) {
+                return;
+              }
+              var interrupted = linkInterrupted();
+              if (interrupted) {
+                applyLink(interrupted);
+              }
+            });
+          }
+          var restoredEvent = meet.events.conference.CONNECTION_RESTORED;
+          if (restoredEvent) {
+            room.on(restoredEvent, function () {
+              if (leaving) {
+                return;
+              }
+              var restored = linkRestored();
+              if (restored) {
+                applyLink(restored);
+              }
+            });
+          }
+          room.on(meet.events.conference.CONFERENCE_JOINED, function () {
+            callJoined = true;
+            applyLink(linkJoined());
+            localEndpoint = room.myUserId() || "";
+            post("endpoint", localEndpoint);
+            post("joined");
+            render();
+          });
+          room.join();
+        });
+        connection.connect();
+      }
+
+      function failKind(kind) {
+        return kind === "video" ? "camera-failed" : "mic-failed";
+      }
+
+      function applyMute(kind, muted) {
+        if (kind === "video") {
+          videoMuted = muted;
+          if (people.local) {
+            people.local.videoMuted = muted;
+          }
+        } else {
+          audioMuted = muted;
+        }
+        post(muted ? (kind === "video" ? "camera-off" : "mic-off") : kind === "video" ? "camera-on" : "mic-on");
+        render();
+      }
+
+      function beginCapture(kind) {
+        var meet = window.JitsiMeetJS;
+        if (opening[kind] || !room || !meet) {
+          return;
+        }
+        opening[kind] = true;
+        var gen = captureGen[kind];
+        var request =
+          kind === "video"
+            ? meet.createLocalTracks({ devices: ["video"] })
+            : meet.createLocalTracks({ devices: ["audio"] });
+        request
+          .then(function (tracks) {
+            opening[kind] = false;
+            var created = takeTrack(tracks, kind);
+            if (!created) {
+              if (gen === captureGen[kind] && !leaving) {
+                post(failKind(kind), "failed");
+              }
+              return;
+            }
+            if (gen !== captureGen[kind] || leaving || wishMuted[kind] || !room) {
+              releaseTrack(created);
+              if (gen === captureGen[kind] && wishMuted[kind] && !leaving) {
+                applyMute(kind, true);
+              }
+              return;
+            }
+            var heldRoom = room;
+            return heldRoom.addTrack(created).then(function () {
+              if (gen !== captureGen[kind] || leaving || wishMuted[kind]) {
+                try {
+                  if (heldRoom.removeTrack) {
+                    heldRoom.removeTrack(created);
+                  }
+                } catch (error) {}
+                releaseTrack(created);
+                return;
+              }
+              if (kind === "video") {
+                localVideo = created;
+                var person = ensurePerson("local", true);
+                person.camera = created;
+              } else {
+                localAudio = created;
+              }
+              applyMute(kind, false);
+            });
+          })
+          .catch(function (error) {
+            opening[kind] = false;
+            if (gen !== captureGen[kind] || leaving) {
+              return;
+            }
+            post(failKind(kind), blockOf(error));
+          });
+      }
+
+      function askDevice(kind, muted) {
+        var meet = window.JitsiMeetJS;
+        if (!room || !meet) {
+          post(failKind(kind), "failed");
+          return;
+        }
+        wishMuted[kind] = muted;
+        var track = kind === "video" ? localVideo : localAudio;
+        if (muted) {
+          if (track && track.mute) {
+            Promise.resolve(track.mute())
+              .then(function () {
+                if (wishMuted[kind]) {
+                  applyMute(kind, true);
+                }
+              })
+              .catch(function (error) {
+                post(failKind(kind), blockOf(error));
+              });
+          } else {
+            applyMute(kind, true);
+          }
+          return;
+        }
+        if (track && track.unmute) {
+          Promise.resolve(track.unmute())
+            .then(function () {
+              if (!wishMuted[kind]) {
+                applyMute(kind, false);
+              }
+            })
+            .catch(function (error) {
+              post(failKind(kind), blockOf(error));
+            });
+          return;
+        }
+        beginCapture(kind);
+      }
+
+      function toggleDevice(kind) {
+        var muted = kind === "video" ? videoMuted : audioMuted;
+        askDevice(kind, !muted);
+      }
+
+      function setDevice(kind, muted) {
+        askDevice(kind, muted);
+      }
+
+      function toggleCamera() {
+        toggleDevice("video");
+      }
+
+      function toggleMic() {
+        toggleDevice("audio");
+      }
+
+      function resumeHear() {
+        var pending = remoteAudios.map(function (audio) {
+          return audio.play();
+        });
+        Promise.all(pending)
+          .then(function () {
+            post("hear-on");
+          })
+          .catch(function () {
+            post("hear-blocked");
+          });
+      }
+
+      function linkSame(step) {
+        return step.phase === linkPhase && step.auto === linkAuto && step.at === linkAutoAt;
+      }
+
+      function clearLinkTimer() {
+        if (linkTimer) {
+          clearTimeout(linkTimer);
+          linkTimer = null;
+        }
+      }
+
+      function armLinkTimer() {
+        if (linkTimer) {
+          return;
+        }
+        linkTimer = setTimeout(function () {
+          linkTimer = null;
+          if (leaving) {
+            return;
+          }
+          var step = linkTimeout(Date.now());
+          if (step) {
+            applyLink(step);
+          }
+        }, 45000);
+      }
+
+      function postLinkPhase() {
+        var ui =
+          linkPhase === "reconnecting" || linkPhase === "rejoining"
+            ? "reconnecting"
+            : linkPhase === "lost"
+              ? "lost"
+              : "room";
+        post("link", ui);
+      }
+
+      function applyLink(step) {
+        if (!step || (linkSame(step) && !step.wait && !step.rejoin)) {
+          return;
+        }
+        linkPhase = step.phase;
+        linkAuto = step.auto;
+        linkAutoAt = step.at;
+        if (step.wait) {
+          armLinkTimer();
+        } else {
+          clearLinkTimer();
+        }
+        postLinkPhase();
+        if (step.rejoin) {
+          beginRejoin();
+        }
+      }
+
+      function linkInterrupted() {
+        if (linkPhase !== "room") {
+          return null;
+        }
+        return { phase: "reconnecting", auto: linkAuto, at: linkAutoAt, wait: true, rejoin: false };
+      }
+
+      function linkRestored() {
+        if (linkPhase !== "reconnecting" && linkPhase !== "rejoining") {
+          return null;
+        }
+        return { phase: "room", auto: true, at: 0, wait: false, rejoin: false };
+      }
+
+      function linkCanAuto(now) {
+        return linkAuto && (linkAutoAt === 0 || now - linkAutoAt >= 45000);
+      }
+
+      function linkGaveUp(now) {
+        if (linkPhase !== "room" && linkPhase !== "reconnecting") {
+          return null;
+        }
+        if (!linkCanAuto(now)) {
+          return { phase: "lost", auto: false, at: linkAutoAt, wait: false, rejoin: false };
+        }
+        return { phase: "rejoining", auto: false, at: now, wait: false, rejoin: true };
+      }
+
+      function linkTimeout(now) {
+        if (linkPhase !== "reconnecting") {
+          return null;
+        }
+        var saved = linkPhase;
+        linkPhase = "room";
+        var step = linkGaveUp(now);
+        if (!step) {
+          linkPhase = saved;
+        }
+        return step;
+      }
+
+      function linkJoined() {
+        return { phase: "room", auto: true, at: linkAutoAt, wait: false, rejoin: false };
+      }
+
+      function linkEntranceFailed() {
+        return { phase: "lost", auto: false, at: linkAutoAt, wait: false, rejoin: false };
+      }
+
+      function linkRetry() {
+        if (linkPhase !== "lost") {
+          return null;
+        }
+        return { phase: "rejoining", auto: false, at: linkAutoAt, wait: false, rejoin: true };
+      }
+
+      function noteJoinFailure() {
+        joining = false;
+        if (linkPhase === "rejoining") {
+          applyLink(linkEntranceFailed());
+          return;
+        }
+        post("failed");
+      }
+
+      function noteRoomFailure() {
+        if (!callJoined) {
+          noteJoinFailure();
+          return;
+        }
+        var step = linkGaveUp(Date.now());
+        if (step) {
+          applyLink(step);
+        }
+      }
+
+      function retryLink() {
+        var step = linkRetry();
+        if (step) {
+          applyLink(step);
+        }
+      }
+
+      function beginRejoin() {
+        rejoin();
+      }
+
+      function rejoin() {
+        if (renewing || leaving) {
+          return;
+        }
+        renewing = true;
+        post("renew");
+      }
+
+      function renewFailed(code) {
+        renewing = false;
+        if (code === "inactive") {
+          post("closed");
+          return;
+        }
+        if (callJoined || linkPhase === "rejoining" || linkPhase === "reconnecting") {
+          applyLink(linkEntranceFailed());
+          return;
+        }
+        post("failed");
+      }
+
+      function dropSession() {
+        captureGen.video += 1;
+        captureGen.audio += 1;
+        opening.video = false;
+        opening.audio = false;
+        wishMuted.video = true;
+        wishMuted.audio = true;
+        videoMuted = true;
+        audioMuted = true;
+        var paused = leaving;
+        leaving = true;
+        var currentRoom = room;
+        var currentConnection = connection;
+        room = null;
+        connection = null;
+        joining = false;
+        callJoined = false;
+        releaseTrack(localVideo);
+        releaseTrack(localAudio);
+        localVideo = null;
+        localAudio = null;
+        people = {};
+        speakerId = "";
+        localEndpoint = "";
+        for (var id in tileNodes) {
+          detachVideo(tileNodes[id]);
+          if (tileNodes[id].tile.parentNode) {
+            tileNodes[id].tile.parentNode.removeChild(tileNodes[id].tile);
+          }
+          delete tileNodes[id];
+        }
+        for (var i = 0; i < remoteAudios.length; i++) {
+          var audio = remoteAudios[i];
+          try {
+            audio.srcObject = null;
+          } catch (error) {}
+          if (audio.parentNode) {
+            audio.parentNode.removeChild(audio);
+          }
+        }
+        remoteAudios = [];
+        if (currentRoom && currentRoom.leave) {
+          try {
+            currentRoom.leave();
+          } catch (error) {}
+        }
+        if (currentConnection && currentConnection.disconnect) {
+          try {
+            currentConnection.disconnect();
+          } catch (error) {}
+        }
+        leaving = paused;
+        post("camera-off");
+        post("mic-off");
+      }
+
+      function acceptPass(pass) {
+        renewing = false;
+        if (!pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
+          post("failed");
+          return;
+        }
+        passHold = pass;
+        dropSession();
+        join(pass);
+      }
+
+      function leave() {
+        clearLinkTimer();
+        renewing = false;
+        dropSession();
+        leaving = true;
+      }
+    </script>
+  </body>
+</html>

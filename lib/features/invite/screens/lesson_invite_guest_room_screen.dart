@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
+import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -252,7 +253,17 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
 
         unawaited(_leaveLesson());
       },
-      child: _buildBody(l10n),
+      child: _room == null
+          ? _buildBody(l10n)
+          : LessonCallStage(
+              body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
+              childId: '',
+              inviteToken: widget.token,
+              onLeave: () {
+                unawaited(_leaveLesson());
+              },
+              trainerOpen: _showingPlayer,
+            ),
     );
   }
 

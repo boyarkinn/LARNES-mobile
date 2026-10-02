@@ -402,6 +402,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentLiveLessonLeaveFailed => 'Could not leave the lesson.';
 
   @override
+  String get parentLiveLessonEnableCamera => 'Turn the camera on';
+
+  @override
+  String get parentLiveLessonCallFailed => 'Could not connect the call.';
+
+  @override
+  String get parentLiveLessonCameraFailed => 'The camera did not turn on.';
+
+  @override
+  String get parentLiveLessonDockLabel => 'Lesson controls';
+
+  @override
+  String get parentLiveLessonCameraOn => 'Camera on';
+
+  @override
+  String get parentLiveLessonCameraOff => 'Camera off';
+
+  @override
+  String get parentLiveLessonMicOn => 'Microphone on';
+
+  @override
+  String get parentLiveLessonMicOff => 'Microphone off';
+
+  @override
+  String get parentLiveLessonLeave => 'Leave';
+
+  @override
+  String get parentLiveLessonHear => 'Turn sound on';
+
+  @override
+  String get parentLiveLessonCameraDenied =>
+      'The phone blocked the camera. Allow it in settings and press the camera button.';
+
+  @override
+  String get parentLiveLessonCameraMissing =>
+      'No camera found. Press the camera button to ask again.';
+
+  @override
+  String get parentLiveLessonCameraAskAgain =>
+      'The camera did not turn on. Press the camera button to ask again.';
+
+  @override
+  String get parentLiveLessonMicDenied =>
+      'The phone blocked the microphone. Allow it in settings and press the microphone button.';
+
+  @override
+  String get parentLiveLessonMicMissing =>
+      'No microphone found. Press the microphone button to ask again.';
+
+  @override
+  String get parentLiveLessonMicAskAgain =>
+      'The microphone did not turn on. Press the microphone button to ask again.';
+
+  @override
+  String get parentLiveLessonLinkLost => 'The connection was lost.';
+
+  @override
+  String get parentLiveLessonLinkReconnecting => 'The connection dropped. Reconnecting.';
+
+  @override
+  String get parentLiveLessonLinkRetry => 'Join again';
+
+  @override
+  String get parentLiveLessonLinkClosed => 'The lesson has already ended';
+
+  @override
+  String get parentLiveLessonYou => 'Me';
+
+  @override
+  String get parentLiveLessonCameraOffCaption => 'Camera is off';
+
+  @override
+  String get parentLiveLessonOnline => 'Online';
+
+  @override
+  String get parentLiveLessonCall => 'Call';
+
+  @override
+  String get parentLiveLessonCallShow => 'Show call controls';
+
+  @override
+  String get parentLiveLessonCallHide => 'Hide call controls';
+
+  @override
   String get parentAccount => 'Account';
 
   @override

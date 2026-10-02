@@ -487,6 +487,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentLiveLessonCallHide => 'Hide call controls';
 
   @override
+  String get parentLiveLessonBoardPen => 'Brush';
+
+  @override
+  String get parentLiveLessonBoardEraser => 'Eraser';
+
+  @override
+  String get parentLiveLessonBoardColor => 'Color';
+
+  @override
   String get parentAccount => 'Account';
 
   @override

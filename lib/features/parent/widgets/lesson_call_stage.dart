@@ -13,6 +13,7 @@ import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_dock.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/board/lesson_board_canvas.dart';
+import 'package:larnes_mobile/trainers/board/lesson_board_scene.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 enum _LessonCallLink { none, reconnecting, lost, closed, failed }
@@ -68,8 +69,13 @@ class _LessonCallStageState extends State<LessonCallStage> {
   Timer? _chromeTimer;
   bool _chromeOpen = false;
   String _mode = 'grid';
+  String _boardDraw = 'teacher';
   int _boardSentAt = 0;
-  List<LessonBoardStroke> _strokes = const [];
+  List<Map<String, dynamic>> _elements = const [];
+  bool _eraser = false;
+  Color _ink = const Color(0xFF1E1E1E);
+  String _inkHex = '#1e1e1e';
+  Timer? _boardSend;
   _LessonCallLink _link = _LessonCallLink.none;
 
   @override
@@ -462,14 +468,26 @@ class _LessonCallStageState extends State<LessonCallStage> {
               _chromeTimer?.cancel();
             }
           }
+        case 'board-draw':
+          if (detail == 'teacher' || detail == 'all') {
+            _boardDraw = detail;
+            if (detail != 'all') {
+              _boardSend?.cancel();
+            }
+          }
         case 'board':
           final scene = message['scene'];
           if (scene is Map) {
-            final sentAt = scene['sentAt'];
-            final at = sentAt is num ? sentAt.toInt() : 0;
-            if (at > _boardSentAt) {
-              _boardSentAt = at;
-              _strokes = LessonBoardStroke.fromElements(scene['elements']);
+            final incoming = readBoardElements(scene['elements']);
+            if (_drawAll) {
+              _elements = mergeBoardElements(_elements, incoming);
+            } else {
+              final sentAt = scene['sentAt'];
+              final at = sentAt is num ? sentAt.toInt() : 0;
+              if (at > _boardSentAt) {
+                _boardSentAt = at;
+                _elements = incoming;
+              }
             }
           }
         case 'link':
@@ -517,6 +535,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
     _micSeq += 1;
     _roster?.cancel();
     _chromeTimer?.cancel();
+    _boardSend?.cancel();
     _web?.evaluateJavascript(source: 'leave()');
     super.dispose();
   }
@@ -569,6 +588,42 @@ class _LessonCallStageState extends State<LessonCallStage> {
         );
       },
     );
+  }
+
+  bool get _drawAll => _boardDraw == 'all';
+
+  void _rememberElements(List<Map<String, dynamic>> next) {
+    setState(() => _elements = next);
+    _scheduleBoardSend();
+  }
+
+  void _scheduleBoardSend() {
+    if (!_drawAll || !_inRoom) {
+      return;
+    }
+    _boardSend?.cancel();
+    _boardSend = Timer(const Duration(milliseconds: 300), () {
+      final body = jsonEncode(_elements);
+      unawaited(_web?.evaluateJavascript(source: 'sendBoard(${jsonEncode(body)})'));
+    });
+  }
+
+  void _addStroke(List<BoardPoint> points) {
+    if (points.isEmpty || !_drawAll) {
+      return;
+    }
+    _rememberElements([..._elements, freedrawElement(points, _inkHex)]);
+  }
+
+  void _eraseAt(BoardPoint at, double radius) {
+    if (!_drawAll) {
+      return;
+    }
+    final next = eraseBoardElements(_elements, at, radius);
+    if (next == null) {
+      return;
+    }
+    _rememberElements(next);
   }
 
   void _keepChrome() {
@@ -634,6 +689,111 @@ class _LessonCallStageState extends State<LessonCallStage> {
     );
   }
 
+  Widget _boardTools() {
+    final l10n = context.l10n;
+    const inks = <(Color, String)>[
+      (Color(0xFF1E1E1E), '#1e1e1e'),
+      (Color(0xFFE03131), '#e03131'),
+      (Color(0xFF1971C2), '#1971c2'),
+      (Color(0xFF2F9E44), '#2f9e44'),
+    ];
+    return Material(
+      color: ParentColors.surface,
+      elevation: 2,
+      shadowColor: ParentColors.shadow,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _boardTool(
+              selected: !_eraser,
+              label: l10n.parentLiveLessonBoardPen,
+              icon: Icons.edit,
+              onTap: () => setState(() => _eraser = false),
+            ),
+            _boardTool(
+              selected: _eraser,
+              label: l10n.parentLiveLessonBoardEraser,
+              icon: Icons.auto_fix_off,
+              onTap: () => setState(() => _eraser = true),
+            ),
+            for (final ink in inks)
+              _boardColor(
+                color: ink.$1,
+                selected: !_eraser && _inkHex == ink.$2,
+                onTap: () => setState(() {
+                  _eraser = false;
+                  _ink = ink.$1;
+                  _inkHex = ink.$2;
+                }),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _boardTool({
+    required bool selected,
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: label,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: selected ? ParentColors.shellSoft : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 20, color: ParentColors.ink),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _boardColor({
+    required Color color,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: context.l10n.parentLiveLessonBoardColor,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          child: Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: selected ? ParentColors.shell : ParentColors.line, width: selected ? 2 : 1),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _linkButton() {
     final l10n = context.l10n;
     final hear = _hearBlocked;
@@ -685,7 +845,27 @@ class _LessonCallStageState extends State<LessonCallStage> {
               Positioned.fill(child: _callSurface()),
               if (board)
                 Positioned.fill(
-                  child: LessonBoardCanvas(canDraw: false, strokes: _strokes),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: LessonBoardCanvas(
+                          canDraw: _drawAll,
+                          color: _ink,
+                          elements: _elements,
+                          eraser: _eraser,
+                          onErase: _eraseAt,
+                          onStroke: _addStroke,
+                        ),
+                      ),
+                      if (_drawAll)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          right: 8,
+                          child: _boardTools(),
+                        ),
+                    ],
+                  ),
                 ),
               if (trainer) Positioned.fill(child: widget.body!),
               if (handle)

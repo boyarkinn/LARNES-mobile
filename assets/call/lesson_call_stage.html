@@ -119,9 +119,13 @@
       var shownMode = "grid";
       var speakerId = "";
       var workspaceSlots = {};
-      var boardOpen = null;
-      var boardShownSentAt = 0;
+      var boardOpenBySender = {};
+      var boardShownSentAtBySender = {};
       var boardHeld = [];
+      var boardDrawSlots = {};
+      var shownDraw = "";
+      var boardShared = false;
+      var lastSentBoardAt = 0;
       var localEndpoint = "";
       var youLabel = "";
       var cameraOffLabel = "";
@@ -602,35 +606,57 @@
       function pushBoard(sender, payload) {
         var at = Date.now();
         var message = readBoard(payload);
-        if (!sender || !message || message.sentAt <= boardShownSentAt || message.sentAt > at + 15 * 60 * 1000) {
+        var seen = boardShownSentAtBySender[sender] || 0;
+        if (!sender || !message || message.sentAt <= seen || message.sentAt > at + 15 * 60 * 1000) {
           return null;
         }
-        if (boardOpen && at - boardOpen.startedAt > 5000) {
-          boardOpen = null;
+        var open = boardOpenBySender[sender] || null;
+        if (open && at - open.startedAt > 5000) {
+          open = null;
+          delete boardOpenBySender[sender];
         }
-        if (!boardOpen || message.sentAt > boardOpen.sentAt) {
+        if (!open || message.sentAt > open.sentAt) {
           var pieces = {};
           pieces[message.index] = message.piece;
-          boardOpen = { count: message.count, pieces: pieces, sender: sender, sentAt: message.sentAt, startedAt: at };
-        } else if (message.sentAt < boardOpen.sentAt || sender !== boardOpen.sender || message.count !== boardOpen.count) {
+          open = { count: message.count, pieces: pieces, sender: sender, sentAt: message.sentAt, startedAt: at };
+          boardOpenBySender[sender] = open;
+        } else if (message.sentAt < open.sentAt || message.count !== open.count) {
           return null;
         } else {
-          boardOpen.pieces[message.index] = message.piece;
+          open.pieces[message.index] = message.piece;
         }
         var got = 0;
-        for (var key in boardOpen.pieces) {
+        for (var key in open.pieces) {
           got += 1;
         }
-        if (got < boardOpen.count) {
+        if (got < open.count) {
           return null;
         }
-        var scene = sceneFromPieces(boardOpen.pieces, boardOpen.count, boardOpen.sentAt);
-        boardOpen = null;
+        var scene = sceneFromPieces(open.pieces, open.count, open.sentAt);
+        delete boardOpenBySender[sender];
         if (!scene) {
           return null;
         }
-        boardShownSentAt = scene.sentAt;
+        boardShownSentAtBySender[sender] = scene.sentAt;
         return scene;
+      }
+
+      function sendBoard(body) {
+        if (!room || !room.sendEndpointMessage || typeof body !== "string" || !body || body.length > 6000 * 40) {
+          return;
+        }
+        var sentAt = Math.max(Date.now(), lastSentBoardAt + 1);
+        lastSentBoardAt = sentAt;
+        var count = Math.max(1, Math.ceil(body.length / 6000));
+        for (var index = 0; index < count; index += 1) {
+          room.sendEndpointMessage("", {
+            kind: "larnes-board",
+            count: count,
+            index: index,
+            piece: body.slice(index * 6000, (index + 1) * 6000),
+            sentAt: sentAt,
+          });
+        }
       }
 
       function postBoard(scene) {
@@ -649,7 +675,7 @@
           boardHeld.push({ sender: sender, payload: payload });
           return;
         }
-        if (teacherIds.indexOf(sender) < 0) {
+        if (teacherIds.indexOf(sender) < 0 && !boardShared) {
           return;
         }
         var scene = pushBoard(sender, payload);
@@ -730,7 +756,64 @@
         flushHold();
         flushBoard();
         emitWorkspace();
+        emitBoardDraw();
         render();
+      }
+
+      function readBoardDraw(payload) {
+        var text = commandText(payload);
+        if (!text) {
+          return null;
+        }
+        var parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (error) {
+          return null;
+        }
+        if (!parsed || (parsed.mode !== "teacher" && parsed.mode !== "all")) {
+          return null;
+        }
+        if (typeof parsed.sentAt !== "number" || !isFinite(parsed.sentAt)) {
+          return null;
+        }
+        return parsed;
+      }
+
+      function emitBoardDraw() {
+        var best = null;
+        for (var id in boardDrawSlots) {
+          if (teacherIds.indexOf(id) < 0) {
+            continue;
+          }
+          var slot = boardDrawSlots[id];
+          if (!best || slot.sentAt >= best.sentAt) {
+            best = slot;
+          }
+        }
+        var mode = best ? best.mode : "teacher";
+        boardShared = mode === "all";
+        if (mode === shownDraw) {
+          return;
+        }
+        shownDraw = mode;
+        post("board-draw", mode);
+      }
+
+      function applyBoardDraw(participantId, payload) {
+        if (!participantId) {
+          return;
+        }
+        var slot = readBoardDraw(payload);
+        if (!slot) {
+          return;
+        }
+        var current = boardDrawSlots[participantId];
+        if (current && current.sentAt >= slot.sentAt) {
+          return;
+        }
+        boardDrawSlots[participantId] = slot;
+        emitBoardDraw();
       }
 
       function setLabels(labels) {
@@ -882,6 +965,8 @@
             }
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
+              delete boardDrawSlots[id];
+              emitBoardDraw();
               render();
             }
           });
@@ -908,6 +993,12 @@
               return;
             }
             applyWorkspace(participantId, payload);
+          });
+          room.addCommandListener("larnes-board-draw", function (payload, participantId) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
+            applyBoardDraw(participantId, payload);
           });
           var speakerEvent = meet.events.conference.DOMINANT_SPEAKER_CHANGED;
           if (speakerEvent) {

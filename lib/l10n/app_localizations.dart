@@ -1004,6 +1004,24 @@ abstract class AppLocalizations {
   /// **'Hide call controls'**
   String get parentLiveLessonCallHide;
 
+  /// No description provided for @parentLiveLessonBoardPen.
+  ///
+  /// In en, this message translates to:
+  /// **'Brush'**
+  String get parentLiveLessonBoardPen;
+
+  /// No description provided for @parentLiveLessonBoardEraser.
+  ///
+  /// In en, this message translates to:
+  /// **'Eraser'**
+  String get parentLiveLessonBoardEraser;
+
+  /// No description provided for @parentLiveLessonBoardColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get parentLiveLessonBoardColor;
+
   /// No description provided for @parentAccount.
   ///
   /// In en, this message translates to:

@@ -488,6 +488,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentLiveLessonCallHide => 'Скрыть связь';
 
   @override
+  String get parentLiveLessonBoardPen => 'Кисть';
+
+  @override
+  String get parentLiveLessonBoardEraser => 'Ластик';
+
+  @override
+  String get parentLiveLessonBoardColor => 'Цвет';
+
+  @override
   String get parentAccount => 'Аккаунт';
 
   @override

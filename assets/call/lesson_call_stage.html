@@ -12,6 +12,9 @@
         color: #fff;
         font-family: sans-serif;
       }
+      body {
+        position: relative;
+      }
       .grid {
         box-sizing: border-box;
         display: grid;
@@ -85,10 +88,39 @@
         font-size: 12px;
         line-height: 1.25;
       }
+      .board {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        background: #fff;
+        touch-action: none;
+      }
+      .board.on {
+        display: block;
+      }
+      .board .excalidraw,
+      .board .excalidraw-container {
+        width: 100%;
+        height: 100%;
+      }
+      .board .main-menu-trigger,
+      .board .help-icon,
+      .board .sidebar-trigger,
+      .board .sidebar-trigger__label-element,
+      .board .App-toolbar__extra-tools-trigger,
+      .board .App-toolbar__divider,
+      .board .ToolIcon__penMode,
+      .board .ToolIcon__lock,
+      .board .App-toolbar .ToolIcon:not(.Shape),
+      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])) {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div id="grid" class="grid"></div>
+    <div id="board" class="board"></div>
     <script>
       var connection = null;
       var room = null;
@@ -121,6 +153,8 @@
       var ownName = "";
       var teacherName = "";
       var shownMode = "grid";
+      var boardScene = null;
+      var boardParts = [];
       var speakerId = "";
       var workspaceSlots = {};
       var boardOpenBySender = {};
@@ -439,6 +473,7 @@
           }
           delete tileNodes[id];
         }
+        syncBoard();
       }
 
       function rememberVideo(track) {
@@ -715,35 +750,90 @@
         }
       }
 
-      function postBoard(scene) {
-        var bridge = window.flutter_inappwebview;
-        if (!bridge || !bridge.callHandler) {
+      function syncBoard() {
+        var host = document.getElementById("board");
+        if (!host) {
           return;
         }
-        bridge.callHandler("lessonCall", { kind: "board", scene: scene });
+        var open = shownMode === "workflow" && !band;
+        var was = host.className.indexOf("on") !== -1;
+        host.className = open ? "board on" : "board";
+        if (!open || !window.LarnesBoard || !window.LarnesBoard.mount) {
+          return;
+        }
+        window.LarnesBoard.mount(host);
+        if (was) {
+          return;
+        }
+        if (boardScene && window.LarnesBoard.apply) {
+          window.LarnesBoard.apply(boardScene);
+          return;
+        }
+        if (window.LarnesBoard.refresh) {
+          window.LarnesBoard.refresh();
+        }
+      }
+
+      function installBoard(part, last) {
+        if (typeof part === "string" && part) {
+          boardParts.push(part);
+        }
+        if (!last) {
+          return;
+        }
+        var code = boardParts.join("");
+        boardParts = [];
+        try {
+          (0, eval)(code);
+        } catch (error) {
+          return;
+        }
+        if (!window.LarnesBoard || !window.LarnesBoard.mount || !window.LarnesBoard.setShared) {
+          return;
+        }
+        window.LarnesBoard.onSend = function (body) {
+          sendBoard(body);
+        };
+        window.LarnesBoard.setShared(boardShared);
+        syncBoard();
+      }
+
+      function postBoard(scene) {
+        boardScene = scene;
+        if (window.LarnesBoard && window.LarnesBoard.apply) {
+          window.LarnesBoard.apply(scene);
+        }
+      }
+
+      function openTeacherBoard() {
+        flushHold();
+        flushBoard();
+        emitWorkspace();
+        emitBoardDraw();
       }
 
       function onBoard(sender, payload) {
         if (!sender || sender === localEndpoint) {
           return;
         }
-        if (teacherIds.length === 0) {
-          boardHeld.push({ sender: sender, payload: payload });
-          return;
-        }
-        if (teacherIds.indexOf(sender) < 0 && !boardShared) {
+        var learned = noteNamedTeacher(sender);
+        if (!knownTeacher(sender) && !boardShared) {
+          var person = people[sender];
+          if (!person || !person.name) {
+            boardHeld.push({ sender: sender, payload: payload });
+          }
           return;
         }
         var scene = pushBoard(sender, payload);
         if (scene) {
           postBoard(scene);
         }
+        if (learned) {
+          openTeacherBoard();
+        }
       }
 
       function flushBoard() {
-        if (teacherIds.length === 0) {
-          return;
-        }
         var held = boardHeld;
         boardHeld = [];
         for (var i = 0; i < held.length; i++) {
@@ -846,7 +936,7 @@
       function emitBoardDraw() {
         var best = null;
         for (var id in boardDrawSlots) {
-          if (teacherIds.indexOf(id) < 0) {
+          if (!knownTeacher(id)) {
             continue;
           }
           var slot = boardDrawSlots[id];
@@ -860,7 +950,9 @@
           return;
         }
         shownDraw = mode;
-        post("board-draw", mode);
+        if (window.LarnesBoard && window.LarnesBoard.setShared) {
+          window.LarnesBoard.setShared(boardShared);
+        }
       }
 
       function applyBoardDraw(participantId, payload) {
@@ -1023,8 +1115,7 @@
               person.name = name;
             }
             if (noteNamedTeacher(id)) {
-              flushHold();
-              emitWorkspace();
+              openTeacherBoard();
             }
             render();
           });
@@ -1035,6 +1126,10 @@
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               delete boardDrawSlots[id];
+              var namedAt = namedTeacherIds.indexOf(id);
+              if (namedAt >= 0) {
+                namedTeacherIds.splice(namedAt, 1);
+              }
               emitBoardDraw();
               render();
             }
@@ -1047,8 +1142,7 @@
             if (person && !person.local && typeof name === "string") {
               person.name = name;
               if (noteNamedTeacher(id)) {
-                flushHold();
-                emitWorkspace();
+                openTeacherBoard();
               }
               render();
             }

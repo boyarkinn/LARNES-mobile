@@ -51,6 +51,7 @@ class LessonCallStage extends StatefulWidget {
     this.fetchPass,
     this.claimRoster,
     this.handle,
+    this.captureOnJoin = true,
   });
 
   final Widget? body;
@@ -59,6 +60,7 @@ class LessonCallStage extends StatefulWidget {
   final bool trainerOpen;
   final String? inviteToken;
   final LessonCallStageHandle? handle;
+  final bool captureOnJoin;
   final Future<LessonCallPass?> Function(String locale)? fetchPass;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
@@ -485,11 +487,13 @@ class _LessonCallStageState extends State<LessonCallStage> {
     final detail = message['detail'];
     final block = detail is String && detail.isNotEmpty ? detail : 'failed';
     var stopSession = false;
+    var openDevices = false;
     setState(() {
       switch (kind) {
         case 'joined':
           _inRoom = true;
           _link = _LessonCallLink.none;
+          openDevices = widget.captureOnJoin;
         case 'endpoint':
           if (detail is String) {
             _watchRoster(detail);
@@ -581,6 +585,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
     });
     if (stopSession) {
       unawaited(_stopSession());
+    }
+    if (openDevices) {
+      unawaited(_setDeviceWish('video', false));
+      unawaited(_setDeviceWish('audio', false));
     }
   }
 

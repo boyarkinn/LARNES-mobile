@@ -468,6 +468,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     final childId = controller.deviceContext.activeChild?.childId ?? '';
     return LessonCallStage(
       body: null,
+      captureOnJoin: false,
       childId: childId,
       trainerOpen: false,
       fetchPass: (locale) => callApi.fetchPass(locale: locale),

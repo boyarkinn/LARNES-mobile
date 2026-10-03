@@ -5,6 +5,7 @@ class LessonCallPass {
     required this.jwt,
     required this.room,
     required this.xmppDomain,
+    this.teacherName = '',
   });
 
   final String displayName;
@@ -12,6 +13,7 @@ class LessonCallPass {
   final String jwt;
   final String room;
   final String xmppDomain;
+  final String teacherName;
 
   static final _host = RegExp(r'^[A-Za-z0-9.-]+$');
 
@@ -25,6 +27,7 @@ class LessonCallPass {
     final jwt = json['jwt'];
     final room = json['room'];
     final xmppDomain = json['xmppDomain'];
+    final teacherName = json['teacherName'];
     if (displayName is! String ||
         domain is! String ||
         jwt is! String ||
@@ -44,6 +47,7 @@ class LessonCallPass {
       jwt: jwt,
       room: room,
       xmppDomain: xmppDomain,
+      teacherName: teacherName is String ? teacherName : '',
     );
   }
 
@@ -53,6 +57,7 @@ class LessonCallPass {
         'jwt': jwt,
         'room': room,
         'xmppDomain': xmppDomain,
+        'teacherName': teacherName,
       };
 }
 

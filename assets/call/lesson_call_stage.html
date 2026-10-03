@@ -241,11 +241,27 @@
           return false;
         }
         var person = people[id];
-        if (!person || !sameCallName(person.name, teacherName)) {
-          return false;
+        if (person && sameCallName(person.name, teacherName)) {
+          namedTeacherIds.push(id);
+          return true;
         }
-        namedTeacherIds.push(id);
-        return true;
+        var participant = room && room.getParticipantById ? room.getParticipantById(id) : null;
+        var identity = "";
+        if (participant && participant.getIdentity) {
+          var raw = participant.getIdentity();
+          if (typeof raw === "string") {
+            identity = raw;
+          } else if (raw && raw.user && typeof raw.user.id === "string") {
+            identity = raw.user.id;
+          } else if (raw && typeof raw.id === "string") {
+            identity = raw.id;
+          }
+        }
+        if (identity.indexOf("teacher:") === 0) {
+          namedTeacherIds.push(id);
+          return true;
+        }
+        return false;
       }
 
       function orderedPeople() {

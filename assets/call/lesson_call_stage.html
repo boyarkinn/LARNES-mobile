@@ -148,10 +148,8 @@
       var attempt = 0;
       var people = {};
       var teacherIds = [];
-      var namedTeacherIds = [];
       var teacherPrimary = "";
       var ownName = "";
-      var teacherName = "";
       var shownMode = "grid";
       var boardScene = null;
       var boardParts = [];
@@ -159,7 +157,12 @@
       var workspaceSlots = {};
       var boardOpenBySender = {};
       var boardShownSentAtBySender = {};
-      var boardHeld = [];
+      var boardHeld = {};
+      var boardHoldCount = 0;
+      var boardHoldCap = 16;
+      var boardAskLeft = 3;
+      var boardAskTimer = null;
+      var boardAskPauseMs = 4000;
       var boardDrawSlots = {};
       var shownDraw = "";
       var boardShared = false;
@@ -171,7 +174,7 @@
       var nameLocale = "ru";
       var band = false;
       var mediaAppliedAt = { audio: 0, video: 0 };
-      var mediaHold = [];
+      var mediaHold = { audio: null, video: null };
       var mediaSkewMs = 15 * 60 * 1000;
 
       function post(kind, detail) {
@@ -267,35 +270,7 @@
       }
 
       function knownTeacher(id) {
-        return teacherIds.indexOf(id) >= 0 || namedTeacherIds.indexOf(id) >= 0;
-      }
-
-      function noteNamedTeacher(id) {
-        if (!id || knownTeacher(id)) {
-          return false;
-        }
-        var person = people[id];
-        if (person && sameCallName(person.name, teacherName)) {
-          namedTeacherIds.push(id);
-          return true;
-        }
-        var participant = room && room.getParticipantById ? room.getParticipantById(id) : null;
-        var identity = "";
-        if (participant && participant.getIdentity) {
-          var raw = participant.getIdentity();
-          if (typeof raw === "string") {
-            identity = raw;
-          } else if (raw && raw.user && typeof raw.user.id === "string") {
-            identity = raw.user.id;
-          } else if (raw && typeof raw.id === "string") {
-            identity = raw.id;
-          }
-        }
-        if (identity.indexOf("teacher:") === 0) {
-          namedTeacherIds.push(id);
-          return true;
-        }
-        return false;
+        return teacherIds.indexOf(id) >= 0;
       }
 
       function orderedPeople() {
@@ -555,12 +530,11 @@
         if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > Date.now() + mediaSkewMs) {
           return "drop";
         }
-        if (teacherIds.indexOf(sender) >= 0 || namedTeacherIds.indexOf(sender) >= 0 || noteNamedTeacher(sender)) {
-          return "apply";
-        }
-        var person = people[sender];
-        if (!person || !person.name) {
+        if (teacherIds.length === 0) {
           return "wait";
+        }
+        if (teacherIds.indexOf(sender) >= 0) {
+          return "apply";
         }
         return "drop";
       }
@@ -798,46 +772,147 @@
         syncBoard();
       }
 
+      function stopBoardAsk() {
+        if (boardAskTimer !== null) {
+          window.clearTimeout(boardAskTimer);
+          boardAskTimer = null;
+        }
+      }
+
       function postBoard(scene) {
         boardScene = scene;
+        stopBoardAsk();
         if (window.LarnesBoard && window.LarnesBoard.apply) {
           window.LarnesBoard.apply(scene);
         }
       }
 
-      function openTeacherBoard() {
-        flushHold();
-        flushBoard();
-        emitWorkspace();
-        emitBoardDraw();
+      function dropOldestHold() {
+        var oldestId = "";
+        var oldestAt = 0;
+        for (var id in boardHeld) {
+          var startedAt = boardHeld[id].startedAt;
+          if (!oldestId || startedAt < oldestAt) {
+            oldestId = id;
+            oldestAt = startedAt;
+          }
+        }
+        if (!oldestId) {
+          return;
+        }
+        delete boardHeld[oldestId];
+        boardHoldCount -= 1;
+      }
+
+      function holdBoard(sender, payload) {
+        var at = Date.now();
+        var message = readBoard(payload);
+        if (!sender || !message || message.sentAt > at + mediaSkewMs) {
+          return;
+        }
+        var held = boardHeld[sender];
+        if (held && at - held.startedAt > 5000) {
+          delete boardHeld[sender];
+          boardHoldCount -= 1;
+          held = null;
+        }
+        if (!held || message.sentAt > held.sentAt) {
+          if (!held) {
+            while (boardHoldCount >= boardHoldCap) {
+              dropOldestHold();
+            }
+            boardHoldCount += 1;
+          }
+          var pieces = {};
+          pieces[message.index] = payload;
+          boardHeld[sender] = {
+            count: message.count,
+            pieces: pieces,
+            sender: sender,
+            sentAt: message.sentAt,
+            startedAt: at,
+          };
+          return;
+        }
+        if (message.sentAt < held.sentAt || message.count !== held.count) {
+          return;
+        }
+        held.pieces[message.index] = payload;
+      }
+
+      function askBoard() {
+        if (boardScene || !room || !room.sendEndpointMessage || teacherIds.length === 0) {
+          stopBoardAsk();
+          return;
+        }
+        if (boardAskLeft <= 0 || boardAskTimer !== null) {
+          return;
+        }
+        boardAskLeft -= 1;
+        for (var i = 0; i < teacherIds.length; i++) {
+          try {
+            room.sendEndpointMessage(teacherIds[i], { kind: "larnes-board-sync" });
+          } catch (error) {}
+        }
+        if (boardScene || boardAskLeft <= 0) {
+          return;
+        }
+        boardAskTimer = window.setTimeout(function () {
+          boardAskTimer = null;
+          askBoard();
+        }, boardAskPauseMs);
       }
 
       function onBoard(sender, payload) {
         if (!sender || sender === localEndpoint) {
           return;
         }
-        var learned = noteNamedTeacher(sender);
+        if (teacherIds.length === 0) {
+          holdBoard(sender, payload);
+          return;
+        }
         if (!knownTeacher(sender) && !boardShared) {
-          var person = people[sender];
-          if (!person || !person.name) {
-            boardHeld.push({ sender: sender, payload: payload });
-          }
           return;
         }
         var scene = pushBoard(sender, payload);
         if (scene) {
           postBoard(scene);
         }
-        if (learned) {
-          openTeacherBoard();
-        }
       }
 
       function flushBoard() {
-        var held = boardHeld;
-        boardHeld = [];
-        for (var i = 0; i < held.length; i++) {
-          onBoard(held[i].sender, held[i].payload);
+        var at = Date.now();
+        var heldMap = boardHeld;
+        boardHeld = {};
+        boardHoldCount = 0;
+        var pending = [];
+        for (var id in heldMap) {
+          pending.push(heldMap[id]);
+        }
+        pending.sort(function (left, right) {
+          return left.sentAt - right.sentAt;
+        });
+        for (var i = 0; i < pending.length; i++) {
+          var held = pending[i];
+          if (at - held.startedAt > 5000 || teacherIds.indexOf(held.sender) < 0) {
+            continue;
+          }
+          var indexes = [];
+          for (var key in held.pieces) {
+            indexes.push(Number(key));
+          }
+          indexes.sort(function (left, right) {
+            return left - right;
+          });
+          for (var j = 0; j < indexes.length; j++) {
+            var scene = pushBoard(held.sender, held.pieces[indexes[j]]);
+            if (scene) {
+              postBoard(scene);
+            }
+          }
+        }
+        if (teacherIds.length > 0 && !boardScene) {
+          askBoard();
         }
       }
 
@@ -868,7 +943,10 @@
         var sender = senderId(from);
         var decision = decideCommand(command, sender);
         if (decision === "wait") {
-          mediaHold.push({ command: command, sender: sender });
+          var heldMedia = mediaHold[command.device];
+          if (!heldMedia || command.sentAt > heldMedia.command.sentAt) {
+            mediaHold[command.device] = { command: command, sender: sender };
+          }
           return;
         }
         if (decision !== "apply") {
@@ -879,10 +957,17 @@
       }
 
       function flushHold() {
-        var held = mediaHold;
-        mediaHold = [];
-        for (var i = 0; i < held.length; i++) {
-          onEndpointMessage(held[i].sender, held[i].command);
+        var devices = ["audio", "video"];
+        var held = [];
+        for (var i = 0; i < devices.length; i++) {
+          var item = mediaHold[devices[i]];
+          mediaHold[devices[i]] = null;
+          if (item) {
+            held.push(item);
+          }
+        }
+        for (var j = 0; j < held.length; j++) {
+          onEndpointMessage(held[j].sender, held[j].command);
         }
       }
 
@@ -1050,7 +1135,6 @@
           }
           room = connection.initJitsiConference(pass.room, { p2p: { enabled: false } });
           ownName = pass.displayName || "";
-          teacherName = pass.teacherName || "";
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
           }
@@ -1114,9 +1198,6 @@
             if (name) {
               person.name = name;
             }
-            if (noteNamedTeacher(id)) {
-              openTeacherBoard();
-            }
             render();
           });
           room.on(meet.events.conference.USER_LEFT, function (id) {
@@ -1126,10 +1207,6 @@
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               delete boardDrawSlots[id];
-              var namedAt = namedTeacherIds.indexOf(id);
-              if (namedAt >= 0) {
-                namedTeacherIds.splice(namedAt, 1);
-              }
               emitBoardDraw();
               render();
             }
@@ -1141,9 +1218,6 @@
             var person = id === room.myUserId() ? people.local : people[id];
             if (person && !person.local && typeof name === "string") {
               person.name = name;
-              if (noteNamedTeacher(id)) {
-                openTeacherBoard();
-              }
               render();
             }
           });
@@ -1659,7 +1733,12 @@
         localVideo = null;
         localAudio = null;
         people = {};
-        namedTeacherIds = [];
+        boardHeld = {};
+        boardHoldCount = 0;
+        boardAskLeft = 3;
+        stopBoardAsk();
+        boardScene = null;
+        mediaHold = { audio: null, video: null };
         speakerId = "";
         localEndpoint = "";
         for (var id in tileNodes) {

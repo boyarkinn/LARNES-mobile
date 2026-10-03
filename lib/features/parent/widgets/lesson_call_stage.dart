@@ -346,11 +346,15 @@ class _LessonCallStageState extends State<LessonCallStage> {
       }
     });
     if (!muted) {
-      final permission = await (video ? Permission.camera : Permission.microphone).request();
+      final statuses = await [Permission.camera, Permission.microphone].request();
       if (!_deviceWishCurrent(video, seq, callGen)) {
         return;
       }
-      if (!permission.isGranted) {
+      final cameraGranted = statuses[Permission.camera]?.isGranted ?? false;
+      final micGranted = statuses[Permission.microphone]?.isGranted ?? false;
+      await _web?.evaluateJavascript(source: 'allowDevices($cameraGranted, $micGranted)');
+      final granted = video ? cameraGranted : micGranted;
+      if (!granted) {
         setState(() {
           if (video) {
             _cameraOn = false;
@@ -574,9 +578,12 @@ class _LessonCallStageState extends State<LessonCallStage> {
       },
       onPermissionRequest: (controller, request) async {
         final resources = request.resources;
-        final cameraOnly = resources.length == 1 && resources.single == PermissionResourceType.CAMERA;
-        final micOnly = resources.length == 1 && resources.single == PermissionResourceType.MICROPHONE;
-        if (!cameraOnly && !micOnly) {
+        final capture = {
+          PermissionResourceType.CAMERA,
+          PermissionResourceType.MICROPHONE,
+          PermissionResourceType.CAMERA_AND_MICROPHONE,
+        };
+        if (resources.isEmpty || resources.any((type) => !capture.contains(type))) {
           return PermissionResponse(
             resources: resources,
             action: PermissionResponseAction.DENY,

@@ -107,6 +107,7 @@
       var remoteAudios = [];
       var opening = { video: false, audio: false };
       var wishMuted = { video: true, audio: true };
+      var deviceAllowed = { video: true, audio: true };
       var captureGen = { video: 0, audio: 0 };
       var pending = { video: null, audio: null };
       var tileNodes = {};
@@ -196,20 +197,6 @@
           return "missing";
         }
         return "failed";
-      }
-
-      function takeTrack(tracks, kind) {
-        var mine = null;
-        var list = tracks || [];
-        for (var i = 0; i < list.length; i++) {
-          var track = list[i];
-          if (!mine && track.getType && track.getType() === kind) {
-            mine = track;
-          } else if (track.dispose) {
-            track.dispose();
-          }
-        }
-        return mine;
       }
 
       function ensurePerson(id, local) {
@@ -1081,81 +1068,153 @@
         }
       }
 
-      function beginCapture(kind) {
-        var meet = window.JitsiMeetJS;
-        if (opening[kind] || !room || !meet) {
+      function allowDevices(video, audio) {
+        deviceAllowed.video = !!video;
+        deviceAllowed.audio = !!audio;
+      }
+
+      function devicesToOpen() {
+        var devices = [];
+        if (deviceAllowed.video && !localVideo) {
+          devices.push("video");
+        }
+        if (deviceAllowed.audio && !localAudio) {
+          devices.push("audio");
+        }
+        return devices;
+      }
+
+      function tracksByKind(tracks) {
+        var found = { video: null, audio: null };
+        var list = tracks || [];
+        for (var i = 0; i < list.length; i++) {
+          var track = list[i];
+          var type = track.getType && track.getType();
+          if ((type === "video" || type === "audio") && !found[type]) {
+            found[type] = track;
+          } else if (track.dispose) {
+            track.dispose();
+          }
+        }
+        return found;
+      }
+
+      function storeLocalTrack(kind, created) {
+        if (kind === "video") {
+          localVideo = created;
+          var person = ensurePerson("local", true);
+          person.camera = created;
           return;
         }
-        opening[kind] = true;
-        var gen = captureGen[kind];
-        var request =
-          kind === "video"
-            ? meet.createLocalTracks({ devices: ["video"] })
-            : meet.createLocalTracks({ devices: ["audio"] });
-        request
+        localAudio = created;
+      }
+
+      function beginCapture(kind) {
+        var meet = window.JitsiMeetJS;
+        if (opening.video || opening.audio || !room || !meet) {
+          return;
+        }
+        var devices = devicesToOpen();
+        if (devices.indexOf(kind) < 0) {
+          if (!deviceAllowed[kind]) {
+            post(failKind(kind), "denied");
+            return;
+          }
+          devices = [kind];
+        }
+        var gens = { video: captureGen.video, audio: captureGen.audio };
+        for (var i = 0; i < devices.length; i++) {
+          opening[devices[i]] = true;
+        }
+        meet
+          .createLocalTracks({ devices: devices })
           .then(function (tracks) {
-            var created = takeTrack(tracks, kind);
-            if (!created) {
-              finishCapture(kind, gen);
-              if (gen === captureGen[kind] && !leaving) {
-                post(failKind(kind), "failed");
-              }
-              return;
-            }
-            if (gen !== captureGen[kind] || leaving || wishMuted[kind] || !room) {
-              finishCapture(kind, gen);
-              releaseTrack(created);
-              if (gen === captureGen[kind] && wishMuted[kind] && !leaving) {
-                applyMute(kind, true);
-              }
-              return;
-            }
-            pending[kind] = created;
-            var heldRoom = room;
-            var heldAttempt = attempt;
-            return heldRoom.addTrack(created).then(
-              function () {
-                finishCapture(kind, gen);
-                if (pending[kind] === created) {
-                  pending[kind] = null;
-                }
-                if (gen !== captureGen[kind] || leaving || wishMuted[kind] || heldAttempt !== attempt) {
-                  try {
-                    if (heldRoom.removeTrack) {
-                      heldRoom.removeTrack(created);
-                    }
-                  } catch (error) {}
-                  releaseTrack(created);
-                  return;
-                }
-                if (kind === "video") {
-                  localVideo = created;
-                  var person = ensurePerson("local", true);
-                  person.camera = created;
-                } else {
-                  localAudio = created;
-                }
-                applyMute(kind, false);
-              },
-              function () {
-                finishCapture(kind, gen);
-                if (pending[kind] === created) {
-                  pending[kind] = null;
-                }
-                releaseTrack(created);
-                if (gen === captureGen[kind] && !leaving && heldAttempt === attempt) {
-                  post(failKind(kind), "failed");
-                }
-              },
-            );
+            var found = tracksByKind(tracks);
+            var chain = Promise.resolve();
+            devices.forEach(function (item) {
+              chain = chain.then(function () {
+                return acceptOpenedTrack(item, found[item], gens);
+              });
+            });
+            return chain;
           })
           .catch(function (error) {
+            devices.forEach(function (item) {
+              finishCapture(item, gens[item]);
+              if (gens[item] !== captureGen[item] || leaving) {
+                return;
+              }
+              post(failKind(item), blockOf(error));
+            });
+          });
+      }
+
+      function acceptOpenedTrack(kind, created, gens) {
+        var gen = gens[kind];
+        if (!created) {
+          finishCapture(kind, gen);
+          if (gen === captureGen[kind] && !leaving) {
+            post(failKind(kind), "failed");
+          }
+          return Promise.resolve();
+        }
+        if (gen !== captureGen[kind] || leaving || !room) {
+          finishCapture(kind, gen);
+          releaseTrack(created);
+          return Promise.resolve();
+        }
+        pending[kind] = created;
+        var heldRoom = room;
+        var heldAttempt = attempt;
+        return heldRoom.addTrack(created).then(
+          function () {
             finishCapture(kind, gen);
-            if (gen !== captureGen[kind] || leaving) {
+            if (pending[kind] === created) {
+              pending[kind] = null;
+            }
+            if (gen !== captureGen[kind] || leaving || heldAttempt !== attempt) {
+              try {
+                if (heldRoom.removeTrack) {
+                  heldRoom.removeTrack(created);
+                }
+              } catch (error) {}
+              releaseTrack(created);
               return;
             }
-            post(failKind(kind), blockOf(error));
-          });
+            storeLocalTrack(kind, created);
+            if (wishMuted[kind]) {
+              var mute = created.mute ? created.mute() : Promise.resolve();
+              return Promise.resolve(mute).then(
+                function () {
+                  if (localTrack(kind) !== created) {
+                    return;
+                  }
+                  applyMute(kind, true);
+                },
+                function () {
+                  if (localTrack(kind) === created) {
+                    applyMute(kind, true);
+                  }
+                },
+              );
+            }
+            applyMute(kind, false);
+          },
+          function () {
+            finishCapture(kind, gen);
+            if (pending[kind] === created) {
+              pending[kind] = null;
+            }
+            releaseTrack(created);
+            if (gen === captureGen[kind] && !leaving && heldAttempt === attempt) {
+              post(failKind(kind), "failed");
+            }
+          },
+        );
+      }
+
+      function localTrack(kind) {
+        return kind === "video" ? localVideo : localAudio;
       }
 
       function sameTrack(kind, track, heldAttempt) {

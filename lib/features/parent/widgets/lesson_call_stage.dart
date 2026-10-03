@@ -18,6 +18,28 @@ import 'package:permission_handler/permission_handler.dart';
 
 enum _LessonCallLink { none, reconnecting, lost, closed, failed }
 
+class LessonCallStageHandle {
+  Future<void> Function()? _end;
+
+  void attach(Future<void> Function() end) {
+    _end = end;
+  }
+
+  void detach(Future<void> Function() end) {
+    if (_end == end) {
+      _end = null;
+    }
+  }
+
+  Future<void> end() {
+    final end = _end;
+    if (end == null) {
+      return Future<void>.value();
+    }
+    return end();
+  }
+}
+
 class LessonCallStage extends StatefulWidget {
   const LessonCallStage({
     super.key,
@@ -28,6 +50,7 @@ class LessonCallStage extends StatefulWidget {
     this.inviteToken,
     this.fetchPass,
     this.claimRoster,
+    this.handle,
   });
 
   final Widget? body;
@@ -35,6 +58,7 @@ class LessonCallStage extends StatefulWidget {
   final VoidCallback onLeave;
   final bool trainerOpen;
   final String? inviteToken;
+  final LessonCallStageHandle? handle;
   final Future<LessonCallPass?> Function(String locale)? fetchPass;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
@@ -76,11 +100,15 @@ class _LessonCallStageState extends State<LessonCallStage> {
   Color _ink = const Color(0xFF1E1E1E);
   String _inkHex = '#1e1e1e';
   Timer? _boardSend;
+  Completer<void>? _left;
+  Future<void>? _ending;
+  bool _ended = false;
   _LessonCallLink _link = _LessonCallLink.none;
 
   @override
   void initState() {
     super.initState();
+    widget.handle?.attach(endCall);
     _load();
   }
 
@@ -410,13 +438,50 @@ class _LessonCallStageState extends State<LessonCallStage> {
     await _renewPass();
   }
 
+  Future<void> endCall() {
+    return _ending ??= _endCall();
+  }
+
+  Future<void> _endCall() async {
+    if (_ended) {
+      return;
+    }
+    _ended = true;
+    final web = _web;
+    if (web == null) {
+      return;
+    }
+    final left = Completer<void>();
+    _left = left;
+    try {
+      await web.evaluateJavascript(source: 'leave()');
+    } catch (_) {
+      if (!left.isCompleted) {
+        left.complete();
+      }
+      return;
+    }
+    try {
+      await left.future.timeout(const Duration(seconds: 2));
+    } catch (_) {}
+  }
+
   void _onBridge(List<dynamic> args) {
-    if (!mounted || args.isEmpty || args.first is! Map) {
+    if (args.isEmpty || args.first is! Map) {
       return;
     }
 
     final message = Map<String, dynamic>.from(args.first as Map);
     final kind = message['kind'];
+    if (kind == 'left') {
+      final left = _left;
+      if (left != null && !left.isCompleted) {
+        left.complete();
+      }
+    }
+    if (!mounted) {
+      return;
+    }
     final detail = message['detail'];
     final block = detail is String && detail.isNotEmpty ? detail : 'failed';
     var stopSession = false;
@@ -522,6 +587,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
   @override
   void didUpdateWidget(covariant LessonCallStage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.handle != widget.handle) {
+      oldWidget.handle?.detach(endCall);
+      widget.handle?.attach(endCall);
+    }
     if (oldWidget.trainerOpen == widget.trainerOpen) {
       return;
     }
@@ -540,7 +609,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
     _roster?.cancel();
     _chromeTimer?.cancel();
     _boardSend?.cancel();
-    _web?.evaluateJavascript(source: 'leave()');
+    widget.handle?.detach(endCall);
+    if (!_ended) {
+      _web?.evaluateJavascript(source: 'leave()');
+    }
     super.dispose();
   }
 
@@ -659,6 +731,14 @@ class _LessonCallStageState extends State<LessonCallStage> {
     _keepChrome();
   }
 
+  Future<void> _leaveFromDock() async {
+    await endCall();
+    if (!mounted) {
+      return;
+    }
+    widget.onLeave();
+  }
+
   Widget _dock() {
     return LessonCallDock(
       audioOn: _micOn,
@@ -677,9 +757,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
         _resumeHear();
       },
       onLeave: () {
-        setState(_retireCall);
-        unawaited(_stopSession());
-        widget.onLeave();
+        unawaited(_leaveFromDock());
       },
       onRetry: () {
         _keepChrome();

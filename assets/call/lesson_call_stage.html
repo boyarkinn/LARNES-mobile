@@ -1101,17 +1101,6 @@
         deviceAllowed.audio = !!audio;
       }
 
-      function devicesToOpen() {
-        var devices = [];
-        if (deviceAllowed.video && !localVideo) {
-          devices.push("video");
-        }
-        if (deviceAllowed.audio && !localAudio) {
-          devices.push("audio");
-        }
-        return devices;
-      }
-
       function tracksByKind(tracks) {
         var found = { video: null, audio: null };
         var list = tracks || [];
@@ -1139,21 +1128,19 @@
 
       function beginCapture(kind) {
         var meet = window.JitsiMeetJS;
-        if (opening.video || opening.audio || !room || !meet) {
+        if (opening[kind] || !room || !meet) {
           return;
         }
-        var devices = devicesToOpen();
-        if (devices.indexOf(kind) < 0) {
-          if (!deviceAllowed[kind]) {
-            post(failKind(kind), "denied");
-            return;
-          }
-          devices = [kind];
+        if (!deviceAllowed[kind]) {
+          post(failKind(kind), "denied");
+          return;
         }
+        if (kind === "video" ? localVideo : localAudio) {
+          return;
+        }
+        var devices = [kind];
         var gens = { video: captureGen.video, audio: captureGen.audio };
-        for (var i = 0; i < devices.length; i++) {
-          opening[devices[i]] = true;
-        }
+        opening[kind] = true;
         meet
           .createLocalTracks({ devices: devices })
           .then(function (tracks) {
@@ -1539,19 +1526,34 @@
           }
         }
         remoteAudios = [];
+        var left = Promise.resolve();
         if (currentRoom && currentRoom.leave) {
           try {
-            currentRoom.leave();
-          } catch (error) {}
-        }
-        if (currentConnection && currentConnection.disconnect) {
-          try {
-            currentConnection.disconnect();
+            var result = currentRoom.leave();
+            if (result && typeof result.then === "function") {
+              left = result;
+            }
           } catch (error) {}
         }
         leaving = paused;
         post("camera-off");
         post("mic-off");
+        return left.then(
+          function () {
+            disconnectCall(currentConnection);
+          },
+          function () {
+            disconnectCall(currentConnection);
+          },
+        );
+      }
+
+      function disconnectCall(currentConnection) {
+        if (currentConnection && currentConnection.disconnect) {
+          try {
+            currentConnection.disconnect();
+          } catch (error) {}
+        }
       }
 
       function acceptPass(pass) {
@@ -1561,15 +1563,26 @@
           return;
         }
         passHold = pass;
-        dropSession();
-        join(pass);
+        dropSession().then(function () {
+          if (leaving) {
+            return;
+          }
+          join(pass);
+        });
       }
 
       function leave() {
         clearLinkTimer();
         renewing = false;
-        dropSession();
         leaving = true;
+        return dropSession().then(
+          function () {
+            post("left");
+          },
+          function () {
+            post("left");
+          },
+        );
       }
     </script>
   </body>

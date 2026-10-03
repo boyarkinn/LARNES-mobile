@@ -37,6 +37,7 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
   bool _leaving = false;
   bool _exited = false;
   Timer? _poll;
+  final _call = LessonCallStageHandle();
 
   @override
   void initState() {
@@ -199,9 +200,12 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
 
     _leaving = true;
     _poll?.cancel();
+    final api = _api;
+    final locale = _locale;
+    await _call.end();
 
     try {
-      await _api.leaveLiveLesson(childId: widget.childId, locale: _locale);
+      await api.leaveLiveLesson(childId: widget.childId, locale: locale);
     } catch (_) {
       // Web also leaves the room even if the action fails.
     } finally {
@@ -270,6 +274,7 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
           : LessonCallStage(
               body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
               childId: widget.childId,
+              handle: _call,
               onLeave: () {
                 unawaited(_leaveLesson());
               },

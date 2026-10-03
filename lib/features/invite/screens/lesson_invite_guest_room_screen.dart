@@ -36,6 +36,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
   int _stepIndex = 0;
   int? _dismissedSeq;
   bool _leaving = false;
+  final _call = LessonCallStageHandle();
   bool _exited = false;
   Timer? _poll;
 
@@ -182,11 +183,14 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
 
     _leaving = true;
     _poll?.cancel();
+    final api = AuthScope.of(context).lessonInviteGuestApi;
+    final locale = _locale;
+    await _call.end();
 
     try {
-      await AuthScope.of(context).lessonInviteGuestApi.leave(
+      await api.leave(
             token: widget.token,
-            locale: _locale,
+            locale: locale,
           );
     } catch (_) {
       // Web also leaves the room even if the action fails.
@@ -258,6 +262,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
           : LessonCallStage(
               body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
               childId: '',
+              handle: _call,
               inviteToken: widget.token,
               onLeave: () {
                 unawaited(_leaveLesson());

@@ -116,7 +116,10 @@
       var attempt = 0;
       var people = {};
       var teacherIds = [];
+      var namedTeacherIds = [];
       var teacherPrimary = "";
+      var ownName = "";
+      var teacherName = "";
       var shownMode = "grid";
       var speakerId = "";
       var workspaceSlots = {};
@@ -217,19 +220,47 @@
         return person.desktop || person.camera;
       }
 
+      function sameCallName(left, right) {
+        var normalize = function (value) {
+          return String(value || "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLocaleLowerCase();
+        };
+        var normalizedLeft = normalize(left);
+        var normalizedRight = normalize(right);
+        return normalizedLeft.length > 0 && normalizedLeft === normalizedRight;
+      }
+
+      function knownTeacher(id) {
+        return teacherIds.indexOf(id) >= 0 || namedTeacherIds.indexOf(id) >= 0;
+      }
+
+      function noteNamedTeacher(id) {
+        if (!id || knownTeacher(id)) {
+          return false;
+        }
+        var person = people[id];
+        if (!person || !sameCallName(person.name, teacherName)) {
+          return false;
+        }
+        namedTeacherIds.push(id);
+        return true;
+      }
+
       function orderedPeople() {
         var local = null;
         var remotes = [];
         for (var id in people) {
           if (people[id].local) {
             local = people[id];
-          } else {
+          } else if (!sameCallName(people[id].name, ownName)) {
             remotes.push(people[id]);
           }
         }
         remotes.sort(function (left, right) {
-          var leftTeacher = teacherIds.indexOf(left.id) >= 0 ? 0 : 1;
-          var rightTeacher = teacherIds.indexOf(right.id) >= 0 ? 0 : 1;
+          var leftTeacher = knownTeacher(left.id) ? 0 : 1;
+          var rightTeacher = knownTeacher(right.id) ? 0 : 1;
           if (leftTeacher !== rightTeacher) {
             return leftTeacher - rightTeacher;
           }
@@ -473,13 +504,14 @@
         if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > Date.now() + mediaSkewMs) {
           return "drop";
         }
-        if (teacherIds.length === 0) {
+        if (teacherIds.indexOf(sender) >= 0 || namedTeacherIds.indexOf(sender) >= 0 || noteNamedTeacher(sender)) {
+          return "apply";
+        }
+        var person = people[sender];
+        if (!person || !person.name) {
           return "wait";
         }
-        if (teacherIds.indexOf(sender) < 0) {
-          return "drop";
-        }
-        return "apply";
+        return "drop";
       }
 
       function commandText(payload) {
@@ -521,7 +553,7 @@
       function emitWorkspace() {
         var best = null;
         for (var id in workspaceSlots) {
-          if (teacherIds.indexOf(id) < 0) {
+          if (!knownTeacher(id)) {
             continue;
           }
           var slot = workspaceSlots[id];
@@ -909,6 +941,8 @@
             return;
           }
           room = connection.initJitsiConference(pass.room, { p2p: { enabled: false } });
+          ownName = pass.displayName || "";
+          teacherName = pass.teacherName || "";
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
           }
@@ -972,6 +1006,10 @@
             if (name) {
               person.name = name;
             }
+            if (noteNamedTeacher(id)) {
+              flushHold();
+              emitWorkspace();
+            }
             render();
           });
           room.on(meet.events.conference.USER_LEFT, function (id) {
@@ -992,6 +1030,10 @@
             var person = id === room.myUserId() ? people.local : people[id];
             if (person && !person.local && typeof name === "string") {
               person.name = name;
+              if (noteNamedTeacher(id)) {
+                flushHold();
+                emitWorkspace();
+              }
               render();
             }
           });
@@ -1507,6 +1549,7 @@
         localVideo = null;
         localAudio = null;
         people = {};
+        namedTeacherIds = [];
         speakerId = "";
         localEndpoint = "";
         for (var id in tileNodes) {

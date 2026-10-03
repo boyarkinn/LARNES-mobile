@@ -415,13 +415,20 @@
         render();
       }
 
+      function endpointKey(id) {
+        if (typeof id !== "string") {
+          return "";
+        }
+        var slash = id.lastIndexOf("/");
+        return (slash >= 0 ? id.slice(slash + 1) : id).trim();
+      }
+
       function senderId(from) {
         if (typeof from === "string") {
-          return from;
+          return endpointKey(from);
         }
         if (from && from.getId) {
-          var id = from.getId();
-          return typeof id === "string" ? id : "";
+          return endpointKey(from.getId());
         }
         return "";
       }
@@ -531,19 +538,33 @@
         render();
       }
 
+      function readWorkspaceSlot(payload) {
+        if (payload && payload.kind === "larnes-workspace") {
+          if (payload.mode !== "grid" && payload.mode !== "talk" && payload.mode !== "workflow") {
+            return null;
+          }
+          if (!whole(payload.sentAt) || payload.sentAt <= 0) {
+            return null;
+          }
+          return payload;
+        }
+        return readWorkspace(payload);
+      }
+
       function applyWorkspace(participantId, payload) {
-        if (!participantId) {
+        var id = endpointKey(participantId);
+        if (!id) {
           return;
         }
-        var slot = readWorkspace(payload);
+        var slot = readWorkspaceSlot(payload);
         if (!slot) {
           return;
         }
-        var current = workspaceSlots[participantId];
+        var current = workspaceSlots[id];
         if (current && current.sentAt >= slot.sentAt) {
           return;
         }
-        workspaceSlots[participantId] = slot;
+        workspaceSlots[id] = slot;
         emitWorkspace();
       }
 
@@ -690,6 +711,13 @@
           } catch (error) {
             raw = payload;
           }
+        }
+        if (raw && raw.kind === "larnes-workspace") {
+          var workspaceSender = senderId(from);
+          if (workspaceSender && workspaceSender !== localEndpoint) {
+            applyWorkspace(workspaceSender, raw);
+          }
+          return;
         }
         if (raw && raw.kind === "larnes-board") {
           onBoard(senderId(from), raw);

@@ -63,7 +63,8 @@ class LessonCallStage extends StatefulWidget {
   final Future<LessonCallTeachers> Function({
     required String endpointId,
     required String locale,
-  })? claimRoster;
+  })?
+  claimRoster;
 
   @override
   State<LessonCallStage> createState() => _LessonCallStageState();
@@ -84,6 +85,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
   bool _claiming = false;
   bool _renewing = false;
   int _callGen = 0;
+  int _pageGen = 0;
   int _cameraSeq = 0;
   int _micSeq = 0;
   String? _cameraNote;
@@ -106,7 +108,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
   }
 
   Future<void> _load() async {
-    final html = await rootBundle.loadString('assets/call/lesson_call_stage.html');
+    final html = await rootBundle.loadString(
+      'assets/call/lesson_call_stage.html',
+    );
     if (!mounted) {
       return;
     }
@@ -123,15 +127,13 @@ class _LessonCallStageState extends State<LessonCallStage> {
     }
     final invite = widget.inviteToken;
     if (invite == null) {
-      return AuthScope.of(context).parentApi.fetchLessonCallPass(
-        childId: widget.childId,
-        locale: locale,
-      );
+      return AuthScope.of(
+        context,
+      ).parentApi.fetchLessonCallPass(childId: widget.childId, locale: locale);
     }
-    return AuthScope.of(context).lessonInviteGuestApi.fetchLessonCallPass(
-      token: invite,
-      locale: locale,
-    );
+    return AuthScope.of(
+      context,
+    ).lessonInviteGuestApi.fetchLessonCallPass(token: invite, locale: locale);
   }
 
   Future<void> _openPass() async {
@@ -159,7 +161,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
     }
     setState(() {
       _loading = false;
-      _link = code == 'inactive' ? _LessonCallLink.closed : _LessonCallLink.failed;
+      _link = code == 'inactive'
+          ? _LessonCallLink.closed
+          : _LessonCallLink.failed;
     });
   }
 
@@ -197,7 +201,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
         _tryStart();
         return;
       }
-      await web.evaluateJavascript(source: 'acceptPass(${jsonEncode(pass.toStageJson())})');
+      await web.evaluateJavascript(
+        source: 'acceptPass(${jsonEncode(pass.toStageJson())})',
+      );
     } on ParentApiException catch (error) {
       await _failRenew(error.code, callGen);
     } on KioskApiException catch (error) {
@@ -212,8 +218,12 @@ class _LessonCallStageState extends State<LessonCallStage> {
       return;
     }
     final closed = code == 'inactive';
-    setState(() => _link = closed ? _LessonCallLink.closed : _LessonCallLink.failed);
-    await _web?.evaluateJavascript(source: 'renewFailed(${jsonEncode(closed ? "inactive" : "failed")})');
+    setState(
+      () => _link = closed ? _LessonCallLink.closed : _LessonCallLink.failed,
+    );
+    await _web?.evaluateJavascript(
+      source: 'renewFailed(${jsonEncode(closed ? "inactive" : "failed")})',
+    );
   }
 
   void _stopRoster(String? code) {
@@ -244,6 +254,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
     _starting = true;
     _awaitingPage = true;
+    _pageGen += 1;
     web.loadData(
       data: html,
       mimeType: 'text/html',
@@ -254,26 +265,31 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
   Future<void> _installBoard() async {
     final web = _web;
+    final pageGen = _pageGen;
     if (web == null) {
       return;
     }
     final source = await rootBundle.loadString('assets/call/larnes-board.js');
-    if (!mounted || _web != web) {
+    if (!mounted || _web != web || _pageGen != pageGen) {
       return;
     }
     const size = 240000;
     var start = 0;
     while (start < source.length) {
-      if (!mounted || _web != web) {
+      if (!mounted || _web != web || _pageGen != pageGen) {
         return;
       }
       var end = start + size < source.length ? start + size : source.length;
-      if (end < source.length && source.codeUnitAt(end - 1) >= 0xD800 && source.codeUnitAt(end - 1) <= 0xDBFF) {
+      if (end < source.length &&
+          source.codeUnitAt(end - 1) >= 0xD800 &&
+          source.codeUnitAt(end - 1) <= 0xDBFF) {
         end -= 1;
       }
       final last = end == source.length;
       final part = jsonEncode(source.substring(start, end));
-      await web.evaluateJavascript(source: 'installBoard($part,${last ? 'true' : 'false'})');
+      await web.evaluateJavascript(
+        source: 'installBoard($part,${last ? 'true' : 'false'})',
+      );
       start = end;
     }
   }
@@ -287,7 +303,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
     _joined = true;
     await _syncPage();
-    await web.evaluateJavascript(source: 'join(${jsonEncode(pass.toStageJson())})');
+    await web.evaluateJavascript(
+      source: 'join(${jsonEncode(pass.toStageJson())})',
+    );
   }
 
   Future<void> _syncPage() async {
@@ -301,6 +319,18 @@ class _LessonCallStageState extends State<LessonCallStage> {
       'locale': Localizations.localeOf(context).languageCode,
       'online': l10n.parentLiveLessonOnline,
       'you': l10n.parentLiveLessonYou,
+      'board': {
+        'waiting': l10n.parentLiveLessonBoardWaiting,
+        'unsupported': l10n.parentLiveLessonBoardUnsupported,
+        'offline': l10n.parentLiveLessonBoardOffline,
+        'ready': l10n.parentLiveLessonBoardReady,
+        'recovering': l10n.parentLiveLessonBoardRecovering,
+        'limited': l10n.parentLiveLessonBoardLimited,
+        'readOnly': l10n.parentLiveLessonBoardReadOnly,
+        'retry': l10n.parentLiveLessonBoardRetry,
+        'presenceTeacher': l10n.parentLiveLessonBoardPresenceTeacher,
+        'presenceParticipant': l10n.parentLiveLessonBoardPresenceParticipant,
+      },
     });
     await web.evaluateJavascript(source: 'setLabels($labels)');
     await web.evaluateJavascript(source: 'setBand(${widget.trainerOpen})');
@@ -320,7 +350,12 @@ class _LessonCallStageState extends State<LessonCallStage> {
   Future<void> _claimRoster() async {
     final endpointId = _endpointId;
     final web = _web;
-    if (endpointId == null || endpointId.isEmpty || web == null || _claiming || !mounted) {
+    final callGen = _callGen;
+    if (endpointId == null ||
+        endpointId.isEmpty ||
+        web == null ||
+        _claiming ||
+        !mounted) {
       return;
     }
 
@@ -336,20 +371,54 @@ class _LessonCallStageState extends State<LessonCallStage> {
               endpointId: endpointId,
               locale: locale,
             )
-          : await AuthScope.of(context).lessonInviteGuestApi.claimLessonCallRoster(
+          : await AuthScope.of(
+              context,
+            ).lessonInviteGuestApi.claimLessonCallRoster(
               token: widget.inviteToken!,
               endpointId: endpointId,
               locale: locale,
             );
-      if (!mounted) {
+      if (!mounted ||
+          _web != web ||
+          _endpointId != endpointId ||
+          _callGen != callGen) {
         return;
       }
       await web.evaluateJavascript(
-        source: 'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)})',
+        source:
+            'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)})',
+      );
+      if (!mounted ||
+          _web != web ||
+          _endpointId != endpointId ||
+          _callGen != callGen) {
+        return;
+      }
+      await web.evaluateJavascript(
+        source:
+            'setBoardRoster(${jsonEncode(teachers.toBoardJson())}, ${jsonEncode(endpointId)})',
       );
     } on ParentApiException catch (error) {
+      if (!mounted ||
+          _web != web ||
+          _endpointId != endpointId ||
+          _callGen != callGen) {
+        return;
+      }
+      await web.evaluateJavascript(
+        source: 'setBoardRoster(null, ${jsonEncode(endpointId)})',
+      );
       _stopRoster(error.code);
     } on KioskApiException catch (error) {
+      if (!mounted ||
+          _web != web ||
+          _endpointId != endpointId ||
+          _callGen != callGen) {
+        return;
+      }
+      await web.evaluateJavascript(
+        source: 'setBoardRoster(null, ${jsonEncode(endpointId)})',
+      );
       _stopRoster(error.code);
     } finally {
       _claiming = false;
@@ -358,6 +427,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
   void _retireCall() {
     _callGen += 1;
+    _endpointId = null;
     _cameraSeq += 1;
     _micSeq += 1;
     _inRoom = false;
@@ -393,13 +463,18 @@ class _LessonCallStageState extends State<LessonCallStage> {
       }
     });
     if (!muted) {
-      final statuses = await [Permission.camera, Permission.microphone].request();
+      final statuses = await [
+        Permission.camera,
+        Permission.microphone,
+      ].request();
       if (!_deviceWishCurrent(video, seq, callGen)) {
         return;
       }
       final cameraGranted = statuses[Permission.camera]?.isGranted ?? false;
       final micGranted = statuses[Permission.microphone]?.isGranted ?? false;
-      await _web?.evaluateJavascript(source: 'allowDevices($cameraGranted, $micGranted)');
+      await _web?.evaluateJavascript(
+        source: 'allowDevices($cameraGranted, $micGranted)',
+      );
       final granted = video ? cameraGranted : micGranted;
       if (!granted) {
         setState(() {
@@ -414,14 +489,18 @@ class _LessonCallStageState extends State<LessonCallStage> {
         if (!_deviceWishCurrent(video, seq, callGen)) {
           return;
         }
-        await _web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, true)');
+        await _web?.evaluateJavascript(
+          source: 'setDevice(${jsonEncode(device)}, true)',
+        );
         return;
       }
     }
     if (!_deviceWishCurrent(video, seq, callGen)) {
       return;
     }
-    await _web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, $muted)');
+    await _web?.evaluateJavascript(
+      source: 'setDevice(${jsonEncode(device)}, $muted)',
+    );
   }
 
   Future<void> _applyTeacherMedia(String device, bool muted) async {
@@ -607,6 +686,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
   @override
   void dispose() {
     _callGen += 1;
+    _pageGen += 1;
     _cameraSeq += 1;
     _micSeq += 1;
     _roster?.cancel();
@@ -623,7 +703,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
       return ColoredBox(
         color: const Color(0xFF111111),
         child: Center(
-          child: _loading ? const CircularProgressIndicator() : const SizedBox.shrink(),
+          child: _loading
+              ? const CircularProgressIndicator()
+              : const SizedBox.shrink(),
         ),
       );
     }
@@ -666,7 +748,8 @@ class _LessonCallStageState extends State<LessonCallStage> {
           PermissionResourceType.MICROPHONE,
           PermissionResourceType.CAMERA_AND_MICROPHONE,
         };
-        if (resources.isEmpty || resources.any((type) => !capture.contains(type))) {
+        if (resources.isEmpty ||
+            resources.any((type) => !capture.contains(type))) {
           return PermissionResponse(
             resources: resources,
             action: PermissionResponseAction.DENY,
@@ -755,8 +838,8 @@ class _LessonCallStageState extends State<LessonCallStage> {
     final label = hear
         ? l10n.parentLiveLessonHear
         : _chromeOpen
-            ? l10n.parentLiveLessonCallHide
-            : l10n.parentLiveLessonCallShow;
+        ? l10n.parentLiveLessonCallHide
+        : l10n.parentLiveLessonCallShow;
     return Tooltip(
       message: l10n.parentLiveLessonCall,
       child: Semantics(
@@ -766,7 +849,9 @@ class _LessonCallStageState extends State<LessonCallStage> {
           color: hear ? const Color(0xFFDC2626) : ParentColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: hear ? const Color(0xFFDC2626) : ParentColors.line),
+            side: BorderSide(
+              color: hear ? const Color(0xFFDC2626) : ParentColors.line,
+            ),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -805,12 +890,19 @@ class _LessonCallStageState extends State<LessonCallStage> {
                   right: 0,
                   bottom: 0,
                   child: Column(
-                    crossAxisAlignment: trainer ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                    crossAxisAlignment: trainer
+                        ? CrossAxisAlignment.start
+                        : CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_chromeOpen && !_hearBlocked) _dock(),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(12, 0, 12, 8 + MediaQuery.paddingOf(context).bottom),
+                        padding: EdgeInsets.fromLTRB(
+                          12,
+                          0,
+                          12,
+                          8 + MediaQuery.paddingOf(context).bottom,
+                        ),
                         child: _linkButton(),
                       ),
                     ],

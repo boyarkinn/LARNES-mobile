@@ -64,16 +64,7 @@ class KioskLessonCallApi {
       if (data == null || data['status'] != 'success') {
         throw KioskApiException(l10n.requestFailed, code: _codeFromBody(data));
       }
-      final teachers = data['teacherEndpointIds'];
-      final primary = data['teacherEndpointId'];
-      return LessonCallTeachers(
-        ids: [
-          if (teachers is List)
-            for (final id in teachers)
-              if (id is String && id.isNotEmpty) id,
-        ],
-        primary: primary is String ? primary : '',
-      );
+      return LessonCallTeachers.fromJson(data);
     } on DioException catch (error) {
       throw KioskApiException(
         l10n.requestFailed,

@@ -1003,5 +1003,15 @@
   "appUpdateLaterButton": "Later",
   "appUpdateDownloadingButton": "Downloading…",
   "appUpdateChecksumFailed": "The update file failed verification. Try again later.",
-  "appUpdateInstallFailed": "Could not open the installer."
+  "appUpdateInstallFailed": "Could not open the installer.",
+  "parentLiveLessonBoardWaiting": "Connecting to the shared board…",
+  "parentLiveLessonBoardUnsupported": "The shared board is unavailable: the teacher may be using an older version. Ask them to refresh the lesson page.",
+  "parentLiveLessonBoardOffline": "Board is not syncing. Content remains on this screen; check the connection and retry.",
+  "parentLiveLessonBoardReady": "Board channel is working. This does not confirm delivery to every participant.",
+  "parentLiveLessonBoardRecovering": "Sending changes or checking the board. Retrying after interruptions; delivery is not confirmed yet.",
+  "parentLiveLessonBoardLimited": "A board or stroke limit was reached, or the change is unsupported. Recent changes may not be shared; simplify the drawing.",
+  "parentLiveLessonBoardReadOnly": "The teacher is drawing. Together mode is required for shared drawing.",
+  "parentLiveLessonBoardRetry": "Retry connection",
+  "parentLiveLessonBoardPresenceTeacher": "Teacher",
+  "parentLiveLessonBoardPresenceParticipant": "Participant"
 }

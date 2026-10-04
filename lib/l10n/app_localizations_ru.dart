@@ -2731,4 +2731,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get appUpdateInstallFailed => 'Не удалось открыть установщик.';
+
+  @override
+  String get parentLiveLessonBoardWaiting => 'Подключаем общую доску…';
+
+  @override
+  String get parentLiveLessonBoardUnsupported =>
+      'Общая доска недоступна: у педагога может быть старая версия. Попросите его обновить страницу урока.';
+
+  @override
+  String get parentLiveLessonBoardOffline =>
+      'Доска не синхронизируется. Содержимое осталось на этом экране; проверьте связь и повторите подключение.';
+
+  @override
+  String get parentLiveLessonBoardReady =>
+      'Канал доски работает. Это не подтверждение доставки каждому участнику.';
+
+  @override
+  String get parentLiveLessonBoardRecovering =>
+      'Передаём изменения или сверяем доску. При сбое повторяем попытку; доставка ещё не подтверждена.';
+
+  @override
+  String get parentLiveLessonBoardLimited =>
+      'Достигнут лимит доски или штриха, либо изменение не поддерживается. Последние изменения могут не передаваться; сократите рисунок.';
+
+  @override
+  String get parentLiveLessonBoardReadOnly =>
+      'Сейчас рисует педагог. Для совместного рисования нужен режим «Вместе».';
+
+  @override
+  String get parentLiveLessonBoardRetry => 'Повторить подключение';
+
+  @override
+  String get parentLiveLessonBoardPresenceTeacher => 'Педагог';
+
+  @override
+  String get parentLiveLessonBoardPresenceParticipant => 'Участник';
 }

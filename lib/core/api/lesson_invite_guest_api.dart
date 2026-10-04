@@ -152,16 +152,7 @@ class LessonInviteGuestApi {
       if (data == null || data['status'] != 'success') {
         throw ParentApiException(l10n.parentLiveLessonCallFailed);
       }
-      final teachers = data['teacherEndpointIds'];
-      final primary = data['teacherEndpointId'];
-      return LessonCallTeachers(
-        ids: [
-          if (teachers is List)
-            for (final id in teachers)
-              if (id is String && id.isNotEmpty) id,
-        ],
-        primary: primary is String ? primary : '',
-      );
+      return LessonCallTeachers.fromJson(data);
     } on DioException catch (error) {
       throw _parentApiException(error, l10n, fallback: l10n.parentLiveLessonCallFailed);
     }

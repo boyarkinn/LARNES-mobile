@@ -52,18 +52,48 @@ class LessonCallPass {
   }
 
   Map<String, String> toStageJson() => {
-        'displayName': displayName,
-        'domain': domain,
-        'jwt': jwt,
-        'room': room,
-        'xmppDomain': xmppDomain,
-        'teacherName': teacherName,
-      };
+    'displayName': displayName,
+    'domain': domain,
+    'jwt': jwt,
+    'room': room,
+    'xmppDomain': xmppDomain,
+    'teacherName': teacherName,
+  };
 }
 
 class LessonCallTeachers {
-  const LessonCallTeachers({required this.ids, required this.primary});
+  const LessonCallTeachers({
+    required this.ids,
+    required this.primary,
+    this.scopeId = '',
+    this.participants = const [],
+  });
 
   final List<String> ids;
   final String primary;
+  final String scopeId;
+  final List<String> participants;
+
+  factory LessonCallTeachers.fromJson(Map<String, dynamic> json) {
+    List<String> idsOf(dynamic value) => [
+      if (value is List)
+        for (final id in value)
+          if (id is String && id.isNotEmpty) id,
+    ];
+    return LessonCallTeachers(
+      ids: idsOf(json['teacherEndpointIds']),
+      primary: json['teacherEndpointId'] is String
+          ? json['teacherEndpointId'] as String
+          : '',
+      scopeId: json['scopeId'] is String ? json['scopeId'] as String : '',
+      participants: idsOf(json['participantEndpointIds']),
+    );
+  }
+
+  Map<String, dynamic> toBoardJson() => {
+    'scopeId': scopeId,
+    'teacherEndpointIds': ids,
+    'teacherEndpointId': primary.isEmpty ? null : primary,
+    'participantEndpointIds': participants,
+  };
 }

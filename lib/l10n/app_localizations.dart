@@ -5058,6 +5058,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the installer.'**
   String get appUpdateInstallFailed;
+
+  /// No description provided for @parentLiveLessonBoardWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Connecting to the shared board…'**
+  String get parentLiveLessonBoardWaiting;
+
+  /// No description provided for @parentLiveLessonBoardUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'The shared board is unavailable: the teacher may be using an older version. Ask them to refresh the lesson page.'**
+  String get parentLiveLessonBoardUnsupported;
+
+  /// No description provided for @parentLiveLessonBoardOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Board is not syncing. Content remains on this screen; check the connection and retry.'**
+  String get parentLiveLessonBoardOffline;
+
+  /// No description provided for @parentLiveLessonBoardReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Board channel is working. This does not confirm delivery to every participant.'**
+  String get parentLiveLessonBoardReady;
+
+  /// No description provided for @parentLiveLessonBoardRecovering.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending changes or checking the board. Retrying after interruptions; delivery is not confirmed yet.'**
+  String get parentLiveLessonBoardRecovering;
+
+  /// No description provided for @parentLiveLessonBoardLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'A board or stroke limit was reached, or the change is unsupported. Recent changes may not be shared; simplify the drawing.'**
+  String get parentLiveLessonBoardLimited;
+
+  /// No description provided for @parentLiveLessonBoardReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'The teacher is drawing. Together mode is required for shared drawing.'**
+  String get parentLiveLessonBoardReadOnly;
+
+  /// No description provided for @parentLiveLessonBoardRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry connection'**
+  String get parentLiveLessonBoardRetry;
+
+  /// No description provided for @parentLiveLessonBoardPresenceTeacher.
+  ///
+  /// In en, this message translates to:
+  /// **'Teacher'**
+  String get parentLiveLessonBoardPresenceTeacher;
+
+  /// No description provided for @parentLiveLessonBoardPresenceParticipant.
+  ///
+  /// In en, this message translates to:
+  /// **'Participant'**
+  String get parentLiveLessonBoardPresenceParticipant;
 }
 
 class _AppLocalizationsDelegate

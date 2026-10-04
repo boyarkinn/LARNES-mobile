@@ -102,6 +102,13 @@
       .board.on {
         display: block;
       }
+      #board-note {
+        display: none; position: absolute; z-index: 5; inset-inline: 12px;
+        bottom: 64px; padding: 8px; border-radius: 10px; color: #57534e;
+        background: #fafaf9e8; pointer-events: none; font-size: 12px;
+      }
+      #board-retry { pointer-events: auto; border: 0; background: transparent; text-decoration: underline; color: inherit; padding: 8px; min-height: 44px; min-width: 44px; }
+      #board-announcement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
       .board .excalidraw,
       .board .excalidraw-container {
         width: 100%;
@@ -124,6 +131,8 @@
   <body>
     <div id="grid" class="grid"></div>
     <div id="board" class="board"></div>
+    <div id="board-note" aria-live="off"><span id="board-status-text"></span><button id="board-retry" type="button" onclick="retryBoard()"></button></div>
+    <div id="board-announcement" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
       var connection = null;
       var room = null;
@@ -159,22 +168,22 @@
       var teacherPrimary = "";
       var ownName = "";
       var shownMode = "grid";
-      var boardScene = null;
       var boardParts = [];
+      var boardSourceChars = 0;
+      var boardInstalled = false;
+      var boardEnded = false;
+      var boardRoster = null;
+      var boardRosterAt = 0;
+      var boardInbox = [];
+      var boardInboxBytes = 0;
+      var boardInboxTimer = null;
+      var boardState = "waiting";
+      var boardLabels = {};
+      var boardDetails = {};
+      var boardNoticeText = "";
+      var boardNoticeTimer = null;
       var speakerId = "";
       var workspaceSlots = {};
-      var boardOpenBySender = {};
-      var boardShownSentAtBySender = {};
-      var boardHeld = {};
-      var boardHoldCount = 0;
-      var boardHoldCap = 16;
-      var boardAskLeft = 3;
-      var boardAskTimer = null;
-      var boardAskPauseMs = 4000;
-      var boardDrawSlots = {};
-      var shownDraw = "";
-      var boardShared = false;
-      var lastSentBoardAt = 0;
       var localEndpoint = "";
       var youLabel = "";
       var cameraOffLabel = "";
@@ -665,296 +674,124 @@
         return typeof value === "number" && isFinite(value) && Math.floor(value) === value;
       }
 
-      function readBoard(payload) {
-        if (!payload || typeof payload !== "object" || payload.kind !== "larnes-board") {
-          return null;
-        }
-        if (!whole(payload.sentAt) || !whole(payload.index) || !whole(payload.count) || typeof payload.piece !== "string") {
-          return null;
-        }
-        if (
-          payload.sentAt <= 0 ||
-          payload.count < 1 ||
-          payload.count > 40 ||
-          payload.index < 0 ||
-          payload.index >= payload.count ||
-          payload.piece.length > 6000
-        ) {
-          return null;
-        }
-        return payload;
-      }
-
-      function sceneFromPieces(pieces, count, sentAt) {
-        var body = "";
-        for (var index = 0; index < count; index += 1) {
-          if (pieces[index] === undefined) {
-            return null;
+      // Only the bundle owns v2 schema/assembly/access/scene. HTML forwards actual Jitsi senders.
+      function syncBoardChannel() {
+        if (!boardInstalled || boardEnded) return;
+        var active = [];
+        if (callJoined && localEndpoint) active.push(localEndpoint);
+        if (room && room.getParticipants) {
+          var members = room.getParticipants();
+          for (var i = 0; i < members.length; i++) {
+            var id = senderId(members[i]);
+            if (id) active.push(id);
           }
-          body += pieces[index];
         }
-        try {
-          var parsed = JSON.parse(body);
-          if (!Array.isArray(parsed)) {
-            return null;
-          }
-          return { elements: parsed, sentAt: sentAt };
-        } catch (error) {
-          return null;
+        var scope = passHold && typeof passHold.room === "string" ? passHold.room.trim().toLowerCase() : "";
+        window.LarnesBoard.bind(scope && localEndpoint ? {
+          scopeId: scope, room: room, endpointId: localEndpoint, active: active,
+          connected: callJoined && linkPhase === "room",
+          roster: boardRoster, rosterAgeMs: boardRosterAt ? Math.max(0, Date.now() - boardRosterAt) : Infinity
+        } : null);
+      }
+
+      function setBoardRoster(roster, endpoint) {
+        if (boardEnded || !localEndpoint || endpoint !== localEndpoint) return;
+        boardRoster = roster;
+        boardRosterAt = Date.now();
+        syncBoardChannel();
+      }
+
+      function clearBoardInbox() {
+        if (boardInboxTimer !== null) window.clearTimeout(boardInboxTimer);
+        boardInboxTimer = null; boardInbox = []; boardInboxBytes = 0;
+      }
+
+      function receiveBoard(sender, payload) {
+        if (boardEnded || !sender || sender.length > 200 || sender === localEndpoint) return;
+        if (boardInstalled) { window.LarnesBoard.receive(sender, payload); return; }
+        var bytes;
+        try { bytes = new TextEncoder().encode(JSON.stringify(payload)).length; } catch (_) { return; }
+        // Pre-install buffer is raw bounded packets, NOT another assembly/algorithm.
+        if (bytes > 16384) return;
+        if (boardInbox.length && Date.now() - boardInbox[0].at > 5000) clearBoardInbox();
+        while (boardInbox.length && (boardInbox.length >= 64 || boardInboxBytes + bytes > 262144)) {
+          boardInboxBytes -= boardInbox.shift().bytes;
+        }
+        boardInbox.push({ sender: sender, payload: payload, bytes: bytes, at: Date.now() });
+        boardInboxBytes += bytes;
+        if (boardInboxTimer === null) boardInboxTimer = window.setTimeout(clearBoardInbox, 5000);
+      }
+
+      function updateBoardNotice() {
+        var note = document.getElementById("board-note");
+        if (!note) return;
+        var open = shownMode === "workflow" && !band;
+        var text = boardLabels[boardState] || "";
+        if (boardDetails.hydrated && !boardDetails.writable && boardDetails.mode === "teacher" && (boardState === "ready" || boardState === "recovering")) text += " " + (boardLabels.readOnly || "");
+        document.getElementById("board-status-text").textContent = text;
+        var retry = document.getElementById("board-retry");
+        retry.textContent = boardLabels.retry || "";
+        retry.style.display = boardDetails.canRetry && retry.textContent ? "inline-block" : "none";
+        note.style.display = open && text ? "block" : "none";
+        var announcement = open ? text : "";
+        if (announcement !== boardNoticeText) {
+          boardNoticeText = announcement;
+          if (boardNoticeTimer !== null) window.clearTimeout(boardNoticeTimer);
+          boardNoticeTimer = window.setTimeout(function () {
+            boardNoticeTimer = null;
+            document.getElementById("board-announcement").textContent = boardNoticeText;
+          }, 600);
         }
       }
 
-      function pushBoard(sender, payload) {
-        var at = Date.now();
-        var message = readBoard(payload);
-        var seen = boardShownSentAtBySender[sender] || 0;
-        if (!sender || !message || message.sentAt <= seen || message.sentAt > at + 15 * 60 * 1000) {
-          return null;
-        }
-        var open = boardOpenBySender[sender] || null;
-        if (open && at - open.startedAt > 5000) {
-          open = null;
-          delete boardOpenBySender[sender];
-        }
-        if (!open || message.sentAt > open.sentAt) {
-          var pieces = {};
-          pieces[message.index] = message.piece;
-          open = { count: message.count, pieces: pieces, sender: sender, sentAt: message.sentAt, startedAt: at };
-          boardOpenBySender[sender] = open;
-        } else if (message.sentAt < open.sentAt || message.count !== open.count) {
-          return null;
-        } else {
-          open.pieces[message.index] = message.piece;
-        }
-        var got = 0;
-        for (var key in open.pieces) {
-          got += 1;
-        }
-        if (got < open.count) {
-          return null;
-        }
-        var scene = sceneFromPieces(open.pieces, open.count, open.sentAt);
-        delete boardOpenBySender[sender];
-        if (!scene) {
-          return null;
-        }
-        boardShownSentAtBySender[sender] = scene.sentAt;
-        return scene;
-      }
-
-      function sendBoard(body) {
-        if (!room || !room.sendEndpointMessage || typeof body !== "string" || !body || body.length > 6000 * 40) {
-          return;
-        }
-        var sentAt = Math.max(Date.now(), lastSentBoardAt + 1);
-        lastSentBoardAt = sentAt;
-        var count = Math.max(1, Math.ceil(body.length / 6000));
-        for (var index = 0; index < count; index += 1) {
-          room.sendEndpointMessage("", {
-            kind: "larnes-board",
-            count: count,
-            index: index,
-            piece: body.slice(index * 6000, (index + 1) * 6000),
-            sentAt: sentAt,
-          });
-        }
-      }
+      function retryBoard() { if (boardInstalled) window.LarnesBoard.retry(); }
 
       function syncBoard() {
         var host = document.getElementById("board");
-        if (!host) {
-          return;
-        }
+        if (!host) return;
         var open = shownMode === "workflow" && !band;
-        var was = host.className.indexOf("on") !== -1;
         host.className = open ? "board on" : "board";
-        if (!open || !window.LarnesBoard || !window.LarnesBoard.mount) {
-          return;
-        }
-        window.LarnesBoard.mount(host);
-        if (was) {
-          return;
-        }
-        if (boardScene && window.LarnesBoard.apply) {
-          window.LarnesBoard.apply(boardScene);
-          return;
-        }
-        if (window.LarnesBoard.refresh) {
-          window.LarnesBoard.refresh();
-        }
+        if (boardInstalled) window.LarnesBoard.setVisible(open);
+        updateBoardNotice();
+        if (open && boardInstalled) window.requestAnimationFrame(function () { window.LarnesBoard.refresh(); });
       }
 
       function installBoard(part, last) {
+        // A repeated Flutter load-stop never creates a second root/controller.
+        if (boardInstalled || boardEnded) return;
         if (typeof part === "string" && part) {
+          boardSourceChars += part.length;
+          if (boardParts.length >= 64 || boardSourceChars > 12 * 1024 * 1024) {
+            boardParts = []; boardSourceChars = 0; boardState = "offline"; updateBoardNotice(); return;
+          }
           boardParts.push(part);
         }
-        if (!last) {
-          return;
-        }
+        if (!last) return;
         var code = boardParts.join("");
-        boardParts = [];
-        try {
-          (0, eval)(code);
-        } catch (error) {
-          return;
+        boardParts = []; boardSourceChars = 0;
+        try { (0, eval)(code); } catch (_) { boardState = "offline"; updateBoardNotice(); return; }
+        if (!window.LarnesBoard || window.LarnesBoard.version !== 2) {
+          boardState = "unsupported"; updateBoardNotice(); return;
         }
-        if (!window.LarnesBoard || !window.LarnesBoard.mount || !window.LarnesBoard.setShared) {
-          return;
+        boardInstalled = true;
+        window.LarnesBoard.onStatus = function (state, details) { if (boardEnded) return; boardState = state; boardDetails = details || {}; updateBoardNotice(); };
+        window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
+        window.LarnesBoard.setLocale(nameLocale);
+        window.LarnesBoard.mount(document.getElementById("board"));
+        syncBoardChannel();
+        var inbox = boardInbox.slice();
+        clearBoardInbox();
+        for (var i = 0; i < inbox.length; i++) {
+          if (Date.now() - inbox[i].at <= 5000) window.LarnesBoard.receive(inbox[i].sender, inbox[i].payload);
         }
-        window.LarnesBoard.onSend = function (body) {
-          sendBoard(body);
-        };
-        window.LarnesBoard.setShared(boardShared);
+        // Shared session negotiates capabilities and requests a fresh correlated snapshot on API ready.
         syncBoard();
-      }
-
-      function stopBoardAsk() {
-        if (boardAskTimer !== null) {
-          window.clearTimeout(boardAskTimer);
-          boardAskTimer = null;
-        }
-      }
-
-      function postBoard(scene) {
-        boardScene = scene;
-        stopBoardAsk();
-        if (window.LarnesBoard && window.LarnesBoard.apply) {
-          window.LarnesBoard.apply(scene);
-        }
-      }
-
-      function dropOldestHold() {
-        var oldestId = "";
-        var oldestAt = 0;
-        for (var id in boardHeld) {
-          var startedAt = boardHeld[id].startedAt;
-          if (!oldestId || startedAt < oldestAt) {
-            oldestId = id;
-            oldestAt = startedAt;
-          }
-        }
-        if (!oldestId) {
-          return;
-        }
-        delete boardHeld[oldestId];
-        boardHoldCount -= 1;
-      }
-
-      function holdBoard(sender, payload) {
-        var at = Date.now();
-        var message = readBoard(payload);
-        if (!sender || !message || message.sentAt > at + mediaSkewMs) {
-          return;
-        }
-        var held = boardHeld[sender];
-        if (held && at - held.startedAt > 5000) {
-          delete boardHeld[sender];
-          boardHoldCount -= 1;
-          held = null;
-        }
-        if (!held || message.sentAt > held.sentAt) {
-          if (!held) {
-            while (boardHoldCount >= boardHoldCap) {
-              dropOldestHold();
-            }
-            boardHoldCount += 1;
-          }
-          var pieces = {};
-          pieces[message.index] = payload;
-          boardHeld[sender] = {
-            count: message.count,
-            pieces: pieces,
-            sender: sender,
-            sentAt: message.sentAt,
-            startedAt: at,
-          };
-          return;
-        }
-        if (message.sentAt < held.sentAt || message.count !== held.count) {
-          return;
-        }
-        held.pieces[message.index] = payload;
-      }
-
-      function askBoard() {
-        if (boardScene || !room || !room.sendEndpointMessage || teacherIds.length === 0) {
-          stopBoardAsk();
-          return;
-        }
-        if (boardAskLeft <= 0 || boardAskTimer !== null) {
-          return;
-        }
-        boardAskLeft -= 1;
-        for (var i = 0; i < teacherIds.length; i++) {
-          try {
-            room.sendEndpointMessage(teacherIds[i], { kind: "larnes-board-sync" });
-          } catch (error) {}
-        }
-        if (boardScene || boardAskLeft <= 0) {
-          return;
-        }
-        boardAskTimer = window.setTimeout(function () {
-          boardAskTimer = null;
-          askBoard();
-        }, boardAskPauseMs);
-      }
-
-      function onBoard(sender, payload) {
-        if (!sender || sender === localEndpoint) {
-          return;
-        }
-        if (teacherIds.length === 0) {
-          holdBoard(sender, payload);
-          return;
-        }
-        if (!knownTeacher(sender) && !boardShared) {
-          return;
-        }
-        var scene = pushBoard(sender, payload);
-        if (scene) {
-          postBoard(scene);
-        }
-      }
-
-      function flushBoard() {
-        var at = Date.now();
-        var heldMap = boardHeld;
-        boardHeld = {};
-        boardHoldCount = 0;
-        var pending = [];
-        for (var id in heldMap) {
-          pending.push(heldMap[id]);
-        }
-        pending.sort(function (left, right) {
-          return left.sentAt - right.sentAt;
-        });
-        for (var i = 0; i < pending.length; i++) {
-          var held = pending[i];
-          if (at - held.startedAt > 5000 || teacherIds.indexOf(held.sender) < 0) {
-            continue;
-          }
-          var indexes = [];
-          for (var key in held.pieces) {
-            indexes.push(Number(key));
-          }
-          indexes.sort(function (left, right) {
-            return left - right;
-          });
-          for (var j = 0; j < indexes.length; j++) {
-            var scene = pushBoard(held.sender, held.pieces[indexes[j]]);
-            if (scene) {
-              postBoard(scene);
-            }
-          }
-        }
-        if (teacherIds.length > 0 && !boardScene) {
-          askBoard();
-        }
       }
 
       function onEndpointMessage(from, payload) {
         var raw = payload;
         if (typeof raw === "string") {
+          if (raw.length > 16384) return;
           try {
             raw = JSON.parse(raw);
           } catch (error) {
@@ -968,10 +805,11 @@
           }
           return;
         }
-        if (raw && raw.kind === "larnes-board") {
-          onBoard(senderId(from), raw);
+        if (raw && raw.kind === "larnes-board-v2") {
+          receiveBoard(senderId(from), raw);
           return;
         }
+        // v1 snapshots/commands never overwrite a v2 scene or grant drawing.
         var command = readCommand(payload);
         if (!command) {
           return;
@@ -1028,68 +866,8 @@
         teacherIds = next;
         teacherPrimary = primaryId;
         flushHold();
-        flushBoard();
         emitWorkspace();
-        emitBoardDraw();
         render();
-      }
-
-      function readBoardDraw(payload) {
-        var text = commandText(payload);
-        if (!text) {
-          return null;
-        }
-        var parsed;
-        try {
-          parsed = JSON.parse(text);
-        } catch (error) {
-          return null;
-        }
-        if (!parsed || (parsed.mode !== "teacher" && parsed.mode !== "all")) {
-          return null;
-        }
-        if (typeof parsed.sentAt !== "number" || !isFinite(parsed.sentAt)) {
-          return null;
-        }
-        return parsed;
-      }
-
-      function emitBoardDraw() {
-        var best = null;
-        for (var id in boardDrawSlots) {
-          if (!knownTeacher(id)) {
-            continue;
-          }
-          var slot = boardDrawSlots[id];
-          if (!best || slot.sentAt >= best.sentAt) {
-            best = slot;
-          }
-        }
-        var mode = best ? best.mode : "teacher";
-        boardShared = mode === "all";
-        if (mode === shownDraw) {
-          return;
-        }
-        shownDraw = mode;
-        if (window.LarnesBoard && window.LarnesBoard.setShared) {
-          window.LarnesBoard.setShared(boardShared);
-        }
-      }
-
-      function applyBoardDraw(participantId, payload) {
-        if (!participantId) {
-          return;
-        }
-        var slot = readBoardDraw(payload);
-        if (!slot) {
-          return;
-        }
-        var current = boardDrawSlots[participantId];
-        if (current && current.sentAt >= slot.sentAt) {
-          return;
-        }
-        boardDrawSlots[participantId] = slot;
-        emitBoardDraw();
       }
 
       function setLabels(labels) {
@@ -1097,6 +875,12 @@
         cameraOffLabel = labels && labels.cameraOff ? String(labels.cameraOff) : "";
         onlineLabel = labels && labels.online ? String(labels.online) : "";
         nameLocale = labels && labels.locale ? String(labels.locale) : "ru";
+        boardLabels = labels && labels.board ? labels.board : {};
+        if (boardInstalled) {
+          window.LarnesBoard.setLocale(nameLocale);
+          window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
+        }
+        updateBoardNotice();
         render();
       }
 
@@ -1262,6 +1046,7 @@
             if (name) {
               person.name = name;
             }
+            syncBoardChannel();
             render();
           });
           room.on(meet.events.conference.USER_LEFT, function (id) {
@@ -1271,8 +1056,7 @@
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               delete shareSlots[id];
-              delete boardDrawSlots[id];
-              emitBoardDraw();
+              syncBoardChannel();
               render();
             }
           });
@@ -1305,12 +1089,6 @@
               return;
             }
             applyWorkspace(participantId, payload);
-          });
-          room.addCommandListener("larnes-board-draw", function (payload, participantId) {
-            if (thisAttempt !== attempt) {
-              return;
-            }
-            applyBoardDraw(participantId, payload);
           });
           var speakerEvent = meet.events.conference.DOMINANT_SPEAKER_CHANGED;
           if (speakerEvent) {
@@ -1361,6 +1139,7 @@
             callJoined = true;
             applyLink(linkJoined());
             localEndpoint = room.myUserId() || "";
+            syncBoardChannel();
             post("endpoint", localEndpoint);
             post("joined");
             render();
@@ -1937,6 +1716,7 @@
           clearLinkTimer();
         }
         postLinkPhase();
+        syncBoardChannel();
         if (step.rejoin) {
           beginRejoin();
         }
@@ -2039,6 +1819,7 @@
 
       function renewFailed(code) {
         renewing = false;
+        if (code === "inactive" || code === "forbidden") closeBoard();
         var wasLive = callJoined || linkPhase === "rejoining" || linkPhase === "reconnecting";
         dropSession();
         if (code === "inactive") {
@@ -2081,11 +1862,10 @@
         localVideo = null;
         localAudio = null;
         people = {};
-        boardHeld = {};
-        boardHoldCount = 0;
-        boardAskLeft = 3;
-        stopBoardAsk();
-        boardScene = null;
+        boardRoster = null;
+        boardRosterAt = 0;
+        clearBoardInbox();
+        if (boardInstalled) window.LarnesBoard.bind(null);
         mediaHold = { audio: null, video: null };
         speakerId = "";
         localEndpoint = "";
@@ -2152,6 +1932,7 @@
       }
 
       function leave() {
+        closeBoard();
         clearLinkTimer();
         renewing = false;
         leaving = true;
@@ -2163,6 +1944,19 @@
             post("left");
           },
         );
+      }
+
+      // A reconnect only detaches. Existing terminal/leave decisions close the
+      // document owner immediately; stale roster/asset callbacks cannot reopen it.
+      function closeBoard() {
+        if (boardEnded) return;
+        boardEnded = true;
+        clearBoardInbox(); boardParts = []; boardSourceChars = 0; boardRoster = null;
+        if (boardNoticeTimer !== null) window.clearTimeout(boardNoticeTimer);
+        boardNoticeTimer = null;
+        if (boardInstalled) window.LarnesBoard.endSession();
+        document.getElementById("board-note").style.display = "none";
+        document.getElementById("board-announcement").textContent = "";
       }
     </script>
   </body>

@@ -2710,4 +2710,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appUpdateInstallFailed => 'Could not open the installer.';
+
+  @override
+  String get parentLiveLessonBoardWaiting => 'Connecting to the shared board…';
+
+  @override
+  String get parentLiveLessonBoardUnsupported =>
+      'The shared board is unavailable: the teacher may be using an older version. Ask them to refresh the lesson page.';
+
+  @override
+  String get parentLiveLessonBoardOffline =>
+      'Board is not syncing. Content remains on this screen; check the connection and retry.';
+
+  @override
+  String get parentLiveLessonBoardReady =>
+      'Board channel is working. This does not confirm delivery to every participant.';
+
+  @override
+  String get parentLiveLessonBoardRecovering =>
+      'Sending changes or checking the board. Retrying after interruptions; delivery is not confirmed yet.';
+
+  @override
+  String get parentLiveLessonBoardLimited =>
+      'A board or stroke limit was reached, or the change is unsupported. Recent changes may not be shared; simplify the drawing.';
+
+  @override
+  String get parentLiveLessonBoardReadOnly =>
+      'The teacher is drawing. Together mode is required for shared drawing.';
+
+  @override
+  String get parentLiveLessonBoardRetry => 'Retry connection';
+
+  @override
+  String get parentLiveLessonBoardPresenceTeacher => 'Teacher';
+
+  @override
+  String get parentLiveLessonBoardPresenceParticipant => 'Participant';
 }

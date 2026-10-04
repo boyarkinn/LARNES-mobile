@@ -954,5 +954,15 @@
   "appUpdateLaterButton": "Позже",
   "appUpdateDownloadingButton": "Скачиваем…",
   "appUpdateChecksumFailed": "Файл обновления не прошёл проверку. Попробуйте позже.",
-  "appUpdateInstallFailed": "Не удалось открыть установщик."
+  "appUpdateInstallFailed": "Не удалось открыть установщик.",
+  "parentLiveLessonBoardWaiting": "Подключаем общую доску…",
+  "parentLiveLessonBoardUnsupported": "Общая доска недоступна: у педагога может быть старая версия. Попросите его обновить страницу урока.",
+  "parentLiveLessonBoardOffline": "Доска не синхронизируется. Содержимое осталось на этом экране; проверьте связь и повторите подключение.",
+  "parentLiveLessonBoardReady": "Канал доски работает. Это не подтверждение доставки каждому участнику.",
+  "parentLiveLessonBoardRecovering": "Передаём изменения или сверяем доску. При сбое повторяем попытку; доставка ещё не подтверждена.",
+  "parentLiveLessonBoardLimited": "Достигнут лимит доски или штриха, либо изменение не поддерживается. Последние изменения могут не передаваться; сократите рисунок.",
+  "parentLiveLessonBoardReadOnly": "Сейчас рисует педагог. Для совместного рисования нужен режим «Вместе».",
+  "parentLiveLessonBoardRetry": "Повторить подключение",
+  "parentLiveLessonBoardPresenceTeacher": "Педагог",
+  "parentLiveLessonBoardPresenceParticipant": "Участник"
 }

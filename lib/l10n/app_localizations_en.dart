@@ -426,6 +426,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentLiveLessonMicOff => 'Microphone off';
 
   @override
+  String get parentLiveLessonShareOff => 'Show screen';
+
+  @override
+  String get parentLiveLessonShareOn => 'Screen is on';
+
+  @override
+  String get parentLiveLessonShareFailed =>
+      'The screen did not turn on. Press the screen button to ask again.';
+
+  @override
   String get parentLiveLessonLeave => 'Leave';
 
   @override

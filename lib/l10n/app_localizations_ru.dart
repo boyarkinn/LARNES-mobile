@@ -427,6 +427,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentLiveLessonMicOff => 'Микрофон выключен';
 
   @override
+  String get parentLiveLessonShareOff => 'Показать экран';
+
+  @override
+  String get parentLiveLessonShareOn => 'Демонстрация включена';
+
+  @override
+  String get parentLiveLessonShareFailed =>
+      'Экран не показался. Нажмите кнопку экрана, чтобы спросить ещё раз.';
+
+  @override
   String get parentLiveLessonLeave => 'Выйти';
 
   @override

@@ -52,6 +52,9 @@
         object-fit: cover;
         background: #000;
       }
+      .tile video.screen {
+        object-fit: contain;
+      }
       .dot {
         position: absolute;
         top: 0.7rem;
@@ -126,8 +129,13 @@
       var room = null;
       var localVideo = null;
       var localAudio = null;
+      var localDesktop = null;
       var videoMuted = true;
       var audioMuted = true;
+      var shareState = "idle";
+      var shareGeneration = 0;
+      var shareStartedAt = 0;
+      var shareSlots = {};
       var joining = false;
       var leaving = false;
       var callJoined = false;
@@ -247,6 +255,8 @@
             local: local,
             camera: null,
             desktop: null,
+            sharing: false,
+            shareStartedAt: null,
             videoMuted: true,
           };
         }
@@ -309,6 +319,22 @@
       function talkTiles(tiles) {
         if (shownMode !== "talk") {
           return tiles;
+        }
+        var sharer = null;
+        var sharerAt = 0;
+        for (var i = 0; i < tiles.length; i++) {
+          var candidate = tiles[i];
+          if (!candidate.sharing) {
+            continue;
+          }
+          var started = candidate.shareStartedAt > 0 ? candidate.shareStartedAt : 9007199254740991;
+          if (!sharer || started < sharerAt || (started === sharerAt && candidate.id < sharer.id)) {
+            sharer = candidate;
+            sharerAt = started;
+          }
+        }
+        if (sharer) {
+          return [sharer];
         }
         var speaker = personById(tiles, speakerId);
         if (speaker) {
@@ -381,7 +407,7 @@
           node.dot.setAttribute("aria-label", onlineLabel);
         }
         var videoTrack = shownTrack(person);
-        var show = Boolean(videoTrack) && !person.videoMuted;
+        var show = Boolean(videoTrack) && (person.sharing || !person.videoMuted);
         if (!show) {
           detachVideo(node);
           if (!node.meta) {
@@ -405,6 +431,7 @@
         var video = document.createElement("video");
         video.autoplay = true;
         video.muted = true;
+        video.className = videoTrack === person.desktop ? "screen" : "";
         video.setAttribute("playsinline", "");
         node.tile.insertBefore(video, node.tile.firstChild);
         node.video = video;
@@ -460,14 +487,23 @@
         var person = ensurePerson(id, local);
         if (track.getVideoType && track.getVideoType() === "desktop") {
           person.desktop = track;
+          person.sharing = true;
+          var announced = shareSlots[id];
+          person.shareStartedAt = announced && announced.sharing ? announced.startedAt : person.shareStartedAt || Date.now();
+          if (announced && announced.sharing) {
+            person.videoMuted = announced.cameraMuted;
+          }
+          if (local) {
+            localDesktop = track;
+            post("share-on");
+          }
         } else {
           person.camera = track;
-        }
-        var shown = shownTrack(person);
-        person.videoMuted = shown ? shown.isMuted() : true;
-        if (local && person.camera === track) {
-          localVideo = track;
-          videoMuted = person.videoMuted;
+          person.videoMuted = track.isMuted();
+          if (local) {
+            localVideo = track;
+            videoMuted = person.videoMuted;
+          }
         }
         render();
       }
@@ -1165,9 +1201,16 @@
             }
             if (person.desktop === track) {
               person.desktop = null;
+              person.sharing = false;
+              person.shareStartedAt = null;
+              if (track.isLocal() && localDesktop === track) {
+                stopShare();
+                return;
+              }
             }
-            var shown = shownTrack(person);
-            person.videoMuted = shown ? shown.isMuted() : true;
+            if (!person.desktop && person.camera) {
+              person.videoMuted = person.camera.isMuted();
+            }
             render();
           });
           room.on(meet.events.conference.TRACK_MUTE_CHANGED, function (track) {
@@ -1176,7 +1219,28 @@
             }
             var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
             var person = id ? people[id] : null;
-            if (track.getType() === "video" && person && shownTrack(person) === track) {
+            if (track.getType() === "video" && person) {
+              if (track.getVideoType && track.getVideoType() === "desktop") {
+                return;
+              }
+              var trackShown = shownTrack(person) === track;
+              var ownShareMute = track.isLocal() && shareState === "on" && !trackShown;
+              if (ownShareMute) {
+                person.videoMuted = track.isMuted();
+                videoMuted = person.videoMuted;
+                post(videoMuted ? "camera-off" : "camera-on");
+                publishShare(true, person.videoMuted);
+                render();
+                return;
+              }
+              if (!trackShown && person.sharing) {
+                person.videoMuted = track.isMuted();
+                render();
+                return;
+              }
+              if (!trackShown) {
+                return;
+              }
               person.videoMuted = track.isMuted();
               if (track.isLocal()) {
                 videoMuted = person.videoMuted;
@@ -1206,6 +1270,7 @@
             }
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
+              delete shareSlots[id];
               delete boardDrawSlots[id];
               emitBoardDraw();
               render();
@@ -1228,6 +1293,12 @@
               return;
             }
             onEndpointMessage(from, payload);
+          });
+          room.addCommandListener("larnes-share", function (payload, participantId) {
+            if (thisAttempt !== attempt) {
+              return;
+            }
+            applyShare(participantId, payload);
           });
           room.addCommandListener("larnes-workspace", function (payload, participantId) {
             if (thisAttempt !== attempt) {
@@ -1313,6 +1384,9 @@
           audioMuted = muted;
         }
         post(muted ? (kind === "video" ? "camera-off" : "mic-off") : kind === "video" ? "camera-on" : "mic-on");
+        if (kind === "video" && shareState === "on") {
+          publishShare(true, muted);
+        }
         render();
       }
 
@@ -1518,6 +1592,278 @@
 
       function setDevice(kind, muted) {
         askDevice(kind, muted);
+      }
+
+      function readShare(payload) {
+        var text = commandText(payload);
+        if (!text) {
+          return null;
+        }
+        var parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (error) {
+          return null;
+        }
+        if (!parsed || typeof parsed.cameraMuted !== "boolean" || typeof parsed.sharing !== "boolean") {
+          return null;
+        }
+        if (!whole(parsed.sentAt) || parsed.sentAt <= 0 || !whole(parsed.startedAt) || parsed.startedAt < 0) {
+          return null;
+        }
+        return parsed;
+      }
+
+      function applyShare(participantId, payload) {
+        var slot = readShare(payload);
+        if (!slot) {
+          return;
+        }
+        var id = endpointKey(participantId);
+        if (id === "local" || (room && id && id === room.myUserId())) {
+          id = "local";
+        }
+        if (!id) {
+          return;
+        }
+        var current = shareSlots[id];
+        if (current && current.sentAt >= slot.sentAt) {
+          return;
+        }
+        shareSlots[id] = slot;
+        var person = people[id];
+        if (!person) {
+          return;
+        }
+        person.videoMuted = slot.cameraMuted;
+        if (slot.sharing) {
+          person.shareStartedAt = slot.startedAt;
+          if (person.desktop) {
+            person.sharing = true;
+          }
+        } else if (!person.desktop) {
+          person.sharing = false;
+          person.shareStartedAt = null;
+        }
+        if (person.local) {
+          videoMuted = person.videoMuted;
+          post(slot.sharing || person.sharing ? "share-on" : "share-off");
+          post(videoMuted ? "camera-off" : "camera-on");
+        }
+        render();
+      }
+
+      function publishShare(sharing, cameraMuted) {
+        if (!sharing) {
+          shareStartedAt = 0;
+        } else if (!shareStartedAt) {
+          shareStartedAt = Date.now();
+        }
+        var body = JSON.stringify({
+          cameraMuted: !!cameraMuted,
+          sentAt: Date.now(),
+          sharing: !!sharing,
+          startedAt: shareStartedAt,
+        });
+        applyShare(localEndpoint || "local", body);
+        if (!room || !room.sendCommand) {
+          return;
+        }
+        try {
+          room.sendCommand("larnes-share", { value: body });
+        } catch (error) {}
+      }
+
+      function releaseDesktop() {
+        var active = shareState !== "idle" || localDesktop !== null;
+        shareGeneration += 1;
+        shareState = "idle";
+        shareStartedAt = 0;
+        var video = localDesktop;
+        localDesktop = null;
+        if (people.local && people.local.desktop === video) {
+          people.local.desktop = null;
+        }
+        releaseTrack(video);
+        if (!active) {
+          return;
+        }
+        delete shareSlots.local;
+        if (people.local) {
+          people.local.sharing = false;
+          people.local.shareStartedAt = null;
+          people.local.desktop = null;
+        }
+        post("share-off");
+      }
+
+      function stopShare() {
+        if (shareState !== "on" && !localDesktop) {
+          return;
+        }
+        var video = localDesktop;
+        var camera = localVideo;
+        var heldRoom = room;
+        var muted = camera && camera.isMuted ? camera.isMuted() : videoMuted;
+        shareGeneration += 1;
+        shareState = "idle";
+        shareStartedAt = 0;
+        localDesktop = null;
+        var chain = Promise.resolve();
+        if (heldRoom && video && heldRoom.removeTrack) {
+          try {
+            var removed = heldRoom.removeTrack(video);
+            if (removed && removed.then) {
+              chain = removed;
+            }
+          } catch (error) {}
+        }
+        chain.then(
+          function () {
+            if (heldRoom && camera && heldRoom.addTrack && room === heldRoom) {
+              return heldRoom.addTrack(camera);
+            }
+          },
+          function () {},
+        ).then(
+          function () {
+            finishStoppedShare(video, muted);
+          },
+          function () {
+            finishStoppedShare(video, muted);
+          },
+        );
+      }
+
+      function finishStoppedShare(video, muted) {
+        if (people.local && people.local.desktop === video) {
+          people.local.desktop = null;
+        }
+        releaseTrack(video);
+        if (people.local) {
+          people.local.sharing = false;
+          people.local.shareStartedAt = null;
+          people.local.videoMuted = muted;
+        }
+        videoMuted = muted;
+        publishShare(false, muted);
+        render();
+      }
+
+      function startShare() {
+        var meet = window.JitsiMeetJS;
+        if (shareState !== "idle" || !callJoined || !room || !meet || leaving) {
+          return;
+        }
+        shareState = "starting";
+        var generation = ++shareGeneration;
+        var heldRoom = room;
+        meet.createLocalTracks({ devices: ["desktop"] }).then(
+          function (tracks) {
+            var video = null;
+            var list = tracks || [];
+            for (var i = 0; i < list.length; i++) {
+              var item = list[i];
+              if (!video && item.getType && item.getType() === "video") {
+                video = item;
+              } else if (item.dispose) {
+                item.dispose();
+              }
+            }
+            if (generation !== shareGeneration || leaving || !callJoined || room !== heldRoom || !video) {
+              if (video) {
+                releaseTrack(video);
+              }
+              if (generation === shareGeneration) {
+                shareState = "idle";
+              }
+              if (generation === shareGeneration && !leaving && callJoined) {
+                post("share-failed", video ? "failed" : "missing");
+              }
+              return;
+            }
+            var camera = localVideo;
+            var cameraRemoved = false;
+            var addDesktop = function () {
+              return heldRoom.addTrack(video).then(
+                function () {
+                  if (generation !== shareGeneration || leaving || room !== heldRoom) {
+                    localDesktop = null;
+                    try {
+                      heldRoom.removeTrack(video);
+                    } catch (error) {}
+                    if (cameraRemoved && camera) {
+                      try {
+                        heldRoom.addTrack(camera);
+                      } catch (error) {}
+                    }
+                    releaseTrack(video);
+                    if (generation === shareGeneration) {
+                      shareState = "idle";
+                    }
+                    return;
+                  }
+                  localDesktop = video;
+                  shareState = "on";
+                  shareStartedAt = Date.now();
+                  var stoppedEvent = meet.events.track && meet.events.track.LOCAL_TRACK_STOPPED;
+                  if (stoppedEvent && video.addEventListener) {
+                    video.addEventListener(stoppedEvent, function () {
+                      if (localDesktop === video) {
+                        stopShare();
+                      }
+                    });
+                  }
+                  publishShare(true, camera && camera.isMuted ? camera.isMuted() : videoMuted);
+                },
+                function () {
+                  if (cameraRemoved && camera) {
+                    try {
+                      heldRoom.addTrack(camera);
+                    } catch (error) {}
+                  }
+                  releaseTrack(video);
+                  if (generation === shareGeneration) {
+                    shareState = "idle";
+                    post("share-failed", "failed");
+                  }
+                },
+              );
+            };
+            if (!camera || !heldRoom.removeTrack) {
+              addDesktop();
+              return;
+            }
+            Promise.resolve(heldRoom.removeTrack(camera)).then(
+              function () {
+                cameraRemoved = true;
+                addDesktop();
+              },
+              function () {
+                cameraRemoved = false;
+                addDesktop();
+              },
+            );
+          },
+          function (error) {
+            if (generation !== shareGeneration || leaving) {
+              return;
+            }
+            shareState = "idle";
+            post("share-failed", blockOf(error));
+          },
+        );
+      }
+
+      function toggleShare() {
+        if (!callJoined || !room || shareState === "starting") {
+          return;
+        }
+        if (shareState === "on") {
+          stopShare();
+          return;
+        }
+        startShare();
       }
 
       function toggleCamera() {
@@ -1728,6 +2074,8 @@
         releaseTrack(pending.audio);
         pending.video = null;
         pending.audio = null;
+        releaseDesktop();
+        shareSlots = {};
         releaseTrack(localVideo);
         releaseTrack(localAudio);
         localVideo = null;

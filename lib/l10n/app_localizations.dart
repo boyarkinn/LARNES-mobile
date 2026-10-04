@@ -896,6 +896,24 @@ abstract class AppLocalizations {
   /// **'Microphone off'**
   String get parentLiveLessonMicOff;
 
+  /// No description provided for @parentLiveLessonShareOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Show screen'**
+  String get parentLiveLessonShareOff;
+
+  /// No description provided for @parentLiveLessonShareOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen is on'**
+  String get parentLiveLessonShareOn;
+
+  /// No description provided for @parentLiveLessonShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The screen did not turn on. Press the screen button to ask again.'**
+  String get parentLiveLessonShareFailed;
+
   /// No description provided for @parentLiveLessonLeave.
   ///
   /// In en, this message translates to:

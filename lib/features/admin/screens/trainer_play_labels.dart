@@ -119,9 +119,33 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayMatchValue4Label;
     case 'targetModeLabel':
       return l10n.adminTrainerPlayTargetModeLabel;
+    case 'vanishSourceLabel':
+      return _passageLabel(l10n, ru: 'Откуда текст', en: 'Text source', ar: 'مصدر النص');
+    case 'vanishPassageLabel':
+      return _passageLabel(l10n, ru: 'Текст', en: 'Text', ar: 'النص');
+    case 'vanishCustomTextLabel':
+      return _passageLabel(l10n, ru: 'Свой текст', en: 'My own text', ar: 'نصي');
+    case 'vanishPauseLabel':
+      return _passageLabel(l10n, ru: 'Пауза на букву, мс', en: 'Pause per letter, ms', ar: 'وقفة لكل حرف، مللي ثانية');
+    case 'shutterEdgeLabel':
+      return _passageLabel(l10n, ru: 'Край шторки', en: 'Shutter edge', ar: 'طرف الستارة');
+    case 'shutterCoverLabel':
+      return _passageLabel(l10n, ru: 'Сколько закрыто', en: 'How much is covered', ar: 'مقدار التغطية');
     default:
       return labelKey;
   }
+}
+
+String _passageLabel(
+  AppLocalizations l10n, {
+  required String ru,
+  required String en,
+  required String ar,
+}) {
+  final code = l10n.localeName;
+  if (code.startsWith('en')) return en;
+  if (code.startsWith('ar')) return ar;
+  return ru;
 }
 
 String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption option) {
@@ -178,6 +202,18 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
       return l10n.adminTrainerPlaySchulteToggleNo;
     case 'schulteToggleYes':
       return l10n.adminTrainerPlaySchulteToggleYes;
+    case 'vanishSourceBank':
+      return _passageLabel(l10n, ru: 'Из банка', en: 'From the bank', ar: 'من المجموعة');
+    case 'vanishSourceCustom':
+      return _passageLabel(l10n, ru: 'Свой текст', en: 'My own text', ar: 'نصي');
+    case 'shutterTop':
+      return _passageLabel(l10n, ru: 'Сверху', en: 'From the top', ar: 'من الأعلى');
+    case 'shutterBottom':
+      return _passageLabel(l10n, ru: 'Снизу', en: 'From the bottom', ar: 'من الأسفل');
+    case 'shutterQuarter':
+      return _passageLabel(l10n, ru: 'Четверть', en: 'A quarter', ar: 'الربع');
+    case 'shutterHalf':
+      return _passageLabel(l10n, ru: 'Половина', en: 'Half', ar: 'النصف');
     default:
       return option.value;
   }

@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_firs
 import 'package:larnes_mobile/trainers/reading/letter_guide_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/reading_shutter/model.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/definition.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/definition.dart';
@@ -636,5 +637,20 @@ ValidateTrainerParamsResult validateWedgeTablesParams(
     'orientation': orientation,
     'rounds': rounds,
     'rowCount': rowCount,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingShutterParams(Map<String, dynamic> raw) {
+  final error = validateReadingShutterRaw(raw);
+  if (error != null) return _fail(error);
+
+  final plan = readingShutterPlanFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'cover': plan.cover,
+    'customText': raw['source'] == 'custom' ? plan.text : '',
+    'edge': plan.edge,
+    'letterPauseMs': plan.letterPauseMs,
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
   });
 }

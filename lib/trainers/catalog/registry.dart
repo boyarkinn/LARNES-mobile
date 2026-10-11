@@ -38,6 +38,7 @@ import 'package:larnes_mobile/trainers/reading/letter_marquee_tap/letter_marquee
 import 'package:larnes_mobile/trainers/reading/letter_word_link/letter_word_link_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/letter_place_in_word_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_connect_dots/letter_connect_dots_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_shutter/reading_shutter_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/letter_orientation_pick_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_trace/letter_trace_trainer.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
@@ -118,6 +119,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       SchulteTableTrainer(params: params, onComplete: onComplete),
   TrainerKey.wedgeTables: ({required params, onComplete}) =>
       WedgeTablesTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingShutter: ({required params, onComplete}) =>
+      ReadingShutterTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterDrawShow: ({required params, onComplete}) =>
       LetterDrawShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterConnectDots: ({required params, onComplete}) =>
@@ -341,6 +344,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateWedgeTablesParams,
+  ),
+  TrainerKey.readingShutter: TrainerDefinition(
+    key: TrainerKey.readingShutter,
+    title: 'Шторка',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingShutterParams,
   ),
   TrainerKey.letterMarqueeTap: TrainerDefinition(
     key: TrainerKey.letterMarqueeTap,

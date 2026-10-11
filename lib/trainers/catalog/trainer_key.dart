@@ -25,6 +25,7 @@ enum TrainerKey {
   stroopColors('stroop-colors'),
   schulteTable('schulte-table'),
   wedgeTables('wedge-tables'),
+  readingShutter('reading-shutter'),
   letterOddOneOut('letter-odd-one-out'),
   letterOrientationPick('letter-orientation-pick'),
   letterPlaceInWord('letter-place-in-word'),

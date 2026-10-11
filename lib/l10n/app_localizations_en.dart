@@ -919,6 +919,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentHomeworkPlayAdvanceFailed => 'Could not save progress.';
 
   @override
+  String get homeworkBoardUnavailable =>
+      'The board didn\'t open. Ask the teacher to send the homework again.';
+
+  @override
+  String get homeworkBoardSaving =>
+      'Saving the drawing…';
+
+  @override
+  String get homeworkBoardSaved =>
+      'Drawing saved';
+
+  @override
+  String get homeworkBoardSaveFailed =>
+      'The drawing wasn\'t saved. Check the connection and try again.';
+
+  @override
+  String get homeworkBoardClosed =>
+      'This homework is closed, the drawing is no longer saved.';
+
+  @override
   String parentHomeworkPlayProgress(int current, int total) {
     return 'Step $current of $total';
   }

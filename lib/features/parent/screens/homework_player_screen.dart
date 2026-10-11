@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
+import 'package:larnes_mobile/features/parent/widgets/homework/homework_board_step.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -196,6 +197,31 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
     final step = snapshot.steps[_stepIndex];
     final isLast = _stepIndex >= totalSteps - 1;
     final isInteractive = isTrainerInteractive(step.trainerKey);
+
+    if (step.trainerKey == homeworkBoardKey) {
+      return TrainerPlayShell(
+        currentStep: _stepIndex + 1,
+        totalSteps: totalSteps,
+        menuContinueLabel: l10n.parentHomeworkPlayMenuContinue,
+        menuExitLabel: l10n.parentHomeworkPlayExit,
+        onExit: _exit,
+        child: HomeworkBoardStep(
+          key: ValueKey(step.id),
+          assignmentId: widget.assignmentId,
+          childId: widget.childId,
+          step: step,
+          chrome: TrainerStepChrome(
+            errorMessage: _advanceError,
+            finishLabel: l10n.parentHomeworkPlayFinish,
+            isInteractive: false,
+            isLast: isLast,
+            isPending: _isAdvancing,
+            nextLabel: l10n.parentHomeworkPlayNext,
+            onAdvance: _isAdvancing ? null : _handleAdvance,
+          ),
+        ),
+      );
+    }
 
     return TrainerPlayShell(
       currentStep: _stepIndex + 1,

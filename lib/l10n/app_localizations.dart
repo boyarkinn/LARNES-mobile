@@ -1790,6 +1790,36 @@ abstract class AppLocalizations {
   /// **'Could not save progress.'**
   String get parentHomeworkPlayAdvanceFailed;
 
+  /// No description provided for @homeworkBoardUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The board didn\'t open. Ask the teacher to send the homework again.'**
+  String get homeworkBoardUnavailable;
+
+  /// No description provided for @homeworkBoardSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving the drawing…'**
+  String get homeworkBoardSaving;
+
+  /// No description provided for @homeworkBoardSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing saved'**
+  String get homeworkBoardSaved;
+
+  /// No description provided for @homeworkBoardSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The drawing wasn\'t saved. Check the connection and try again.'**
+  String get homeworkBoardSaveFailed;
+
+  /// No description provided for @homeworkBoardClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'This homework is closed, the drawing is no longer saved.'**
+  String get homeworkBoardClosed;
+
   /// No description provided for @parentHomeworkPlayProgress.
   ///
   /// In en, this message translates to:

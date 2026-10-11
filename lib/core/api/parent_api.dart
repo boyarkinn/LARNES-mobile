@@ -1005,6 +1005,36 @@ class ParentApi {
     }
   }
 
+  /// Рисунок ребёнка на доске из ДЗ; рисунок педагога в него не входит.
+  Future<void> saveHomeworkBoardWork({
+    required String childId,
+    required String assignmentId,
+    required String itemId,
+    required List<dynamic> elements,
+    String locale = 'ru',
+  }) async {
+    final l10n = lookupAppLocalizations(Locale(locale));
+    try {
+      final response = await _client.dio.put(
+        '/api/mobile/parent/children/$childId/homework/$assignmentId/board/$itemId',
+        data: {'elements': elements, 'locale': locale},
+      );
+      final data = _asJsonMap(response.data);
+      if (data == null || data['status'] != 'success') {
+        throw ParentApiException(
+          _messageFromBody(data, l10n, fallback: l10n.homeworkBoardSaveFailed),
+          code: data?['code'] as String?,
+        );
+      }
+    } on DioException catch (error) {
+      final body = _asJsonMap(error.response?.data);
+      throw ParentApiException(
+        _messageFromBody(body, l10n, fallback: _networkMessage(error, l10n)),
+        code: body?['code'] as String?,
+      );
+    }
+  }
+
   Future<ChildClassroomQrState> fetchChildClassroomQr(
     String childId, {
     String locale = 'ru',

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #fff; }
+      .board { position: fixed; inset: 0; background: #fff; touch-action: none; }
+      .board .excalidraw,
+      .board .excalidraw-container {
+        width: 100%;
+        height: 100%;
+      }
+      .board .main-menu-trigger,
+      .board .help-icon,
+      .board .sidebar-trigger,
+      .board .sidebar-trigger__label-element,
+      .board .App-toolbar__extra-tools-trigger,
+      .board .App-toolbar__divider,
+      .board .ToolIcon__penMode,
+      .board .ToolIcon__lock,
+      .board .App-toolbar .ToolIcon:not(.Shape),
+      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])) {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="board" class="board"></div>
+    <script>
+      // Homework board: Flutter installs the shared board file and the scene in chunks, then reads the work back.
+      var boardParts = [];
+      var boardChars = 0;
+      var dataParts = [];
+      var dataChars = 0;
+      var installed = false;
+      var mounted = false;
+
+      function post(kind, detail) {
+        var bridge = window.flutter_inappwebview;
+        if (bridge && bridge.callHandler) bridge.callHandler("homeworkBoard", { kind: kind, detail: detail === undefined ? "" : detail });
+      }
+
+      function installBoard(part, last) {
+        if (installed) return;
+        if (typeof part === "string" && part) {
+          boardChars += part.length;
+          if (boardParts.length >= 64 || boardChars > 12 * 1024 * 1024) { boardParts = []; boardChars = 0; post("failed", "size"); return; }
+          boardParts.push(part);
+        }
+        if (!last) return;
+        var code = boardParts.join("");
+        boardParts = []; boardChars = 0;
+        try { (0, eval)(code); } catch (_) { post("failed", "eval"); return; }
+        if (!window.LarnesBoard || window.LarnesBoard.homework !== 1) { post("failed", "unsupported"); return; }
+        installed = true;
+        window.LarnesBoard.onHomework = function (work) { post("work", work); };
+        post("installed");
+      }
+
+      function appendScene(part, last) {
+        if (!installed || mounted) return;
+        if (typeof part === "string" && part) {
+          dataChars += part.length;
+          if (dataParts.length >= 64 || dataChars > 8 * 1024 * 1024) { dataParts = []; dataChars = 0; post("failed", "size"); return; }
+          dataParts.push(part);
+        }
+        if (!last) return;
+        var raw = dataParts.join("");
+        dataParts = []; dataChars = 0;
+        var input;
+        try { input = JSON.parse(raw); } catch (_) { post("failed", "scene"); return; }
+        mounted = window.LarnesBoard.mountHomework(document.getElementById("board"), input) === true;
+        post(mounted ? "mounted" : "failed", mounted ? "" : "scene");
+      }
+
+      function currentWork() {
+        if (!mounted) return null;
+        var work = window.LarnesBoard.homeworkWork();
+        return work === null ? null : JSON.stringify(work);
+      }
+
+      window.addEventListener("resize", function () {
+        if (mounted && window.LarnesBoard.refresh) window.LarnesBoard.refresh();
+      });
+    </script>
+  </body>
+</html>

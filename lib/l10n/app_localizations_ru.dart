@@ -924,6 +924,26 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось сохранить прогресс.';
 
   @override
+  String get homeworkBoardUnavailable =>
+      'Доска не открылась. Попросите педагога отправить задание заново.';
+
+  @override
+  String get homeworkBoardSaving =>
+      'Сохраняем рисунок…';
+
+  @override
+  String get homeworkBoardSaved =>
+      'Рисунок сохранён';
+
+  @override
+  String get homeworkBoardSaveFailed =>
+      'Рисунок не сохранился. Проверьте интернет и нажмите ещё раз.';
+
+  @override
+  String get homeworkBoardClosed =>
+      'Задание уже закрыто, рисунок больше не сохраняется.';
+
+  @override
   String parentHomeworkPlayProgress(int current, int total) {
     return 'Шаг $current из $total';
   }

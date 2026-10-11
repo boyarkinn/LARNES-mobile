@@ -110,12 +110,15 @@ class ParentHomeworkPlayStep {
     required this.params,
     this.runtimeSnapshot,
     required this.sortOrder,
+    this.boardWork,
   });
 
   factory ParentHomeworkPlayStep.fromJson(Map<String, dynamic> json) {
     final rawParams = json['params'];
     final rawRuntimeSnapshot = json['runtimeSnapshot'];
+    final rawBoardWork = json['boardWork'];
     return ParentHomeworkPlayStep(
+      boardWork: rawBoardWork is List ? List<dynamic>.from(rawBoardWork) : null,
       id: json['id'] as String,
       trainerKey: json['trainerKey'] as String,
       params: rawParams is Map
@@ -133,6 +136,9 @@ class ParentHomeworkPlayStep {
   final Map<String, dynamic> params;
   final Map<String, dynamic>? runtimeSnapshot;
   final int sortOrder;
+
+  /// Только у задания «Доска»: сохранённый рисунок ребёнка.
+  final List<dynamic>? boardWork;
 }
 
 class ParentHomeworkPlaySnapshot {

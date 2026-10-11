@@ -325,6 +325,11 @@
   "parentHomeworkPlaySoon": "Прохождение задания — в следующем шаге.",
   "parentHomeworkPlayLoadFailed": "Не удалось загрузить задание.",
   "parentHomeworkPlayAdvanceFailed": "Не удалось сохранить прогресс.",
+  "homeworkBoardUnavailable": "Доска не открылась. Попросите педагога отправить задание заново.",
+  "homeworkBoardSaving": "Сохраняем рисунок…",
+  "homeworkBoardSaved": "Рисунок сохранён",
+  "homeworkBoardSaveFailed": "Рисунок не сохранился. Проверьте интернет и нажмите ещё раз.",
+  "homeworkBoardClosed": "Задание уже закрыто, рисунок больше не сохраняется.",
   "parentHomeworkPlayProgress": "Шаг {current} из {total}",
   "@parentHomeworkPlayProgress": {
     "placeholders": {

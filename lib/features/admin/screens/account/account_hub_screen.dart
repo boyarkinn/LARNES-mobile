@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/admin/widgets/admin_account_time_zone_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/admin_theme.dart';
@@ -62,7 +63,9 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final snapshot = await AuthScope.of(context).adminAccountApi.fetchAccount(locale: locale);
+      final snapshot = await AuthScope.of(
+        context,
+      ).adminAccountApi.fetchAccount(locale: locale);
       if (!mounted) {
         return;
       }
@@ -123,14 +126,18 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
 
     try {
       final locale = LocaleScope.of(context).localeCode;
-      await AuthScope.of(context).adminAccountApi.logoutAllDevices(locale: locale);
+      await AuthScope.of(
+        context,
+      ).adminAccountApi.logoutAllDevices(locale: locale);
       await AuthScope.of(context).logout();
       if (mounted) {
         context.go('/login');
       }
     } on AdminAccountApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
     }
   }
@@ -165,7 +172,9 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
 
   Widget _buildBody(AppLocalizations l10n) {
     if (_isLoading && _snapshot == null) {
-      return const Center(child: CircularProgressIndicator(color: AdminColors.accent));
+      return const Center(
+        child: CircularProgressIndicator(color: AdminColors.accent),
+      );
     }
 
     if (_error != null && _snapshot == null) {
@@ -182,7 +191,9 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
               ),
               const SizedBox(height: 16),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AdminColors.accent),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AdminColors.accent,
+                ),
                 onPressed: _load,
                 child: Text(l10n.continueButton),
               ),
@@ -202,7 +213,9 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
           title: l10n.adminAccountSectionProfile,
           child: AdminAccountFieldGroup(
             label: l10n.parentAccountFieldFullName,
-            value: user.fullName.isNotEmpty ? user.fullName : l10n.adminAccountNotSet,
+            value: user.fullName.isNotEmpty
+                ? user.fullName
+                : l10n.adminAccountNotSet,
             valueMuted: user.fullName.isEmpty,
             onTap: () => _openAccountRoute('/admin/account/profile'),
           ),
@@ -217,8 +230,8 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
                 valueMuted: user.phone == null,
                 badgeLabel: user.phone != null
                     ? (user.phoneVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
+                          ? l10n.parentAccountContactVerified
+                          : l10n.parentAccountContactNotVerified)
                     : null,
                 badgeVerified: user.phoneVerified,
                 onTap: () => _openAccountRoute('/admin/account/phone'),
@@ -230,8 +243,8 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
                 valueMuted: user.email == null,
                 badgeLabel: user.email != null
                     ? (user.emailVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
+                          ? l10n.parentAccountContactVerified
+                          : l10n.parentAccountContactNotVerified)
                     : null,
                 badgeVerified: user.emailVerified,
                 onTap: () => _openAccountRoute('/admin/account/email'),
@@ -251,8 +264,20 @@ class _AdminAccountHubScreenState extends State<AdminAccountHubScreen> {
           child: const AppUpdateAccountSection(),
         ),
         AdminAccountCard(
-          title: l10n.adminAccountSectionLanguage,
-          child: const AdminAccountLanguagePicker(),
+          title: l10n.accountRegionLanguage,
+          child: Column(
+            children: [
+              AdminAccountFieldGroup(
+                label: l10n.cityLabel,
+                value: user.city ?? l10n.parentAccountCityNotSet,
+                valueMuted: user.city == null || user.city!.isEmpty,
+                onTap: () => _openAccountRoute('/admin/account/city'),
+              ),
+              const AdminAccountDivider(),
+              const AdminAccountLanguagePicker(),
+              const AdminAccountTimeZonePicker(),
+            ],
+          ),
         ),
         AdminAccountCard(
           title: l10n.adminAccountSectionSecurity,

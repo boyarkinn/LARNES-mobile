@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/admin/screens/account/account_city_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
@@ -77,10 +78,18 @@ import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_shell_scaffold.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
-final _parentChildrenNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentChildren');
-final _parentAccountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'parentAccount');
-final _adminAccountNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'adminAccount');
-final _adminTrainersNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'adminTrainers');
+final _parentChildrenNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'parentChildren',
+);
+final _parentAccountNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'parentAccount',
+);
+final _adminAccountNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'adminAccount',
+);
+final _adminTrainersNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'adminTrainers',
+);
 
 GoRouter createAppRouter({
   required AuthSession authSession,
@@ -147,7 +156,9 @@ GoRouter createAppRouter({
           GoRoute(
             path: ':type/contact',
             builder: (context, state) {
-              final type = RegisterAccountType.fromSlug(state.pathParameters['type']);
+              final type = RegisterAccountType.fromSlug(
+                state.pathParameters['type'],
+              );
               if (type == null) {
                 return const RegisterTypeScreen();
               }
@@ -206,13 +217,17 @@ GoRouter createAppRouter({
                   ),
                   GoRoute(
                     path: 'date-of-birth',
-                    builder: (context, state) => const AccountDateOfBirthScreen(),
+                    builder: (context, state) =>
+                        const AccountDateOfBirthScreen(),
                   ),
                   GoRoute(
                     path: 'relationship',
                     builder: (context, state) {
-                      final relationship = state.uri.queryParameters['relationship'];
-                      return AccountRelationshipScreen(initialRelationship: relationship);
+                      final relationship =
+                          state.uri.queryParameters['relationship'];
+                      return AccountRelationshipScreen(
+                        initialRelationship: relationship,
+                      );
                     },
                   ),
                   GoRoute(
@@ -225,15 +240,17 @@ GoRouter createAppRouter({
                   ),
                   GoRoute(
                     path: 'phone',
-                    builder: (context, state) => const AccountChangeContactScreen(
-                      channel: AccountContactChangeChannel.phone,
-                    ),
+                    builder: (context, state) =>
+                        const AccountChangeContactScreen(
+                          channel: AccountContactChangeChannel.phone,
+                        ),
                   ),
                   GoRoute(
                     path: 'email',
-                    builder: (context, state) => const AccountChangeContactScreen(
-                      channel: AccountContactChangeChannel.email,
-                    ),
+                    builder: (context, state) =>
+                        const AccountChangeContactScreen(
+                          channel: AccountContactChangeChannel.email,
+                        ),
                   ),
                   GoRoute(
                     path: 'password',
@@ -245,7 +262,8 @@ GoRouter createAppRouter({
                   ),
                   GoRoute(
                     path: 'data-request',
-                    builder: (context, state) => const AccountDataRequestScreen(),
+                    builder: (context, state) =>
+                        const AccountDataRequestScreen(),
                   ),
                   GoRoute(
                     path: 'safety',
@@ -300,7 +318,8 @@ GoRouter createAppRouter({
                   ),
                   GoRoute(
                     path: 'family/confirm-children',
-                    builder: (context, state) => const ConfirmFamilyChildrenScreen(),
+                    builder: (context, state) =>
+                        const ConfirmFamilyChildrenScreen(),
                   ),
                   GoRoute(
                     path: 'family-join-dedup',
@@ -317,7 +336,8 @@ GoRouter createAppRouter({
                       if (childId == 'family-setup') {
                         return '/parent/family-setup';
                       }
-                      if (childId == 'family' || childId == 'confirm-children') {
+                      if (childId == 'family' ||
+                          childId == 'confirm-children') {
                         return '/parent/family/confirm-children';
                       }
                       if (childId == 'family-join-dedup') {
@@ -345,7 +365,9 @@ GoRouter createAppRouter({
                           }
                           return ChildProfileScreen(
                             childId: childId,
-                            origin: childProfileOriginFromQuery(state.uri.queryParameters['from']),
+                            origin: childProfileOriginFromQuery(
+                              state.uri.queryParameters['from'],
+                            ),
                           );
                         },
                       ),
@@ -373,7 +395,8 @@ GoRouter createAppRouter({
                             path: ':assignmentId',
                             builder: (context, state) {
                               final childId = state.pathParameters['childId'];
-                              final assignmentId = state.pathParameters['assignmentId'];
+                              final assignmentId =
+                                  state.pathParameters['assignmentId'];
                               if (childId == null ||
                                   childId.isEmpty ||
                                   assignmentId == null ||
@@ -402,7 +425,8 @@ GoRouter createAppRouter({
                             path: 'play/:trainerKey',
                             builder: (context, state) {
                               final childId = state.pathParameters['childId'];
-                              final trainerKey = state.pathParameters['trainerKey'];
+                              final trainerKey =
+                                  state.pathParameters['trainerKey'];
                               if (childId == null ||
                                   childId.isEmpty ||
                                   trainerKey == null ||
@@ -419,7 +443,8 @@ GoRouter createAppRouter({
                             path: ':direction',
                             builder: (context, state) {
                               final childId = state.pathParameters['childId'];
-                              final direction = state.pathParameters['direction'];
+                              final direction =
+                                  state.pathParameters['direction'];
                               if (childId == null ||
                                   childId.isEmpty ||
                                   direction == null ||
@@ -435,9 +460,12 @@ GoRouter createAppRouter({
                               GoRoute(
                                 path: ':trainerKey',
                                 builder: (context, state) {
-                                  final childId = state.pathParameters['childId'];
-                                  final direction = state.pathParameters['direction'];
-                                  final trainerKey = state.pathParameters['trainerKey'];
+                                  final childId =
+                                      state.pathParameters['childId'];
+                                  final direction =
+                                      state.pathParameters['direction'];
+                                  final trainerKey =
+                                      state.pathParameters['trainerKey'];
                                   if (childId == null ||
                                       childId.isEmpty ||
                                       direction == null ||
@@ -503,7 +531,9 @@ GoRouter createAppRouter({
                           if (childId == null || childId.isEmpty) {
                             return const ChildPickerScreen();
                           }
-                          return ParentAttendanceClassesScreen(childId: childId);
+                          return ParentAttendanceClassesScreen(
+                            childId: childId,
+                          );
                         },
                         routes: [
                           GoRoute(
@@ -518,7 +548,8 @@ GoRouter createAppRouter({
                                 return const ChildPickerScreen();
                               }
                               final extra = state.extra;
-                              final placeId = extra is String && extra.isNotEmpty
+                              final placeId =
+                                  extra is String && extra.isNotEmpty
                                   ? extra
                                   : parentActivitySummaryPlaceId;
                               return ParentAttendanceCalendarScreen(
@@ -588,7 +619,8 @@ GoRouter createAppRouter({
                         path: 'directions/:directionId',
                         builder: (context, state) {
                           final childId = state.pathParameters['childId'];
-                          final directionId = state.pathParameters['directionId'];
+                          final directionId =
+                              state.pathParameters['directionId'];
                           if (childId == null ||
                               childId.isEmpty ||
                               directionId == null ||
@@ -652,28 +684,37 @@ GoRouter createAppRouter({
                 builder: (context, state) => const AdminAccountHubScreen(),
                 routes: [
                   GoRoute(
+                    path: 'city',
+                    builder: (context, state) => const AdminAccountCityScreen(),
+                  ),
+                  GoRoute(
                     path: 'profile',
-                    builder: (context, state) => const AdminAccountProfileScreen(),
+                    builder: (context, state) =>
+                        const AdminAccountProfileScreen(),
                   ),
                   GoRoute(
                     path: 'login',
-                    builder: (context, state) => const AdminAccountLoginScreen(),
+                    builder: (context, state) =>
+                        const AdminAccountLoginScreen(),
                   ),
                   GoRoute(
                     path: 'phone',
-                    builder: (context, state) => const AdminAccountChangeContactScreen(
-                      channel: AdminAccountContactChangeChannel.phone,
-                    ),
+                    builder: (context, state) =>
+                        const AdminAccountChangeContactScreen(
+                          channel: AdminAccountContactChangeChannel.phone,
+                        ),
                   ),
                   GoRoute(
                     path: 'email',
-                    builder: (context, state) => const AdminAccountChangeContactScreen(
-                      channel: AdminAccountContactChangeChannel.email,
-                    ),
+                    builder: (context, state) =>
+                        const AdminAccountChangeContactScreen(
+                          channel: AdminAccountContactChangeChannel.email,
+                        ),
                   ),
                   GoRoute(
                     path: 'password',
-                    builder: (context, state) => const AdminAccountPasswordScreen(),
+                    builder: (context, state) =>
+                        const AdminAccountPasswordScreen(),
                   ),
                 ],
               ),
@@ -705,7 +746,9 @@ GoRouter createAppRouter({
                               trainerKey.isEmpty ||
                               launch is! AdminTrainerPlayLaunch ||
                               launch.trainerKey != trainerKey) {
-                            return TrainerDetailScreen(trainerKey: trainerKey ?? '');
+                            return TrainerDetailScreen(
+                              trainerKey: trainerKey ?? '',
+                            );
                           }
                           return AdminTrainerPlayScreen(launch: launch);
                         },
@@ -757,7 +800,9 @@ GoRouter createAppRouter({
         path: '/invite/preaccount-claim',
         redirect: (context, state) {
           final token = state.uri.queryParameters['token'] ?? '';
-          final query = token.isEmpty ? '' : '?token=${Uri.encodeComponent(token)}';
+          final query = token.isEmpty
+              ? ''
+              : '?token=${Uri.encodeComponent(token)}';
           return '/invite/family-adult-claim$query';
         },
       ),
@@ -781,7 +826,8 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) => HomePlaceholderScreen(authSession: authSession),
+        builder: (context, state) =>
+            HomePlaceholderScreen(authSession: authSession),
       ),
     ],
   );

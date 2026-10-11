@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:dio/dio.dart';
 import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
@@ -19,6 +20,10 @@ class ChildSessionApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          await UserTimeZone.refreshDeviceZone();
+          if (UserTimeZone.deviceZone != null) {
+            options.headers['x-larnes-time-zone'] = UserTimeZone.deviceZone;
+          }
           final token = await _childSessionTokenStorage.readToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';

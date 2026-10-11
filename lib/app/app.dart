@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -21,7 +23,41 @@ class LarnesApp extends StatefulWidget {
   State<LarnesApp> createState() => _LarnesAppState();
 }
 
-class _LarnesAppState extends State<LarnesApp> {
+class _LarnesAppState extends State<LarnesApp> with WidgetsBindingObserver {
+  Timer? _timeTimer;
+  String _day = UserTimeZone.dayKey();
+  String? _zone = UserTimeZone.effectiveZone;
+  bool _checkingTime = false;
+
+  Future<void> _checkTime({bool resumed = false}) async {
+    if (_checkingTime) return;
+    _checkingTime = true;
+    try {
+      await UserTimeZone.refreshDeviceZone();
+      if (!mounted) return;
+      final day = UserTimeZone.dayKey();
+      final zone = UserTimeZone.effectiveZone;
+      if (resumed || day != _day || zone != _zone) {
+        _day = day;
+        _zone = zone;
+        if (_authSession.isAuthenticated) {
+          await _authSession.refreshUser();
+          _authSession.notifyParentDataChanged();
+        }
+        if (mounted) setState(() {});
+      }
+    } finally {
+      _checkingTime = false;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_checkTime(resumed: true));
+    }
+  }
+
   late final AuthSession _authSession;
   late final KioskRouteState _kioskRouteState;
   late final LocaleController _localeController;
@@ -31,6 +67,11 @@ class _LarnesAppState extends State<LarnesApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _timeTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => unawaited(_checkTime()),
+    );
     _authSession = AuthSession();
     _kioskRouteState = KioskRouteState();
     _localeController = LocaleController()..load();
@@ -53,6 +94,8 @@ class _LarnesAppState extends State<LarnesApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timeTimer?.cancel();
     _authSession.removeListener(_onStateChanged);
     _kioskRouteState.removeListener(_onStateChanged);
     _localeController.removeListener(_onStateChanged);

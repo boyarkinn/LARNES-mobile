@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
@@ -90,7 +91,7 @@ class _AccountDataRequestScreenState extends State<AccountDataRequestScreen> {
                   const SizedBox(height: 8),
                   Text(
                     '${ru ? 'Срок ответа' : 'Reply due'}: '
-                    '${MaterialLocalizations.of(context).formatMediumDate(_receipt!.dueAt)}',
+                    '${MaterialLocalizations.of(context).formatMediumDate(UserTimeZone.displayTime(_receipt!.dueAt))}',
                   ),
                 ],
               )

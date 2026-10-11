@@ -22,6 +22,7 @@ class ParentHomeworkAssignment {
     required this.status,
     required this.sentAt,
     required this.availableOn,
+    this.timeZone,
     this.cancelledAt,
     this.completedAt,
     required this.currentStepIndex,
@@ -37,6 +38,7 @@ class ParentHomeworkAssignment {
       status: json['status'] as String,
       sentAt: DateTime.parse(json['sentAt'] as String),
       availableOn: json['availableOn'] as String,
+      timeZone: json['timeZone'] as String?,
       cancelledAt: json['cancelledAt'] == null
           ? null
           : DateTime.parse(json['cancelledAt'] as String),
@@ -55,6 +57,7 @@ class ParentHomeworkAssignment {
   final String status;
   final DateTime sentAt;
   final String availableOn;
+  final String? timeZone;
   final DateTime? cancelledAt;
   final DateTime? completedAt;
   final int currentStepIndex;

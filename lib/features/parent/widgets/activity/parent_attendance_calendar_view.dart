@@ -44,6 +44,11 @@ class ParentAttendanceCalendarView extends StatelessWidget {
                 nextLabel: l10n.parentActivityCalendarNextMonth,
               ),
               const SizedBox(height: 12),
+              if (page.calendarTimeZone != null)
+                Text(
+                  '${l10n.timeZoneTitle}: ${page.calendarTimeZone}',
+                  style: textTheme.bodySmall,
+                ),
               _WeekdayRow(labels: page.weekdayLabels),
               const SizedBox(height: 8),
               GridView.builder(
@@ -100,19 +105,30 @@ class ParentAttendanceCalendarView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        _CodeLegendItem(code: '1', label: l10n.parentActivityCalendarCodePresent),
-        _CodeLegendItem(code: 'Н', label: l10n.parentActivityCalendarCodeAbsent),
+        _CodeLegendItem(
+          code: '1',
+          label: l10n.parentActivityCalendarCodePresent,
+        ),
+        _CodeLegendItem(
+          code: 'Н',
+          label: l10n.parentActivityCalendarCodeAbsent,
+        ),
         _CodeLegendItem(code: 'Б', label: l10n.parentActivityCalendarCodeSick),
-        _CodeLegendItem(code: 'ОТ', label: l10n.parentActivityCalendarCodeExcused),
-        _CodeLegendItem(code: 'ТА', label: l10n.parentActivityCalendarCodeAdvanceNotice),
-        if (page.scheduleLabel != null && page.scheduleLabel!.trim().isNotEmpty) ...[
+        _CodeLegendItem(
+          code: 'ОТ',
+          label: l10n.parentActivityCalendarCodeExcused,
+        ),
+        _CodeLegendItem(
+          code: 'ТА',
+          label: l10n.parentActivityCalendarCodeAdvanceNotice,
+        ),
+        if (page.scheduleLabel != null &&
+            page.scheduleLabel!.trim().isNotEmpty) ...[
           const SizedBox(height: 18),
           Text(
             page.scheduleLabel!.replaceAll('\n', ' · '),
             textAlign: TextAlign.center,
-            style: textTheme.bodyMedium?.copyWith(
-              color: ParentColors.inkMuted,
-            ),
+            style: textTheme.bodyMedium?.copyWith(color: ParentColors.inkMuted),
           ),
         ],
       ],
@@ -194,12 +210,16 @@ class _MonthButton extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: ParentColors.line),
-              color: enabled ? ParentColors.surface : ParentColors.surface.withValues(alpha: 0.6),
+              color: enabled
+                  ? ParentColors.surface
+                  : ParentColors.surface.withValues(alpha: 0.6),
             ),
             child: Icon(
               icon,
               size: 22,
-              color: enabled ? ParentColors.ink : ParentColors.inkMuted.withValues(alpha: 0.5),
+              color: enabled
+                  ? ParentColors.ink
+                  : ParentColors.inkMuted.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -303,9 +323,9 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: ParentColors.inkMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: ParentColors.inkMuted),
         ),
       ],
     );
@@ -337,9 +357,9 @@ class _CodeLegendItem extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: ParentColors.inkMuted,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: ParentColors.inkMuted),
             ),
           ),
         ],

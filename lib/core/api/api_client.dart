@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/api_error_body.dart';
@@ -22,20 +23,25 @@ import 'package:larnes_mobile/core/config/app_config.dart';
 
 class ApiClient {
   ApiClient({TokenStorage? tokenStorage, Dio? dio})
-      : _tokenStorage = tokenStorage ?? TokenStorage(),
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppConfig.apiBaseUrl,
-                connectTimeout: const Duration(seconds: 20),
-                receiveTimeout: const Duration(seconds: 20),
-                headers: {'Content-Type': 'application/json'},
-                validateStatus: apiStatusAcceptable,
-              ),
-            ) {
+    : _tokenStorage = tokenStorage ?? TokenStorage(),
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: AppConfig.apiBaseUrl,
+              connectTimeout: const Duration(seconds: 20),
+              receiveTimeout: const Duration(seconds: 20),
+              headers: {'Content-Type': 'application/json'},
+              validateStatus: apiStatusAcceptable,
+            ),
+          ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          await UserTimeZone.refreshDeviceZone();
+          if (UserTimeZone.deviceZone != null) {
+            options.headers['x-larnes-time-zone'] = UserTimeZone.deviceZone;
+          }
           final token = await _tokenStorage.readToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
@@ -85,17 +91,21 @@ class ApiClient {
 
   ParentApi get parentApi => _parentApi ??= ParentApi(this);
 
-  ParentAccountApi get parentAccountApi => _parentAccountApi ??= ParentAccountApi(this);
+  ParentAccountApi get parentAccountApi =>
+      _parentAccountApi ??= ParentAccountApi(this);
 
-  AdminAccountApi get adminAccountApi => _adminAccountApi ??= AdminAccountApi(this);
+  AdminAccountApi get adminAccountApi =>
+      _adminAccountApi ??= AdminAccountApi(this);
 
-  AdminTrainersApi get adminTrainersApi => _adminTrainersApi ??= AdminTrainersApi(this);
+  AdminTrainersApi get adminTrainersApi =>
+      _adminTrainersApi ??= AdminTrainersApi(this);
 
   FamilySetupApi get familySetupApi => _familySetupApi ??= FamilySetupApi(this);
 
   GuardiansApi get guardiansApi => _guardiansApi ??= GuardiansApi(this);
 
-  FamilyInvitesApi get familyInvitesApi => _familyInvitesApi ??= FamilyInvitesApi(this);
+  FamilyInvitesApi get familyInvitesApi =>
+      _familyInvitesApi ??= FamilyInvitesApi(this);
 
   LessonInviteGuestApi get lessonInviteGuestApi =>
       _lessonInviteGuestApi ??= LessonInviteGuestApi(this);

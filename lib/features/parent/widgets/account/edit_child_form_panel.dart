@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -302,7 +303,7 @@ int? ageYearsFromIsoDate(String? iso) {
   if (dob == null) {
     return null;
   }
-  final now = DateTime.now();
+  final now = UserTimeZone.displayTime(DateTime.now());
   var age = now.year - dob.year;
   if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
     age--;

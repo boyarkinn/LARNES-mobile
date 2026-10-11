@@ -25,13 +25,17 @@
   "passwordResetOtpHintSms": "Code sent to {contact}. Enter it below.",
   "@passwordResetOtpHintSms": {
     "placeholders": {
-      "contact": {"type": "String"}
+      "contact": {
+        "type": "String"
+      }
     }
   },
   "passwordResetOtpHintEmail": "Code sent to {contact}. Check your inbox (and spam folder) and enter it below.",
   "@passwordResetOtpHintEmail": {
     "placeholders": {
-      "contact": {"type": "String"}
+      "contact": {
+        "type": "String"
+      }
     }
   },
   "passwordResetOtpResent": "A new code was sent.",
@@ -325,7 +329,9 @@
   "parentClassroomQrVersion": "Version {version}",
   "@parentClassroomQrVersion": {
     "placeholders": {
-      "version": {"type": "int"}
+      "version": {
+        "type": "int"
+      }
     }
   },
   "parentClassroomQrPrint": "Print",
@@ -345,7 +351,9 @@
   "parentHomeworkListTitle": "Homework {name}",
   "@parentHomeworkListTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "parentHomeworkBack": "Back",
@@ -355,8 +363,12 @@
   "parentHomeworkProgressValue": "{current} / {total}",
   "@parentHomeworkProgressValue": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlaySoon": "Assignment player — coming in the next step.",
@@ -365,8 +377,12 @@
   "parentHomeworkPlayProgress": "Step {current} of {total}",
   "@parentHomeworkPlayProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlayNext": "Next",
@@ -379,7 +395,9 @@
   "parentHomeworkPlayStepLabel": "Step {step}",
   "@parentHomeworkPlayStepLabel": {
     "placeholders": {
-      "step": {"type": "int"}
+      "step": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlayTrainerSoon": "Trainer — coming in the next update.",
@@ -389,15 +407,27 @@
   "parentHomeworkEmptyUpcoming": "No upcoming assignments.",
   "parentHomeworkTabDue": "Due ({count})",
   "@parentHomeworkTabDue": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkTabCompleted": "Finished ({count})",
   "@parentHomeworkTabCompleted": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkTabUpcoming": "Upcoming ({count})",
   "@parentHomeworkTabUpcoming": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkStatusAssigned": "Not started",
   "parentHomeworkStatusInProgress": "In progress",
@@ -449,7 +479,9 @@
   "adminTrainersGroupCount": "{count, plural, one{# trainer} other{# trainers}}",
   "@adminTrainersGroupCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminTrainerPlayLoadFailed": "Could not load parameters.",
@@ -654,13 +686,17 @@
   "inviteLessonJoinChild": "Join the lesson: {name}",
   "@inviteLessonJoinChild": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "inviteLessonOpenChild": "Open the lesson: {name}",
   "@inviteLessonOpenChild": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "inviteLessonJoining": "Joining…",
@@ -717,7 +753,9 @@
   "parentAccountChildrenCount": "{count, plural, =1{1 profile} other{{count} profiles}}",
   "@parentAccountChildrenCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "parentAccountCityNotSet": "City not set",
@@ -796,7 +834,9 @@
   "parentLearningDirectionProgramCount": "{count, plural, one {# program} other {# programs}}",
   "@parentLearningDirectionProgramCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "parentDirectionProgramsBack": "Back to study",
@@ -812,10 +852,18 @@
   "parentProgramPlayLessonProgress": "Topic {topic} · Lesson {lesson} · step {current} of {total}",
   "@parentProgramPlayLessonProgress": {
     "placeholders": {
-      "topic": {"type": "int"},
-      "lesson": {"type": "int"},
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "topic": {
+        "type": "int"
+      },
+      "lesson": {
+        "type": "int"
+      },
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentProgramPlayNext": "Next",
@@ -828,8 +876,12 @@
   "parentProgramPlayEmptyLesson": "Lesson {lesson} in topic {topic} has no trainers yet. Ask your teacher to add tasks.",
   "@parentProgramPlayEmptyLesson": {
     "placeholders": {
-      "topic": {"type": "int"},
-      "lesson": {"type": "int"}
+      "topic": {
+        "type": "int"
+      },
+      "lesson": {
+        "type": "int"
+      }
     }
   },
   "parentProgramPlayInteractiveHint": "Complete the task on screen",
@@ -850,7 +902,9 @@
   "networkDeviceSlotValue": "Slot {slot}",
   "@networkDeviceSlotValue": {
     "placeholders": {
-      "slot": {"type": "String"}
+      "slot": {
+        "type": "String"
+      }
     }
   },
   "kioskRegistrationTitle": "Device not registered",
@@ -940,7 +994,13 @@
   "voluntaryConsentParentFields": "Covers only patronymic, city, and date of birth. Core account functions do not depend on it.",
   "voluntaryConsentParentCheckbox": "I consent to processing my patronymic, city, and date of birth for maintaining my private extended profile.",
   "voluntaryConsentOpenVersion": "Open version {version}",
-  "@voluntaryConsentOpenVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@voluntaryConsentOpenVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "voluntaryConsentVersionMissing": "The published consent version is unavailable.",
   "voluntaryConsentRequired": "Confirm the separate consent to save a non-empty optional field.",
   "voluntaryConsentRevokeTitle": "Withdraw profile data consent",
@@ -950,7 +1010,13 @@
   "voluntaryConsentRevokeSuccess": "Consent was withdrawn and the data was erased.",
   "voluntaryConsentRevokeFailed": "Consent could not be withdrawn. No data was erased.",
   "inviteFamilyAdultClaimTitle": "School «{school}» invites you to the LARNES ecosystem",
-  "@inviteFamilyAdultClaimTitle": {"placeholders": {"school": {"type": "String"}}},
+  "@inviteFamilyAdultClaimTitle": {
+    "placeholders": {
+      "school": {
+        "type": "String"
+      }
+    }
+  },
   "inviteFamilyAdultClaimTitleShort": "School invitation",
   "inviteFamilyAdultClaimSubtitle": "Accept the invitation, confirm your identity, then fill in the required details",
   "inviteFamilyAdultClaimAccept": "Accept invitation",
@@ -964,7 +1030,13 @@
   "inviteFamilyAdultClaimOtpSubmit": "Confirm",
   "inviteFamilyAdultClaimOtpResend": "Send code again",
   "inviteFamilyAdultClaimOtpResendIn": "Resend available in {seconds}s",
-  "@inviteFamilyAdultClaimOtpResendIn": {"placeholders": {"seconds": {"type": "int"}}},
+  "@inviteFamilyAdultClaimOtpResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "inviteFamilyAdultClaimProfileTitle": "Parent details",
   "inviteFamilyAdultClaimProfileHint": "Check the details and set a password. You will confirm children on the next step.",
   "inviteFamilyAdultClaimProfileSubmit": "Create account",
@@ -973,7 +1045,13 @@
   "inviteFamilyAdultClaimLoggedInSubmit": "Accept family",
   "parentConfirmFamilyChildrenTitle": "Confirm children",
   "parentConfirmFamilyChildrenSubtitle": "Family «{family}». The school shared profiles — confirm the details.",
-  "@parentConfirmFamilyChildrenSubtitle": {"placeholders": {"family": {"type": "String"}}},
+  "@parentConfirmFamilyChildrenSubtitle": {
+    "placeholders": {
+      "family": {
+        "type": "String"
+      }
+    }
+  },
   "parentConfirmFamilyChildrenNoChildren": "There are no children in the family yet. You can finish confirmation.",
   "parentConfirmFamilyChildrenSubmit": "Confirm",
   "parentConfirmFamilyChildrenGender": "Gender",
@@ -994,9 +1072,24 @@
   "appUpdateSectionTitle": "About the app",
   "appUpdateAvailableTitle": "Update available",
   "appUpdateAvailableMessage": "Version {versionName} ({versionCode}) is ready to install.",
-  "@appUpdateAvailableMessage": {"placeholders": {"versionName": {"type": "String"}, "versionCode": {"type": "int"}}},
+  "@appUpdateAvailableMessage": {
+    "placeholders": {
+      "versionName": {
+        "type": "String"
+      },
+      "versionCode": {
+        "type": "int"
+      }
+    }
+  },
   "appUpdateInstalledVersion": "Installed: {versionLabel}",
-  "@appUpdateInstalledVersion": {"placeholders": {"versionLabel": {"type": "String"}}},
+  "@appUpdateInstalledVersion": {
+    "placeholders": {
+      "versionLabel": {
+        "type": "String"
+      }
+    }
+  },
   "appUpdateCheckButton": "Check for updates",
   "appUpdateCheckingButton": "Checking…",
   "appUpdateInstallButton": "Update",
@@ -1013,5 +1106,25 @@
   "parentLiveLessonBoardReadOnly": "The teacher is drawing. Together mode is required for shared drawing.",
   "parentLiveLessonBoardRetry": "Retry connection",
   "parentLiveLessonBoardPresenceTeacher": "Teacher",
-  "parentLiveLessonBoardPresenceParticipant": "Participant"
+  "parentLiveLessonBoardPresenceParticipant": "Participant",
+  "timeZoneTitle": "Time zone",
+  "timeZoneAuto": "Automatic — city or device",
+  "timeZoneManual": "Choose manually",
+  "timeZoneHint": "Automatic mode uses the city’s zone, or the device’s if unavailable. A manual choice takes priority.",
+  "timeZoneSave": "Save",
+  "timeZoneError": "Could not save the time zone. Check its name and your connection.",
+  "timeZoneUnknown": "Device time zone unavailable",
+  "accountRegionLanguage": "Region and language",
+  "timeZoneSearch": "Search city or time zone",
+  "timeZoneSourceCity": "From city: {city}",
+  "timeZoneSourceDevice": "From device",
+  "timeZoneSourceManual": "Selected manually",
+  "timeZoneSaved": "Time zone saved",
+  "@timeZoneSourceCity": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  }
 }

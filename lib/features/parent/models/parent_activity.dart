@@ -202,6 +202,7 @@ class ParentAttendanceCalendarCell {
 
 class ParentAttendanceCalendarPage {
   const ParentAttendanceCalendarPage({
+    this.calendarTimeZone,
     required this.groupId,
     required this.groupName,
     required this.monthKey,
@@ -218,6 +219,7 @@ class ParentAttendanceCalendarPage {
     final gridCells = json['gridCells'] as List<dynamic>? ?? const [];
 
     return ParentAttendanceCalendarPage(
+      calendarTimeZone: json['calendarTimeZone'] as String?,
       groupId: json['groupId'] as String,
       groupName: json['groupName'] as String,
       monthKey: json['monthKey'] as String,
@@ -241,6 +243,7 @@ class ParentAttendanceCalendarPage {
   }
 
   final String groupId;
+  final String? calendarTimeZone;
   final String groupName;
   final String monthKey;
   final String monthLabel;
@@ -376,10 +379,7 @@ enum ParentActivityPaymentReceiptKind {
   }
 }
 
-enum ParentActivityPaymentsTab {
-  accruals,
-  receipts,
-}
+enum ParentActivityPaymentsTab { accruals, receipts }
 
 class ParentActivityPaymentReceiptItem {
   const ParentActivityPaymentReceiptItem({
@@ -395,7 +395,9 @@ class ParentActivityPaymentReceiptItem {
   factory ParentActivityPaymentReceiptItem.fromJson(Map<String, dynamic> json) {
     return ParentActivityPaymentReceiptItem(
       id: json['id'] as String,
-      kind: ParentActivityPaymentReceiptKind.fromApiValue(json['kind'] as String?),
+      kind: ParentActivityPaymentReceiptKind.fromApiValue(
+        json['kind'] as String?,
+      ),
       dateIso: json['dateIso'] as String,
       dateLabel: json['dateLabel'] as String,
       amountLabel: json['amountLabel'] as String,
@@ -498,7 +500,9 @@ class ParentActivityReceiptDetailPage {
   factory ParentActivityReceiptDetailPage.fromJson(Map<String, dynamic> json) {
     return ParentActivityReceiptDetailPage(
       id: json['id'] as String,
-      kind: ParentActivityPaymentReceiptKind.fromApiValue(json['kind'] as String?),
+      kind: ParentActivityPaymentReceiptKind.fromApiValue(
+        json['kind'] as String?,
+      ),
       dateIso: json['dateIso'] as String,
       dateLabel: json['dateLabel'] as String,
       titleLabel: json['titleLabel'] as String,

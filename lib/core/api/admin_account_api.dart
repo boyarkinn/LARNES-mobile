@@ -15,7 +15,11 @@ Map<String, dynamic>? _asJsonMap(dynamic body) {
   return null;
 }
 
-String _messageFromBody(dynamic body, AppLocalizations l10n, {String? fallback}) {
+String _messageFromBody(
+  dynamic body,
+  AppLocalizations l10n, {
+  String? fallback,
+}) {
   final map = _asJsonMap(body);
   final message = map?['message'];
   if (message is String && message.isNotEmpty) {
@@ -63,22 +67,28 @@ class AdminAccountApi {
     }
   }
 
+  Future<AuthUser> updateCity({
+    required String placeMapboxId,
+    String locale = 'ru',
+  }) {
+    return _patchUser('/api/mobile/admin/account/city', {
+      'placeMapboxId': placeMapboxId,
+      'locale': locale,
+    }, locale: locale);
+  }
+
   Future<AuthUser> updateProfile({
     required String firstName,
     required String lastName,
     required String patronymic,
     String locale = 'ru',
   }) {
-    return _patchUser(
-      '/api/mobile/admin/account/profile',
-      {
-        'firstName': firstName,
-        'lastName': lastName,
-        'patronymic': patronymic,
-        'locale': locale,
-      },
-      locale: locale,
-    );
+    return _patchUser('/api/mobile/admin/account/profile', {
+      'firstName': firstName,
+      'lastName': lastName,
+      'patronymic': patronymic,
+      'locale': locale,
+    }, locale: locale);
   }
 
   Future<AuthUser> updateLogin({
@@ -87,16 +97,12 @@ class AdminAccountApi {
     required String confirmNewLogin,
     String locale = 'ru',
   }) {
-    return _patchUser(
-      '/api/mobile/admin/account/login',
-      {
-        'currentPassword': currentPassword,
-        'newLogin': newLogin,
-        'confirmNewLogin': confirmNewLogin,
-        'locale': locale,
-      },
-      locale: locale,
-    );
+    return _patchUser('/api/mobile/admin/account/login', {
+      'currentPassword': currentPassword,
+      'newLogin': newLogin,
+      'confirmNewLogin': confirmNewLogin,
+      'locale': locale,
+    }, locale: locale);
   }
 
   Future<({AuthUser user, String? token})> updatePassword({
@@ -120,7 +126,9 @@ class AdminAccountApi {
       if (data == null || data['status'] != 'success') {
         throw AdminAccountApiException(_messageFromBody(data, l10n));
       }
-      final user = AuthUser.fromJson(Map<String, dynamic>.from(data['user'] as Map));
+      final user = AuthUser.fromJson(
+        Map<String, dynamic>.from(data['user'] as Map),
+      );
       final token = data['token'] as String?;
       return (user: user, token: token);
     } on DioException catch (error) {
@@ -181,11 +189,7 @@ class AdminAccountApi {
     final basePath = channel == ContactChangeChannel.phone ? 'phone' : 'email';
     return _postUser(
       '/api/mobile/admin/account/$basePath/verify-otp',
-      {
-        'pendingToken': pendingToken,
-        'code': code,
-        'locale': locale,
-      },
+      {'pendingToken': pendingToken, 'code': code, 'locale': locale},
       locale: locale,
       fallback: lookupAppLocalizations(Locale(locale)).verifyCodeFailed,
     );
@@ -201,10 +205,7 @@ class AdminAccountApi {
     try {
       final response = await _client.dio.post(
         '/api/mobile/admin/account/$basePath/resend-otp',
-        data: {
-          'pendingToken': pendingToken,
-          'locale': locale,
-        },
+        data: {'pendingToken': pendingToken, 'locale': locale},
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
@@ -226,7 +227,9 @@ class AdminAccountApi {
   Future<void> logoutAllDevices({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
-      final response = await _client.dio.post('/api/mobile/admin/account/logout-all');
+      final response = await _client.dio.post(
+        '/api/mobile/admin/account/logout-all',
+      );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
         throw AdminAccountApiException(_messageFromBody(data, l10n));
@@ -253,7 +256,9 @@ class AdminAccountApi {
       final response = await _client.dio.post(path, data: payload);
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
-        throw AdminAccountApiException(_messageFromBody(data, l10n, fallback: fallback));
+        throw AdminAccountApiException(
+          _messageFromBody(data, l10n, fallback: fallback),
+        );
       }
       return AuthUser.fromJson(Map<String, dynamic>.from(data['user'] as Map));
     } on DioException catch (error) {

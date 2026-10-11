@@ -25,13 +25,17 @@
   "passwordResetOtpHintSms": "Код отправлен на {contact}. Введите его ниже.",
   "@passwordResetOtpHintSms": {
     "placeholders": {
-      "contact": {"type": "String"}
+      "contact": {
+        "type": "String"
+      }
     }
   },
   "passwordResetOtpHintEmail": "Код отправлен на {contact}. Проверьте почту (и папку «Спам») и введите его ниже.",
   "@passwordResetOtpHintEmail": {
     "placeholders": {
-      "contact": {"type": "String"}
+      "contact": {
+        "type": "String"
+      }
     }
   },
   "passwordResetOtpResent": "Новый код отправлен.",
@@ -276,7 +280,9 @@
   "parentClassroomQrVersion": "Версия {version}",
   "@parentClassroomQrVersion": {
     "placeholders": {
-      "version": {"type": "int"}
+      "version": {
+        "type": "int"
+      }
     }
   },
   "parentClassroomQrPrint": "Печать",
@@ -296,7 +302,9 @@
   "parentHomeworkListTitle": "ДЗ {name}",
   "@parentHomeworkListTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "parentHomeworkBack": "Назад",
@@ -306,8 +314,12 @@
   "parentHomeworkProgressValue": "{current} / {total}",
   "@parentHomeworkProgressValue": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlaySoon": "Прохождение задания — в следующем шаге.",
@@ -316,8 +328,12 @@
   "parentHomeworkPlayProgress": "Шаг {current} из {total}",
   "@parentHomeworkPlayProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlayNext": "Далее",
@@ -330,7 +346,9 @@
   "parentHomeworkPlayStepLabel": "Шаг {step}",
   "@parentHomeworkPlayStepLabel": {
     "placeholders": {
-      "step": {"type": "int"}
+      "step": {
+        "type": "int"
+      }
     }
   },
   "parentHomeworkPlayTrainerSoon": "Тренажёр — в следующем обновлении.",
@@ -340,15 +358,27 @@
   "parentHomeworkEmptyUpcoming": "Нет предстоящих заданий.",
   "parentHomeworkTabDue": "Сделать ({count})",
   "@parentHomeworkTabDue": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkTabCompleted": "Завершённые ({count})",
   "@parentHomeworkTabCompleted": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkTabUpcoming": "Предстоящие ({count})",
   "@parentHomeworkTabUpcoming": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "parentHomeworkStatusAssigned": "Не начато",
   "parentHomeworkStatusInProgress": "В процессе",
@@ -400,7 +430,9 @@
   "adminTrainersGroupCount": "{count, plural, one{# тренажёр} few{# тренажёра} many{# тренажёров} other{# тренажёра}}",
   "@adminTrainersGroupCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "adminTrainerPlayLoadFailed": "Не удалось загрузить параметры.",
@@ -605,13 +637,17 @@
   "inviteLessonJoinChild": "Зайдите в урок: {name}",
   "@inviteLessonJoinChild": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "inviteLessonOpenChild": "Открыть урок: {name}",
   "@inviteLessonOpenChild": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "inviteLessonJoining": "Входим…",
@@ -668,7 +704,9 @@
   "parentAccountChildrenCount": "{count, plural, one{# профиль} few{# профиля} many{# профилей} other{# профилей}}",
   "@parentAccountChildrenCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "parentAccountCityNotSet": "Город не указан",
@@ -747,7 +785,9 @@
   "parentLearningDirectionProgramCount": "{count, plural, one {# программа} few {# программы} many {# программ} other {# программ}}",
   "@parentLearningDirectionProgramCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "parentDirectionProgramsBack": "К занятиям",
@@ -763,10 +803,18 @@
   "parentProgramPlayLessonProgress": "Тема {topic} · Урок {lesson} · шаг {current} из {total}",
   "@parentProgramPlayLessonProgress": {
     "placeholders": {
-      "topic": {"type": "int"},
-      "lesson": {"type": "int"},
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "topic": {
+        "type": "int"
+      },
+      "lesson": {
+        "type": "int"
+      },
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "parentProgramPlayNext": "Далее",
@@ -779,8 +827,12 @@
   "parentProgramPlayEmptyLesson": "В уроке {lesson} темы {topic} пока нет тренажёров. Попросите методиста добавить задания.",
   "@parentProgramPlayEmptyLesson": {
     "placeholders": {
-      "topic": {"type": "int"},
-      "lesson": {"type": "int"}
+      "topic": {
+        "type": "int"
+      },
+      "lesson": {
+        "type": "int"
+      }
     }
   },
   "parentProgramPlayInteractiveHint": "Выполните задание на экране",
@@ -801,7 +853,9 @@
   "networkDeviceSlotValue": "Слот {slot}",
   "@networkDeviceSlotValue": {
     "placeholders": {
-      "slot": {"type": "String"}
+      "slot": {
+        "type": "String"
+      }
     }
   },
   "kioskRegistrationTitle": "Устройство не зарегистрировано",
@@ -891,7 +945,13 @@
   "voluntaryConsentParentFields": "Охватывает только отчество, город и дату рождения. Основные функции аккаунта от него не зависят.",
   "voluntaryConsentParentCheckbox": "Я согласен на обработку отчества, города и даты рождения для ведения закрытого расширенного профиля.",
   "voluntaryConsentOpenVersion": "Открыть версию {version}",
-  "@voluntaryConsentOpenVersion": {"placeholders": {"version": {"type": "String"}}},
+  "@voluntaryConsentOpenVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "voluntaryConsentVersionMissing": "Опубликованная версия согласия недоступна.",
   "voluntaryConsentRequired": "Подтвердите отдельное согласие для сохранения заполненного необязательного поля.",
   "voluntaryConsentRevokeTitle": "Отозвать согласие на данные профиля",
@@ -901,7 +961,13 @@
   "voluntaryConsentRevokeSuccess": "Согласие отозвано, данные удалены.",
   "voluntaryConsentRevokeFailed": "Не удалось отозвать согласие. Данные не удалены.",
   "inviteFamilyAdultClaimTitle": "Школа «{school}» приглашает вас в экосистему LARNES",
-  "@inviteFamilyAdultClaimTitle": {"placeholders": {"school": {"type": "String"}}},
+  "@inviteFamilyAdultClaimTitle": {
+    "placeholders": {
+      "school": {
+        "type": "String"
+      }
+    }
+  },
   "inviteFamilyAdultClaimTitleShort": "Приглашение школы",
   "inviteFamilyAdultClaimSubtitle": "Примите приглашение, подтвердите личность, затем заполните необходимые данные",
   "inviteFamilyAdultClaimAccept": "Принять приглашение",
@@ -915,7 +981,13 @@
   "inviteFamilyAdultClaimOtpSubmit": "Подтвердить",
   "inviteFamilyAdultClaimOtpResend": "Отправить код снова",
   "inviteFamilyAdultClaimOtpResendIn": "Повторная отправка через {seconds} с",
-  "@inviteFamilyAdultClaimOtpResendIn": {"placeholders": {"seconds": {"type": "int"}}},
+  "@inviteFamilyAdultClaimOtpResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "inviteFamilyAdultClaimProfileTitle": "Представитель",
   "inviteFamilyAdultClaimProfileHint": "Проверьте данные и задайте пароль. Детей проверите на следующем шаге.",
   "inviteFamilyAdultClaimProfileSubmit": "Создать аккаунт",
@@ -924,7 +996,13 @@
   "inviteFamilyAdultClaimLoggedInSubmit": "Принять семью",
   "parentConfirmFamilyChildrenTitle": "Проверьте детей",
   "parentConfirmFamilyChildrenSubtitle": "Семья «{family}». Школа передала карточки — подтвердите данные.",
-  "@parentConfirmFamilyChildrenSubtitle": {"placeholders": {"family": {"type": "String"}}},
+  "@parentConfirmFamilyChildrenSubtitle": {
+    "placeholders": {
+      "family": {
+        "type": "String"
+      }
+    }
+  },
   "parentConfirmFamilyChildrenNoChildren": "В семье пока нет детей. Можно завершить проверку.",
   "parentConfirmFamilyChildrenSubmit": "Подтвердить",
   "parentConfirmFamilyChildrenGender": "Пол",
@@ -945,9 +1023,24 @@
   "appUpdateSectionTitle": "О приложении",
   "appUpdateAvailableTitle": "Доступно обновление",
   "appUpdateAvailableMessage": "Версия {versionName} ({versionCode}) готова к установке.",
-  "@appUpdateAvailableMessage": {"placeholders": {"versionName": {"type": "String"}, "versionCode": {"type": "int"}}},
+  "@appUpdateAvailableMessage": {
+    "placeholders": {
+      "versionName": {
+        "type": "String"
+      },
+      "versionCode": {
+        "type": "int"
+      }
+    }
+  },
   "appUpdateInstalledVersion": "Установлено: {versionLabel}",
-  "@appUpdateInstalledVersion": {"placeholders": {"versionLabel": {"type": "String"}}},
+  "@appUpdateInstalledVersion": {
+    "placeholders": {
+      "versionLabel": {
+        "type": "String"
+      }
+    }
+  },
   "appUpdateCheckButton": "Проверить обновление",
   "appUpdateCheckingButton": "Проверяем…",
   "appUpdateInstallButton": "Обновить",
@@ -964,5 +1057,25 @@
   "parentLiveLessonBoardReadOnly": "Сейчас рисует педагог. Для совместного рисования нужен режим «Вместе».",
   "parentLiveLessonBoardRetry": "Повторить подключение",
   "parentLiveLessonBoardPresenceTeacher": "Педагог",
-  "parentLiveLessonBoardPresenceParticipant": "Участник"
+  "parentLiveLessonBoardPresenceParticipant": "Участник",
+  "timeZoneTitle": "Часовой пояс",
+  "timeZoneAuto": "Автоматически — по городу или устройству",
+  "timeZoneManual": "Указать вручную",
+  "timeZoneHint": "Автоматически: пояс города, а если он не определён — устройства. Ручной выбор имеет приоритет.",
+  "timeZoneSave": "Сохранить",
+  "timeZoneError": "Не удалось сохранить часовой пояс. Проверьте название и соединение.",
+  "timeZoneUnknown": "Пояс устройства недоступен",
+  "accountRegionLanguage": "Регион и язык",
+  "timeZoneSearch": "Поиск города или часового пояса",
+  "timeZoneSourceCity": "По городу: {city}",
+  "timeZoneSourceDevice": "По устройству",
+  "timeZoneSourceManual": "Выбран вручную",
+  "timeZoneSaved": "Часовой пояс сохранён",
+  "@timeZoneSourceCity": {
+    "placeholders": {
+      "city": {
+        "type": "String"
+      }
+    }
+  }
 }

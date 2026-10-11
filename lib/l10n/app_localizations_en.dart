@@ -2746,4 +2746,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentLiveLessonBoardPresenceParticipant => 'Participant';
+
+  @override
+  String get timeZoneTitle => 'Time zone';
+
+  @override
+  String get timeZoneAuto => 'Automatic — city or device';
+
+  @override
+  String get timeZoneManual => 'Choose manually';
+
+  @override
+  String get timeZoneHint =>
+      'Automatic mode uses the city’s zone, or the device’s if unavailable. A manual choice takes priority.';
+
+  @override
+  String get timeZoneSave => 'Save';
+
+  @override
+  String get timeZoneError =>
+      'Could not save the time zone. Check its name and your connection.';
+
+  @override
+  String get timeZoneUnknown => 'Device time zone unavailable';
+
+  @override
+  String get accountRegionLanguage => 'Region and language';
+
+  @override
+  String get timeZoneSearch => 'Search city or time zone';
+
+  @override
+  String timeZoneSourceCity(String city) {
+    return 'From city: $city';
+  }
+
+  @override
+  String get timeZoneSourceDevice => 'From device';
+
+  @override
+  String get timeZoneSourceManual => 'Selected manually';
+
+  @override
+  String get timeZoneSaved => 'Time zone saved';
 }

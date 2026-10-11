@@ -2767,4 +2767,47 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get parentLiveLessonBoardPresenceParticipant => 'Участник';
+
+  @override
+  String get timeZoneTitle => 'Часовой пояс';
+
+  @override
+  String get timeZoneAuto => 'Автоматически — по городу или устройству';
+
+  @override
+  String get timeZoneManual => 'Указать вручную';
+
+  @override
+  String get timeZoneHint =>
+      'Автоматически: пояс города, а если он не определён — устройства. Ручной выбор имеет приоритет.';
+
+  @override
+  String get timeZoneSave => 'Сохранить';
+
+  @override
+  String get timeZoneError =>
+      'Не удалось сохранить часовой пояс. Проверьте название и соединение.';
+
+  @override
+  String get timeZoneUnknown => 'Пояс устройства недоступен';
+
+  @override
+  String get accountRegionLanguage => 'Регион и язык';
+
+  @override
+  String get timeZoneSearch => 'Поиск города или часового пояса';
+
+  @override
+  String timeZoneSourceCity(String city) {
+    return 'По городу: $city';
+  }
+
+  @override
+  String get timeZoneSourceDevice => 'По устройству';
+
+  @override
+  String get timeZoneSourceManual => 'Выбран вручную';
+
+  @override
+  String get timeZoneSaved => 'Часовой пояс сохранён';
 }

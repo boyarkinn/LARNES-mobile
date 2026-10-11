@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -96,7 +97,11 @@ class AuthSession extends ChangeNotifier {
   }
 
   void applyUser(AuthUser user) {
+    final oldZone = UserTimeZone.effectiveZone;
     _user = user;
+    UserTimeZone.manualZone = user.timeZone;
+    UserTimeZone.cityZone = user.cityTimeZone;
+    if (oldZone != UserTimeZone.effectiveZone) _parentDataRevision += 1;
     _notifySafely();
   }
 
@@ -123,10 +128,27 @@ class AuthSession extends ChangeNotifier {
     }
   }
 
+  Future<void> saveTimeZone({required bool automatic, String? timeZone}) async {
+    final response = await _client.dio.post(
+      "/api/account/time-zone",
+      data: {
+        "mode": automatic ? "auto" : "manual",
+        "timeZone": timeZone,
+        "deviceTimeZone": UserTimeZone.deviceZone,
+      },
+    );
+    if (response.statusCode != 200) throw StateError("time-zone");
+    UserTimeZone.manualZone = automatic ? null : timeZone;
+    await refreshUser();
+    notifyParentDataChanged();
+  }
+
   Future<void> refreshUser() async {
     try {
       final user = await _authApi.fetchSession();
       _user = user;
+      UserTimeZone.manualZone = user?.timeZone;
+      UserTimeZone.cityZone = user?.cityTimeZone;
       _notifySafely();
     } catch (_) {
       // keep current user on transient errors
@@ -147,6 +169,8 @@ class AuthSession extends ChangeNotifier {
 
   Future<String> completeRegistration(UserLoginOutcome result) async {
     _user = result.user;
+    UserTimeZone.manualZone = result.user.timeZone;
+    UserTimeZone.cityZone = result.user.cityTimeZone;
     await refreshFamilySetup();
     _notifySafely();
     return result.homePath;
@@ -157,6 +181,8 @@ class AuthSession extends ChangeNotifier {
     _notifySafely();
     try {
       _user = await _authApi.fetchSession();
+      UserTimeZone.manualZone = _user?.timeZone;
+      UserTimeZone.cityZone = _user?.cityTimeZone;
       if (isParentAccount(_user?.accountType)) {
         try {
           _familySetup = await _client.familySetupApi.fetchStatus();
@@ -168,6 +194,8 @@ class AuthSession extends ChangeNotifier {
       }
     } catch (_) {
       _user = null;
+      UserTimeZone.manualZone = null;
+      UserTimeZone.cityZone = null;
       _familySetup = null;
     } finally {
       _isLoading = false;
@@ -188,6 +216,8 @@ class AuthSession extends ChangeNotifier {
 
     if (outcome is UserLoginOutcome) {
       _user = outcome.user;
+      UserTimeZone.manualZone = outcome.user.timeZone;
+      UserTimeZone.cityZone = outcome.user.cityTimeZone;
       await refreshFamilySetup(locale: locale);
       _notifySafely();
     }
@@ -198,6 +228,8 @@ class AuthSession extends ChangeNotifier {
   Future<void> logout() async {
     await _authApi.logout();
     _user = null;
+    UserTimeZone.manualZone = null;
+    UserTimeZone.cityZone = null;
     _familySetup = null;
     _notifySafely();
   }

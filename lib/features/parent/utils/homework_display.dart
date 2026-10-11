@@ -1,9 +1,10 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:intl/intl.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 String formatHomeworkDate(DateTime date, String localeCode) {
-  return DateFormat.yMd(localeCode).format(date.toLocal());
+  return DateFormat.yMd(localeCode).format(UserTimeZone.displayTime(date));
 }
 
 String formatHomeworkAvailableOn(String isoDate, String localeCode) {
@@ -49,6 +50,9 @@ String buildHomeworkCardSubtitle(
   final parts = <String>[
     '$statusLabel · ${l10n.parentHomeworkAvailableOn}: $availableOn',
   ];
+  if (assignment.timeZone != null && assignment.timeZone != UserTimeZone.effectiveZone) {
+    parts.add('${l10n.timeZoneTitle}: ${assignment.timeZone}');
+  }
 
   if (assignment.totalSteps > 0) {
     parts.add(

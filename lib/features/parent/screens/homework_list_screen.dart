@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -28,6 +29,37 @@ class _HomeworkListScreenState extends State<HomeworkListScreen> {
   ParentHomeworkTab _activeTab = ParentHomeworkTab.due;
   ParentHomeworkListPage? _page;
   String _childTitle = '';
+  int? _lastDataRevision;
+  AuthSession? _authSession;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = AuthScope.of(context);
+    if (_authSession != auth) {
+      _authSession?.removeListener(_onAuthChanged);
+      _authSession = auth;
+      auth.addListener(_onAuthChanged);
+      _lastDataRevision = auth.parentDataRevision;
+    }
+  }
+
+  void _onAuthChanged() {
+    final revision = _authSession!.parentDataRevision;
+    final previous = _lastDataRevision;
+    _lastDataRevision = revision;
+    if (previous != null && previous != revision) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _load(silent: _page != null);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSession?.removeListener(_onAuthChanged);
+    super.dispose();
+  }
 
   @override
   void initState() {

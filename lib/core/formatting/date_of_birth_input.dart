@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 
 const dateOfBirthMaxDigits = 8;
 
@@ -65,7 +66,8 @@ String? displayDateToIso(String display) {
   if (date.year != year || date.month != month || date.day != day) {
     return null;
   }
-  if (date.isAfter(DateTime.now())) {
+  final iso = '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+  if (iso.compareTo(UserTimeZone.dayKey()) > 0) {
     return null;
   }
 

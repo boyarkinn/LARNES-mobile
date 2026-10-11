@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/parent/widgets/account/account_time_zone_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
@@ -177,8 +178,14 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
         title: Text(l10n.parentAccountLogoutAllTitle),
         content: Text(l10n.parentAccountLogoutAllMessage),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.parentAccountCancel)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l10n.parentAccountLogoutAllConfirm)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.parentAccountCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.parentAccountLogoutAllConfirm),
+          ),
         ],
       ),
     );
@@ -188,14 +195,18 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
 
     try {
       final locale = LocaleScope.of(context).localeCode;
-      await AuthScope.of(context).parentAccountApi.logoutAllDevices(locale: locale);
+      await AuthScope.of(
+        context,
+      ).parentAccountApi.logoutAllDevices(locale: locale);
       await AuthScope.of(context).logout();
       if (mounted) {
         context.go('/login');
       }
     } on ParentAccountApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error.message)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
     }
   }
@@ -221,9 +232,8 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
                 value: confirmed,
-                onChanged: (value) => setDialogState(
-                  () => confirmed = value ?? false,
-                ),
+                onChanged: (value) =>
+                    setDialogState(() => confirmed = value ?? false),
                 title: Text(l10n.voluntaryConsentRevokeConfirm),
               ),
             ],
@@ -261,9 +271,9 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
       }
     } on ParentAccountApiException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
       }
     } catch (_) {
       if (mounted) {
@@ -324,10 +334,16 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: ParentColors.inkMuted)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: ParentColors.inkMuted),
+              ),
               const SizedBox(height: 16),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: ParentColors.shell),
+                style: FilledButton.styleFrom(
+                  backgroundColor: ParentColors.shell,
+                ),
                 onPressed: _load,
                 child: Text(l10n.continueButton),
               ),
@@ -355,14 +371,18 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
             children: [
               AccountFieldGroup(
                 label: l10n.parentAccountFieldFullName,
-                value: user.fullName.isNotEmpty ? user.fullName : l10n.parentAccountNotSet,
+                value: user.fullName.isNotEmpty
+                    ? user.fullName
+                    : l10n.parentAccountNotSet,
                 valueMuted: user.fullName.isEmpty,
                 onTap: () => _openAccountRoute('/parent/account/profile'),
               ),
               const AccountDivider(),
               AccountFieldGroup(
                 label: l10n.parentAccountFieldDateOfBirth,
-                value: formattedDob.isNotEmpty ? formattedDob : l10n.parentAccountDateOfBirthNotSet,
+                value: formattedDob.isNotEmpty
+                    ? formattedDob
+                    : l10n.parentAccountDateOfBirthNotSet,
                 valueMuted: formattedDob.isEmpty,
                 onTap: () => _openAccountRoute('/parent/account/date-of-birth'),
               ),
@@ -376,13 +396,6 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                   ),
                 ),
               ],
-              const AccountDivider(),
-              AccountFieldGroup(
-                label: l10n.parentAccountFieldCity,
-                value: user.city ?? l10n.parentAccountCityNotSet,
-                valueMuted: user.city == null || user.city!.isEmpty,
-                onTap: () => _openAccountRoute('/parent/account/city'),
-              ),
             ],
           ),
         ),
@@ -396,8 +409,8 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 valueMuted: user.phone == null,
                 badgeLabel: user.phone != null
                     ? (user.phoneVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
+                          ? l10n.parentAccountContactVerified
+                          : l10n.parentAccountContactNotVerified)
                     : null,
                 badgeVerified: user.phoneVerified,
                 onTap: () => _openAccountRoute('/parent/account/phone'),
@@ -409,8 +422,8 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                 valueMuted: user.email == null,
                 badgeLabel: user.email != null
                     ? (user.emailVerified
-                        ? l10n.parentAccountContactVerified
-                        : l10n.parentAccountContactNotVerified)
+                          ? l10n.parentAccountContactVerified
+                          : l10n.parentAccountContactNotVerified)
                     : null,
                 badgeVerified: user.emailVerified,
                 onTap: () => _openAccountRoute('/parent/account/email'),
@@ -437,16 +450,16 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
                   AccountChildRow(
                     name: _childTitle(_children[i]),
                     meta: _children[i].ageYears != null
-                        ? formatChildAgeYears(_children[i].ageYears!, localeCode)
+                        ? formatChildAgeYears(
+                            _children[i].ageYears!,
+                            localeCode,
+                          )
                         : null,
                     onTap: () => _openChildProfile(_children[i].id),
                   ),
                 ],
               if (_children.isNotEmpty) const AccountDivider(),
-              AccountLinkRow(
-                label: l10n.parentAddChild,
-                onTap: _openAddChild,
-              ),
+              AccountLinkRow(label: l10n.parentAddChild, onTap: _openAddChild),
             ],
           ),
         ),
@@ -462,11 +475,25 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           child: const AppUpdateAccountSection(),
         ),
         AccountDeskCard(
-          bandTitle: l10n.parentAccountSectionLanguage,
-          child: const AccountLanguagePicker(),
+          bandTitle: l10n.accountRegionLanguage,
+          child: Column(
+            children: [
+              AccountFieldGroup(
+                label: l10n.parentAccountFieldCity,
+                value: user.city ?? l10n.parentAccountCityNotSet,
+                valueMuted: user.city == null || user.city!.isEmpty,
+                onTap: () => _openAccountRoute('/parent/account/city'),
+              ),
+              const AccountDivider(),
+              const AccountLanguagePicker(),
+              const AccountTimeZonePicker(),
+            ],
+          ),
         ),
         AccountDeskCard(
-          bandTitle: localeCode == 'ru' ? 'Персональные данные' : 'Personal data',
+          bandTitle: localeCode == 'ru'
+              ? 'Персональные данные'
+              : 'Personal data',
           child: AccountLinkRow(
             label: localeCode == 'ru'
                 ? 'Копия, исправление или удаление данных'
@@ -475,7 +502,9 @@ class _AccountHubScreenState extends State<AccountHubScreen> {
           ),
         ),
         AccountDeskCard(
-          bandTitle: localeCode == 'ru' ? 'Безопасность ребёнка' : 'Child safety',
+          bandTitle: localeCode == 'ru'
+              ? 'Безопасность ребёнка'
+              : 'Child safety',
           child: AccountLinkRow(
             label: localeCode == 'ru'
                 ? 'Сообщить о проблеме или угрозе'

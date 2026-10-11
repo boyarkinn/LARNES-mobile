@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -196,7 +197,7 @@ class _FamilyJoinDedupScreenState extends State<FamilyJoinDedupScreen> {
 
   String _formatDate(DateTime value) {
     final locale = LocaleScope.of(context).localeCode;
-    return DateFormat.yMMMd(locale).format(value.toLocal());
+    return DateFormat.yMMMd(locale).format(UserTimeZone.displayTime(value));
   }
 
   @override

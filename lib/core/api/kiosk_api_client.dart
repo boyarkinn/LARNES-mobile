@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:dio/dio.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/api/kiosk_trainer_api.dart';
@@ -6,19 +7,24 @@ import 'package:larnes_mobile/core/config/app_config.dart';
 
 class KioskApiClient {
   KioskApiClient({DeviceTokenStorage? deviceTokenStorage, Dio? dio})
-      : _deviceTokenStorage = deviceTokenStorage ?? DeviceTokenStorage(),
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppConfig.apiBaseUrl,
-                connectTimeout: const Duration(seconds: 20),
-                receiveTimeout: const Duration(seconds: 20),
-                headers: {'Content-Type': 'application/json'},
-              ),
-            ) {
+    : _deviceTokenStorage = deviceTokenStorage ?? DeviceTokenStorage(),
+      _dio =
+          dio ??
+          Dio(
+            BaseOptions(
+              baseUrl: AppConfig.apiBaseUrl,
+              connectTimeout: const Duration(seconds: 20),
+              receiveTimeout: const Duration(seconds: 20),
+              headers: {'Content-Type': 'application/json'},
+            ),
+          ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
+          await UserTimeZone.refreshDeviceZone();
+          if (UserTimeZone.deviceZone != null) {
+            options.headers['x-larnes-time-zone'] = UserTimeZone.deviceZone;
+          }
           final token = await _deviceTokenStorage.readToken();
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';

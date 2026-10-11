@@ -16,6 +16,8 @@ class AuthUser {
     this.city,
     this.dateOfBirth,
     this.login,
+    this.timeZone,
+    this.cityTimeZone,
     this.phoneVerified = false,
     this.emailVerified = false,
   });
@@ -32,6 +34,8 @@ class AuthUser {
       city: json['city'] as String?,
       dateOfBirth: json['dateOfBirth'] as String?,
       login: json['login'] as String?,
+      timeZone: json['timeZone'] as String?,
+      cityTimeZone: json['cityTimeZone'] as String?,
       phoneVerified: json['phoneVerifiedAt'] != null,
       emailVerified: json['emailVerifiedAt'] != null,
     );
@@ -47,11 +51,16 @@ class AuthUser {
   final String? city;
   final String? dateOfBirth;
   final String? login;
+  final String? timeZone;
+  final String? cityTimeZone;
   final bool phoneVerified;
   final bool emailVerified;
 
   String get displayName {
-    final parts = [firstName, lastName].whereType<String>().where((s) => s.isNotEmpty);
+    final parts = [
+      firstName,
+      lastName,
+    ].whereType<String>().where((s) => s.isNotEmpty);
     if (parts.isNotEmpty) {
       return parts.join(' ');
     }
@@ -59,9 +68,11 @@ class AuthUser {
   }
 
   String get fullName {
-    final parts = [lastName, firstName, patronymic]
-        .whereType<String>()
-        .where((part) => part.isNotEmpty);
+    final parts = [
+      lastName,
+      firstName,
+      patronymic,
+    ].whereType<String>().where((part) => part.isNotEmpty);
     if (parts.isNotEmpty) {
       return parts.join(' ');
     }
@@ -181,8 +192,10 @@ class AuthApi {
 
   Future<void> logout() => _client.tokenStorage.clearToken();
 
-  static String _messageFromBody(Map<String, dynamic>? body, AppLocalizations l10n) =>
-      apiMessageFromBody(body, l10n);
+  static String _messageFromBody(
+    Map<String, dynamic>? body,
+    AppLocalizations l10n,
+  ) => apiMessageFromBody(body, l10n);
 }
 
 class AuthApiException implements Exception {

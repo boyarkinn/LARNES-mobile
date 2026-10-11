@@ -5118,6 +5118,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Participant'**
   String get parentLiveLessonBoardPresenceParticipant;
+
+  /// No description provided for @timeZoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone'**
+  String get timeZoneTitle;
+
+  /// No description provided for @timeZoneAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic — city or device'**
+  String get timeZoneAuto;
+
+  /// No description provided for @timeZoneManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose manually'**
+  String get timeZoneManual;
+
+  /// No description provided for @timeZoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic mode uses the city’s zone, or the device’s if unavailable. A manual choice takes priority.'**
+  String get timeZoneHint;
+
+  /// No description provided for @timeZoneSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get timeZoneSave;
+
+  /// No description provided for @timeZoneError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the time zone. Check its name and your connection.'**
+  String get timeZoneError;
+
+  /// No description provided for @timeZoneUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Device time zone unavailable'**
+  String get timeZoneUnknown;
+
+  /// No description provided for @accountRegionLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Region and language'**
+  String get accountRegionLanguage;
+
+  /// No description provided for @timeZoneSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search city or time zone'**
+  String get timeZoneSearch;
+
+  /// No description provided for @timeZoneSourceCity.
+  ///
+  /// In en, this message translates to:
+  /// **'From city: {city}'**
+  String timeZoneSourceCity(String city);
+
+  /// No description provided for @timeZoneSourceDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'From device'**
+  String get timeZoneSourceDevice;
+
+  /// No description provided for @timeZoneSourceManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected manually'**
+  String get timeZoneSourceManual;
+
+  /// No description provided for @timeZoneSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zone saved'**
+  String get timeZoneSaved;
 }
 
 class _AppLocalizationsDelegate

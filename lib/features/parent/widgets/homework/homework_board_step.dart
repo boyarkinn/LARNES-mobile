@@ -4,11 +4,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
+import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 
@@ -114,6 +114,7 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
     final locale = LocaleScope.read(context).localeCode;
     final scene = jsonEncode({
       'base': homeworkBoardBase(widget.step.runtimeSnapshot) ?? const [],
+      'imageBase': boardImageBase(),
       'locale': locale,
       'work': widget.step.boardWork ?? const [],
     });
@@ -209,85 +210,79 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
             : _save == _BoardSave.closed
                 ? l10n.homeworkBoardClosed
                 : chrome.errorMessage;
-    final status = _save == _BoardSave.saving
-        ? l10n.homeworkBoardSaving
-        : _save == _BoardSave.saved
-            ? l10n.homeworkBoardSaved
-            : null;
     final html = _html;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 56, 8, 0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: ColoredBox(
-                color: Colors.white,
-                child: _failed
-                    ? const SizedBox.expand()
-                    : html == null
-                        ? const Center(child: CircularProgressIndicator())
-                        : Stack(
-                            children: [
-                              InAppWebView(
-                                initialData: InAppWebViewInitialData(
-                                  data: html,
-                                  baseUrl: WebUri('https://larnes.app/'),
-                                ),
-                                initialSettings: InAppWebViewSettings(
-                                  javaScriptEnabled: true,
-                                  supportZoom: false,
-                                  transparentBackground: false,
-                                ),
-                                onWebViewCreated: (controller) {
-                                  _web = controller;
-                                  controller.addJavaScriptHandler(
-                                    handlerName: 'homeworkBoard',
-                                    callback: _onBridge,
-                                  );
-                                },
-                                onLoadStop: (controller, url) => _install(),
+    // White sheet edge to edge; the shell's progress and menu lie on top, as on other trainers.
+    return ColoredBox(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),
+              child: _failed
+                  ? const SizedBox.expand()
+                  : html == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : Stack(
+                          children: [
+                            InAppWebView(
+                              initialData: InAppWebViewInitialData(
+                                data: html,
+                                baseUrl: WebUri('https://larnes.app/'),
                               ),
-                              if (!_mounted)
-                                const ColoredBox(
-                                  color: Colors.white,
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
+                              initialSettings: InAppWebViewSettings(
+                                javaScriptEnabled: true,
+                                supportZoom: false,
+                                transparentBackground: false,
+                              ),
+                              onWebViewCreated: (controller) {
+                                _web = controller;
+                                controller.addJavaScriptHandler(
+                                  handlerName: 'homeworkBoard',
+                                  callback: _onBridge,
+                                );
+                                controller.addJavaScriptHandler(
+                                  handlerName: 'boardImage',
+                                  callback: (args) => uploadBoardImageFromPage(
+                                    AuthScope.of(context).parentApi,
+                                    args,
                                   ),
+                                );
+                              },
+                              onLoadStop: (controller, url) => _install(),
+                            ),
+                            if (!_mounted)
+                              const ColoredBox(
+                                color: Colors.white,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
                                 ),
-                            ],
-                          ),
+                              ),
+                          ],
+                        ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: TrainerStepChromeBar(
+              chrome: TrainerStepChrome(
+                errorMessage: error,
+                finishLabel: chrome.finishLabel,
+                isInteractive: false,
+                isLast: chrome.isLast,
+                isPending: chrome.isPending || _save == _BoardSave.saving,
+                nextLabel: chrome.nextLabel,
+                onAdvance: chrome.isPending || _save == _BoardSave.saving
+                    ? null
+                    : () => unawaited(_advance()),
+                theme: chrome.theme,
               ),
             ),
           ),
-        ),
-        if (status != null && error == null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              status,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: ParentColors.inkMuted),
-            ),
-          ),
-        TrainerStepChromeBar(
-          chrome: TrainerStepChrome(
-            errorMessage: error,
-            finishLabel: chrome.finishLabel,
-            isInteractive: false,
-            isLast: chrome.isLast,
-            isPending: chrome.isPending || _save == _BoardSave.saving,
-            nextLabel: chrome.nextLabel,
-            onAdvance: chrome.isPending || _save == _BoardSave.saving
-                ? null
-                : () => unawaited(_advance()),
-            theme: chrome.theme,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

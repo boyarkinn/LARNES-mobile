@@ -928,14 +928,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Доска не открылась. Попросите педагога отправить задание заново.';
 
   @override
-  String get homeworkBoardSaving =>
-      'Сохраняем рисунок…';
-
-  @override
-  String get homeworkBoardSaved =>
-      'Рисунок сохранён';
-
-  @override
   String get homeworkBoardSaveFailed =>
       'Рисунок не сохранился. Проверьте интернет и нажмите ещё раз.';
 

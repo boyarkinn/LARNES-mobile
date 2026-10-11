@@ -1035,6 +1035,34 @@ class ParentApi {
     }
   }
 
+  /// Картинка на доску (ДЗ или урок). Ответ — id файла; код ошибки в `ParentApiException.code`.
+  Future<String> uploadBoardImage({
+    required List<int> bytes,
+    required String mimeType,
+  }) async {
+    try {
+      final response = await _client.dio.post(
+        '/api/boards/images',
+        data: FormData.fromMap({
+          'file': MultipartFile.fromBytes(
+            bytes,
+            filename: 'board-image',
+            contentType: DioMediaType.parse(mimeType),
+          ),
+        }),
+      );
+      final data = _asJsonMap(response.data);
+      final fileId = data?['fileId'];
+      if (data == null || data['status'] != 'success' || fileId is! String) {
+        throw ParentApiException('', code: data?['code'] as String?);
+      }
+      return fileId;
+    } on DioException catch (error) {
+      final body = _asJsonMap(error.response?.data);
+      throw ParentApiException('', code: body?['code'] as String?);
+    }
+  }
+
   Future<ChildClassroomQrState> fetchChildClassroomQr(
     String childId, {
     String locale = 'ru',

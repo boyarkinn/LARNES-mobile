@@ -123,7 +123,9 @@
       .board .ToolIcon__penMode,
       .board .ToolIcon__lock,
       .board .App-toolbar .ToolIcon:not(.Shape),
-      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])) {
+      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])):not(:has([data-testid="toolbar-selection"])):not(:has([data-testid="toolbar-image"])),
+      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-selection"]),
+      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-image"]) {
         display: none;
       }
     </style>
@@ -179,6 +181,8 @@
       var boardInboxTimer = null;
       var boardState = "waiting";
       var boardLabels = {};
+      var boardImageBase = null;
+      var boardImageUpload = false;
       var boardDetails = {};
       var boardNoticeText = "";
       var boardNoticeTimer = null;
@@ -775,6 +779,7 @@
         }
         boardInstalled = true;
         window.LarnesBoard.onStatus = function (state, details) { if (boardEnded) return; boardState = state; boardDetails = details || {}; updateBoardNotice(); };
+        applyBoardImages();
         window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
         window.LarnesBoard.setLocale(nameLocale);
         window.LarnesBoard.mount(document.getElementById("board"));
@@ -870,7 +875,21 @@
         render();
       }
 
+      function applyBoardImages() {
+        if (!boardInstalled || window.LarnesBoard.images !== 1) return;
+        window.LarnesBoard.setImageBase(boardImageBase);
+        // Only an app signed in as a parent uploads pictures; a guest link just sees them.
+        var bridge = window.flutter_inappwebview;
+        window.LarnesBoard.onImage = boardImageUpload && bridge && bridge.callHandler
+          ? function (input) { return bridge.callHandler("boardImage", input); }
+          : null;
+      }
+
       function setLabels(labels) {
+        var images = labels && labels.boardImages ? labels.boardImages : {};
+        boardImageBase = typeof images.base === "string" ? images.base : null;
+        boardImageUpload = images.upload === true;
+        applyBoardImages();
         youLabel = labels && labels.you ? String(labels.you) : "";
         cameraOffLabel = labels && labels.cameraOff ? String(labels.cameraOff) : "";
         onlineLabel = labels && labels.online ? String(labels.online) : "";

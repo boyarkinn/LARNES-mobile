@@ -20,9 +20,14 @@
       .board .ToolIcon__penMode,
       .board .ToolIcon__lock,
       .board .App-toolbar .ToolIcon:not(.Shape),
-      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])) {
+      .board .Shape:not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])):not(:has([data-testid="toolbar-selection"])):not(:has([data-testid="toolbar-image"])),
+      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-selection"]),
+      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-image"]) {
         display: none;
       }
+      /* The trainer shell lays its progress bar and menu button over the top-left corner. */
+      .board .excalidraw .FixedSideContainer_side_top { top: 16px; }
+      .board .excalidraw .App-menu__left { margin-top: 56px; }
     </style>
   </head>
   <body>
@@ -55,6 +60,11 @@
         if (!window.LarnesBoard || window.LarnesBoard.homework !== 1) { post("failed", "unsupported"); return; }
         installed = true;
         window.LarnesBoard.onHomework = function (work) { post("work", work); };
+        // The app uploads the picture with its own login and answers with the file id.
+        var bridge = window.flutter_inappwebview;
+        if (window.LarnesBoard.images === 1 && bridge && bridge.callHandler) {
+          window.LarnesBoard.onImage = function (input) { return bridge.callHandler("boardImage", input); };
+        }
         post("installed");
       }
 

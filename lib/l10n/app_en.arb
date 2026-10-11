@@ -375,8 +375,6 @@
   "parentHomeworkPlayLoadFailed": "Could not load assignment.",
   "parentHomeworkPlayAdvanceFailed": "Could not save progress.",
   "homeworkBoardUnavailable": "The board didn't open. Ask the teacher to send the homework again.",
-  "homeworkBoardSaving": "Saving the drawing…",
-  "homeworkBoardSaved": "Drawing saved",
   "homeworkBoardSaveFailed": "The drawing wasn't saved. Check the connection and try again.",
   "homeworkBoardClosed": "This homework is closed, the drawing is no longer saved.",
   "parentHomeworkPlayProgress": "Step {current} of {total}",

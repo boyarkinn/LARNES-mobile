@@ -923,14 +923,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The board didn\'t open. Ask the teacher to send the homework again.';
 
   @override
-  String get homeworkBoardSaving =>
-      'Saving the drawing…';
-
-  @override
-  String get homeworkBoardSaved =>
-      'Drawing saved';
-
-  @override
   String get homeworkBoardSaveFailed =>
       'The drawing wasn\'t saved. Check the connection and try again.';
 

@@ -1796,18 +1796,6 @@ abstract class AppLocalizations {
   /// **'The board didn\'t open. Ask the teacher to send the homework again.'**
   String get homeworkBoardUnavailable;
 
-  /// No description provided for @homeworkBoardSaving.
-  ///
-  /// In en, this message translates to:
-  /// **'Saving the drawing…'**
-  String get homeworkBoardSaving;
-
-  /// No description provided for @homeworkBoardSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Drawing saved'**
-  String get homeworkBoardSaved;
-
   /// No description provided for @homeworkBoardSaveFailed.
   ///
   /// In en, this message translates to:

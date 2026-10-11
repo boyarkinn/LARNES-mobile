@@ -10,6 +10,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
+import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_dock.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -99,6 +100,12 @@ class _LessonCallStageState extends State<LessonCallStage> {
   Future<void>? _ending;
   bool _ended = false;
   _LessonCallLink _link = _LessonCallLink.none;
+
+  /// Урок открыт входом родителя, а не гостевой ссылкой или экраном класса.
+  bool get _parentSession =>
+      widget.inviteToken == null &&
+      widget.fetchPass == null &&
+      widget.claimRoster == null;
 
   @override
   void initState() {
@@ -330,6 +337,11 @@ class _LessonCallStageState extends State<LessonCallStage> {
         'retry': l10n.parentLiveLessonBoardRetry,
         'presenceTeacher': l10n.parentLiveLessonBoardPresenceTeacher,
         'presenceParticipant': l10n.parentLiveLessonBoardPresenceParticipant,
+      },
+      // Pictures load from the site; only the parent's own sign-in may upload one.
+      'boardImages': {
+        'base': boardImageBase(),
+        'upload': _parentSession,
       },
     });
     await web.evaluateJavascript(source: 'setLabels($labels)');
@@ -723,6 +735,12 @@ class _LessonCallStageState extends State<LessonCallStage> {
         controller.addJavaScriptHandler(
           handlerName: 'lessonCall',
           callback: _onBridge,
+        );
+        controller.addJavaScriptHandler(
+          handlerName: 'boardImage',
+          callback: (args) => _parentSession
+              ? uploadBoardImageFromPage(AuthScope.of(context).parentApi, args)
+              : Future.value(const {'code': 'forbidden'}),
         );
         _tryStart();
       },

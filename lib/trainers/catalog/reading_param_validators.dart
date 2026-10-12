@@ -4,7 +4,28 @@ import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_firs
 import 'package:larnes_mobile/trainers/reading/letter_guide_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/reading_blocks/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_tree/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_flash/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_fixation/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_diagonal/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_reread/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_echo/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_phrases/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_find_span/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_sprint/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_cloze/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_story_order/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_main_idea/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_anagram/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_maze/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_grid_mask/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_snake/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_line_pace/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_noisy_text/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_pace_track/reading_pace_track_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_shutter/model.dart';
+import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/definition.dart';
 import 'package:larnes_mobile/trainers/reading/schulte_table/model.dart';
 import 'package:larnes_mobile/trainers/reading/stroop_colors/definition.dart';
@@ -652,5 +673,234 @@ ValidateTrainerParamsResult validateReadingShutterParams(Map<String, dynamic> ra
     'letterPauseMs': plan.letterPauseMs,
     'passageId': raw['passageId']?.toString() ?? defaultPassageId,
     'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+Map<String, dynamic> _passageSuccess(Map<String, dynamic> raw) {
+  final play = passagePlayFromParams(raw);
+  return {
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'letterPauseMs': play.letterPauseMs,
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  };
+}
+
+ValidateTrainerParamsResult validateReadingVanishParams(Map<String, dynamic> raw) {
+  final error = validatePassageAssignment(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success(_passageSuccess(raw));
+}
+
+ValidateTrainerParamsResult validateReadingUpsideDownParams(Map<String, dynamic> raw) {
+  final error = validatePassageAssignment(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success(_passageSuccess(raw));
+}
+
+ValidateTrainerParamsResult validateReadingPaceTrackParams(Map<String, dynamic> raw) {
+  final error = validateReadingPaceTrackRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    ..._passageSuccess(raw),
+    'track': readingPaceTrackOf(raw),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingNoisyTextParams(Map<String, dynamic> raw) {
+  final error = validateReadingNoisyTextRaw(raw);
+  if (error != null) return _fail(error);
+  final plan = readingNoisyTextPlanFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    ..._passageSuccess(raw),
+    'noise': plan.noise,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingPointerParams(Map<String, dynamic> raw) {
+  final error = validatePassageAssignment(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success(_passageSuccess(raw));
+}
+
+ValidateTrainerParamsResult validateReadingBlocksParams(Map<String, dynamic> raw) {
+  final error = validateReadingBlocksRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+    'wordsPerLine': readingBlocksWordsPerLine(raw['wordsPerLine']),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingTreeParams(Map<String, dynamic> raw) {
+  final error = validateReadingTreeRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingFlashParams(Map<String, dynamic> raw) {
+  final error = validateReadingFlashRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'flashDurationMs': readingFlashDurationMs(raw['flashDurationMs']),
+    'flashKind': readingFlashKind(raw['flashKind']),
+    'flashShows': readingFlashShows(raw['flashShows']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingFixationParams(Map<String, dynamic> raw) {
+  final error = validateReadingFixationRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'fixationFragment': readingFixationFragment(raw['fixationFragment']),
+    'fixationPauseMs': readingFixationPauseMs(raw['fixationPauseMs']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingDiagonalParams(Map<String, dynamic> raw) {
+  final error = validateReadingDiagonalRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingRereadParams(Map<String, dynamic> raw) {
+  final error = validateReadingRereadRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingEchoParams(Map<String, dynamic> raw) {
+  final error = validateReadingEchoRaw(raw);
+  if (error != null) return _fail(error);
+  final play = passagePlayFromParams(raw);
+  return ValidateTrainerParamsResult.success({
+    'customText': raw['source'] == 'custom' ? play.text : '',
+    'echoHighlight': readingEchoSwitch(raw['echoHighlight']),
+    'echoPauseMs': readingEchoPauseMs(raw['echoPauseMs']),
+    'echoRepeat': readingEchoSwitch(raw['echoRepeat']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+  });
+}
+
+ValidateTrainerParamsResult validateReadingPhrasesParams(Map<String, dynamic> raw) {
+  final error = validateReadingPhrasesRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'phraseMode': readingPhraseMode(raw['phraseMode']),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingFindSpanParams(Map<String, dynamic> raw) {
+  final error = validateReadingFindSpanRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'findMode': readingFindMode(raw['findMode']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingWordSprintParams(Map<String, dynamic> raw) {
+  final error = validateReadingWordSprintRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingClozeParams(Map<String, dynamic> raw) {
+  final error = validateReadingClozeRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'clozeMode': readingClozeMode(raw['clozeMode']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingStoryOrderParams(Map<String, dynamic> raw) {
+  final error = validateReadingStoryOrderRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'storyCards': readingStoryCards(raw['storyCards']),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingMainIdeaParams(Map<String, dynamic> raw) {
+  final error = validateReadingMainIdeaRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingAnagramParams(Map<String, dynamic> raw) {
+  final error = validateReadingAnagramRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'anagramHint': readingAnagramHint(raw['anagramHint']),
+    'anagramSlug': raw['anagramSlug']?.toString() ?? readingAnagramDefaultSlug,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingWordMazeParams(Map<String, dynamic> raw) {
+  final error = validateReadingWordMazeRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'mazeMode': readingMazeMode(raw['mazeMode']),
+    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+  });
+}
+
+ValidateTrainerParamsResult validateReadingGridMaskParams(Map<String, dynamic> raw) {
+  final error = validateReadingGridMaskRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    ..._passageSuccess(raw),
+    'gridStep': readingGridStep(raw['gridStep']),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingSnakeParams(Map<String, dynamic> raw) {
+  final error = validateReadingSnakeRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success(_passageSuccess(raw));
+}
+
+ValidateTrainerParamsResult validateReadingLinePaceParams(Map<String, dynamic> raw) {
+  final error = validateReadingLinePaceRaw(raw);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    ..._passageSuccess(raw),
+    'lineKeep': readingLineKeep(raw['lineKeep']),
+    'linePaceMs': readingLinePaceMs(raw['linePaceMs']),
+    'wordsPerLine': readingBlocksWordsPerLine(raw['wordsPerLine']),
   });
 }

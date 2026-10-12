@@ -6,8 +6,8 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('mobile play gate', () {
     test('all registered trainers have native builders', () {
-      expect(trainerBuilders.length, 38);
-      expect(trainerDefinitions.length, 38);
+      expect(trainerBuilders.length, 61);
+      expect(trainerDefinitions.length, 61);
 
       for (final key in TrainerKey.values) {
         expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);

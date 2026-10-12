@@ -39,6 +39,29 @@ import 'package:larnes_mobile/trainers/reading/letter_word_link/letter_word_link
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/letter_place_in_word_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_connect_dots/letter_connect_dots_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_shutter/reading_shutter_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_vanish/reading_vanish_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_upside_down/reading_upside_down_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_pace_track/reading_pace_track_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_noisy_text/reading_noisy_text_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_pointer/reading_pointer_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_blocks/reading_blocks_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_tree/reading_tree_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_flash/reading_flash_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_fixation/reading_fixation_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_diagonal/reading_diagonal_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_reread/reading_reread_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_echo/reading_echo_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_phrases/reading_phrases_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_find_span/reading_find_span_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_sprint/reading_word_sprint_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_cloze/reading_cloze_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_story_order/reading_story_order_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_main_idea/reading_main_idea_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_anagram/reading_anagram_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_maze/reading_word_maze_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_grid_mask/reading_grid_mask_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_snake/reading_snake_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_line_pace/reading_line_pace_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/letter_orientation_pick_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_trace/letter_trace_trainer.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
@@ -121,6 +144,52 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       WedgeTablesTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingShutter: ({required params, onComplete}) =>
       ReadingShutterTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingVanish: ({required params, onComplete}) =>
+      ReadingVanishTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingUpsideDown: ({required params, onComplete}) =>
+      ReadingUpsideDownTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingPaceTrack: ({required params, onComplete}) =>
+      ReadingPaceTrackTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingNoisyText: ({required params, onComplete}) =>
+      ReadingNoisyTextTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingPointer: ({required params, onComplete}) =>
+      ReadingPointerTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingBlocks: ({required params, onComplete}) =>
+      ReadingBlocksTrainer(params: params),
+  TrainerKey.readingTree: ({required params, onComplete}) =>
+      ReadingTreeTrainer(params: params),
+  TrainerKey.readingFlash: ({required params, onComplete}) =>
+      ReadingFlashTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingFixation: ({required params, onComplete}) =>
+      ReadingFixationTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingDiagonal: ({required params, onComplete}) =>
+      ReadingDiagonalTrainer(params: params),
+  TrainerKey.readingReread: ({required params, onComplete}) =>
+      ReadingRereadTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingEcho: ({required params, onComplete}) =>
+      ReadingEchoTrainer(params: params),
+  TrainerKey.readingPhrases: ({required params, onComplete}) =>
+      ReadingPhrasesTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingFindSpan: ({required params, onComplete}) =>
+      ReadingFindSpanTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingWordSprint: ({required params, onComplete}) =>
+      ReadingWordSprintTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingCloze: ({required params, onComplete}) =>
+      ReadingClozeTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingStoryOrder: ({required params, onComplete}) =>
+      ReadingStoryOrderTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingMainIdea: ({required params, onComplete}) =>
+      ReadingMainIdeaTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingAnagram: ({required params, onComplete}) =>
+      ReadingAnagramTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingWordMaze: ({required params, onComplete}) =>
+      ReadingWordMazeTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingGridMask: ({required params, onComplete}) =>
+      ReadingGridMaskTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingSnake: ({required params, onComplete}) =>
+      ReadingSnakeTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingLinePace: ({required params, onComplete}) =>
+      ReadingLinePaceTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterDrawShow: ({required params, onComplete}) =>
       LetterDrawShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterConnectDots: ({required params, onComplete}) =>
@@ -351,6 +420,163 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateReadingShutterParams,
+  ),
+  TrainerKey.readingVanish: TrainerDefinition(
+    key: TrainerKey.readingVanish,
+    title: 'Исчезающий текст',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingVanishParams,
+  ),
+  TrainerKey.readingUpsideDown: TrainerDefinition(
+    key: TrainerKey.readingUpsideDown,
+    title: 'Вверх ногами',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingUpsideDownParams,
+  ),
+  TrainerKey.readingPaceTrack: TrainerDefinition(
+    key: TrainerKey.readingPaceTrack,
+    title: 'Обратный счет',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingPaceTrackParams,
+  ),
+  TrainerKey.readingNoisyText: TrainerDefinition(
+    key: TrainerKey.readingNoisyText,
+    title: 'Зашумленные тексты',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingNoisyTextParams,
+  ),
+  TrainerKey.readingPointer: TrainerDefinition(
+    key: TrainerKey.readingPointer,
+    title: 'Указка',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingPointerParams,
+  ),
+  TrainerKey.readingBlocks: TrainerDefinition(
+    key: TrainerKey.readingBlocks,
+    title: 'Блочное чтение',
+    direction: TrainerDirection.reading,
+    validate: validateReadingBlocksParams,
+  ),
+  TrainerKey.readingTree: TrainerDefinition(
+    key: TrainerKey.readingTree,
+    title: 'Ёлочка',
+    direction: TrainerDirection.reading,
+    validate: validateReadingTreeParams,
+  ),
+  TrainerKey.readingFlash: TrainerDefinition(
+    key: TrainerKey.readingFlash,
+    title: 'Вспышка',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingFlashParams,
+  ),
+  TrainerKey.readingFixation: TrainerDefinition(
+    key: TrainerKey.readingFixation,
+    title: 'Пачка в одной точке',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingFixationParams,
+  ),
+  TrainerKey.readingDiagonal: TrainerDefinition(
+    key: TrainerKey.readingDiagonal,
+    title: 'Чтение по диагонали',
+    direction: TrainerDirection.reading,
+    validate: validateReadingDiagonalParams,
+  ),
+  TrainerKey.readingReread: TrainerDefinition(
+    key: TrainerKey.readingReread,
+    title: 'Побей свой результат',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingRereadParams,
+  ),
+  TrainerKey.readingEcho: TrainerDefinition(
+    key: TrainerKey.readingEcho,
+    title: 'Эхо',
+    direction: TrainerDirection.reading,
+    validate: validateReadingEchoParams,
+  ),
+  TrainerKey.readingPhrases: TrainerDefinition(
+    key: TrainerKey.readingPhrases,
+    title: 'Смысловые фразы',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingPhrasesParams,
+  ),
+  TrainerKey.readingFindSpan: TrainerDefinition(
+    key: TrainerKey.readingFindSpan,
+    title: 'Найди слово',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingFindSpanParams,
+  ),
+  TrainerKey.readingWordSprint: TrainerDefinition(
+    key: TrainerKey.readingWordSprint,
+    title: 'Словесный спринт',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingWordSprintParams,
+  ),
+  TrainerKey.readingCloze: TrainerDefinition(
+    key: TrainerKey.readingCloze,
+    title: 'Пропущенное слово',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingClozeParams,
+  ),
+  TrainerKey.readingStoryOrder: TrainerDefinition(
+    key: TrainerKey.readingStoryOrder,
+    title: 'Собери историю',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingStoryOrderParams,
+  ),
+  TrainerKey.readingMainIdea: TrainerDefinition(
+    key: TrainerKey.readingMainIdea,
+    title: 'Главная мысль',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingMainIdeaParams,
+  ),
+  TrainerKey.readingAnagram: TrainerDefinition(
+    key: TrainerKey.readingAnagram,
+    title: 'Анаграммы',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingAnagramParams,
+  ),
+  TrainerKey.readingWordMaze: TrainerDefinition(
+    key: TrainerKey.readingWordMaze,
+    title: 'Словесный лабиринт',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingWordMazeParams,
+  ),
+  TrainerKey.readingGridMask: TrainerDefinition(
+    key: TrainerKey.readingGridMask,
+    title: 'Рамка',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingGridMaskParams,
+  ),
+  TrainerKey.readingSnake: TrainerDefinition(
+    key: TrainerKey.readingSnake,
+    title: 'Змейка',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingSnakeParams,
+  ),
+  TrainerKey.readingLinePace: TrainerDefinition(
+    key: TrainerKey.readingLinePace,
+    title: 'Построчное чтение',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateReadingLinePaceParams,
   ),
   TrainerKey.letterMarqueeTap: TrainerDefinition(
     key: TrainerKey.letterMarqueeTap,

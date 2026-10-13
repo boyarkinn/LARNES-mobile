@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
-import 'package:larnes_mobile/trainers/audio/number_bank.dart';
-import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/audio/background_music.dart';
-import 'package:larnes_mobile/trainers/reading/shared/echo_fragment.dart';
 
 const catalogAudioPublicBase = 'https://audio.larnes.ru';
 const catalogAudioTimeout = Duration(seconds: 10);
@@ -113,17 +111,14 @@ bool catalogExpectsStimuli(ExerciseAudioManifest? manifest) {
   final publishedStimulus = manifest.clips.any(
     (clip) => !isCatalogInstructionKey(clip.semanticKey) && !isBackgroundMusicAudioKey(clip.semanticKey),
   );
-  final missingRequired = manifest.missing.any((item) => _isRequiredLaunchStimulus(item.semanticKey));
+  final missingRequired = manifest.missing.any((item) => item.required != false && _isRequiredLaunchStimulus(item.semanticKey));
   return publishedStimulus || missingRequired;
 }
 
 bool _isRequiredLaunchStimulus(String semanticKey) {
   return !isCatalogInstructionKey(semanticKey) &&
       !isBackgroundMusicAudioKey(semanticKey) &&
-      !isNumberBankAudioKey(semanticKey) &&
-      !isSpeechBankAudioKey(semanticKey) &&
-      !isSpokenCueAudioKey(semanticKey) &&
-      !isEchoFragmentAudioKey(semanticKey);
+      !isSpokenCueAudioKey(semanticKey);
 }
 
 bool catalogTrainerMayStart(CatalogPack pack) {
@@ -191,7 +186,10 @@ class CatalogAudioStore {
   final List<Completer<void>> _waiters = [];
   var _opened = false;
 
-  Future<void> open() async {
+  Future<void>? _opening;
+  Future<void> open() => _opening ??= _open();
+
+  Future<void> _open() async {
     if (_opened) {
       return;
     }
@@ -248,8 +246,11 @@ class CatalogAudioStore {
     CatalogSignal? signal,
   }) async {
     await open();
-    final clips = manifest?.clips ?? const <PublishedAudioClip>[];
-    final missingRequired = manifest?.missing.any((item) => _isRequiredLaunchStimulus(item.semanticKey)) ?? false;
+    final allClips = manifest?.clips ?? const <PublishedAudioClip>[];
+    final musicCandidates = allClips.where((clip) => isBackgroundMusicAudioKey(clip.semanticKey)).toList();
+    final selectedMusic = musicCandidates.isEmpty ? null : musicCandidates[Random().nextInt(musicCandidates.length)];
+    final clips = allClips.where((clip) => !isBackgroundMusicAudioKey(clip.semanticKey) || identical(clip, selectedMusic)).toList();
+    final missingRequired = manifest?.missing.any((item) => item.required != false && _isRequiredLaunchStimulus(item.semanticKey)) ?? false;
     final paths = <String, String>{};
     var aborted = false;
     var timedOut = false;

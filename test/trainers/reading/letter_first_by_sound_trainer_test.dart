@@ -73,11 +73,7 @@ void main() {
 
     test('keeps instruction, countdown and first-words audio wiring', () {
       expect(kLetterFirstBySoundInstructionPlaybackRate, 1.5);
-      expect(
-        File('assets/audio/ru/reading/letter-first-by-sound/instruction.mp3')
-            .existsSync(),
-        isTrue,
-      );
+      expect(getLetterFirstBySoundInstructionAudioAsset(), '');
 
       final trainerSource = File(
         'lib/trainers/reading/letter_first_by_sound/letter_first_by_sound_trainer.dart',

@@ -26,6 +26,7 @@ class PublishedAudioClip {
 
 class MissingAudioBinding {
   const MissingAudioBinding({
+    this.required,
     required this.locale,
     required this.reason,
     required this.semanticKey,
@@ -33,6 +34,7 @@ class MissingAudioBinding {
 
   final String locale;
   final String reason;
+  final bool? required;
   final String semanticKey;
 }
 
@@ -107,6 +109,7 @@ class ExerciseAudioManifest {
         missing.add(MissingAudioBinding(
           locale: item['locale'] as String? ?? '',
           reason: reason as String,
+          required: item['required'] as bool?,
           semanticKey: item['semanticKey'] as String? ?? '',
         ));
       }

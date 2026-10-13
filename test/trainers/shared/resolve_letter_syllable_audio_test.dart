@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/shared/letters_syllables/resolve_letter_syllable_audio.dart';
 
@@ -16,19 +14,7 @@ void main() {
       expect(getLetterSyllableRelativePath('ъ'), isNull);
       expect(hasLetterSyllableAudio('М'), isTrue);
       expect(hasLetterSyllableAudio('Ъ'), isFalse);
-      expect(
-        getLetterSyllableAudioAsset('ба'),
-        'audio/ru/letters-syllables/11-Б/11-БА.mp3',
-      );
-    });
-
-    test('points at copied bank files', () {
-      expect(File('assets/audio/ru/letters-syllables/1-10-А-Е/1-А.mp3').existsSync(), isTrue);
-      expect(File('assets/audio/ru/letters-syllables/11-Б/11-БА.mp3').existsSync(), isTrue);
-      expect(
-        File('assets/audio/ru/reading/letter-find-by-sound/instruction.mp3').existsSync(),
-        isTrue,
-      );
+      expect(getLetterSyllableAudioAsset('ба'), isNull);
     });
   });
 }

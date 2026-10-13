@@ -1,12 +1,9 @@
 /// Web: `platform/src/trainers/mental-arithmetic/audio/resolve-step-audio.ts`
 ///
-/// Пути — Flutter [AssetSource] без префикса `assets/`
-/// (файлы в `assets/audio/ru/mental-arithmetic/...`).
+/// Опубликованный файл каталога. Старый ассет приложения не подставляется.
 
 import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
-
-const kMentalAudioAssetBase = 'audio/ru/mental-arithmetic';
 
 class StepAudioResolution {
   const StepAudioResolution({
@@ -25,26 +22,23 @@ class StepAudioResolution {
 }
 
 String getOperationAudioAsset(String sign) {
-  final file = sign == '+' ? 'plus.mp3' : 'minus.mp3';
-  return numberAudioFileForKey(operationAudioKey(sign))?.path ??
-      '$kMentalAudioAssetBase/operations/$file';
+  return numberAudioFileForKey(operationAudioKey(sign))?.path ?? '';
 }
 
-/// 0…99 → numbers; круглые / составные 100…999 → hundreds [+ numbers].
-/// Опубликованный файл того же ключа заменяет старый.
+/// 0…99 → один файл; составные 101…999 — сотня и остаток.
+/// Если хотя бы одного файла нет, число не произносится наполовину.
 List<String> getAmountAudioAssets(int amount) {
-  return [
-    for (final key in amountAudioKeys(amount))
-      numberAudioFileForKey(key)?.path ?? _legacyAmountAsset(key),
-  ];
-}
+  final paths = <String>[];
 
-String _legacyAmountAsset(String semanticKey) {
-  if (semanticKey.startsWith('number:hundreds:')) {
-    return '$kMentalAudioAssetBase/hundreds/${semanticKey.substring('number:hundreds:'.length)}.mp3';
+  for (final key in amountAudioKeys(amount)) {
+    final path = numberAudioFileForKey(key)?.path;
+    if (path == null || path.isEmpty) {
+      return [];
+    }
+    paths.add(path);
   }
 
-  return '$kMentalAudioAssetBase/numbers/${semanticKey.substring('number:'.length)}.mp3';
+  return paths;
 }
 
 /// Один клип, если операнд целиком в одном файле; иначе null.
@@ -60,6 +54,6 @@ StepAudioResolution resolveStepAudio(ChainStep step) {
   return StepAudioResolution(
     operationAsset: operationAsset,
     amountAssets: amountAssets,
-    assets: [operationAsset, ...amountAssets],
+    assets: [operationAsset, ...amountAssets].where((path) => path.isNotEmpty).toList(),
   );
 }

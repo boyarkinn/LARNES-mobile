@@ -76,8 +76,8 @@ class _NumberRowSceneState extends State<NumberRowScene>
 
   @override
   Widget build(BuildContext context) {
-    final slots = getNumberRowSlots(studyDigit);
     final studyDigit = normalizeStudyDigit(widget.studyDigit);
+    final slots = getNumberRowSlots(studyDigit);
 
     return SizedBox(
       width: NumberRowLayout.width,

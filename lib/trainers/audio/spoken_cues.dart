@@ -30,34 +30,34 @@ const _cueKeys = {
 
 bool isSpokenCueAudioKey(String semanticKey) => _cueKeys.contains(semanticKey);
 
-String? spokenCueAsset(String semanticKey, String legacyAsset) {
-  final file = speechAudioFile(semanticKey);
-
-  if (file != null) {
-    return file.path;
-  }
-
-  if (speechCatalogHas(semanticKey)) {
-    return null;
-  }
-
-  return legacyAsset;
-}
+String? spokenCueAsset(String semanticKey) =>
+    speechAudioFile(semanticKey)?.path;
 
 Future<void> playSpokenCue({
   required String semanticKey,
-  required String legacyAsset,
-  required double legacyRate,
-}) {
+  double legacyRate = 1,
+  int fallbackMs = 3000,
+}) async {
   final file = speechAudioFile(semanticKey);
 
-  if (file != null) {
-    return getSharedClipPlayer().play([file.path], playbackRate: 1);
+  if (file == null) {
+    if (semanticKey.startsWith('instruction:'))
+      await getSharedClipPlayer().waitForFallback(
+        Duration(milliseconds: fallbackMs),
+      );
+    return;
   }
 
-  if (speechCatalogHas(semanticKey)) {
-    return Future<void>.value();
+  final elapsed = Stopwatch()..start();
+  final player = getSharedClipPlayer();
+  final runId = player.generation + 1; // play cancels the previous run first.
+  await player.play([file.path], playbackRate: 1);
+  // A failed player must not make the visible instruction disappear immediately.
+  if (player.generation == runId &&
+      semanticKey.startsWith('instruction:') &&
+      elapsed.elapsedMilliseconds < file.durationMs) {
+    await player.waitForFallback(
+      Duration(milliseconds: file.durationMs - elapsed.elapsedMilliseconds),
+    );
   }
-
-  return getSharedClipPlayer().play([legacyAsset], playbackRate: legacyRate);
 }

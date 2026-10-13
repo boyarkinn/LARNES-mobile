@@ -3,6 +3,7 @@ import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_commands_response.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
+import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 

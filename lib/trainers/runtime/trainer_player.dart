@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'package:larnes_mobile/trainers/audio/catalog_playback_failure.dart';
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -65,6 +68,8 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     super.initState();
     // Первый кадр запуска фиксирует набор. Поздний ответ каталога его не меняет.
     _music.bind(_direction);
+    setRequiredCatalogPaths(const []);
+    catalogPlaybackFailures.addListener(_onPlaybackFailure);
     _pinnedAudio = widget.audioManifest;
     final hasClips = widget.audioManifest?.clips.isNotEmpty ?? false;
     _pack = _expectsStimuli || hasClips ? CatalogPack.preparing : CatalogPack.missing;
@@ -74,6 +79,8 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
   @override
   void dispose() {
     _alive = false;
+    catalogPlaybackFailures.removeListener(_onPlaybackFailure);
+    setRequiredCatalogPaths(const []);
     _signal?.cancel();
     _launch?.release();
     setNumberAudioFiles(const {});
@@ -135,6 +142,12 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     }
   }
 
+  void _onPlaybackFailure() {
+    if (!_alive || !mounted) return;
+    unawaited(getSharedClipPlayer().cancel());
+    setState(() { _pack = CatalogPack.blocked; });
+  }
+
   void _bindNumberFiles(CatalogLaunch launch) {
     final manifest = _pinnedAudio;
     final files = <String, NumberAudioFile>{};
@@ -151,6 +164,10 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
       }
     }
 
+    setRequiredCatalogPaths([
+      for (final entry in files.entries)
+        if (!isCatalogInstructionKey(entry.key) && !isBackgroundMusicAudioKey(entry.key) && !isSpokenCueAudioKey(entry.key)) entry.value.path,
+    ]);
     setNumberAudioFiles(files);
     setSpeechAudioFiles(
       {

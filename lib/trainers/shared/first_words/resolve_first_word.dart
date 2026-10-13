@@ -1,13 +1,11 @@
 /// Web: `platform/src/trainers/shared/first-words/resolve-first-word.ts`
 ///
-/// Ассеты: `assets/{images,audio}/ru/first-words/{урок}/{slug}.{png|mp3}`
-/// Плеер — существующий `getSharedClipPlayer`, не новый Audio.
+/// Картинки остаются в assets/images. Слово звучит только из каталога.
 
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
 
 const kFirstWordsImageAssetBase = 'images/ru/first-words';
-const kFirstWordsAudioAssetBase = 'audio/ru/first-words';
 const kFirstWordAudioPlaybackRate = 1.0;
 
 final _cyrillicLetter = RegExp(r'^[\u0400-\u04FF]$');
@@ -71,7 +69,7 @@ String? getFirstWordAudioAsset(String slug) {
     return null;
   }
 
-  return speechPlaybackPath(semanticKey, '$kFirstWordsAudioAssetBase/$stem.mp3');
+  return speechPlaybackPath(semanticKey);
 }
 
 bool hasFirstWord(String slug) {

@@ -5,8 +5,6 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart'
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_sizes.dart';
 
-const kDotsDigitAbacusAudioAssetBase =
-    'audio/ru/mental-arithmetic/dots-digit-abacus';
 const kDotsDigitAbacusAudioPlaybackRate = 1.5;
 const kDotsDigitAbacusInstructionDurationFallbackMs = 1968;
 const kDotsDigitAbacusTaskInstructionDurationFallbackMs = 5568;
@@ -16,22 +14,18 @@ const kDotsDigitAbacusInstructionText = 'Считай точки вместе с
 const kDotsDigitAbacusTaskInstructionText =
     'А теперь посчитай точки, соедини их с соответствующей цифрой, а цифру с абакусом';
 
-String getDotsDigitAbacusInstructionAudioAsset() =>
-    '$kDotsDigitAbacusAudioAssetBase/instruction.mp3';
+String getDotsDigitAbacusInstructionAudioAsset() => '';
 
-String getDotsDigitAbacusTaskInstructionAudioAsset() =>
-    '$kDotsDigitAbacusAudioAssetBase/task-instruction.mp3';
+String getDotsDigitAbacusTaskInstructionAudioAsset() => '';
 
-String getDotsDigitAbacusEqualsDigitAudioAsset() =>
-    '$kDotsDigitAbacusAudioAssetBase/equals-digit.mp3';
+String getDotsDigitAbacusEqualsDigitAudioAsset() => '';
 
-String getDotsDigitAbacusAbacusMatchAudioAsset() =>
-    '$kDotsDigitAbacusAudioAssetBase/abacus-match.mp3';
+String getDotsDigitAbacusAbacusMatchAudioAsset() => '';
 
 Future<void> playDotsDigitAbacusInstruction() {
   return playSpokenCue(
     semanticKey: 'instruction:dots-digit-abacus',
-    legacyAsset: getDotsDigitAbacusInstructionAudioAsset(),
+    fallbackMs: kDotsDigitAbacusInstructionDurationFallbackMs,
     legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }
@@ -39,7 +33,7 @@ Future<void> playDotsDigitAbacusInstruction() {
 Future<void> playDotsDigitAbacusTaskInstruction() {
   return playSpokenCue(
     semanticKey: 'instruction:dots-digit-abacus:task',
-    legacyAsset: getDotsDigitAbacusTaskInstructionAudioAsset(),
+    fallbackMs: kDotsDigitAbacusTaskInstructionDurationFallbackMs,
     legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }
@@ -61,7 +55,6 @@ Future<void> playDotsDigitAbacusEqualsDigitBridge({
   onStarted?.call();
   return playSpokenCue(
     semanticKey: 'explanation:dots-digit-abacus:equals',
-    legacyAsset: getDotsDigitAbacusEqualsDigitAudioAsset(),
     legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }
@@ -72,7 +65,6 @@ Future<void> playDotsDigitAbacusAbacusMatchBridge({
   onStarted?.call();
   return playSpokenCue(
     semanticKey: 'explanation:dots-digit-abacus:abacus',
-    legacyAsset: getDotsDigitAbacusAbacusMatchAudioAsset(),
     legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }

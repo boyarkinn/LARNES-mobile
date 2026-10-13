@@ -72,18 +72,9 @@ void main() {
       expect(isTrainerKey('stroop-colors'), isTrue);
     });
 
-    test('instruction clip is bundled and plays at 1.5x', () {
+    test('instruction clip is not a bundled file and plays at 1.5x', () {
       expect(kStroopColorsInstructionPlaybackRate, 1.5);
-      expect(
-        getStroopColorsInstructionAudioAsset(),
-        'audio/ru/reading/stroop-colors/instruction.mp3',
-      );
-      expect(
-        File(
-          'assets/audio/ru/reading/stroop-colors/instruction.mp3',
-        ).existsSync(),
-        isTrue,
-      );
+      expect(getStroopColorsInstructionAudioAsset(), '');
     });
 
     test('scene has no on-screen instruction chrome', () {

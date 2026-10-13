@@ -81,20 +81,10 @@ SpeechAudioFile? speechAudioFile(String semanticKey) => _speechAudioFiles[semant
 
 bool speechCatalogHas(String semanticKey) => _speechCatalogKeys.contains(semanticKey);
 
-String? speechPlaybackPath(String? semanticKey, String legacyPath) {
+String? speechPlaybackPath(String? semanticKey) {
   if (semanticKey == null) {
-    return legacyPath;
-  }
-
-  final file = _speechAudioFiles[semanticKey];
-
-  if (file != null) {
-    return file.path;
-  }
-
-  if (_speechCatalogKeys.contains(semanticKey)) {
     return null;
   }
 
-  return legacyPath;
+  return _speechAudioFiles[semanticKey]?.path;
 }

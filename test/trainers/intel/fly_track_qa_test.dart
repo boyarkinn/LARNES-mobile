@@ -106,14 +106,8 @@ void main() {
     });
 
     test('move audio contract matches web first-step vs later steps', () {
-      expect(
-        getFlyTrackMoveAudioAssets('up', 4, includeFlyMoved: true),
-        contains('audio/ru/intel/fly-track/fly-moved.mp3'),
-      );
-      expect(
-        getFlyTrackMoveAudioAssets('left', 2, includeFlyMoved: false),
-        isNot(contains('audio/ru/intel/fly-track/fly-moved.mp3')),
-      );
+      expect(getFlyTrackMoveAudioAssets('up', 4, includeFlyMoved: true), isEmpty);
+      expect(getFlyTrackMoveAudioAssets('left', 2, includeFlyMoved: false), isEmpty);
     });
   });
 }

@@ -1,6 +1,7 @@
 /// Web: `platform/src/trainers/shared/instruction/load-trainer-instruction-duration.ts`
 
 import 'package:just_audio/just_audio.dart';
+import 'package:larnes_mobile/trainers/audio/legacy_audio_path.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 
 Future<int> loadTrainerInstructionDurationMs({
@@ -20,6 +21,11 @@ Future<int> loadTrainerInstructionDurationMs({
       return fallbackMs;
     }
   }
+
+  if (assetPath.isEmpty || isLegacyTrainerAudioPath(assetPath)) {
+    return fallbackMs;
+  }
+
   final player = AudioPlayer();
   try {
     await player.setAsset('assets/$assetPath');

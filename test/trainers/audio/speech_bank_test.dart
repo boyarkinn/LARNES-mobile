@@ -15,7 +15,7 @@ void main() {
     expect(wordAudioKey('21_замок1'), 'word:ru:21_замок1');
     expect(wordAudioKey('21_замок2'), isNot(wordAudioKey('21_замок1')));
     expect(getFirstWordImageAsset('21_замок1'), contains('21_замок1.png'));
-    expect(getLetterSyllableAudioAsset('м'), contains('24-М/24-М.mp3'));
+    expect(getLetterSyllableAudioAsset('м'), isNull);
   });
 
   test('a published file replaces the old asset and a missing download does not', () {
@@ -26,6 +26,6 @@ void main() {
 
     expect(getLetterSyllableAudioAsset('м'), r'C:\cache\em.mp3');
     expect(getFirstWordAudioAsset('1_арка'), isNull);
-    expect(getLetterSyllableAudioAsset('а'), contains('1-А.mp3'));
+    expect(getLetterSyllableAudioAsset('а'), isNull);
   });
 }

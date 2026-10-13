@@ -12,12 +12,9 @@ void main() {
       'number:hundreds:100',
       'number:23',
     ]);
-    expect(getAmountAudioAssets(100), ['audio/ru/mental-arithmetic/hundreds/100.mp3']);
-    expect(getAmountAudioAssets(154), [
-      'audio/ru/mental-arithmetic/hundreds/100.mp3',
-      'audio/ru/mental-arithmetic/numbers/54.mp3',
-    ]);
-    expect(resolveStepAudio(const ChainStep(amount: 8, sign: '-')).assets.first, contains('minus.mp3'));
+    expect(getAmountAudioAssets(100), isEmpty);
+    expect(getAmountAudioAssets(154), isEmpty);
+    expect(resolveStepAudio(const ChainStep(amount: 8, sign: '-')).assets, isEmpty);
   });
 
   test('a published file replaces the old asset and keeps a natural tempo', () {

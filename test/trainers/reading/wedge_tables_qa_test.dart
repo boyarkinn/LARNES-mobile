@@ -107,16 +107,9 @@ void main() {
       expect(isTrainerKey('wedge-tables'), isTrue);
     });
 
-    test('instruction clip is bundled and plays at 1.5x', () {
+    test('instruction clip is not a bundled file and plays at 1.5x', () {
       expect(kWedgeTablesInstructionPlaybackRate, 1.5);
-      expect(
-        getWedgeTablesInstructionAudioAsset(),
-        'audio/ru/reading/wedge-tables/instruction.mp3',
-      );
-      expect(
-        File('assets/audio/ru/reading/wedge-tables/instruction.mp3').existsSync(),
-        isTrue,
-      );
+      expect(getWedgeTablesInstructionAudioAsset(), '');
     });
 
     test('scene has no on-screen instruction chrome', () {

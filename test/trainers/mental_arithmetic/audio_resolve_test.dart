@@ -6,47 +6,22 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.d
 void main() {
   group('resolve_step_audio', () {
     test('maps +/− and 0…99 / hundreds', () {
-      expect(
-        getOperationAudioAsset('+'),
-        'audio/ru/mental-arithmetic/operations/plus.mp3',
-      );
-      expect(
-        getOperationAudioAsset('-'),
-        'audio/ru/mental-arithmetic/operations/minus.mp3',
-      );
-      expect(
-        getAmountAudioAsset(4),
-        'audio/ru/mental-arithmetic/numbers/4.mp3',
-      );
-      expect(
-        getAmountAudioAsset(100),
-        'audio/ru/mental-arithmetic/hundreds/100.mp3',
-      );
+      expect(getOperationAudioAsset('+'), '');
+      expect(getOperationAudioAsset('-'), '');
+      expect(getAmountAudioAsset(4), isNull);
+      expect(getAmountAudioAsset(100), isNull);
       expect(getAmountAudioAsset(123), isNull);
-      expect(getAmountAudioAssets(154), [
-        'audio/ru/mental-arithmetic/hundreds/100.mp3',
-        'audio/ru/mental-arithmetic/numbers/54.mp3',
-      ]);
-      expect(getAmountAudioAssets(506), [
-        'audio/ru/mental-arithmetic/hundreds/500.mp3',
-        'audio/ru/mental-arithmetic/numbers/6.mp3',
-      ]);
+      expect(getAmountAudioAssets(154), isEmpty);
+      expect(getAmountAudioAssets(506), isEmpty);
     });
 
     test('resolveStepAudio queues sign then amount clip(s)', () {
       final resolved = resolveStepAudio(const ChainStep(amount: 4, sign: '+'));
-      expect(resolved.assets, [
-        'audio/ru/mental-arithmetic/operations/plus.mp3',
-        'audio/ru/mental-arithmetic/numbers/4.mp3',
-      ]);
+      expect(resolved.assets, isEmpty);
 
       final composite =
           resolveStepAudio(const ChainStep(amount: 123, sign: '+'));
-      expect(composite.assets, [
-        'audio/ru/mental-arithmetic/operations/plus.mp3',
-        'audio/ru/mental-arithmetic/hundreds/100.mp3',
-        'audio/ru/mental-arithmetic/numbers/23.mp3',
-      ]);
+      expect(composite.assets, isEmpty);
     });
   });
 

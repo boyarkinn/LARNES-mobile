@@ -1,6 +1,6 @@
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/moving_bead_highlights.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('resolveMovingBeadHighlights', () {

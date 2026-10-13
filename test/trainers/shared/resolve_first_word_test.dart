@@ -42,7 +42,7 @@ void main() {
       );
       expect(
         getFirstWordAudioAsset('1_арка'),
-        'audio/ru/first-words/1-А/1_арка.mp3',
+        isNull,
       );
       expect(getFirstWordImageAsset('missing'), isNull);
       expect(getFirstWordAudioAsset('missing'), isNull);
@@ -58,11 +58,7 @@ void main() {
           isTrue,
           reason: 'missing image $stem.png',
         );
-        expect(
-          File('assets/audio/ru/first-words/$stem.mp3').existsSync(),
-          isTrue,
-          reason: 'missing audio $stem.mp3',
-        );
+        expect(getFirstWordAudioAsset(word.slug), isNull);
       }
     });
   });

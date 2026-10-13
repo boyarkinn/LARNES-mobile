@@ -144,16 +144,9 @@ void main() {
       expect(isTrainerKey('schulte-table'), isTrue);
     });
 
-    test('instruction clip is bundled and plays at 1.5x', () {
+    test('instruction clip is not a bundled file and plays at 1.5x', () {
       expect(kSchulteTableInstructionPlaybackRate, 1.5);
-      expect(
-        getSchulteTableInstructionAudioAsset(),
-        'audio/ru/reading/schulte-table/instruction.mp3',
-      );
-      expect(
-        File('assets/audio/ru/reading/schulte-table/instruction.mp3').existsSync(),
-        isTrue,
-      );
+      expect(getSchulteTableInstructionAudioAsset(), '');
     });
 
     test('scene has no on-screen instruction chrome', () {

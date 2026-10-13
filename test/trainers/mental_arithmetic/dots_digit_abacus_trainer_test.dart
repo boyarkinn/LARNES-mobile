@@ -96,7 +96,7 @@ void main() {
 
     testWidgets('shows the target abacus immediately', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: TripleScene(
             colors: buildExplainColorPlan(5, 42),
             value: 5,

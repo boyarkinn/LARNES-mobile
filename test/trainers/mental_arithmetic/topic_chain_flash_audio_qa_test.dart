@@ -18,7 +18,7 @@ void main() {
       expect(flashAudioPlaybackRate(5), 2);
     });
 
-    test('resolves assets for simple-1 and simple-hundreds chains', () {
+    test('without a catalog file the chain does not speak a bundled number', () {
       for (final topicId in ['simple-1', 'simple-hundreds']) {
         final validated = validateTrainerParams('topic-chain-flash', {
           'topicId': topicId,
@@ -33,22 +33,9 @@ void main() {
 
         for (final step in chain.steps) {
           final resolved = resolveStepAudio(step);
-          expect(resolved.assets, isNotEmpty);
-          expect(
-            File('assets/${resolved.operationAsset}').existsSync(),
-            isTrue,
-          );
-          for (final amountAsset in resolved.amountAssets) {
-            expect(File('assets/$amountAsset').existsSync(), isTrue);
-          }
-          if (topicId == 'simple-hundreds') {
-            expect(
-              resolved.amountAssets.any(
-                (asset) => asset.contains('/hundreds/'),
-              ),
-              isTrue,
-            );
-          }
+          expect(resolved.assets, isEmpty);
+          expect(resolved.operationAsset, isEmpty);
+          expect(resolved.amountAssets, isEmpty);
         }
       }
     });

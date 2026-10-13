@@ -2,7 +2,6 @@
 
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 
-const kLettersSyllablesAudioAssetBase = 'audio/ru/letters-syllables';
 const kLettersSyllablesPlaybackRate = 1.0;
 final _cyrillicToken = RegExp(r'^[\u0400-\u04FF]{1,2}$');
 
@@ -107,7 +106,7 @@ String? getLetterSyllableAudioAsset(String token) {
     return null;
   }
 
-  return speechPlaybackPath(semanticKey, '$kLettersSyllablesAudioAssetBase/$relativePath');
+  return speechPlaybackPath(semanticKey);
 }
 
 bool hasLetterSyllableAudio(String token) {

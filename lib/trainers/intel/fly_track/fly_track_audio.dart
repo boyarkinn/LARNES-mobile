@@ -4,13 +4,8 @@ import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
-/// Asset paths relative to `assets/` (ClipPlayer prefixes `assets/`).
-const kFlyTrackAudioAssetBase = 'audio/ru/intel/fly-track';
-
 const kFlyTrackAudioPlaybackRate = 1.5;
 const kFlyTrackInstructionDurationFallbackMs = 3888;
-
-String flyTrackAssetPath(String fileName) => '$kFlyTrackAudioAssetBase/$fileName';
 
 String? _flyCue(String fileName) {
   final key = switch (fileName) {
@@ -27,14 +22,12 @@ String? _flyCue(String fileName) {
     'by-4.mp3' => 'explanation:fly-track:by-4',
     _ => null,
   };
-  final legacy = flyTrackAssetPath(fileName);
-  return key == null ? legacy : spokenCueAsset(key, legacy);
+  return key == null ? null : spokenCueAsset(key);
 }
 
-String getFlyTrackInstructionAudioAsset() =>
-    _flyCue('instruction.mp3') ?? flyTrackAssetPath('instruction.mp3');
+String getFlyTrackInstructionAudioAsset() => _flyCue('instruction.mp3') ?? '';
 
-String getFlyTrackAnswerAudioAsset() => _flyCue('tap.mp3') ?? flyTrackAssetPath('tap.mp3');
+String getFlyTrackAnswerAudioAsset() => _flyCue('tap.mp3') ?? '';
 
 List<String> getFlyTrackMoveAudioAssets(
   FlyDirection direction,
@@ -71,10 +64,9 @@ Future<void> playFlyTrackAudio(
     return Future<void>.value();
   }
 
-  final catalog = assetPaths.any((path) => !path.startsWith('audio/'));
   return getSharedClipPlayer().play(
     assetPaths,
-    playbackRate: catalog ? 1 : kFlyTrackAudioPlaybackRate,
+    playbackRate: 1,
     onStarted: onStarted,
   );
 }

@@ -10,8 +10,8 @@ import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 
 void main() {
   test('downloads a real recording once, reuses it, and keeps the open launch', () async {
-    final current = await File('../platform/public/audio/ru/math/digit-find-tap/instruction.mp3').readAsBytes();
-    final newer = await File('../platform/public/audio/ru/math/fruit-count-tap/targets/apple.mp3').readAsBytes();
+    final current = List<int>.generate(64, (index) => index);
+    final newer = List<int>.generate(64, (index) => 255 - index);
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     final base = 'http://${server.address.address}:${server.port}';
     final currentClip = _clip(current, 'number:8', base);
@@ -311,7 +311,7 @@ void main() {
     again.release();
   });
 
-  test('a published number waits and an unpublished bank does not', () {
+  test('an unpublished required number blocks the launch', () {
     final clip = _clip([4, 4, 4], 'number:8', catalogAudioPublicBase);
 
     expect(catalogExpectsStimuli(_manifest([clip], 1)), isTrue);
@@ -326,7 +326,7 @@ void main() {
         ],
         trainerKey: 'digit-find-tap',
       )),
-      isFalse,
+      isTrue,
     );
   });
 }

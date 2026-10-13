@@ -1,5 +1,7 @@
 /// Web: `platform/src/trainers/shared/letters-syllables/resolve-letter-syllable-audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+
 const kLettersSyllablesAudioAssetBase = 'audio/ru/letters-syllables';
 const kLettersSyllablesPlaybackRate = 1.0;
 final _cyrillicToken = RegExp(r'^[\u0400-\u04FF]{1,2}$');
@@ -85,12 +87,27 @@ String? getLetterSyllableRelativePath(String token) {
   return '$lesson-$consonant/$lesson-$normalized.mp3';
 }
 
-String? getLetterSyllableAudioAsset(String token) {
-  final relativePath = getLetterSyllableRelativePath(token);
-  if (relativePath == null) {
+String? letterSyllableAudioKey(String token) {
+  final normalized = normalizeLetterSyllableToken(token);
+  if (normalized == null || getLetterSyllableRelativePath(normalized) == null) {
     return null;
   }
-  return '$kLettersSyllablesAudioAssetBase/$relativePath';
+
+  if (normalized.length == 1) {
+    return 'phoneme:ru:$normalized';
+  }
+
+  return 'syllable:ru:$normalized';
+}
+
+String? getLetterSyllableAudioAsset(String token) {
+  final relativePath = getLetterSyllableRelativePath(token);
+  final semanticKey = letterSyllableAudioKey(token);
+  if (relativePath == null || semanticKey == null) {
+    return null;
+  }
+
+  return speechPlaybackPath(semanticKey, '$kLettersSyllablesAudioAssetBase/$relativePath');
 }
 
 bool hasLetterSyllableAudio(String token) {

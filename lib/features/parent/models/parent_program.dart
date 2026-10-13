@@ -1,3 +1,5 @@
+import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
+
 enum ParentProgramProgressStatus {
   notStarted('not_started'),
   inProgress('in_progress'),
@@ -129,11 +131,13 @@ class ParentProgramPlayStep {
     required this.lessonOrdinal,
     required this.isLastInLesson,
     required this.isLastInProgram,
+    this.audioManifest,
   });
 
   factory ParentProgramPlayStep.fromJson(Map<String, dynamic> json) {
     final rawParams = json['params'];
     return ParentProgramPlayStep(
+      audioManifest: ExerciseAudioManifest.fromJson(json['audioManifest']),
       id: json['id'] as String,
       trainerKey: json['trainerKey'] as String,
       params: rawParams is Map ? Map<String, dynamic>.from(rawParams) : const {},
@@ -151,6 +155,7 @@ class ParentProgramPlayStep {
   final int lessonOrdinal;
   final bool isLastInLesson;
   final bool isLastInProgram;
+  final ExerciseAudioManifest? audioManifest;
 }
 
 enum ParentProgramUnavailableReason {

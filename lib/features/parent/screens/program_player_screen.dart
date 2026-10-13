@@ -7,6 +7,7 @@ import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:larnes_mobile/trainers/audio/catalog_audio_cache.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
@@ -68,6 +69,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
         _isCompleted = snapshot.isCompleted;
         _isLoading = false;
       });
+      await warmCatalogManifests(snapshot.steps.map((step) => step.audioManifest));
     } on ParentApiException catch (error) {
       if (mounted) {
         setState(() {
@@ -217,6 +219,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       onExit: _exit,
       child: TrainerPlayer(
         key: ValueKey(step.id),
+        audioManifest: step.audioManifest,
         trainerKey: step.trainerKey,
         params: step.params,
         l10n: l10n,

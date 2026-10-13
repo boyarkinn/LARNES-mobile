@@ -344,6 +344,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
 
           return TrainerPlayer(
             key: ValueKey(step.id),
+            audioManifest: step.audioManifest,
             trainerKey: step.trainerKey,
             params: step.params,
             runtimeSnapshot: step.runtimeSnapshot,

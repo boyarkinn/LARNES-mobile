@@ -402,6 +402,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
           playStepAudio(
             step,
             playbackRate: playbackRate,
+            stepPauseSec: stepPauseSec,
             onStarted: startStepTimer,
           ),
         );

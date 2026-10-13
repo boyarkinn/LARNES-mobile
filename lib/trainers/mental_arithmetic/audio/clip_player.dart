@@ -48,9 +48,7 @@ class ClipPlayer {
 
     try {
       await player.setAudioSources(
-        queue
-            .map((path) => AudioSource.asset('assets/$path'))
-            .toList(growable: false),
+        queue.map(_sourceFor).toList(growable: false),
         preload: true,
       );
       await player.setSpeed(rate);
@@ -108,6 +106,15 @@ ClipPlayer? _shared;
 
 ClipPlayer getSharedClipPlayer() {
   return _shared ??= ClipPlayer();
+}
+
+AudioSource _sourceFor(String path) {
+  if (path.startsWith('/') || path.contains(r':\') || path.startsWith('file://')) {
+    final local = path.startsWith('file://') ? Uri.parse(path).toFilePath() : path;
+    return AudioSource.file(local);
+  }
+
+  return AudioSource.asset('assets/$path');
 }
 
 Future<void> resetSharedClipPlayerForTests() async {

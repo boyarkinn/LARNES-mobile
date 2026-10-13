@@ -3,6 +3,7 @@
 /// Ассеты: `assets/{images,audio}/ru/first-words/{урок}/{slug}.{png|mp3}`
 /// Плеер — существующий `getSharedClipPlayer`, не новый Audio.
 
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
 
 const kFirstWordsImageAssetBase = 'images/ru/first-words';
@@ -65,10 +66,12 @@ String? getFirstWordImageWidgetAsset(String slug) {
 
 String? getFirstWordAudioAsset(String slug) {
   final stem = getFirstWordRelativeStem(slug);
-  if (stem == null) {
+  final semanticKey = wordAudioKey(slug);
+  if (stem == null || semanticKey == null) {
     return null;
   }
-  return '$kFirstWordsAudioAssetBase/$stem.mp3';
+
+  return speechPlaybackPath(semanticKey, '$kFirstWordsAudioAssetBase/$stem.mp3');
 }
 
 bool hasFirstWord(String slug) {

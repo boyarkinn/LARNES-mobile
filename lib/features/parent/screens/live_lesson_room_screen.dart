@@ -354,6 +354,7 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
 
           return TrainerPlayer(
             key: ValueKey(step.id),
+            audioManifest: step.audioManifest,
             trainerKey: step.trainerKey,
             params: step.params,
             runtimeSnapshot: step.runtimeSnapshot,

@@ -1,3 +1,5 @@
+import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
+
 enum ParentHomeworkTab {
   due,
   upcoming,
@@ -110,6 +112,7 @@ class ParentHomeworkPlayStep {
     required this.params,
     this.runtimeSnapshot,
     required this.sortOrder,
+    this.audioManifest,
     this.boardWork,
   });
 
@@ -118,6 +121,7 @@ class ParentHomeworkPlayStep {
     final rawRuntimeSnapshot = json['runtimeSnapshot'];
     final rawBoardWork = json['boardWork'];
     return ParentHomeworkPlayStep(
+      audioManifest: ExerciseAudioManifest.fromJson(json['audioManifest']),
       boardWork: rawBoardWork is List ? List<dynamic>.from(rawBoardWork) : null,
       id: json['id'] as String,
       trainerKey: json['trainerKey'] as String,
@@ -136,6 +140,7 @@ class ParentHomeworkPlayStep {
   final Map<String, dynamic> params;
   final Map<String, dynamic>? runtimeSnapshot;
   final int sortOrder;
+  final ExerciseAudioManifest? audioManifest;
 
   /// Только у задания «Доска»: сохранённый рисунок ребёнка.
   final List<dynamic>? boardWork;

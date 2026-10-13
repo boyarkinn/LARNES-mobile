@@ -5214,6 +5214,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Time zone saved'**
   String get timeZoneSaved;
+
+  /// No description provided for @catalogAudioPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the exercise sound'**
+  String get catalogAudioPreparing;
+
+  /// No description provided for @catalogAudioBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The exercise sound is not ready yet'**
+  String get catalogAudioBlocked;
+
+  /// No description provided for @catalogAudioRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get catalogAudioRetry;
 }
 
 class _AppLocalizationsDelegate

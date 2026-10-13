@@ -206,6 +206,7 @@ class _KioskProgramPlayerViewState extends State<KioskProgramPlayerView> {
       onExit: _handleExit,
       child: TrainerPlayer(
         key: ValueKey(step.id),
+        audioManifest: step.audioManifest,
         trainerKey: step.trainerKey,
         params: step.params,
         l10n: l10n,

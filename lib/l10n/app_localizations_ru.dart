@@ -2822,4 +2822,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get timeZoneSaved => 'Часовой пояс сохранён';
+
+  @override
+  String get catalogAudioPreparing => 'Готовим звук упражнения';
+
+  @override
+  String get catalogAudioBlocked => 'Звук упражнения ещё не готов';
+
+  @override
+  String get catalogAudioRetry => 'Повторить';
 }

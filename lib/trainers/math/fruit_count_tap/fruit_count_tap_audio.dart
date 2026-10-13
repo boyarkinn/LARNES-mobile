@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/math/fruit-count-tap/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 
@@ -29,8 +30,8 @@ String getFruitCountTapInstructionAudioAsset() =>
 
 String getFruitCountTapTargetAudioAsset(String fruit) {
   final slug = normalizeFruitSlug(fruit);
-  return _fruitTargetAudioAssets[slug] ??
-      _fruitTargetAudioAssets['watermelon']!;
+  final legacy = _fruitTargetAudioAssets[slug] ?? _fruitTargetAudioAssets['watermelon']!;
+  return speechPlaybackPath(fruitAudioKey(slug), legacy) ?? legacy;
 }
 
 Future<void> playFruitCountTapInstruction() {
@@ -41,9 +42,17 @@ Future<void> playFruitCountTapInstruction() {
 }
 
 Future<void> playFruitCountTapTargetFruit(String fruit) {
+  final slug = normalizeFruitSlug(fruit);
+  final legacy = _fruitTargetAudioAssets[slug] ?? _fruitTargetAudioAssets['watermelon']!;
+  final path = speechPlaybackPath(fruitAudioKey(slug), legacy);
+
+  if (path == null) {
+    return Future<void>.value();
+  }
+
   return getSharedClipPlayer().play(
-    [getFruitCountTapTargetAudioAsset(fruit)],
-    playbackRate: kFruitCountTapInstructionPlaybackRate,
+    [path],
+    playbackRate: path == legacy ? kFruitCountTapInstructionPlaybackRate : 1,
   );
 }
 

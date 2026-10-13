@@ -1074,6 +1074,9 @@
   "timeZoneSourceDevice": "По устройству",
   "timeZoneSourceManual": "Выбран вручную",
   "timeZoneSaved": "Часовой пояс сохранён",
+  "catalogAudioPreparing": "Готовим звук упражнения",
+  "catalogAudioBlocked": "Звук упражнения ещё не готов",
+  "catalogAudioRetry": "Повторить",
   "@timeZoneSourceCity": {
     "placeholders": {
       "city": {

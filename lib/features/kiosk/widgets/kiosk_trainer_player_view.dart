@@ -211,6 +211,7 @@ class _KioskTrainerPlayerViewState extends State<KioskTrainerPlayerView> {
 
           return TrainerPlayer(
             key: ValueKey('${snapshot.assignmentId}-${widget.reloadToken}-${step.id}'),
+            audioManifest: step.audioManifest,
             trainerKey: step.trainerKey,
             params: step.params,
             runtimeSnapshot: step.runtimeSnapshot,

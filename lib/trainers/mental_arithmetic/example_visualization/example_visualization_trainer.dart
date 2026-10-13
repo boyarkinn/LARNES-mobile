@@ -408,6 +408,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
           playStepAudio(
             step,
             playbackRate: playbackRate,
+            stepPauseSec: stepPauseSec,
             onStarted: startStepTimer,
           ),
         );
@@ -537,6 +538,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
             playStepAudio(
               step,
               playbackRate: playbackRate,
+              stepPauseSec: stepPauseSec,
               onStarted: startPauseTimer,
             ),
           );

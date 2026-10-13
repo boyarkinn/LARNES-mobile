@@ -3,6 +3,7 @@
 /// Пути — Flutter [AssetSource] без префикса `assets/`
 /// (файлы в `assets/audio/ru/mental-arithmetic/...`).
 
+import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 
 const kMentalAudioAssetBase = 'audio/ru/mental-arithmetic';
@@ -25,28 +26,25 @@ class StepAudioResolution {
 
 String getOperationAudioAsset(String sign) {
   final file = sign == '+' ? 'plus.mp3' : 'minus.mp3';
-  return '$kMentalAudioAssetBase/operations/$file';
+  return numberAudioFileForKey(operationAudioKey(sign))?.path ??
+      '$kMentalAudioAssetBase/operations/$file';
 }
 
 /// 0…99 → numbers; круглые / составные 100…999 → hundreds [+ numbers].
+/// Опубликованный файл того же ключа заменяет старый.
 List<String> getAmountAudioAssets(int amount) {
-  if (amount < 0 || amount > 999) {
-    return const [];
+  return [
+    for (final key in amountAudioKeys(amount))
+      numberAudioFileForKey(key)?.path ?? _legacyAmountAsset(key),
+  ];
+}
+
+String _legacyAmountAsset(String semanticKey) {
+  if (semanticKey.startsWith('number:hundreds:')) {
+    return '$kMentalAudioAssetBase/hundreds/${semanticKey.substring('number:hundreds:'.length)}.mp3';
   }
 
-  if (amount <= 99) {
-    return ['$kMentalAudioAssetBase/numbers/$amount.mp3'];
-  }
-
-  final hundreds = (amount ~/ 100) * 100;
-  final rest = amount % 100;
-  final paths = <String>['$kMentalAudioAssetBase/hundreds/$hundreds.mp3'];
-
-  if (rest > 0) {
-    paths.add('$kMentalAudioAssetBase/numbers/$rest.mp3');
-  }
-
-  return paths;
+  return '$kMentalAudioAssetBase/numbers/${semanticKey.substring('number:'.length)}.mp3';
 }
 
 /// Один клип, если операнд целиком в одном файле; иначе null.

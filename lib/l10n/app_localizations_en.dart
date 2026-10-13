@@ -2801,4 +2801,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timeZoneSaved => 'Time zone saved';
+
+  @override
+  String get catalogAudioPreparing => 'Preparing the exercise sound';
+
+  @override
+  String get catalogAudioBlocked => 'The exercise sound is not ready yet';
+
+  @override
+  String get catalogAudioRetry => 'Try again';
 }

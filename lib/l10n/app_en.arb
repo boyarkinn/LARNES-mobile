@@ -1123,6 +1123,9 @@
   "timeZoneSourceDevice": "From device",
   "timeZoneSourceManual": "Selected manually",
   "timeZoneSaved": "Time zone saved",
+  "catalogAudioPreparing": "Preparing the exercise sound",
+  "catalogAudioBlocked": "The exercise sound is not ready yet",
+  "catalogAudioRetry": "Try again",
   "@timeZoneSourceCity": {
     "placeholders": {
       "city": {

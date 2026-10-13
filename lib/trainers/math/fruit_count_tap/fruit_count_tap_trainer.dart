@@ -161,6 +161,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       assetPath: getFruitCountTapInstructionAudioAsset(),
       playbackRate: kFruitCountTapInstructionPlaybackRate,
       fallbackMs: kFruitCountTapInstructionDurationFallbackMs,
+      semanticKey: 'instruction:fruit-count-tap',
     ).timeout(
       const Duration(milliseconds: kFruitCountTapInstructionDurationFallbackMs),
       onTimeout: () => kFruitCountTapInstructionDurationFallbackMs,
@@ -170,6 +171,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:fruit-count-tap',
       text: fruitCountTapInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -377,6 +379,7 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
           return switch (_phase) {
             FruitCountTapPhase.instruction => TrainerInstructionScene(
               length: _instructionLength,
+              speechKey: 'instruction:fruit-count-tap',
               text: fruitCountTapInstructionText,
             ),
             FruitCountTapPhase.countdown => Center(

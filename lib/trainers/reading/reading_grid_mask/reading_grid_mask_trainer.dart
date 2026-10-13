@@ -19,6 +19,7 @@ class ReadingGridMaskTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingGridMaskInstructionText,
+      trainerKey: 'reading-grid-mask',
       letterCount: play.letterCount,
       letterPauseMs: play.letterPauseMs,
       onComplete: onComplete,

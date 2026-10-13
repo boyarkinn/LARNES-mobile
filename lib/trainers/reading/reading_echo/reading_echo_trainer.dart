@@ -1,8 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/reading/reading_echo/model.dart';
+import 'package:larnes_mobile/trainers/reading/shared/echo_fragment.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
@@ -17,11 +21,13 @@ class ReadingEchoTrainer extends StatefulWidget {
 }
 
 class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
-  Timer? _instructionTimer;
-  Timer? _typeTimer;
   Timer? _stepTimer;
+  void Function()? _cancelInstruction;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  var _narratorMissing = false;
+  var _playToken = 0;
   var _step = 0;
   late List<String> _sentences;
   late int _pauseMs;
@@ -34,7 +40,7 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _cancelInstruction != null) return;
       _armInstruction();
     });
   }
@@ -49,6 +55,8 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
       setState(() {
         _phase = 'instruction';
         _instructionLength = 0;
+        _instructionSpeech = '';
+        _narratorMissing = false;
         _step = 0;
       });
       _armInstruction();
@@ -73,33 +81,47 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
   }
 
   void _cancelTimers() {
-    _instructionTimer?.cancel();
-    _typeTimer?.cancel();
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _stepTimer?.cancel();
-    _instructionTimer = null;
-    _typeTimer = null;
     _stepTimer = null;
+    _playToken += 1;
+    unawaited(getSharedClipPlayer().cancel());
   }
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingEchoInstructionText.isEmpty
-        ? readingEchoInstructionMs
-        : (readingEchoInstructionMs / readingEchoInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingEchoInstructionMs,
+      fallbackText: readingEchoInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
+        if (!mounted) return;
+        setState(() {
+          _step = 0;
+          _narratorMissing = false;
+          _phase = 'play';
+        });
+        _armStep();
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-echo',
+    );
+  }
+
+  void _beginPause() {
+    _stepTimer?.cancel();
+    _stepTimer = Timer(Duration(milliseconds: _pauseMs), () {
       if (!mounted) return;
-      if (_instructionLength >= readingEchoInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingEchoInstructionMs), () {
-      if (!mounted) return;
-      setState(() {
-        _step = 0;
-        _phase = 'play';
-      });
+      setState(() => _step += 1);
       _armStep();
     });
   }
@@ -110,17 +132,46 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
       setState(() => _phase = 'rest');
       return;
     }
-    _stepTimer = Timer(Duration(milliseconds: _pauseMs), () {
-      if (!mounted) return;
-      setState(() => _step += 1);
-      _armStep();
-    });
+
+    final sentence = _sentences[_step];
+    final file = speechAudioFile(echoFragmentAudioKey(sentence));
+    if (file == null || file.durationMs <= 0) {
+      setState(() => _narratorMissing = true);
+      _beginPause();
+      return;
+    }
+
+    setState(() => _narratorMissing = false);
+    final token = _playToken + 1;
+    _playToken = token;
+    var playbackStarted = false;
+    unawaited(getSharedClipPlayer().play([file.path], playbackRate: 1, onStarted: () {
+      if (!mounted || token != _playToken || playbackStarted) {
+        return;
+      }
+      playbackStarted = true;
+      _stepTimer?.cancel();
+      _stepTimer = Timer(Duration(milliseconds: file.durationMs + 400), () {
+        if (!mounted || token != _playToken) return;
+        _playToken += 1;
+        unawaited(getSharedClipPlayer().cancel());
+        _beginPause();
+      });
+    }).then((_) {
+      if (!mounted || token != _playToken) return;
+      _stepTimer?.cancel();
+      _beginPause();
+    }));
   }
 
   void _replay() {
     _stepTimer?.cancel();
+    _playToken += 1;
+    unawaited(getSharedClipPlayer().cancel());
+    final current = _step < _sentences.length ? _step : (_sentences.isEmpty ? 0 : _sentences.length - 1);
     setState(() {
-      _step = 0;
+      _step = current;
+      _narratorMissing = false;
       _phase = 'play';
     });
     _armStep();
@@ -131,7 +182,7 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: readingEchoInstructionText,
+        text: _instructionSpeech.isEmpty ? readingEchoInstructionText : _instructionSpeech,
       );
     }
 
@@ -143,6 +194,15 @@ class _ReadingEchoTrainerState extends State<ReadingEchoTrainer> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_narratorMissing)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Диктор для этого текста ещё не опубликован',
+                    style: TextStyle(color: Color(0xFF155E75), fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               Text.rich(
                 TextSpan(
                   children: [

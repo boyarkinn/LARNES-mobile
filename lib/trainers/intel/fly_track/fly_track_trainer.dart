@@ -181,12 +181,14 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
       assetPath: getFlyTrackInstructionAudioAsset(),
       playbackRate: kFlyTrackAudioPlaybackRate,
       fallbackMs: kFlyTrackInstructionDurationFallbackMs,
+      semanticKey: 'instruction:fly-track',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:fly-track',
       text: _instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -425,6 +427,7 @@ class _FlyTrackTrainerState extends State<FlyTrackTrainer> {
     if (_phase == FlyTrackPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:fly-track',
         text: _instructionText,
       );
     }

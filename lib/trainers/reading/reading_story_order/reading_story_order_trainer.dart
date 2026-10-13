@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_story_order/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -22,6 +23,8 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
   Timer? _typeTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _placed = 0;
   late List<String> _sentences;
   late List<int> _order;
@@ -78,6 +81,8 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _instructionTimer = null;
@@ -86,21 +91,25 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingStoryInstructionText.isEmpty
-        ? readingStoryInstructionMs
-        : (readingStoryInstructionMs / readingStoryInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingStoryInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingStoryInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingStoryInstructionMs,
+      fallbackText: readingStoryInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'order');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-story-order',
+    );
   }
 
   void _choose(int index) {
@@ -115,7 +124,7 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingStoryInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingStoryInstructionText : _instructionSpeech);
     }
 
     if (_phase == 'text') {

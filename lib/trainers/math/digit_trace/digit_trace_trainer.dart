@@ -87,12 +87,14 @@ class _DigitTraceTrainerState extends State<DigitTraceTrainer> {
       assetPath: getDigitTraceInstructionAudioAsset(),
       playbackRate: kDigitTraceInstructionPlaybackRate,
       fallbackMs: kDigitTraceInstructionDurationFallbackMs,
+      semanticKey: 'instruction:digit-trace',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:digit-trace',
       text: digitTraceInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -170,6 +172,7 @@ class _DigitTraceTrainerState extends State<DigitTraceTrainer> {
       child: switch (_phase) {
         DigitTracePhase.instruction => TrainerInstructionScene(
           length: _instructionLength,
+          speechKey: 'instruction:digit-trace',
           text: digitTraceInstructionText,
         ),
         DigitTracePhase.countdown => Center(

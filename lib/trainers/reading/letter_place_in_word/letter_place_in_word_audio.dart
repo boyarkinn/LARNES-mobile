@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kLetterPlaceInWordAudioAssetBase =
@@ -10,9 +11,11 @@ String getLetterPlaceInWordInstructionAudioAsset() =>
     '$kLetterPlaceInWordAudioAssetBase/instruction.mp3';
 
 Future<void> playLetterPlaceInWordInstruction() {
-  return getSharedClipPlayer().play([
-    getLetterPlaceInWordInstructionAudioAsset(),
-  ], playbackRate: kLetterPlaceInWordInstructionPlaybackRate);
+  return playSpokenCue(
+    semanticKey: 'instruction:letter-place-in-word',
+    legacyAsset: getLetterPlaceInWordInstructionAudioAsset(),
+    legacyRate: kLetterPlaceInWordInstructionPlaybackRate,
+  );
 }
 
 Future<void> cancelLetterPlaceInWordAudio() {

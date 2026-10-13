@@ -10,6 +10,7 @@ class PublishedAudioClip {
     required this.url,
     required this.versionId,
     this.contentLocale,
+    this.text = '',
   });
 
   final int bytes;
@@ -18,6 +19,7 @@ class PublishedAudioClip {
   final String locale;
   final String semanticKey;
   final String sha256;
+  final String text;
   final String url;
   final String versionId;
 }
@@ -80,6 +82,7 @@ class ExerciseAudioManifest {
           locale: item['locale'] as String? ?? '',
           semanticKey: item['semanticKey'] as String? ?? '',
           sha256: item['sha256'] as String? ?? '',
+          text: item['text'] as String? ?? '',
           url: url,
           versionId: item['versionId'] as String? ?? '',
         ));

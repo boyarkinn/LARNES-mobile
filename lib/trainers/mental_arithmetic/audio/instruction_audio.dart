@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/audio/instruction-audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';
 
 const kSolveModes = ['abacus', 'mental'];
@@ -21,5 +22,7 @@ String solveModeInstructionLabel(String mode) =>
 
 String getInstructionAudioAsset(String mode) {
   final file = mode == 'mental' ? 'mental.mp3' : 'abacus.mp3';
-  return '$kMentalAudioAssetBase/instructions/$file';
+  final legacy = '$kMentalAudioAssetBase/instructions/$file';
+  final key = mode == 'mental' ? 'instruction:solve-mode:mental' : 'instruction:solve-mode:abacus';
+  return spokenCueAsset(key, legacy) ?? legacy;
 }

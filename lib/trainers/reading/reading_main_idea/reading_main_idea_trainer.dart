@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_main_idea/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -22,6 +23,8 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
   Timer? _typeTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   late List<String> _choices;
   late int _correctIndex;
   late String _confirm;
@@ -84,6 +87,8 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _instructionTimer = null;
@@ -92,21 +97,25 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingMainIdeaInstructionText.isEmpty
-        ? readingMainIdeaInstructionMs
-        : (readingMainIdeaInstructionMs / readingMainIdeaInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingMainIdeaInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingMainIdeaInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingMainIdeaInstructionMs,
+      fallbackText: readingMainIdeaInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'choose');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-main-idea',
+    );
   }
 
   void _choose(int index) {
@@ -122,7 +131,7 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingMainIdeaInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingMainIdeaInstructionText : _instructionSpeech);
     }
 
     if (_phase == 'confirm') {

@@ -22,6 +22,7 @@ class ReadingUpsideDownTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingUpsideDownInstructionText,
+      trainerKey: 'reading-upside-down',
       letterCount: play.letterCount,
       letterPauseMs: play.letterPauseMs,
       onComplete: onComplete,

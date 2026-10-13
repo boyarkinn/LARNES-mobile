@@ -90,12 +90,14 @@ class _NumberRowShowTrainerState extends State<NumberRowShowTrainer> {
       assetPath: getNumberRowShowInstructionAudioAsset(),
       playbackRate: kNumberRowShowInstructionPlaybackRate,
       fallbackMs: kNumberRowShowInstructionDurationFallbackMs,
+      semanticKey: 'instruction:number-row-show',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:number-row-show',
       text: kNumberRowShowInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -171,6 +173,7 @@ class _NumberRowShowTrainerState extends State<NumberRowShowTrainer> {
       child: switch (_phase) {
         NumberRowShowPhase.instruction => TrainerInstructionScene(
             length: _instructionLength,
+            speechKey: 'instruction:number-row-show',
             text: kNumberRowShowInstructionText,
           ),
         NumberRowShowPhase.countdown => Center(

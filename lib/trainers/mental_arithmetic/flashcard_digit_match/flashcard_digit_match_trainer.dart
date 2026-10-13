@@ -131,12 +131,14 @@ _roundIndex = 0;
       assetPath: getFlashcardDigitMatchInstructionAudioAsset(),
       playbackRate: kFlashcardDigitMatchInstructionPlaybackRate,
       fallbackMs: kFlashcardDigitMatchInstructionDurationFallbackMs,
+      semanticKey: 'instruction:flashcard-digit-match',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:flashcard-digit-match',
       text: kFlashcardDigitMatchInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -238,6 +240,7 @@ _roundIndex = 0;
     if (_phase == FlashcardDigitMatchPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:flashcard-digit-match',
         text: kFlashcardDigitMatchInstructionText,
       );
     }

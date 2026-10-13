@@ -1,6 +1,7 @@
 /// Web: `platform/src/trainers/math/fruit-count-tap/audio.ts`
 
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_model.dart';
 
@@ -35,9 +36,10 @@ String getFruitCountTapTargetAudioAsset(String fruit) {
 }
 
 Future<void> playFruitCountTapInstruction() {
-  return getSharedClipPlayer().play(
-    [getFruitCountTapInstructionAudioAsset()],
-    playbackRate: kFruitCountTapInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:fruit-count-tap',
+    legacyAsset: getFruitCountTapInstructionAudioAsset(),
+    legacyRate: kFruitCountTapInstructionPlaybackRate,
   );
 }
 

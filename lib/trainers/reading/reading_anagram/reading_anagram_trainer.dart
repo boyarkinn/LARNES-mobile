@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_anagram/model.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
@@ -22,6 +23,8 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
   Timer? _typeTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _placed = 0;
   late String _hint;
   late String _hintText;
@@ -89,6 +92,8 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _instructionTimer = null;
@@ -97,21 +102,25 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingAnagramInstructionText.isEmpty
-        ? readingAnagramInstructionMs
-        : (readingAnagramInstructionMs / readingAnagramInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingAnagramInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingAnagramInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingAnagramInstructionMs,
+      fallbackText: readingAnagramInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'play');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-anagram',
+    );
   }
 
   void _choose(int index) {
@@ -124,7 +133,7 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingAnagramInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingAnagramInstructionText : _instructionSpeech);
     }
 
     final image = _hint == 'picture' ? getFirstWordImageWidgetAsset(_slug) : null;

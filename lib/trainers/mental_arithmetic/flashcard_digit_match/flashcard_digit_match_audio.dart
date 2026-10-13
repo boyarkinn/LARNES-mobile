@@ -1,5 +1,6 @@
 // Web: `platform/src/trainers/mental-arithmetic/flashcard-digit-match/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kFlashcardDigitMatchAudioAssetBase =
@@ -13,9 +14,11 @@ String getFlashcardDigitMatchInstructionAudioAsset() =>
     '$kFlashcardDigitMatchAudioAssetBase/instruction.mp3';
 
 Future<void> playFlashcardDigitMatchInstruction() {
-  return getSharedClipPlayer().play([
-    getFlashcardDigitMatchInstructionAudioAsset(),
-  ], playbackRate: kFlashcardDigitMatchInstructionPlaybackRate);
+  return playSpokenCue(
+    semanticKey: 'instruction:flashcard-digit-match',
+    legacyAsset: getFlashcardDigitMatchInstructionAudioAsset(),
+    legacyRate: kFlashcardDigitMatchInstructionPlaybackRate,
+  );
 }
 
 Future<void> cancelFlashcardDigitMatchAudio() {

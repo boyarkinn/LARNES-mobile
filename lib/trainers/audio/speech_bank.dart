@@ -46,9 +46,22 @@ bool isSpeechBankAudioKey(String semanticKey) {
 }
 
 class SpeechAudioFile {
-  const SpeechAudioFile({required this.path});
+  const SpeechAudioFile({required this.path, this.durationMs = 0, this.locale = '', this.text = ''});
 
+  final int durationMs;
+  final String locale;
   final String path;
+  final String text;
+}
+
+/// Текст опубликованной версии. Пустая запись оставляет фразу экрана.
+String publishedSpeechText(String? semanticKey, String fallback) {
+  if (semanticKey == null) {
+    return fallback;
+  }
+
+  final text = speechAudioFile(semanticKey)?.text.trim() ?? '';
+  return text.isEmpty ? fallback : text;
 }
 
 final Map<String, SpeechAudioFile> _speechAudioFiles = {};
@@ -64,6 +77,10 @@ void setSpeechAudioFiles(Map<String, SpeechAudioFile> files, {Set<String> catalo
 }
 
 /// Готовый файл каталога заменяет старый. Опубликованный, но ещё не скачанный — null.
+SpeechAudioFile? speechAudioFile(String semanticKey) => _speechAudioFiles[semanticKey];
+
+bool speechCatalogHas(String semanticKey) => _speechCatalogKeys.contains(semanticKey);
+
 String? speechPlaybackPath(String? semanticKey, String legacyPath) {
   if (semanticKey == null) {
     return legacyPath;

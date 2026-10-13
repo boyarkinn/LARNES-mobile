@@ -188,12 +188,14 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       assetPath: getExampleVisualizationInstructionAudioAsset(),
       playbackRate: kExampleVisualizationInstructionPlaybackRate,
       fallbackMs: kExampleVisualizationInstructionDurationFallbackMs,
+      semanticKey: 'instruction:example-visualization',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:example-visualization',
       text: kExampleVisualizationInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -273,6 +275,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       assetPath: getExampleVisualizationSolveInstructionAudioAsset(),
       playbackRate: kExampleVisualizationInstructionPlaybackRate,
       fallbackMs: kExampleVisualizationSolveInstructionDurationFallbackMs,
+      semanticKey: 'instruction:example-visualization:solve',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
@@ -284,6 +287,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     });
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:example-visualization:solve',
       text: kExampleVisualizationSolveInstructionText,
       durationMs: durationMs,
       isCurrent: () =>
@@ -591,10 +595,12 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       child: switch (_phase) {
         ExampleVisualizationPhase.instruction => TrainerInstructionScene(
             length: _instructionLength,
+            speechKey: 'instruction:example-visualization',
             text: kExampleVisualizationInstructionText,
           ),
         ExampleVisualizationPhase.solveInstruction => TrainerInstructionScene(
             length: _solveInstructionLength,
+            speechKey: 'instruction:example-visualization:solve',
             text: kExampleVisualizationSolveInstructionText,
           ),
         ExampleVisualizationPhase.countdown => Center(

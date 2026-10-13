@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_reread/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -26,6 +27,8 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   Timer? _clockTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _round = 0;
   var _elapsedMs = 0;
   var _errors = 0;
@@ -92,6 +95,8 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _clockTimer?.cancel();
@@ -108,21 +113,25 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingRereadInstructionText.isEmpty
-        ? readingRereadInstructionMs
-        : (readingRereadInstructionMs / readingRereadInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingRereadInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingRereadInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingRereadInstructionMs,
+      fallbackText: readingRereadInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'read');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-reread',
+    );
   }
 
   void _resetAttempt() {
@@ -193,7 +202,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingRereadInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingRereadInstructionText : _instructionSpeech);
     }
 
     if (_phase == 'read') {

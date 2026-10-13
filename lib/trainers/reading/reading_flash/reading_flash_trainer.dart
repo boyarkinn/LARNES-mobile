@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_flash/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -27,6 +28,8 @@ class _ReadingFlashTrainerState extends State<ReadingFlashTrainer> {
   Timer? _playTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _index = 0;
   var _finished = false;
   late List<String> _chunks;
@@ -77,6 +80,8 @@ class _ReadingFlashTrainerState extends State<ReadingFlashTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _playTimer?.cancel();
@@ -93,22 +98,26 @@ class _ReadingFlashTrainerState extends State<ReadingFlashTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingFlashInstructionText.isEmpty
-        ? readingFlashInstructionMs
-        : (readingFlashInstructionMs / readingFlashInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingFlashInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingFlashInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingFlashInstructionMs,
+      fallbackText: readingFlashInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'show');
       _armShow();
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-flash',
+    );
   }
 
   void _armShow() {
@@ -140,7 +149,7 @@ class _ReadingFlashTrainerState extends State<ReadingFlashTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: readingFlashInstructionText,
+        text: _instructionSpeech.isEmpty ? readingFlashInstructionText : _instructionSpeech,
       );
     }
 

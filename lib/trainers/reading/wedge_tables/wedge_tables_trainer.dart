@@ -147,12 +147,14 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
       assetPath: getWedgeTablesInstructionAudioAsset(),
       playbackRate: kWedgeTablesInstructionPlaybackRate,
       fallbackMs: kWedgeTablesInstructionDurationFallbackMs,
+      semanticKey: 'instruction:wedge-tables',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:wedge-tables',
       text: kWedgeTablesInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -240,6 +242,7 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
     if (_phase == WedgePhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:wedge-tables',
         text: kWedgeTablesInstructionText,
       );
     }

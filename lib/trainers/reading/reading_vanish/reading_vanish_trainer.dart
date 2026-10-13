@@ -20,6 +20,7 @@ class ReadingVanishTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingVanishInstructionText,
+      trainerKey: 'reading-vanish',
       letterCount: play.letterCount,
       letterPauseMs: play.letterPauseMs,
       onComplete: onComplete,

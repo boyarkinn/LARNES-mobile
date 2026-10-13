@@ -179,12 +179,14 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
       assetPath: getLetterFindBySoundInstructionAudioAsset(),
       playbackRate: kLetterFindBySoundInstructionPlaybackRate,
       fallbackMs: kLetterFindBySoundInstructionDurationFallbackMs,
+      semanticKey: 'instruction:letter-find-by-sound',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:letter-find-by-sound',
       text: _instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -386,6 +388,7 @@ class _LetterFindBySoundTrainerState extends State<LetterFindBySoundTrainer> {
     if (_phase == LetterFindBySoundPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:letter-find-by-sound',
         text: _instructionText,
       );
     }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_sprint/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -22,6 +23,8 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
   Timer? _typeTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   late List<String> _queue;
   late List<String> _sentences;
   late String _resetToken;
@@ -73,6 +76,8 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _instructionTimer = null;
@@ -81,21 +86,25 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingSprintInstructionText.isEmpty
-        ? readingSprintInstructionMs
-        : (readingSprintInstructionMs / readingSprintInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingSprintInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingSprintInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingSprintInstructionMs,
+      fallbackText: readingSprintInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'word');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-word-sprint',
+    );
   }
 
   void _mark(String mark) {
@@ -109,7 +118,7 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingSprintInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingSprintInstructionText : _instructionSpeech);
     }
 
     if (_phase == 'sentences') {

@@ -19,6 +19,7 @@ class ReadingSnakeTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingSnakeInstructionText,
+      trainerKey: 'reading-snake',
       letterCount: play.letterCount,
       letterPauseMs: play.letterPauseMs,
       onComplete: onComplete,

@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+
 class TrainerInstructionTypewriter {
   Timer? _timer;
 
@@ -10,16 +12,18 @@ class TrainerInstructionTypewriter {
     required int durationMs,
     required bool Function() isCurrent,
     required void Function(int length) onLength,
+    String? speechKey,
   }) {
     cancel();
-    if (text.isEmpty) {
+    final shown = publishedSpeechText(speechKey, text);
+    if (shown.isEmpty) {
       return;
     }
 
     var length = 0;
     onLength(0);
 
-    final characterDelayMs = durationMs / text.length;
+    final characterDelayMs = durationMs / shown.length;
     _timer = Timer.periodic(
       Duration(milliseconds: characterDelayMs.round().clamp(1, 1000000)),
       (_) {
@@ -27,7 +31,7 @@ class TrainerInstructionTypewriter {
           return;
         }
 
-        if (length >= text.length) {
+        if (length >= shown.length) {
           cancel();
           return;
         }

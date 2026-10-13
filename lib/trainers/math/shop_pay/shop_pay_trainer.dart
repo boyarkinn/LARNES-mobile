@@ -91,12 +91,14 @@ class _ShopPayTrainerState extends State<ShopPayTrainer> {
       assetPath: getShopPayInstructionAudioAsset(),
       playbackRate: kShopPayInstructionPlaybackRate,
       fallbackMs: kShopPayInstructionDurationFallbackMs,
+      semanticKey: 'instruction:shop-pay',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:shop-pay',
       text: _instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -177,6 +179,7 @@ class _ShopPayTrainerState extends State<ShopPayTrainer> {
       child: switch (_phase) {
         ShopPayPhase.instruction => TrainerInstructionScene(
           length: _instructionLength,
+          speechKey: 'instruction:shop-pay',
           text: _instructionText,
         ),
         ShopPayPhase.countdown => Center(

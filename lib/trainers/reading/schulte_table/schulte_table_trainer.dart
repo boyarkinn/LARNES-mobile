@@ -154,12 +154,14 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
       assetPath: getSchulteTableInstructionAudioAsset(),
       playbackRate: kSchulteTableInstructionPlaybackRate,
       fallbackMs: kSchulteTableInstructionDurationFallbackMs,
+      semanticKey: 'instruction:schulte-table',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:schulte-table',
       text: kSchulteTableInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -251,6 +253,7 @@ class _SchulteTableTrainerState extends State<SchulteTableTrainer> {
     if (_phase == SchultePhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:schulte-table',
         text: kSchulteTableInstructionText,
       );
     }

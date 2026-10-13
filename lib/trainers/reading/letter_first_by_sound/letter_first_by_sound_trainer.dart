@@ -209,12 +209,14 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
       assetPath: getLetterFirstBySoundInstructionAudioAsset(),
       playbackRate: kLetterFirstBySoundInstructionPlaybackRate,
       fallbackMs: kLetterFirstBySoundInstructionDurationFallbackMs,
+      semanticKey: 'instruction:letter-first-by-sound',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:letter-first-by-sound',
       text: _instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -418,6 +420,7 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
     if (_phase == LetterFirstBySoundPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:letter-first-by-sound',
         text: _instructionText,
       );
     }

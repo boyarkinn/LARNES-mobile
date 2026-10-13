@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/reading/letter-first-by-sound/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kLetterFirstBySoundAudioAssetBase = 'audio/ru/reading/letter-first-by-sound';
@@ -10,9 +11,10 @@ String getLetterFirstBySoundInstructionAudioAsset() =>
     '$kLetterFirstBySoundAudioAssetBase/instruction.mp3';
 
 Future<void> playLetterFirstBySoundInstruction() {
-  return getSharedClipPlayer().play(
-    [getLetterFirstBySoundInstructionAudioAsset()],
-    playbackRate: kLetterFirstBySoundInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:letter-first-by-sound',
+    legacyAsset: getLetterFirstBySoundInstructionAudioAsset(),
+    legacyRate: kLetterFirstBySoundInstructionPlaybackRate,
   );
 }
 

@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
+import 'package:larnes_mobile/trainers/audio/background_music.dart';
+import 'package:larnes_mobile/trainers/audio/background_music_player.dart';
 import 'package:larnes_mobile/trainers/audio/catalog_audio_cache.dart';
 import 'package:larnes_mobile/trainers/audio/catalog_audio_store.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/catalog/registry.dart';
+import 'package:larnes_mobile/trainers/catalog/trainer_direction.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/runtime/unimplemented_trainer.dart';
@@ -37,6 +42,7 @@ class TrainerPlayer extends StatefulWidget {
 }
 
 class _TrainerPlayerState extends State<TrainerPlayer> {
+  final TrainerBackgroundMusic _music = TrainerBackgroundMusic();
   ExerciseAudioManifest? _pinnedAudio;
   CatalogLaunch? _launch;
   CatalogSignal? _signal;
@@ -46,12 +52,22 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
 
   bool get _expectsStimuli => catalogExpectsStimuli(_pinnedAudio);
 
+  TrainerDirection? get _direction {
+    final key = TrainerKey.tryParse(widget.trainerKey);
+    if (key == null) {
+      return null;
+    }
+    return trainerDefinitions[key]?.direction;
+  }
+
   @override
   void initState() {
     super.initState();
     // Первый кадр запуска фиксирует набор. Поздний ответ каталога его не меняет.
+    _music.bind(_direction);
     _pinnedAudio = widget.audioManifest;
-    _pack = _expectsStimuli ? CatalogPack.preparing : CatalogPack.missing;
+    final hasClips = widget.audioManifest?.clips.isNotEmpty ?? false;
+    _pack = _expectsStimuli || hasClips ? CatalogPack.preparing : CatalogPack.missing;
     _prepare();
   }
 
@@ -62,6 +78,8 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     _launch?.release();
     setNumberAudioFiles(const {});
     setSpeechAudioFiles(const {});
+    setBackgroundMusicFiles(const {});
+    unawaited(_music.dispose());
     super.dispose();
   }
 
@@ -136,10 +154,36 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     setNumberAudioFiles(files);
     setSpeechAudioFiles(
       {
-        for (final entry in files.entries) entry.key: SpeechAudioFile(path: entry.value.path),
+        for (final entry in files.entries)
+          entry.key: SpeechAudioFile(
+            durationMs: entry.value.durationMs,
+            locale: _clipLocale(manifest, entry.key),
+            path: entry.value.path,
+            text: _clipText(manifest, entry.key),
+          ),
       },
       catalogKeys: manifest?.clips.map((clip) => clip.semanticKey).toSet() ?? const {},
     );
+  }
+
+  String _clipLocale(ExerciseAudioManifest? manifest, String semanticKey) {
+    final clips = manifest?.clips ?? const [];
+    for (final clip in clips) {
+      if (clip.semanticKey == semanticKey) {
+        return clip.locale;
+      }
+    }
+    return '';
+  }
+
+  String _clipText(ExerciseAudioManifest? manifest, String semanticKey) {
+    final clips = manifest?.clips ?? const [];
+    for (final clip in clips) {
+      if (clip.semanticKey == semanticKey) {
+        return clip.text;
+      }
+    }
+    return '';
   }
 
   void _retry() {

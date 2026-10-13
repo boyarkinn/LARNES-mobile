@@ -103,12 +103,14 @@ class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
       assetPath: getLetterPlaceInWordInstructionAudioAsset(),
       playbackRate: kLetterPlaceInWordInstructionPlaybackRate,
       fallbackMs: kLetterPlaceInWordInstructionDurationFallbackMs,
+      semanticKey: 'instruction:letter-place-in-word',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:letter-place-in-word',
       text: kLetterPlaceInWordInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -159,6 +161,7 @@ class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
     if (_phase == LetterPlaceInWordPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:letter-place-in-word',
         text: kLetterPlaceInWordInstructionText,
       );
     }

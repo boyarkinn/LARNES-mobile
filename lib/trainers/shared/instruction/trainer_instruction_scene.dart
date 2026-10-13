@@ -1,6 +1,7 @@
 // Web: `platform/src/trainers/shared/instruction/trainer-instruction-scene.tsx`
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/theme/trainer_direction_theme.dart';
 
@@ -12,14 +13,17 @@ class TrainerInstructionScene extends StatelessWidget {
     super.key,
     required this.length,
     required this.text,
+    this.speechKey,
   });
 
   final int length;
+  final String? speechKey;
   final String text;
 
   @override
   Widget build(BuildContext context) {
-    final visibleText = text.substring(0, length.clamp(0, text.length));
+    final shown = publishedSpeechText(speechKey, text);
+    final visibleText = shown.substring(0, length.clamp(0, shown.length));
     final directionTheme = TrainerDirectionThemeScope.maybeOf(context)?.theme;
     final textColor = directionTheme?.deep ?? kTrainerInstructionColor;
     final cursorColor = directionTheme?.base ?? kTrainerInstructionCursorColor;

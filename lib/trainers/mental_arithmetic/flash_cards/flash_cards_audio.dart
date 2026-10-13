@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/flash-cards/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kFlashCardsAudioAssetBase = 'audio/ru/mental-arithmetic/flash-cards';
@@ -13,9 +14,11 @@ String getFlashCardsInstructionAudioAsset() =>
     '$kFlashCardsAudioAssetBase/instruction.mp3';
 
 Future<void> playFlashCardsInstruction() {
-  return getSharedClipPlayer().play([
-    getFlashCardsInstructionAudioAsset(),
-  ], playbackRate: kFlashCardsInstructionPlaybackRate);
+  return playSpokenCue(
+    semanticKey: 'instruction:flash-cards',
+    legacyAsset: getFlashCardsInstructionAudioAsset(),
+    legacyRate: kFlashCardsInstructionPlaybackRate,
+  );
 }
 
 Future<void> cancelFlashCardsAudio() {

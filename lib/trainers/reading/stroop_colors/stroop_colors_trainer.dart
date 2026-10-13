@@ -141,12 +141,14 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
       assetPath: getStroopColorsInstructionAudioAsset(),
       playbackRate: kStroopColorsInstructionPlaybackRate,
       fallbackMs: kStroopColorsInstructionDurationFallbackMs,
+      semanticKey: 'instruction:stroop-colors',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:stroop-colors',
       text: kStroopColorsInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -245,6 +247,7 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
     if (_phase == StroopPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:stroop-colors',
         text: kStroopColorsInstructionText,
       );
     }

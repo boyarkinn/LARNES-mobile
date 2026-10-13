@@ -87,6 +87,7 @@ class DotsDigitAbacusExperienceScene extends StatelessWidget {
                   .withValues(alpha: 0.82),
               child: TrainerInstructionScene(
                 length: taskInstructionLength,
+                speechKey: 'instruction:dots-digit-abacus:task',
                 text: kDotsDigitAbacusTaskInstructionText,
               ),
             ),

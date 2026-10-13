@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_phrases/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -23,6 +24,8 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
   Timer? _holdTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _hiddenCount = 0;
   var _finished = false;
   final _accepted = <int>{};
@@ -79,6 +82,8 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _holdTimer?.cancel();
@@ -89,22 +94,26 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingPhraseInstructionText.isEmpty
-        ? readingPhraseInstructionMs
-        : (readingPhraseInstructionMs / readingPhraseInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingPhraseInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingPhraseInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingPhraseInstructionMs,
+      fallbackText: readingPhraseInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'play');
       if (_mode == 'fade') _armHold();
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-phrases',
+    );
   }
 
   void _armHold() {
@@ -139,7 +148,7 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: readingPhraseInstructionText,
+        text: _instructionSpeech.isEmpty ? readingPhraseInstructionText : _instructionSpeech,
       );
     }
 

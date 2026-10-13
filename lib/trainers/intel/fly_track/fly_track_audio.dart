@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/intel/fly-track/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
@@ -11,9 +12,29 @@ const kFlyTrackInstructionDurationFallbackMs = 3888;
 
 String flyTrackAssetPath(String fileName) => '$kFlyTrackAudioAssetBase/$fileName';
 
-String getFlyTrackInstructionAudioAsset() => flyTrackAssetPath('instruction.mp3');
+String? _flyCue(String fileName) {
+  final key = switch (fileName) {
+    'instruction.mp3' => 'instruction:fly-track',
+    'tap.mp3' => 'feedback:fly-track:tap',
+    'fly-moved.mp3' => 'explanation:fly-track:moved',
+    'up.mp3' => 'explanation:fly-track:up',
+    'down.mp3' => 'explanation:fly-track:down',
+    'left.mp3' => 'explanation:fly-track:left',
+    'right.mp3' => 'explanation:fly-track:right',
+    'by-1.mp3' => 'explanation:fly-track:by-1',
+    'by-2.mp3' => 'explanation:fly-track:by-2',
+    'by-3.mp3' => 'explanation:fly-track:by-3',
+    'by-4.mp3' => 'explanation:fly-track:by-4',
+    _ => null,
+  };
+  final legacy = flyTrackAssetPath(fileName);
+  return key == null ? legacy : spokenCueAsset(key, legacy);
+}
 
-String getFlyTrackAnswerAudioAsset() => flyTrackAssetPath('tap.mp3');
+String getFlyTrackInstructionAudioAsset() =>
+    _flyCue('instruction.mp3') ?? flyTrackAssetPath('instruction.mp3');
+
+String getFlyTrackAnswerAudioAsset() => _flyCue('tap.mp3') ?? flyTrackAssetPath('tap.mp3');
 
 List<String> getFlyTrackMoveAudioAssets(
   FlyDirection direction,
@@ -21,15 +42,15 @@ List<String> getFlyTrackMoveAudioAssets(
   required bool includeFlyMoved,
 }) {
   final clips = [
-    flyTrackAssetPath('by-$distance.mp3'),
-    flyTrackAssetPath('$direction.mp3'),
+    _flyCue('by-$distance.mp3'),
+    _flyCue('$direction.mp3'),
   ];
 
-  if (!includeFlyMoved) {
-    return clips;
+  if (includeFlyMoved) {
+    clips.insert(0, _flyCue('fly-moved.mp3'));
   }
 
-  return [flyTrackAssetPath('fly-moved.mp3'), ...clips];
+  return clips.whereType<String>().toList();
 }
 
 List<String> getFlyTrackReplayAudioAssets(
@@ -37,18 +58,23 @@ List<String> getFlyTrackReplayAudioAssets(
   FlyDistance distance,
 ) {
   return [
-    flyTrackAssetPath('by-$distance.mp3'),
-    flyTrackAssetPath('$direction.mp3'),
-  ];
+    _flyCue('by-$distance.mp3'),
+    _flyCue('$direction.mp3'),
+  ].whereType<String>().toList();
 }
 
 Future<void> playFlyTrackAudio(
   List<String> assetPaths, {
   void Function()? onStarted,
 }) {
+  if (assetPaths.isEmpty) {
+    return Future<void>.value();
+  }
+
+  final catalog = assetPaths.any((path) => !path.startsWith('audio/'));
   return getSharedClipPlayer().play(
     assetPaths,
-    playbackRate: kFlyTrackAudioPlaybackRate,
+    playbackRate: catalog ? 1 : kFlyTrackAudioPlaybackRate,
     onStarted: onStarted,
   );
 }

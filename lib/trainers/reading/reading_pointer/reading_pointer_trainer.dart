@@ -20,6 +20,7 @@ class ReadingPointerTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingPointerInstructionText,
+      trainerKey: 'reading-pointer',
       letterCount: play.letterCount,
       letterPauseMs: play.letterPauseMs,
       onComplete: onComplete,

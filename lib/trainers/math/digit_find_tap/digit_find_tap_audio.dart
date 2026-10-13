@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/math/digit-find-tap/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_find_tap_model.dart';
@@ -16,9 +17,10 @@ String getDigitFindTapInstructionAudioAsset() =>
     '$kDigitFindTapAudioAssetBase/instruction.mp3';
 
 Future<void> playDigitFindTapInstruction() {
-  return getSharedClipPlayer().play(
-    [getDigitFindTapInstructionAudioAsset()],
-    playbackRate: kDigitFindTapInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:digit-find-tap',
+    legacyAsset: getDigitFindTapInstructionAudioAsset(),
+    legacyRate: kDigitFindTapInstructionPlaybackRate,
   );
 }
 

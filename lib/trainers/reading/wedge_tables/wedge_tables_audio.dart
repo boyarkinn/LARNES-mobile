@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/reading/wedge-tables/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kWedgeTablesAudioAssetBase = 'audio/ru/reading/wedge-tables';
@@ -10,9 +11,10 @@ String getWedgeTablesInstructionAudioAsset() =>
     '$kWedgeTablesAudioAssetBase/instruction.mp3';
 
 Future<void> playWedgeTablesInstruction() {
-  return getSharedClipPlayer().play(
-    [getWedgeTablesInstructionAudioAsset()],
-    playbackRate: kWedgeTablesInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:wedge-tables',
+    legacyAsset: getWedgeTablesInstructionAudioAsset(),
+    legacyRate: kWedgeTablesInstructionPlaybackRate,
   );
 }
 

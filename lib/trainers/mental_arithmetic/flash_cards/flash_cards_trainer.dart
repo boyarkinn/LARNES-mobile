@@ -164,12 +164,14 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
       assetPath: getFlashCardsInstructionAudioAsset(),
       playbackRate: kFlashCardsInstructionPlaybackRate,
       fallbackMs: kFlashCardsInstructionDurationFallbackMs,
+      semanticKey: 'instruction:flash-cards',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:flash-cards',
       text: _instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -517,6 +519,7 @@ class _FlashCardsTrainerState extends State<FlashCardsTrainer>
     if (_phase == FlashCardsPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:flash-cards',
         text: _instructionText,
       );
     }

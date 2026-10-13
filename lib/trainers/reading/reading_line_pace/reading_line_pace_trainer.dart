@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_blocks/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_line_pace/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_line_pace/reading_line_pace_scene.dart';
@@ -27,6 +28,8 @@ class _ReadingLinePaceTrainerState extends State<ReadingLinePaceTrainer> {
   Timer? _doneTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _index = 0;
   var _finished = false;
   late List<String> _lines;
@@ -78,6 +81,8 @@ class _ReadingLinePaceTrainerState extends State<ReadingLinePaceTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _lineTimer?.cancel();
@@ -96,23 +101,26 @@ class _ReadingLinePaceTrainerState extends State<ReadingLinePaceTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final text = readingLinePaceInstructionText;
-    final stepMs = text.isEmpty
-        ? readingLinePaceInstructionMs
-        : (readingLinePaceInstructionMs / text.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= text.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingLinePaceInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingLinePaceInstructionMs,
+      fallbackText: readingLinePaceInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'play');
       _armLines();
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-line-pace',
+    );
   }
 
   void _armLines() {
@@ -142,7 +150,7 @@ class _ReadingLinePaceTrainerState extends State<ReadingLinePaceTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: readingLinePaceInstructionText,
+        text: _instructionSpeech.isEmpty ? readingLinePaceInstructionText : _instructionSpeech,
       );
     }
 

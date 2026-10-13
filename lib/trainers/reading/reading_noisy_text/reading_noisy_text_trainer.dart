@@ -22,6 +22,7 @@ class ReadingNoisyTextTrainer extends StatelessWidget {
 
     return ReadingPassagePlay(
       instruction: readingNoisyTextInstructionText,
+      trainerKey: 'reading-noisy-text',
       letterCount: plan.letterCount,
       letterPauseMs: plan.letterPauseMs,
       onComplete: onComplete,

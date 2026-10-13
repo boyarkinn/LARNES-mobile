@@ -201,9 +201,10 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     });
 
     if (shouldPlayFlashAudio(stepPauseSec)) {
+      final instructionAsset = getInstructionAudioAsset(solveMode);
       await getSharedClipPlayer().play([
-        getInstructionAudioAsset(solveMode),
-      ], playbackRate: kInstructionPlaybackRate);
+        instructionAsset,
+      ], playbackRate: instructionAsset.startsWith('audio/') ? kInstructionPlaybackRate : 1);
       if (!mounted || !identical(runToken, _runToken)) {
         return;
       }

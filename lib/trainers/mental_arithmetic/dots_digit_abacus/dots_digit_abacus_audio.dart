@@ -1,5 +1,6 @@
 // Web: `platform/src/trainers/mental-arithmetic/dots-digit-abacus/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_sizes.dart';
@@ -28,15 +29,19 @@ String getDotsDigitAbacusAbacusMatchAudioAsset() =>
     '$kDotsDigitAbacusAudioAssetBase/abacus-match.mp3';
 
 Future<void> playDotsDigitAbacusInstruction() {
-  return getSharedClipPlayer().play([
-    getDotsDigitAbacusInstructionAudioAsset(),
-  ], playbackRate: kDotsDigitAbacusAudioPlaybackRate);
+  return playSpokenCue(
+    semanticKey: 'instruction:dots-digit-abacus',
+    legacyAsset: getDotsDigitAbacusInstructionAudioAsset(),
+    legacyRate: kDotsDigitAbacusAudioPlaybackRate,
+  );
 }
 
 Future<void> playDotsDigitAbacusTaskInstruction() {
-  return getSharedClipPlayer().play([
-    getDotsDigitAbacusTaskInstructionAudioAsset(),
-  ], playbackRate: kDotsDigitAbacusAudioPlaybackRate);
+  return playSpokenCue(
+    semanticKey: 'instruction:dots-digit-abacus:task',
+    legacyAsset: getDotsDigitAbacusTaskInstructionAudioAsset(),
+    legacyRate: kDotsDigitAbacusAudioPlaybackRate,
+  );
 }
 
 Future<void> playDotsDigitAbacusCountDigitAudio(int digit) {
@@ -53,20 +58,22 @@ Future<void> playDotsDigitAbacusCountDigitAudio(int digit) {
 Future<void> playDotsDigitAbacusEqualsDigitBridge({
   void Function()? onStarted,
 }) {
-  return getSharedClipPlayer().play(
-    [getDotsDigitAbacusEqualsDigitAudioAsset()],
-    playbackRate: kDotsDigitAbacusAudioPlaybackRate,
-    onStarted: onStarted,
+  onStarted?.call();
+  return playSpokenCue(
+    semanticKey: 'explanation:dots-digit-abacus:equals',
+    legacyAsset: getDotsDigitAbacusEqualsDigitAudioAsset(),
+    legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }
 
 Future<void> playDotsDigitAbacusAbacusMatchBridge({
   void Function()? onStarted,
 }) {
-  return getSharedClipPlayer().play(
-    [getDotsDigitAbacusAbacusMatchAudioAsset()],
-    playbackRate: kDotsDigitAbacusAudioPlaybackRate,
-    onStarted: onStarted,
+  onStarted?.call();
+  return playSpokenCue(
+    semanticKey: 'explanation:dots-digit-abacus:abacus',
+    legacyAsset: getDotsDigitAbacusAbacusMatchAudioAsset(),
+    legacyRate: kDotsDigitAbacusAudioPlaybackRate,
   );
 }
 

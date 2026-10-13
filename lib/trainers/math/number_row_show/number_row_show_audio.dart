@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/math/number-row-show/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kNumberRowShowAudioAssetBase = 'audio/ru/math/number-row-show';
@@ -11,9 +12,10 @@ String getNumberRowShowInstructionAudioAsset() =>
     '$kNumberRowShowAudioAssetBase/instruction.mp3';
 
 Future<void> playNumberRowShowInstruction() {
-  return getSharedClipPlayer().play(
-    [getNumberRowShowInstructionAudioAsset()],
-    playbackRate: kNumberRowShowInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:number-row-show',
+    legacyAsset: getNumberRowShowInstructionAudioAsset(),
+    legacyRate: kNumberRowShowInstructionPlaybackRate,
   );
 }
 

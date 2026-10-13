@@ -7,6 +7,9 @@ import 'package:crypto/crypto.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
+import 'package:larnes_mobile/trainers/audio/background_music.dart';
+import 'package:larnes_mobile/trainers/reading/shared/echo_fragment.dart';
 
 const catalogAudioPublicBase = 'https://audio.larnes.ru';
 const catalogAudioTimeout = Duration(seconds: 10);
@@ -107,15 +110,20 @@ bool catalogExpectsStimuli(ExerciseAudioManifest? manifest) {
     return false;
   }
 
-  final publishedStimulus = manifest.clips.any((clip) => !isCatalogInstructionKey(clip.semanticKey));
+  final publishedStimulus = manifest.clips.any(
+    (clip) => !isCatalogInstructionKey(clip.semanticKey) && !isBackgroundMusicAudioKey(clip.semanticKey),
+  );
   final missingRequired = manifest.missing.any((item) => _isRequiredLaunchStimulus(item.semanticKey));
   return publishedStimulus || missingRequired;
 }
 
 bool _isRequiredLaunchStimulus(String semanticKey) {
   return !isCatalogInstructionKey(semanticKey) &&
+      !isBackgroundMusicAudioKey(semanticKey) &&
       !isNumberBankAudioKey(semanticKey) &&
-      !isSpeechBankAudioKey(semanticKey);
+      !isSpeechBankAudioKey(semanticKey) &&
+      !isSpokenCueAudioKey(semanticKey) &&
+      !isEchoFragmentAudioKey(semanticKey);
 }
 
 bool catalogTrainerMayStart(CatalogPack pack) {
@@ -280,9 +288,22 @@ class CatalogAudioStore {
       }
 
       paths[clip.semanticKey] = file.path;
+
+      if (isBackgroundMusicAudioKey(clip.semanticKey)) {
+        rememberBackgroundMusicFile(clip.semanticKey, file.path);
+      }
     }
 
-    await Future.wait(clips.map(take));
+    final blocking = [
+      for (final clip in clips)
+        if (!isBackgroundMusicAudioKey(clip.semanticKey)) clip,
+    ];
+    final music = [
+      for (final clip in clips)
+        if (isBackgroundMusicAudioKey(clip.semanticKey)) clip,
+    ];
+    await Future.wait(blocking.map(take));
+    unawaited(Future.wait(music.map(take)));
 
     if (!aborted) {
       await _evict();
@@ -304,7 +325,7 @@ class CatalogAudioStore {
     var stimuliReady = !missingRequired;
 
     for (final clip in clips) {
-      if (isCatalogInstructionKey(clip.semanticKey)) {
+      if (isCatalogInstructionKey(clip.semanticKey) || isBackgroundMusicAudioKey(clip.semanticKey)) {
         continue;
       }
 

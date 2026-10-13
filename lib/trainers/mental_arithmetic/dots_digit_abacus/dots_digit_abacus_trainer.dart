@@ -180,6 +180,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       assetPath: getDotsDigitAbacusInstructionAudioAsset(),
       playbackRate: kDotsDigitAbacusAudioPlaybackRate,
       fallbackMs: kDotsDigitAbacusInstructionDurationFallbackMs,
+      semanticKey: 'instruction:dots-digit-abacus',
     );
 
     if (!mounted || !identical(runToken, _runToken)) {
@@ -187,6 +188,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:dots-digit-abacus',
       text: kDotsDigitAbacusInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -218,6 +220,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
       assetPath: getDotsDigitAbacusTaskInstructionAudioAsset(),
       playbackRate: kDotsDigitAbacusAudioPlaybackRate,
       fallbackMs: kDotsDigitAbacusTaskInstructionDurationFallbackMs,
+      semanticKey: 'instruction:dots-digit-abacus:task',
     );
 
     if (!mounted || !identical(runToken, _runToken)) {
@@ -225,6 +228,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:dots-digit-abacus:task',
       text: kDotsDigitAbacusTaskInstructionText,
       durationMs: durationMs,
       isCurrent: () =>
@@ -444,6 +448,7 @@ class _DotsDigitAbacusTrainerState extends State<DotsDigitAbacusTrainer> {
     if (_phase == DotsDigitAbacusPhase.instruction) {
       return TrainerInstructionScene(
         length: _instructionLength,
+        speechKey: 'instruction:dots-digit-abacus',
         text: kDotsDigitAbacusInstructionText,
       );
     }

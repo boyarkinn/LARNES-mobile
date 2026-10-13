@@ -90,12 +90,14 @@ class _AppleCountShowTrainerState extends State<AppleCountShowTrainer> {
       assetPath: getAppleCountShowInstructionAudioAsset(),
       playbackRate: kAppleCountShowInstructionPlaybackRate,
       fallbackMs: kAppleCountShowInstructionDurationFallbackMs,
+      semanticKey: 'instruction:apple-count-show',
     );
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:apple-count-show',
       text: kAppleCountShowInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -176,6 +178,7 @@ class _AppleCountShowTrainerState extends State<AppleCountShowTrainer> {
       child: switch (_phase) {
         AppleCountShowPhase.instruction => TrainerInstructionScene(
             length: _instructionLength,
+            speechKey: 'instruction:apple-count-show',
             text: kAppleCountShowInstructionText,
           ),
         AppleCountShowPhase.countdown => Center(

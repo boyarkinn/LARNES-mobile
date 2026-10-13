@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_find_span/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -22,6 +23,8 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   Timer? _typeTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _finished = false;
   final _accepted = <int>{};
   late List<String> _words;
@@ -84,6 +87,8 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _instructionTimer = null;
@@ -92,21 +97,25 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingFindInstructionText.isEmpty
-        ? readingFindInstructionMs
-        : (readingFindInstructionMs / readingFindInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingFindInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingFindInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingFindInstructionMs,
+      fallbackText: readingFindInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'play');
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-find-span',
+    );
   }
 
   void _acceptWord(int index) {
@@ -121,7 +130,7 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: readingFindInstructionText);
+      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingFindInstructionText : _instructionSpeech);
     }
 
     return TrainerScene(

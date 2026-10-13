@@ -1,5 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/example-visualization/audio.ts`
 
+import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const kExampleVisualizationAudioAssetBase =
@@ -17,16 +18,18 @@ String getExampleVisualizationSolveInstructionAudioAsset() =>
     '$kExampleVisualizationAudioAssetBase/solve-instruction.mp3';
 
 Future<void> playExampleVisualizationInstruction() {
-  return getSharedClipPlayer().play(
-    [getExampleVisualizationInstructionAudioAsset()],
-    playbackRate: kExampleVisualizationInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:example-visualization',
+    legacyAsset: getExampleVisualizationInstructionAudioAsset(),
+    legacyRate: kExampleVisualizationInstructionPlaybackRate,
   );
 }
 
 Future<void> playExampleVisualizationSolveInstruction() {
-  return getSharedClipPlayer().play(
-    [getExampleVisualizationSolveInstructionAudioAsset()],
-    playbackRate: kExampleVisualizationInstructionPlaybackRate,
+  return playSpokenCue(
+    semanticKey: 'instruction:example-visualization:solve',
+    legacyAsset: getExampleVisualizationSolveInstructionAudioAsset(),
+    legacyRate: kExampleVisualizationInstructionPlaybackRate,
   );
 }
 

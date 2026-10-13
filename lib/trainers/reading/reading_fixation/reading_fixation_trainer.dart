@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_fixation/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
@@ -26,6 +27,8 @@ class _ReadingFixationTrainerState extends State<ReadingFixationTrainer> {
   Timer? _playTimer;
   var _phase = 'instruction';
   var _instructionLength = 0;
+  var _instructionSpeech = '';
+  void Function()? _cancelInstruction;
   var _index = 0;
   var _finished = false;
   late List<String> _fragments;
@@ -75,6 +78,8 @@ class _ReadingFixationTrainerState extends State<ReadingFixationTrainer> {
   }
 
   void _cancelTimers() {
+    _cancelInstruction?.call();
+    _cancelInstruction = null;
     _instructionTimer?.cancel();
     _typeTimer?.cancel();
     _playTimer?.cancel();
@@ -91,22 +96,26 @@ class _ReadingFixationTrainerState extends State<ReadingFixationTrainer> {
 
   void _armInstruction() {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final stepMs = readingFixationInstructionText.isEmpty
-        ? readingFixationInstructionMs
-        : (readingFixationInstructionMs / readingFixationInstructionText.length).round().clamp(16, 400);
-    _typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-      if (!mounted) return;
-      if (_instructionLength >= readingFixationInstructionText.length) {
-        timer.cancel();
-        return;
-      }
-      setState(() => _instructionLength += 1);
-    });
-    _instructionTimer = Timer(const Duration(milliseconds: readingFixationInstructionMs), () {
+    _cancelInstruction = startReadingInstruction(
+      fallbackMs: readingFixationInstructionMs,
+      fallbackText: readingFixationInstructionText,
+      isMounted: () => mounted,
+      onFinished: () {
       if (!mounted) return;
       setState(() => _phase = 'play');
       _armFragment();
-    });
+      },
+      onFrame: (text, length) {
+        _instructionSpeech = text;
+        _instructionLength = length;
+        if (length == 0 || !mounted) {
+          return;
+        }
+        setState(() {});
+      },
+      reduceMotion: reduceMotion,
+      trainerKey: 'reading-fixation',
+    );
   }
 
   void _armFragment() {
@@ -131,7 +140,7 @@ class _ReadingFixationTrainerState extends State<ReadingFixationTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: readingFixationInstructionText,
+        text: _instructionSpeech.isEmpty ? readingFixationInstructionText : _instructionSpeech,
       );
     }
 

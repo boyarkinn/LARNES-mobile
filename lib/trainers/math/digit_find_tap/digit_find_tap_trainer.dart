@@ -163,6 +163,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
       assetPath: getDigitFindTapInstructionAudioAsset(),
       playbackRate: kDigitFindTapInstructionPlaybackRate,
       fallbackMs: kDigitFindTapInstructionDurationFallbackMs,
+      semanticKey: 'instruction:digit-find-tap',
     ).timeout(
       const Duration(milliseconds: kDigitFindTapInstructionDurationFallbackMs),
       onTimeout: () => kDigitFindTapInstructionDurationFallbackMs,
@@ -172,6 +173,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
     }
 
     _instructionTypewriter.start(
+      speechKey: 'instruction:digit-find-tap',
       text: digitFindTapInstructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
@@ -344,6 +346,7 @@ class _DigitFindTapTrainerState extends State<DigitFindTapTrainer> {
       child: switch (_phase) {
         DigitFindTapPhase.instruction => TrainerInstructionScene(
           length: _instructionLength,
+          speechKey: 'instruction:digit-find-tap',
           text: digitFindTapInstructionText,
         ),
         DigitFindTapPhase.countdown => Center(

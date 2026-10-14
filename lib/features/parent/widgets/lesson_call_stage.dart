@@ -10,6 +10,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_dock.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
@@ -48,6 +49,8 @@ class LessonCallStage extends StatefulWidget {
     required this.trainerOpen,
     this.inviteToken,
     this.fetchPass,
+    this.fetchBoard,
+    this.sendBoard,
     this.claimRoster,
     this.handle,
     this.captureOnJoin = true,
@@ -60,7 +63,9 @@ class LessonCallStage extends StatefulWidget {
   final String? inviteToken;
   final LessonCallStageHandle? handle;
   final bool captureOnJoin;
-  final Future<LessonCallPass?> Function(String locale)? fetchPass;
+  final Future<LessonCallPassOutcome> Function(String locale)? fetchPass;
+  final Future<LessonChildBoard?> Function()? fetchBoard;
+  final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
     required String locale,
@@ -71,13 +76,15 @@ class LessonCallStage extends StatefulWidget {
   State<LessonCallStage> createState() => _LessonCallStageState();
 }
 
-class _LessonCallStageState extends State<LessonCallStage> {
+class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingObserver {
   InAppWebViewController? _web;
   LessonCallPass? _pass;
   String? _html;
   bool _loading = true;
   bool _joined = false;
   bool _inRoom = false;
+  bool _boardWidgets = false;
+  String _boardAudioReady = '';
   bool _cameraOn = false;
   bool _micOn = false;
   bool _hearBlocked = false;
@@ -100,6 +107,15 @@ class _LessonCallStageState extends State<LessonCallStage> {
   Future<void>? _ending;
   bool _ended = false;
   _LessonCallLink _link = _LessonCallLink.none;
+  String _movingDomain = '';
+  bool _holding = false;
+  Timer? _soundTimer;
+  bool _following = false;
+  Timer? _boardTimer;
+  bool _boardBusy = false;
+  int _boardGen = 1;
+  String _boardKey = '';
+  LessonChildBoard? _board;
 
   /// Урок открыт входом родителя, а не гостевой ссылкой или экраном класса.
   bool get _parentSession =>
@@ -111,7 +127,17 @@ class _LessonCallStageState extends State<LessonCallStage> {
   void initState() {
     super.initState();
     widget.handle?.attach(endCall);
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed || _ended) {
+      return;
+    }
+    unawaited(_followRoom());
+    unawaited(_pullBoard());
   }
 
   Future<void> _load() async {
@@ -126,7 +152,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
     await _openPass();
   }
 
-  Future<LessonCallPass?> _fetchPass() async {
+  Future<LessonCallPassOutcome> _fetchPass() async {
     final locale = LocaleScope.read(context).localeCode;
     final injected = widget.fetchPass;
     if (injected != null) {
@@ -145,15 +171,31 @@ class _LessonCallStageState extends State<LessonCallStage> {
 
   Future<void> _openPass() async {
     try {
-      final pass = await _fetchPass();
+      final outcome = await _fetchPass();
       if (!mounted) {
         return;
       }
+      if (outcome.moving) {
+        setState(() {
+          _holding = true;
+          _loading = false;
+          _movingDomain = outcome.domain;
+        });
+        _watchSound();
+        _watchBoard();
+        _tryStart();
+        return;
+      }
+      final pass = outcome.pass;
       setState(() {
         _pass = pass;
         _loading = false;
         _link = pass == null ? _LessonCallLink.failed : _LessonCallLink.none;
       });
+      if (pass?.workspaceFormat == 'board') {
+        _watchSound();
+        _watchBoard();
+      }
       _tryStart();
     } on ParentApiException catch (error) {
       _failOpen(error.code);
@@ -190,10 +232,19 @@ class _LessonCallStageState extends State<LessonCallStage> {
       if (!_renewStill(callGen)) {
         return;
       }
-      final pass = await _fetchPass();
+      final outcome = await _fetchPass();
       if (!_renewStill(callGen)) {
         return;
       }
+      if (outcome.moving) {
+        setState(() {
+          _holding = true;
+          _movingDomain = outcome.domain.isEmpty ? _movingDomain : outcome.domain;
+        });
+        await _web?.evaluateJavascript(source: 'holdRoom()');
+        return;
+      }
+      final pass = outcome.pass;
       if (pass == null) {
         setState(() => _link = _LessonCallLink.failed);
         await _web?.evaluateJavascript(source: 'renewFailed("failed")');
@@ -237,6 +288,8 @@ class _LessonCallStageState extends State<LessonCallStage> {
     if (code == 'inactive' || code == 'forbidden') {
       _roster?.cancel();
       _roster = null;
+      _boardTimer?.cancel();
+      _boardTimer = null;
     }
     if (code == 'inactive' && mounted) {
       setState(() {
@@ -251,11 +304,169 @@ class _LessonCallStageState extends State<LessonCallStage> {
     return mounted && callGen == _callGen && _link != _LessonCallLink.closed;
   }
 
+  void _watchSound() {
+    if (_soundTimer != null) return;
+    _soundTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      unawaited(_followRoom());
+    });
+  }
+
+  Future<void> _followRoom() async {
+    if (_following || _ended || _link == _LessonCallLink.closed) return;
+    _following = true;
+    try {
+      final outcome = await _fetchPass();
+      if (!mounted || _ended) return;
+      if (outcome.moving) {
+        setState(() {
+          _holding = true;
+          _movingDomain = outcome.domain.isEmpty ? _movingDomain : outcome.domain;
+        });
+        await _web?.evaluateJavascript(source: 'holdRoom()');
+        return;
+      }
+      final pass = outcome.pass;
+      if (pass == null || pass.workspaceFormat != 'board') return;
+      final previous = _pass?.room;
+      setState(() {
+        _holding = false;
+        _pass = pass;
+      });
+      if (previous == pass.room && _inRoom) return;
+      await _web?.evaluateJavascript(
+        source: 'switchRoom(${jsonEncode(pass.toStageJson())})',
+      );
+    } catch (_) {
+      // A failed refresh does not put the child back into the shared call.
+    } finally {
+      _following = false;
+    }
+  }
+
+  void _watchBoard() {
+    if (_boardTimer != null) return;
+    _boardTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      unawaited(_pullBoard());
+    });
+    unawaited(_pullBoard());
+  }
+
+  Future<LessonChildBoard?> _fetchBoard() {
+    final injected = widget.fetchBoard;
+    if (injected != null) return injected();
+    final invite = widget.inviteToken;
+    if (invite != null) {
+      return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(token: invite);
+    }
+    return AuthScope.of(context).parentApi.fetchChildBoard(childId: widget.childId);
+  }
+
+  Future<bool> _sendBoard(Map<String, dynamic> body) {
+    final injected = widget.sendBoard;
+    if (injected != null) return injected(body);
+    final invite = widget.inviteToken;
+    if (invite != null) {
+      return AuthScope.of(context).lessonInviteGuestApi.sendBoard(token: invite, body: body);
+    }
+    return AuthScope.of(context).parentApi.sendChildBoard(childId: widget.childId, body: body);
+  }
+
+  Future<void> _pullBoard() async {
+    if (_boardBusy || _ended || !mounted) return;
+    if (_pass?.workspaceFormat != 'board' && !_holding) return;
+    _boardBusy = true;
+    try {
+      final board = await _fetchBoard();
+      if (!mounted || board == null || _ended) return;
+      final key = '${board.focusRoomId}|${board.roomEpoch}|${board.instanceKey}';
+      if (key != _boardKey) {
+        _boardKey = key;
+        _boardGen += 1;
+      }
+      _board = board;
+      await _web?.evaluateJavascript(
+        source: 'setChildRoom(${jsonEncode({
+          'childId': widget.childId,
+          'exercises': board.exercises,
+          'epoch': board.roomEpoch,
+          'focus': board.focusRoomId,
+          'gen': _boardGen,
+          'revision': board.sceneRevision,
+          'scene': board.scene,
+          'sound': board.sound,
+          'title': board.title,
+        })})',
+      );
+    } catch (_) {
+      // A missed snapshot does not end the lesson or the call.
+    } finally {
+      _boardBusy = false;
+    }
+  }
+
+  Future<void> _answerRoom(String detail) async {
+    final board = _board;
+    if (board == null) return;
+    try {
+      final body = jsonDecode(detail);
+      if (body is! Map) return;
+      final gen = body['gen'];
+      final tile = body['tileId'];
+      final instance = body['instanceId'];
+      final room = body['roomId'];
+      final generation = body['instanceGeneration'];
+      final revision = body['expectedRevision'];
+      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
+      if (tile is! String || instance is! String || room is! String) return;
+      if (generation is! int || revision is! int) return;
+      await _sendBoard({
+        'kind': 'command',
+        'command': {
+          'expectedRevision': revision,
+          'instanceGeneration': generation,
+          'lessonSessionId': board.lessonSessionId,
+          'operationId': 'ans${DateTime.now().microsecondsSinceEpoch}',
+          'payload': {'tileId': tile},
+          'protocolVersion': 1,
+          'roomId': room,
+          'trainerInstanceId': instance,
+          'type': 'commit',
+        },
+      });
+    } catch (_) {
+      // A late or broken tap is dropped.
+    }
+  }
+
+  Future<void> _sceneRoom(String detail) async {
+    final board = _board;
+    if (board == null || board.focusRoomId == 'main') return;
+    try {
+      final body = jsonDecode(detail);
+      if (body is! Map) return;
+      final gen = body['gen'];
+      final elements = body['elements'];
+      final roomId = body['roomId'];
+      final epoch = body['epoch'];
+      if (gen is! int || gen != _boardGen || elements is! List) return;
+      if (roomId is! String || epoch is! int || roomId != board.focusRoomId || epoch != board.roomEpoch) return;
+      await _sendBoard({
+        'elements': elements,
+        'kind': 'scene',
+        'roomEpoch': epoch,
+        'roomId': roomId,
+      });
+    } catch (_) {
+      // A stroke from the previous room is not written.
+    }
+  }
+
   void _tryStart() {
     final web = _web;
     final pass = _pass;
     final html = _html;
-    if (web == null || pass == null || html == null || _starting) {
+    final domain = pass?.domain ?? _movingDomain;
+    if (web == null || domain.isEmpty || html == null || _starting) {
       return;
     }
 
@@ -266,7 +477,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
       data: html,
       mimeType: 'text/html',
       encoding: 'utf-8',
-      baseUrl: WebUri('https://${pass.domain}/'),
+      baseUrl: WebUri('https://$domain/'),
     );
   }
 
@@ -593,11 +804,22 @@ class _LessonCallStageState extends State<LessonCallStage> {
       return;
     }
     final detail = message['detail'];
+    if (kind == 'room-answer' && detail is String) {
+      unawaited(_answerRoom(detail));
+      return;
+    }
+    if (kind == 'room-scene' && detail is String) {
+      unawaited(_sceneRoom(detail));
+      return;
+    }
     final block = detail is String && detail.isNotEmpty ? detail : 'failed';
     var stopSession = false;
     var openDevices = false;
     setState(() {
       switch (kind) {
+        case 'board-widgets':
+          _boardWidgets = true;
+          _boardAudioReady = detail is String && detail.isNotEmpty ? detail : 'not-started';
         case 'joined':
           _inRoom = true;
           _link = _LessonCallLink.none;
@@ -701,7 +923,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
     _pageGen += 1;
     _cameraSeq += 1;
     _micSeq += 1;
+    WidgetsBinding.instance.removeObserver(this);
     _roster?.cancel();
+    _soundTimer?.cancel();
+    _boardTimer?.cancel();
     _chromeTimer?.cancel();
     widget.handle?.detach(endCall);
     if (!_ended) {
@@ -711,7 +936,7 @@ class _LessonCallStageState extends State<LessonCallStage> {
   }
 
   Widget _callSurface() {
-    if (_pass == null) {
+    if (_pass == null && !_holding) {
       return ColoredBox(
         color: const Color(0xFF111111),
         child: Center(
@@ -755,6 +980,10 @@ class _LessonCallStageState extends State<LessonCallStage> {
           // Доска не встала. Звонок всё равно открывается.
         }
         if (!mounted) {
+          return;
+        }
+        if (_holding && _pass == null) {
+          await controller.evaluateJavascript(source: 'holdRoom()');
           return;
         }
         await _join();
@@ -892,15 +1121,21 @@ class _LessonCallStageState extends State<LessonCallStage> {
   @override
   Widget build(BuildContext context) {
     final trainer = widget.trainerOpen && widget.body != null;
-    final board = _mode == 'workflow' && !trainer;
-    final handle = board || trainer;
+    final boardFormat = _pass?.workspaceFormat == 'board';
+    final board = boardFormat || (_mode == 'workflow' && !trainer);
+    final handle = !boardFormat && (board || trainer);
 
     return Column(
       children: [
         Flexible(
           child: Stack(
             children: [
-              Positioned.fill(child: _callSurface()),
+              Positioned.fill(
+                child: MetaData(
+                  metaData: _boardWidgets ? _boardAudioReady : '',
+                  child: _callSurface(),
+                ),
+              ),
               if (trainer) Positioned.fill(child: widget.body!),
               if (handle)
                 Positioned(

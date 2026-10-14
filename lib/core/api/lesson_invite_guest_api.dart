@@ -5,6 +5,7 @@ import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/lesson_guest_key_storage.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
@@ -108,7 +109,7 @@ class LessonInviteGuestApi {
     }
   }
 
-  Future<LessonCallPass?> fetchLessonCallPass({
+  Future<LessonCallPassOutcome> fetchLessonCallPass({
     required String token,
     String locale = 'ru',
   }) async {
@@ -126,9 +127,39 @@ class LessonInviteGuestApi {
       if (data == null) {
         throw ParentApiException(l10n.parentLiveLessonCallFailed);
       }
-      return LessonCallPass.fromJson(data);
+      return LessonCallPassOutcome.fromBody(data);
     } on DioException catch (error) {
       throw _parentApiException(error, l10n, fallback: l10n.parentLiveLessonCallFailed);
+    }
+  }
+
+  Future<LessonChildBoard?> fetchBoard({required String token}) async {
+    try {
+      final response = await _client.dio.get(
+        '/api/invite/lesson/guest/board',
+        queryParameters: {'token': token},
+        options: await _guestOptions(),
+      );
+      return LessonChildBoard.fromJson(_asJsonMap(response.data));
+    } on DioException {
+      return null;
+    }
+  }
+
+  Future<bool> sendBoard({
+    required String token,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await _client.dio.post(
+        '/api/invite/lesson/guest/board',
+        queryParameters: {'token': token},
+        data: body,
+        options: await _guestOptions(),
+      );
+      return _asJsonMap(response.data)?['accepted'] == true;
+    } on DioException {
+      return false;
     }
   }
 

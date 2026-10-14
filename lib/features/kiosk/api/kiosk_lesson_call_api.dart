@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/child_session_api_client.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {
@@ -28,25 +29,45 @@ class KioskLessonCallApi {
 
   final ChildSessionApiClient _client;
 
-  Future<LessonCallPass?> fetchPass({String locale = 'ru'}) async {
+  Future<LessonCallPassOutcome> fetchPass({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.get(
         '/api/classroom/devices/me/lesson/call-pass',
         queryParameters: {'locale': locale},
       );
-      final data = _asJsonMap(response.data);
-      final pass = data == null ? null : LessonCallPass.fromJson(data);
-      if (pass == null) {
-        throw KioskApiException(l10n.requestFailed, code: _codeFromBody(data));
+      final outcome = LessonCallPassOutcome.fromBody(_asJsonMap(response.data));
+      if (!outcome.moving && outcome.pass == null) {
+        throw KioskApiException(l10n.requestFailed, code: _codeFromBody(response.data));
       }
-      return pass;
+      return outcome;
     } on DioException catch (error) {
       throw KioskApiException(
         l10n.requestFailed,
         code: _codeFromBody(error.response?.data),
         statusCode: error.response?.statusCode,
       );
+    }
+  }
+
+  Future<LessonChildBoard?> fetchBoard() async {
+    try {
+      final response = await _client.dio.get('/api/classroom/devices/me/lesson/board');
+      return LessonChildBoard.fromJson(_asJsonMap(response.data));
+    } on DioException {
+      return null;
+    }
+  }
+
+  Future<bool> sendBoard(Map<String, dynamic> body) async {
+    try {
+      final response = await _client.dio.post(
+        '/api/classroom/devices/me/lesson/board',
+        data: body,
+      );
+      return _asJsonMap(response.data)?['accepted'] == true;
+    } on DioException {
+      return false;
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:larnes_mobile/core/api/parent_panel_error.dart';
 import 'package:larnes_mobile/core/auth/lesson_guest_key_storage.dart';
 import 'package:larnes_mobile/features/parent/models/child_classroom_qr.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/models/parent_child.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
 import 'package:larnes_mobile/features/parent/models/parent_lesson_invite.dart';
@@ -281,7 +282,7 @@ class ParentApi {
     }
   }
 
-  Future<LessonCallPass?> fetchLessonCallPass({
+  Future<LessonCallPassOutcome> fetchLessonCallPass({
     required String childId,
     String locale = 'ru',
   }) async {
@@ -296,13 +297,40 @@ class ParentApi {
         throw ParentApiException(l10n.parentLiveLessonCallFailed);
       }
 
-      return LessonCallPass.fromJson(data);
+      return LessonCallPassOutcome.fromBody(data);
     } on DioException catch (error) {
       throw _parentApiException(
         error.response?.data,
         l10n,
         fallback: l10n.parentLiveLessonCallFailed,
       );
+    }
+  }
+
+  Future<LessonChildBoard?> fetchChildBoard({required String childId}) async {
+    try {
+      final response = await _client.dio.get(
+        '/api/mobile/parent/children/$childId/live-lesson/board',
+      );
+      return LessonChildBoard.fromJson(_asJsonMap(response.data));
+    } on DioException {
+      return null;
+    }
+  }
+
+  Future<bool> sendChildBoard({
+    required String childId,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/parent/children/$childId/live-lesson/board',
+        data: body,
+      );
+      final data = _asJsonMap(response.data);
+      return data?['accepted'] == true;
+    } on DioException {
+      return false;
     }
   }
 

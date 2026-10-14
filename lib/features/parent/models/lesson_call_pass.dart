@@ -1,3 +1,24 @@
+class LessonCallPassOutcome {
+  const LessonCallPassOutcome.pass(this.pass) : domain = '', moving = false;
+  const LessonCallPassOutcome.moving(this.domain) : pass = null, moving = true;
+  const LessonCallPassOutcome.none() : domain = '', moving = false, pass = null;
+
+  final String domain;
+  final bool moving;
+  final LessonCallPass? pass;
+
+  static LessonCallPassOutcome fromBody(Map<String, dynamic>? json) {
+    if (json == null) return const LessonCallPassOutcome.none();
+    if (json['status'] == 'moving' || json['code'] == 'moving') {
+      final domain = json['domain'];
+      return LessonCallPassOutcome.moving(domain is String ? domain : '');
+    }
+    final pass = LessonCallPass.fromJson(json);
+    if (pass == null) return const LessonCallPassOutcome.none();
+    return LessonCallPassOutcome.pass(pass);
+  }
+}
+
 class LessonCallPass {
   const LessonCallPass({
     required this.displayName,
@@ -6,6 +27,7 @@ class LessonCallPass {
     required this.room,
     required this.xmppDomain,
     this.teacherName = '',
+    this.workspaceFormat = 'classic',
   });
 
   final String displayName;
@@ -14,6 +36,7 @@ class LessonCallPass {
   final String room;
   final String xmppDomain;
   final String teacherName;
+  final String workspaceFormat;
 
   static final _host = RegExp(r'^[A-Za-z0-9.-]+$');
 
@@ -48,6 +71,7 @@ class LessonCallPass {
       room: room,
       xmppDomain: xmppDomain,
       teacherName: teacherName is String ? teacherName : '',
+      workspaceFormat: json['workspaceFormat'] == 'board' ? 'board' : 'classic',
     );
   }
 
@@ -58,6 +82,7 @@ class LessonCallPass {
     'room': room,
     'xmppDomain': xmppDomain,
     'teacherName': teacherName,
+    'workspaceFormat': workspaceFormat,
   };
 }
 

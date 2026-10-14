@@ -102,6 +102,55 @@
       .board.on {
         display: block;
       }
+      #room-label {
+        display: none;
+        position: absolute;
+        z-index: 6;
+        inset-inline-start: 12px;
+        top: 8px;
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      #room-label.on { display: block; }
+      #sound-note {
+        display: none;
+        position: absolute;
+        z-index: 7;
+        inset-inline: 12px;
+        top: 36px;
+        margin: 0;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #fafaf9e8;
+        color: #57534e;
+        font-size: 13px;
+      }
+      #sound-note.on { display: block; }
+      #room-work {
+        display: none;
+        position: absolute;
+        z-index: 8;
+        inset-inline: 8px;
+        bottom: 8px;
+        max-height: 42%;
+        overflow: auto;
+        margin: 0;
+        padding: 8px;
+        border-radius: 12px;
+        background: #ffffffe8;
+      }
+      #room-work.on { display: block; }
+      #room-work p { margin: 0 0 6px; font-size: 13px; color: #57534e; }
+      #room-work button {
+        min-width: 44px;
+        min-height: 44px;
+        margin: 4px;
+        border: 1px solid #d6d3d1;
+        border-radius: 10px;
+        background: #fff;
+        font-size: 18px;
+      }
       #board-note {
         display: none; position: absolute; z-index: 5; inset-inline: 12px;
         bottom: 64px; padding: 8px; border-radius: 10px; color: #57534e;
@@ -133,6 +182,9 @@
   <body>
     <div id="grid" class="grid"></div>
     <div id="board" class="board"></div>
+    <p id="room-label"></p>
+    <p id="sound-note"></p>
+    <div id="room-work"></div>
     <div id="board-note" aria-live="off"><span id="board-status-text"></span><button id="board-retry" type="button" onclick="retryBoard()"></button></div>
     <div id="board-announcement" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
@@ -155,6 +207,13 @@
       var linkAutoAt = 0;
       var linkTimer = null;
       var passHold = null;
+      var boardWorkspace = false;
+      var roomNames = { ru: "Общая", en: "Main", ar: "العامة" };
+      var soundNotes = {
+        ru: "Переходим в звук комнаты. Пока его нет, общий звонок не включается.",
+        en: "Moving into the room sound. The shared call stays off until it connects.",
+        ar: "جارٍ الانتقال إلى صوت الغرفة. المكالمة المشتركة تبقى متوقفة حتى يتصل.",
+      };
       var remoteAudios = [];
       var opening = { video: false, audio: false };
       var wishMuted = { video: true, audio: true };
@@ -163,6 +222,15 @@
       var pending = { video: null, audio: null };
       var tileNodes = {};
       var renewing = false;
+      var carryJoin = false;
+      var holding = false;
+      var switchFailures = 0;
+      var childRoomFocus = "main";
+      var childRoomGen = 0;
+      var childRoomEpoch = -1;
+      var childRoomRevision = -1;
+      var childExerciseKey = "";
+      var childRoomPayload = null;
       var libraryReady = false;
       var attempt = 0;
       var people = {};
@@ -680,7 +748,7 @@
 
       // Only the bundle owns v2 schema/assembly/access/scene. HTML forwards actual Jitsi senders.
       function syncBoardChannel() {
-        if (!boardInstalled || boardEnded) return;
+        if (!boardInstalled || boardEnded || childRoomFocus !== "main") return;
         var active = [];
         if (callJoined && localEndpoint) active.push(localEndpoint);
         if (room && room.getParticipants) {
@@ -711,7 +779,7 @@
       }
 
       function receiveBoard(sender, payload) {
-        if (boardEnded || !sender || sender.length > 200 || sender === localEndpoint) return;
+        if (boardEnded || childRoomFocus !== "main" || !sender || sender.length > 200 || sender === localEndpoint) return;
         if (boardInstalled) { window.LarnesBoard.receive(sender, payload); return; }
         var bytes;
         try { bytes = new TextEncoder().encode(JSON.stringify(payload)).length; } catch (_) { return; }
@@ -729,7 +797,7 @@
       function updateBoardNotice() {
         var note = document.getElementById("board-note");
         if (!note) return;
-        var open = shownMode === "workflow" && !band;
+        var open = boardWorkspace || (shownMode === "workflow" && !band);
         var text = boardLabels[boardState] || "";
         if (boardDetails.hydrated && !boardDetails.writable && boardDetails.mode === "teacher" && (boardState === "ready" || boardState === "recovering")) text += " " + (boardLabels.readOnly || "");
         document.getElementById("board-status-text").textContent = text;
@@ -753,7 +821,7 @@
       function syncBoard() {
         var host = document.getElementById("board");
         if (!host) return;
-        var open = shownMode === "workflow" && !band;
+        var open = boardWorkspace || (shownMode === "workflow" && !band);
         host.className = open ? "board on" : "board";
         if (boardInstalled) window.LarnesBoard.setVisible(open);
         updateBoardNotice();
@@ -783,6 +851,17 @@
         window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
         window.LarnesBoard.setLocale(nameLocale);
         window.LarnesBoard.mount(document.getElementById("board"));
+        window.LarnesBoard.onRoomScene = function (elements) {
+          if (childRoomFocus === "main" || !(elements instanceof Array)) return;
+          post("room-scene", JSON.stringify({
+            elements: elements,
+            epoch: childRoomEpoch,
+            gen: childRoomGen,
+            roomId: childRoomFocus
+          }));
+        };
+        if (childRoomPayload) setChildRoom(childRoomPayload);
+        if (window.LarnesBoard.widgets === 1) post("board-widgets", window.LarnesBoard.audioReady || "not-started");
         syncBoardChannel();
         var inbox = boardInbox.slice();
         clearBoardInbox();
@@ -895,6 +974,7 @@
         onlineLabel = labels && labels.online ? String(labels.online) : "";
         nameLocale = labels && labels.locale ? String(labels.locale) : "ru";
         boardLabels = labels && labels.board ? labels.board : {};
+        applyBoardWorkspace(passHold);
         if (boardInstalled) {
           window.LarnesBoard.setLocale(nameLocale);
           window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
@@ -912,12 +992,21 @@
         return typeof value === "string" && /^[A-Za-z0-9.-]+$/.test(value);
       }
 
+      function applyBoardWorkspace(pass) {
+        if (pass && pass.workspaceFormat === "board") boardWorkspace = true;
+        var label = document.getElementById("room-label");
+        if (!label) return;
+        label.className = boardWorkspace ? "on" : "";
+        label.textContent = boardWorkspace ? (roomNames[nameLocale] || roomNames.ru) : "";
+      }
+
       function join(pass) {
         if (joining || room || !pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
           post("failed");
           return;
         }
         passHold = pass;
+        applyBoardWorkspace(pass);
         joining = true;
         var thisAttempt = attempt;
         if (window.JitsiMeetJS) {
@@ -1156,6 +1245,18 @@
               return;
             }
             callJoined = true;
+            holding = false;
+            switchFailures = 0;
+            hideSound();
+            if (carryJoin) {
+              carryJoin = false;
+              if (localVideo && room.addTrack) {
+                try { room.addTrack(localVideo); } catch (error) {}
+              }
+              if (localAudio && room.addTrack) {
+                try { room.addTrack(localAudio); } catch (error) {}
+              }
+            }
             applyLink(linkJoined());
             localEndpoint = room.myUserId() || "";
             syncBoardChannel();
@@ -1807,6 +1908,7 @@
       }
 
       function noteRoomFailure() {
+        switchFailures += 1;
         if (!callJoined) {
           noteJoinFailure();
           return;
@@ -1942,10 +2044,177 @@
           return;
         }
         passHold = pass;
+        applyBoardWorkspace(pass);
         dropSession().then(function () {
           if (leaving) {
             return;
           }
+          join(pass);
+        });
+      }
+
+      function showSound() {
+        var note = document.getElementById("sound-note");
+        if (!note) return;
+        note.textContent = soundNotes[nameLocale] || soundNotes.ru;
+        note.className = "on";
+      }
+
+      function hideSound() {
+        var note = document.getElementById("sound-note");
+        if (!note) return;
+        note.className = "";
+        note.textContent = "";
+      }
+
+      function clearChildRoom() {
+        var work = document.getElementById("room-work");
+        if (!work) return;
+        work.className = "";
+        while (work.firstChild) work.removeChild(work.firstChild);
+      }
+
+      function exerciseKey(payload) {
+        var views = payload && payload.exercises instanceof Array ? payload.exercises : [];
+        return views.map(function (view) {
+          if (!view) return "";
+          var tiles = view.tiles instanceof Array ? view.tiles : [];
+          return [view.instanceId, view.revision, view.phase, view.wrongTileId, tiles.map(function (tile) {
+            return tile && tile.id + ":" + (tile.used ? 1 : 0);
+          }).join(",")].join("|");
+        }).join(";");
+      }
+
+      function showChildExercises(payload) {
+        var work = document.getElementById("room-work");
+        if (!work) return;
+        var key = exerciseKey(payload);
+        if (key === childExerciseKey && work.childElementCount > 0) return;
+        if (!key && !work.firstChild) return;
+        childExerciseKey = key;
+        while (work.firstChild) work.removeChild(work.firstChild);
+        var views = payload && payload.exercises instanceof Array ? payload.exercises : [];
+        var childId = payload && typeof payload.childId === "string" ? payload.childId : "";
+        views.forEach(function (view) {
+          if (!view || typeof view !== "object") return;
+          var mine = !childId || (view.assignees instanceof Array && view.assignees.indexOf(childId) >= 0);
+          var running = view.phase === "running" && mine;
+          var tiles = view.tiles instanceof Array ? view.tiles : [];
+          tiles.forEach(function (tile) {
+            if (!tile || typeof tile.id !== "string" || typeof tile.letter !== "string") return;
+            var button = document.createElement("button");
+            button.type = "button";
+            button.textContent = tile.letter;
+            button.disabled = !running || tile.used === true;
+            button.addEventListener("click", function () {
+              if (!running || tile.used === true) return;
+              post("room-answer", JSON.stringify({
+                expectedRevision: view.revision,
+                gen: childRoomGen,
+                instanceGeneration: view.instanceGeneration,
+                instanceId: view.instanceId,
+                roomId: view.roomId,
+                tileId: tile.id
+              }));
+            });
+            work.appendChild(button);
+          });
+        });
+        work.className = work.firstChild ? "on" : "";
+      }
+
+      function setChildRoom(payload) {
+        childRoomPayload = payload && typeof payload === "object" ? payload : null;
+        var focus = childRoomPayload && typeof childRoomPayload.focus === "string" ? childRoomPayload.focus : "main";
+        var leftSide = childRoomFocus !== "main" && focus === "main";
+        childRoomFocus = focus;
+        childRoomGen = childRoomPayload && typeof childRoomPayload.gen === "number" ? childRoomPayload.gen : 0;
+        childRoomEpoch = childRoomPayload && typeof childRoomPayload.epoch === "number" ? childRoomPayload.epoch : -1;
+        var label = document.getElementById("room-label");
+        if (focus === "main") {
+          childRoomRevision = -1;
+          if (leftSide && window.LarnesBoard && window.LarnesBoard.showMain) window.LarnesBoard.showMain();
+          if (boardWorkspace && label) {
+            label.textContent = roomNames[nameLocale] || roomNames.ru;
+            label.className = "on";
+          }
+          showChildExercises(childRoomPayload);
+          return;
+        }
+        if (label) {
+          label.textContent = typeof childRoomPayload.title === "string" ? childRoomPayload.title : "";
+          label.className = "on";
+        }
+        showChildExercises(childRoomPayload);
+        var revision = typeof childRoomPayload.revision === "number" ? childRoomPayload.revision : 0;
+        if (revision !== childRoomRevision && window.LarnesBoard && window.LarnesBoard.showRoom) {
+          if (window.LarnesBoard.showRoom(childRoomPayload.scene instanceof Array ? childRoomPayload.scene : []) !== false) {
+            childRoomRevision = revision;
+          }
+        }
+      }
+
+      function leaveConferenceOnly() {
+        attempt += 1;
+        var paused = leaving;
+        leaving = true;
+        var currentRoom = room;
+        var currentConnection = connection;
+        room = null;
+        connection = null;
+        joining = false;
+        callJoined = false;
+        releaseDesktop();
+        people = {};
+        for (var id in tileNodes) {
+          detachVideo(tileNodes[id]);
+          if (tileNodes[id].tile.parentNode) tileNodes[id].tile.parentNode.removeChild(tileNodes[id].tile);
+          delete tileNodes[id];
+        }
+        for (var i = 0; i < remoteAudios.length; i++) {
+          var audio = remoteAudios[i];
+          try { audio.srcObject = null; } catch (error) {}
+          if (audio.parentNode) audio.parentNode.removeChild(audio);
+        }
+        remoteAudios = [];
+        var left = Promise.resolve();
+        if (currentRoom && currentRoom.leave) {
+          try {
+            var result = currentRoom.leave();
+            if (result && typeof result.then === "function") left = result;
+          } catch (error) {}
+        }
+        leaving = paused;
+        return left.then(function () { disconnectCall(currentConnection); }, function () { disconnectCall(currentConnection); });
+      }
+
+      function holdRoom() {
+        holding = true;
+        showSound();
+        if (!room && !connection) {
+          post("holding");
+          return;
+        }
+        leaveConferenceOnly().then(function () { post("holding"); });
+      }
+
+      function switchRoom(pass) {
+        if (!pass || !pass.room || !hostName(pass.domain) || !hostName(pass.xmppDomain)) return;
+        if (passHold && passHold.room === pass.room && !room && switchFailures >= 3) return;
+        if (passHold && passHold.room === pass.room && room) {
+          passHold = pass;
+          return;
+        }
+        holding = false;
+        hideSound();
+        carryJoin = true;
+        var nextWish = { audio: wishMuted.audio, video: wishMuted.video };
+        var gone = room || connection ? leaveConferenceOnly() : Promise.resolve();
+        gone.then(function () {
+          if (leaving) return;
+          wishMuted.audio = nextWish.audio;
+          wishMuted.video = nextWish.video;
+          passHold = pass;
           join(pass);
         });
       }

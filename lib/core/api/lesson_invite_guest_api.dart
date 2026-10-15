@@ -133,14 +133,29 @@ class LessonInviteGuestApi {
     }
   }
 
-  Future<LessonChildBoard?> fetchBoard({required String token}) async {
+  Future<LessonChildBoard?> fetchBoard({required String token, String? link}) async {
     try {
       final response = await _client.dio.get(
         '/api/invite/lesson/guest/board',
-        queryParameters: {'token': token},
+        queryParameters: {
+          'token': token,
+          if (link != null && link.isNotEmpty) 'link': link,
+        },
         options: await _guestOptions(),
       );
       return LessonChildBoard.fromJson(_asJsonMap(response.data));
+    } on DioException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> requestBoard({
+    required String token,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await _client.dio.post('/api/invite/lesson/guest/board', queryParameters: {'token': token}, data: body, options: await _guestOptions());
+      return _asJsonMap(response.data);
     } on DioException {
       return null;
     }

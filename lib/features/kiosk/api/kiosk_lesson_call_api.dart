@@ -71,6 +71,15 @@ class KioskLessonCallApi {
     }
   }
 
+  Future<Map<String, dynamic>?> requestBoard(Map<String, dynamic> body) async {
+    try {
+      final response = await _client.dio.post('/api/classroom/devices/me/lesson/board', data: body);
+      return _asJsonMap(response.data);
+    } on DioException {
+      return null;
+    }
+  }
+
   Future<LessonCallTeachers> claimRoster({
     required String endpointId,
     String locale = 'ru',

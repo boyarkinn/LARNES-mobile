@@ -142,6 +142,15 @@
       }
       #room-work.on { display: block; }
       #room-work p { margin: 0 0 6px; font-size: 13px; color: #57534e; }
+      .board-widget { box-sizing: border-box; pointer-events: auto; position: relative; display: flex; width: 100%; height: 100%; flex-direction: column; gap: 0.35rem; overflow: auto; background: #fff; color: #1e1e1e; font: 14px/1.35 system-ui, sans-serif; }
+      .board-widget__stage { width: 100%; min-height: 0; flex: 1; }
+      .board-widget__stage-box { position: relative; display: flex; width: 100%; aspect-ratio: 480 / 360; container-type: size; flex-direction: column; justify-content: space-between; overflow: hidden; }
+      .board-widget__stage .board-widget__tiles { display: grid; gap: 1cqw; }
+      .board-widget__stage-box .board-widget__gap { margin: 0; font-size: 8cqw; font-weight: 750; }
+      .board-widget__picture { max-height: 28cqh; width: auto; }
+      .board-widget__ghost { position: absolute; transform: translate(-50%, -50%); font-weight: 750; pointer-events: none; }
+      .board-widget button { border: 1px solid #c8c8c8; border-radius: 6px; background: #f6f6f6; color: inherit; }
+      .board-widget button:disabled { opacity: 0.45; }
       #room-work button {
         min-width: 44px;
         min-height: 44px;
@@ -209,6 +218,11 @@
       var passHold = null;
       var boardWorkspace = false;
       var roomNames = { ru: "Общая", en: "Main", ar: "العامة" };
+      var exerciseUpgrade = {
+        ru: "Для упражнения нужна новая версия приложения.",
+        en: "This exercise needs a newer version of the app.",
+        ar: "هذا التمرين يحتاج إلى إصدار أحدث من التطبيق."
+      };
       var soundNotes = {
         ru: "Переходим в звук комнаты. Пока его нет, общий звонок не включается.",
         en: "Moving into the room sound. The shared call stays off until it connects.",
@@ -229,7 +243,8 @@
       var childRoomGen = 0;
       var childRoomEpoch = -1;
       var childRoomRevision = -1;
-      var childExerciseKey = "";
+      var childRoomDocument = "";
+      var childRoomServerKey = "";
       var childRoomPayload = null;
       var libraryReady = false;
       var attempt = 0;
@@ -851,8 +866,55 @@
         window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
         window.LarnesBoard.setLocale(nameLocale);
         window.LarnesBoard.mount(document.getElementById("board"));
+        window.LarnesBoard.onRequest = function (body, roomId) {
+          var bridge = window.flutter_inappwebview;
+          if (!bridge || !bridge.callHandler || boardEnded) return Promise.resolve({ accepted: false });
+          return bridge.callHandler("boardExercise", { gen: childRoomGen, roomId: roomId, body: body });
+        };
+        window.LarnesBoard.onExercise = function (detail) {
+          if (!detail || typeof detail !== "object") return;
+          if (detail.type === "commit") {
+            post("room-answer", JSON.stringify({
+              expectedRevision: detail.expectedRevision,
+              gen: childRoomGen,
+              instanceGeneration: detail.instanceGeneration,
+              instanceId: detail.instanceId,
+              roomId: detail.roomId,
+              tileId: detail.tileId
+            }));
+          } else if (detail.type === "preview") {
+            post("room-preview", JSON.stringify({
+              gen: childRoomGen,
+              instanceGeneration: detail.instanceGeneration,
+              instanceId: detail.instanceId,
+              roomId: detail.roomId,
+              tileId: detail.tileId,
+              x: detail.x,
+              y: detail.y
+            }));
+          } else if (detail.type === "ready") {
+            post("room-ready", JSON.stringify({
+              fence: detail.fence,
+              gen: childRoomGen,
+              hashes: detail.hashes instanceof Array ? detail.hashes : [],
+              instanceGeneration: detail.instanceGeneration,
+              instanceId: detail.instanceId,
+              playback: detail.playback === true,
+              renderer: detail.renderer === true,
+              roomId: detail.roomId
+            }));
+          } else if (detail.type === "listen") {
+            post("room-listen", JSON.stringify({
+              gen: childRoomGen,
+              listen: detail.listen,
+              listenValue: detail.listenValue,
+              roomId: childRoomFocus,
+              slug: detail.slug
+            }));
+          }
+        };
         window.LarnesBoard.onRoomScene = function (elements) {
-          if (childRoomFocus === "main" || !(elements instanceof Array)) return;
+          if (!(elements instanceof Array) || (childRoomFocus === "main" && !boardWorkspace)) return;
           post("room-scene", JSON.stringify({
             elements: elements,
             epoch: childRoomEpoch,
@@ -2074,66 +2136,71 @@
         while (work.firstChild) work.removeChild(work.firstChild);
       }
 
-      function exerciseKey(payload) {
-        var views = payload && payload.exercises instanceof Array ? payload.exercises : [];
-        return views.map(function (view) {
-          if (!view) return "";
-          var tiles = view.tiles instanceof Array ? view.tiles : [];
-          return [view.instanceId, view.revision, view.phase, view.wrongTileId, tiles.map(function (tile) {
-            return tile && tile.id + ":" + (tile.used ? 1 : 0);
-          }).join(",")].join("|");
-        }).join(";");
+      function noteLessonClock(now) {
+        if (typeof now !== "number" || !window.LarnesBoard || typeof window.LarnesBoard.noteClock !== "function") return;
+        window.LarnesBoard.noteClock(now);
       }
 
       function showChildExercises(payload) {
         var work = document.getElementById("room-work");
         if (!work) return;
-        var key = exerciseKey(payload);
-        if (key === childExerciseKey && work.childElementCount > 0) return;
-        if (!key && !work.firstChild) return;
-        childExerciseKey = key;
-        while (work.firstChild) work.removeChild(work.firstChild);
         var views = payload && payload.exercises instanceof Array ? payload.exercises : [];
         var childId = payload && typeof payload.childId === "string" ? payload.childId : "";
-        views.forEach(function (view) {
-          if (!view || typeof view !== "object") return;
-          var mine = !childId || (view.assignees instanceof Array && view.assignees.indexOf(childId) >= 0);
-          var running = view.phase === "running" && mine;
-          var tiles = view.tiles instanceof Array ? view.tiles : [];
-          tiles.forEach(function (tile) {
-            if (!tile || typeof tile.id !== "string" || typeof tile.letter !== "string") return;
-            var button = document.createElement("button");
-            button.type = "button";
-            button.textContent = tile.letter;
-            button.disabled = !running || tile.used === true;
-            button.addEventListener("click", function () {
-              if (!running || tile.used === true) return;
-              post("room-answer", JSON.stringify({
-                expectedRevision: view.revision,
-                gen: childRoomGen,
-                instanceGeneration: view.instanceGeneration,
-                instanceId: view.instanceId,
-                roomId: view.roomId,
-                tileId: tile.id
-              }));
-            });
-            work.appendChild(button);
-          });
-        });
-        work.className = work.firstChild ? "on" : "";
+        if (boardInstalled && window.LarnesBoard && typeof window.LarnesBoard.showExercises === "function") {
+          work.className = "";
+          work.textContent = "";
+          window.LarnesBoard.showExercises(views, childId, payload.lessonSessionId);
+          return;
+        }
+        if (boardInstalled && views.length) {
+          work.textContent = exerciseUpgrade[nameLocale] || exerciseUpgrade.ru;
+          work.className = "on";
+          for (var i = 0; i < views.length; i++) {
+            var oldView = views[i];
+            if (!oldView || typeof oldView.instanceId !== "string") continue;
+            var oldResources = oldView.resources && typeof oldView.resources === "object" ? oldView.resources : null;
+            post("room-ready", JSON.stringify({
+              fence: oldResources && typeof oldResources.fence === "string" ? oldResources.fence : "",
+              gen: childRoomGen,
+              hashes: [],
+              instanceGeneration: oldView.instanceGeneration,
+              instanceId: oldView.instanceId,
+              playback: false,
+              renderer: false,
+              roomId: oldView.roomId
+            }));
+          }
+          return;
+        }
+        work.className = "";
+        work.textContent = "";
       }
 
       function setChildRoom(payload) {
         childRoomPayload = payload && typeof payload === "object" ? payload : null;
+        if (childRoomPayload && typeof childRoomPayload.serverNow === "number") noteLessonClock(childRoomPayload.serverNow);
         var focus = childRoomPayload && typeof childRoomPayload.focus === "string" ? childRoomPayload.focus : "main";
         var leftSide = childRoomFocus !== "main" && focus === "main";
         childRoomFocus = focus;
         childRoomGen = childRoomPayload && typeof childRoomPayload.gen === "number" ? childRoomPayload.gen : 0;
         childRoomEpoch = childRoomPayload && typeof childRoomPayload.epoch === "number" ? childRoomPayload.epoch : -1;
+        var documentKey = focus + ":" + childRoomEpoch;
+        var switched = documentKey !== childRoomDocument;
         var label = document.getElementById("room-label");
         if (focus === "main") {
           childRoomRevision = -1;
-          if (leftSide && window.LarnesBoard && window.LarnesBoard.showMain) window.LarnesBoard.showMain();
+          var mainRevision = childRoomPayload && typeof childRoomPayload.revision === "number" ? childRoomPayload.revision : 0;
+          var mainDraw = childRoomPayload && childRoomPayload.drawMode === "all" ? "all" : "teacher";
+          var mainKey = mainRevision + ":" + mainDraw;
+          if (boardWorkspace && window.LarnesBoard && window.LarnesBoard.showServer) {
+            if ((switched || mainKey !== childRoomServerKey) && window.LarnesBoard.showServer(childRoomPayload && childRoomPayload.scene instanceof Array ? childRoomPayload.scene : [], mainDraw === "all", switched) !== false) {
+              childRoomServerKey = mainKey;
+              childRoomDocument = documentKey;
+            }
+          } else if (leftSide && window.LarnesBoard && window.LarnesBoard.showMain) {
+            window.LarnesBoard.showMain();
+            childRoomDocument = documentKey;
+          }
           if (boardWorkspace && label) {
             label.textContent = roomNames[nameLocale] || roomNames.ru;
             label.className = "on";
@@ -2146,10 +2213,18 @@
           label.className = "on";
         }
         showChildExercises(childRoomPayload);
+        childRoomServerKey = "";
         var revision = typeof childRoomPayload.revision === "number" ? childRoomPayload.revision : 0;
-        if (revision !== childRoomRevision && window.LarnesBoard && window.LarnesBoard.showRoom) {
-          if (window.LarnesBoard.showRoom(childRoomPayload.scene instanceof Array ? childRoomPayload.scene : []) !== false) {
+        var scene = childRoomPayload.scene instanceof Array ? childRoomPayload.scene : [];
+        if ((switched || revision !== childRoomRevision) && window.LarnesBoard && window.LarnesBoard.showServer) {
+          if (window.LarnesBoard.showServer(scene, true, switched) !== false) {
             childRoomRevision = revision;
+            childRoomDocument = documentKey;
+          }
+        } else if ((switched || revision !== childRoomRevision) && window.LarnesBoard && window.LarnesBoard.showRoom) {
+          if (window.LarnesBoard.showRoom(scene, switched) !== false) {
+            childRoomRevision = revision;
+            childRoomDocument = documentKey;
           }
         }
       }

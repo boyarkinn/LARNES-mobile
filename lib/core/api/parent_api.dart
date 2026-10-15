@@ -307,12 +307,28 @@ class ParentApi {
     }
   }
 
-  Future<LessonChildBoard?> fetchChildBoard({required String childId}) async {
+  Future<LessonChildBoard?> fetchChildBoard({
+    required String childId,
+    String? link,
+  }) async {
     try {
       final response = await _client.dio.get(
         '/api/mobile/parent/children/$childId/live-lesson/board',
+        queryParameters: link == null || link.isEmpty ? null : {'link': link},
       );
       return LessonChildBoard.fromJson(_asJsonMap(response.data));
+    } on DioException {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> requestChildBoard({
+    required String childId,
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await _client.dio.post('/api/mobile/parent/children/$childId/live-lesson/board', data: body);
+      return _asJsonMap(response.data);
     } on DioException {
       return null;
     }

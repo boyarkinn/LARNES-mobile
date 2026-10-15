@@ -474,6 +474,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       fetchPass: (locale) => callApi.fetchPass(locale: locale),
       fetchBoard: callApi.fetchBoard,
       sendBoard: callApi.sendBoard,
+      requestBoard: callApi.requestBoard,
       claimRoster: ({required endpointId, required locale}) => callApi.claimRoster(
         endpointId: endpointId,
         locale: locale,

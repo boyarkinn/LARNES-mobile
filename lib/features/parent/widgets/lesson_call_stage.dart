@@ -51,6 +51,7 @@ class LessonCallStage extends StatefulWidget {
     this.fetchPass,
     this.fetchBoard,
     this.sendBoard,
+    this.requestBoard,
     this.claimRoster,
     this.handle,
     this.captureOnJoin = true,
@@ -66,6 +67,7 @@ class LessonCallStage extends StatefulWidget {
   final Future<LessonCallPassOutcome> Function(String locale)? fetchPass;
   final Future<LessonChildBoard?> Function()? fetchBoard;
   final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
+  final Future<Map<String, dynamic>?> Function(Map<String, dynamic> body)? requestBoard;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
     required String locale,
@@ -116,6 +118,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   int _boardGen = 1;
   String _boardKey = '';
   LessonChildBoard? _board;
+  late final String _boardLink;
 
   /// Урок открыт входом родителя, а не гостевой ссылкой или экраном класса.
   bool get _parentSession =>
@@ -126,6 +129,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   @override
   void initState() {
     super.initState();
+    _boardLink =
+        '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}${identityHashCode(this).toRadixString(16)}';
     widget.handle?.attach(endCall);
     WidgetsBinding.instance.addObserver(this);
     _load();
@@ -356,9 +361,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (injected != null) return injected();
     final invite = widget.inviteToken;
     if (invite != null) {
-      return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(token: invite);
+      return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink);
     }
-    return AuthScope.of(context).parentApi.fetchChildBoard(childId: widget.childId);
+    return AuthScope.of(context).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink);
   }
 
   Future<bool> _sendBoard(Map<String, dynamic> body) {
@@ -384,15 +389,19 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _boardGen += 1;
       }
       _board = board;
+      await _web?.evaluateJavascript(source: 'noteLessonClock(${board.serverNow})');
       await _web?.evaluateJavascript(
         source: 'setChildRoom(${jsonEncode({
           'childId': widget.childId,
+          'drawMode': board.drawMode,
           'exercises': board.exercises,
           'epoch': board.roomEpoch,
           'focus': board.focusRoomId,
+          'lessonSessionId': board.lessonSessionId,
           'gen': _boardGen,
           'revision': board.sceneRevision,
           'scene': board.scene,
+          'serverNow': board.serverNow,
           'sound': board.sound,
           'title': board.title,
         })})',
@@ -438,9 +447,89 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     }
   }
 
+  Future<void> _previewRoom(String detail) async {
+    final board = _board;
+    if (board == null) return;
+    try {
+      final body = jsonDecode(detail);
+      if (body is! Map) return;
+      final gen = body['gen'];
+      final instance = body['instanceId'];
+      final room = body['roomId'];
+      final generation = body['instanceGeneration'];
+      final x = body['x'];
+      final y = body['y'];
+      final tile = body['tileId'];
+      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
+      if (instance is! String || room is! String || generation is! int) return;
+      if (x is! num || y is! num) return;
+      if (tile != null && tile is! String) return;
+      await _sendBoard({
+        'instanceGeneration': generation,
+        'instanceId': instance,
+        'kind': 'preview',
+        'roomId': room,
+        'tileId': tile,
+        'x': x.round(),
+        'y': y.round(),
+      });
+    } catch (_) {
+      // A late drag is dropped.
+    }
+  }
+
+  Future<void> _readyRoom(String detail) async {
+    final board = _board;
+    if (board == null) return;
+    try {
+      final body = jsonDecode(detail);
+      if (body is! Map) return;
+      final gen = body['gen'];
+      final instance = body['instanceId'];
+      final room = body['roomId'];
+      final generation = body['instanceGeneration'];
+      final fence = body['fence'];
+      final renderer = body['renderer'];
+      final playback = body['playback'];
+      final hashes = body['hashes'];
+      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
+      if (instance is! String || room is! String || generation is! int || fence is! String) return;
+      if (renderer is! bool || playback is! bool || hashes is! List) return;
+      await _sendBoard({
+        'kind': 'ready',
+        'link': _boardLink,
+        'fence': fence,
+        'hashes': hashes,
+        'instanceGeneration': generation,
+        'instanceId': instance,
+        'playback': playback,
+        'renderer': renderer,
+        'roomId': room,
+      });
+    } catch (_) {
+      // A late confirmation is dropped.
+    }
+  }
+
+  Future<void> _listenRoom(String detail) async {
+    final board = _board;
+    if (board == null) return;
+    try {
+      final body = jsonDecode(detail);
+      if (body is! Map) return;
+      final gen = body['gen'];
+      final room = body['roomId'];
+      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
+      // A published clip is played only when this lesson has already stored it.
+      // An old bundled file is not a substitute, and a missing clip stays silent.
+    } catch (_) {
+      // A late listen is dropped.
+    }
+  }
+
   Future<void> _sceneRoom(String detail) async {
     final board = _board;
-    if (board == null || board.focusRoomId == 'main') return;
+    if (board == null) return;
     try {
       final body = jsonDecode(detail);
       if (body is! Map) return;
@@ -787,6 +876,25 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     } catch (_) {}
   }
 
+  Future<Map<String, dynamic>> _requestBoardExercise(List<dynamic> args) async {
+    final board = _board;
+    if (!mounted || _ended || board == null || args.isEmpty || args.first is! Map) return {'accepted': false};
+    final request = Map<String, dynamic>.from(args.first as Map);
+    if (request['gen'] != _boardGen || request['roomId'] != board.focusRoomId || request['body'] is! Map) return {'accepted': false};
+    final body = Map<String, dynamic>.from(request['body'] as Map);
+    if (!{'audio', 'field', 'command', 'preview'}.contains(body['kind'])) return {'accepted': false};
+    final injected = widget.requestBoard;
+    if (injected != null) return await injected(body) ?? {'accepted': false};
+    // Never fall through from a kiosk identity to the parent's credentials.
+    if (widget.fetchBoard != null) return {'accepted': false};
+    final invite = widget.inviteToken;
+    final auth = AuthScope.of(context);
+    final result = invite != null
+        ? await auth.lessonInviteGuestApi.requestBoard(token: invite, body: body)
+        : await auth.parentApi.requestChildBoard(childId: widget.childId, body: body);
+    return result ?? {'accepted': false};
+  }
+
   void _onBridge(List<dynamic> args) {
     if (args.isEmpty || args.first is! Map) {
       return;
@@ -806,6 +914,18 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final detail = message['detail'];
     if (kind == 'room-answer' && detail is String) {
       unawaited(_answerRoom(detail));
+      return;
+    }
+    if (kind == 'room-preview' && detail is String) {
+      unawaited(_previewRoom(detail));
+      return;
+    }
+    if (kind == 'room-ready' && detail is String) {
+      unawaited(_readyRoom(detail));
+      return;
+    }
+    if (kind == 'room-listen' && detail is String) {
+      unawaited(_listenRoom(detail));
       return;
     }
     if (kind == 'room-scene' && detail is String) {
@@ -960,6 +1080,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         controller.addJavaScriptHandler(
           handlerName: 'lessonCall',
           callback: _onBridge,
+        );
+        controller.addJavaScriptHandler(
+          handlerName: 'boardExercise',
+          callback: _requestBoardExercise,
         );
         controller.addJavaScriptHandler(
           handlerName: 'boardImage',

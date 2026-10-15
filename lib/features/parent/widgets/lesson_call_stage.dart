@@ -138,11 +138,22 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_ended) {
+      unawaited(_setAppVisibility(state == AppLifecycleState.resumed));
+    }
     if (state != AppLifecycleState.resumed || _ended) {
       return;
     }
     unawaited(_followRoom());
     unawaited(_pullBoard());
+  }
+
+  Future<void> _setAppVisibility(bool visible) async {
+    try {
+      await _web?.evaluateJavascript(source: 'if (typeof setLessonAppVisible === "function") setLessonAppVisible($visible)');
+    } catch (_) {
+      // The WebView may already be gone or still installing the lesson page.
+    }
   }
 
   Future<void> _load() async {
@@ -398,6 +409,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           'epoch': board.roomEpoch,
           'focus': board.focusRoomId,
           'lessonSessionId': board.lessonSessionId,
+          'presence': board.presence,
+          'navigation': board.navigation,
           'gen': _boardGen,
           'revision': board.sceneRevision,
           'scene': board.scene,
@@ -882,7 +895,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final request = Map<String, dynamic>.from(args.first as Map);
     if (request['gen'] != _boardGen || request['roomId'] != board.focusRoomId || request['body'] is! Map) return {'accepted': false};
     final body = Map<String, dynamic>.from(request['body'] as Map);
-    if (!{'audio', 'field', 'command', 'preview'}.contains(body['kind'])) return {'accepted': false};
+    if (!{'audio', 'field', 'command', 'preview', 'presence'}.contains(body['kind'])) return {'accepted': false};
+    if (body['kind'] == 'presence' && (body['roomId'] != board.focusRoomId || body['roomEpoch'] != board.roomEpoch)) return {'accepted': false};
     final injected = widget.requestBoard;
     if (injected != null) return await injected(body) ?? {'accepted': false};
     // Never fall through from a kiosk identity to the parent's credentials.

@@ -832,13 +832,15 @@
       }
 
       function retryBoard() { if (boardInstalled) window.LarnesBoard.retry(); }
+      var lessonAppVisible = true;
+      function setLessonAppVisible(value) { lessonAppVisible = value === true; syncBoard(); }
 
       function syncBoard() {
         var host = document.getElementById("board");
         if (!host) return;
         var open = boardWorkspace || (shownMode === "workflow" && !band);
         host.className = open ? "board on" : "board";
-        if (boardInstalled) window.LarnesBoard.setVisible(open);
+        if (boardInstalled) window.LarnesBoard.setVisible(open && lessonAppVisible);
         updateBoardNotice();
         if (open && boardInstalled) window.requestAnimationFrame(function () { window.LarnesBoard.refresh(); });
       }
@@ -2176,6 +2178,16 @@
         work.textContent = "";
       }
 
+      function showChildPresence() {
+        if (!boardWorkspace || !window.LarnesBoard || !window.LarnesBoard.showPresence) return;
+        var payload = childRoomPayload;
+        window.LarnesBoard.showPresence(payload ? {
+          lessonSessionId: payload.lessonSessionId, roomId: childRoomFocus,
+          roomEpoch: childRoomEpoch, peers: payload.presence instanceof Array ? payload.presence : [],
+          navigation: payload.navigation instanceof Array ? payload.navigation : []
+        } : null);
+      }
+
       function setChildRoom(payload) {
         childRoomPayload = payload && typeof payload === "object" ? payload : null;
         if (childRoomPayload && typeof childRoomPayload.serverNow === "number") noteLessonClock(childRoomPayload.serverNow);
@@ -2206,6 +2218,7 @@
             label.className = "on";
           }
           showChildExercises(childRoomPayload);
+          showChildPresence();
           return;
         }
         if (label) {
@@ -2227,6 +2240,7 @@
             childRoomDocument = documentKey;
           }
         }
+        showChildPresence();
       }
 
       function leaveConferenceOnly() {

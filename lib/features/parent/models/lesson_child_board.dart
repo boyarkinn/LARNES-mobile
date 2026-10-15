@@ -8,6 +8,8 @@ class LessonChildBoard {
     required this.scene,
     required this.sceneRevision,
     this.serverNow = 0,
+    this.presence = const [],
+    this.navigation = const [],
     required this.sound,
     required this.title,
   });
@@ -20,6 +22,8 @@ class LessonChildBoard {
   final List<dynamic> scene;
   final int sceneRevision;
   final int serverNow;
+  final List<dynamic> presence;
+  final List<dynamic> navigation;
   final String sound;
   final String title;
 
@@ -53,6 +57,8 @@ class LessonChildBoard {
       scene: scene is List ? scene : const [],
       sceneRevision: revision is int ? revision : 0,
       serverNow: json['serverNow'] is int ? json['serverNow'] as int : 0,
+      presence: json['presence'] is List ? json['presence'] as List : const [],
+      navigation: json['navigation'] is List ? json['navigation'] as List : const [],
       sound: json['sound'] is String ? json['sound'] as String : 'main',
       title: json['title'] is String ? json['title'] as String : '',
     );

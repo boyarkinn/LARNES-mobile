@@ -10311,6 +10311,27 @@ Carryovers:
   cursor: grab;\r
   user-select: none;\r
 }\r
+.board-ruler__pen {\r
+  position: absolute;\r
+  top: 0;\r
+  z-index: 3;\r
+  width: 0;\r
+  height: 0;\r
+  pointer-events: none;\r
+}\r
+.board-ruler__pen::before {\r
+  content: "";\r
+  position: absolute;\r
+  bottom: 0;\r
+  left: 0;\r
+  width: 2px;\r
+  height: 16px;\r
+  margin-left: -1px;\r
+  background: #1b1b1f;\r
+  border-radius: 1px;\r
+  transform-origin: center bottom;\r
+  transform: rotate(-42deg);\r
+}\r
 .board-ruler__face { display: block; width: 100%; height: 100%; pointer-events: none; }\r
 .board-ruler__body { fill: rgb(255 244 196 / 0.82); stroke: #8a6a12; stroke-width: 1.25; }\r
 .board-ruler__edge { stroke: #3d2e0a; stroke-width: 1.5; }\r

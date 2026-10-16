@@ -416,6 +416,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           'scene': board.scene,
           'serverNow': board.serverNow,
           'sound': board.sound,
+          'conversation': board.conversation,
           'title': board.title,
         })})',
       );

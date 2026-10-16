@@ -1,5 +1,6 @@
 class LessonChildBoard {
   const LessonChildBoard({
+    this.conversation,
     required this.drawMode,
     required this.exercises,
     required this.focusRoomId,
@@ -15,6 +16,7 @@ class LessonChildBoard {
   });
 
   final String drawMode;
+  final Map<String, dynamic>? conversation;
   final List<Map<String, dynamic>> exercises;
   final String focusRoomId;
   final String lessonSessionId;
@@ -48,7 +50,13 @@ class LessonChildBoard {
     final scene = json['scene'];
     final revision = json['sceneRevision'];
     final epoch = json['roomEpoch'];
+    final conversation = json['conversation'];
     return LessonChildBoard(
+      conversation: conversation is Map &&
+              (conversation['mode'] == 'listening' || conversation['mode'] == 'talking') &&
+              conversation['remainingMs'] is int && (conversation['remainingMs'] as int) > 0
+          ? {'mode': conversation['mode'], 'remainingMs': (conversation['remainingMs'] as int).clamp(0, 10000)}
+          : null,
       drawMode: json['drawMode'] == 'all' ? 'all' : 'teacher',
       exercises: exercises,
       focusRoomId: focus,

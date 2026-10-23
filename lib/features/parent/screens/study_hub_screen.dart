@@ -155,6 +155,17 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                 ),
                 const SizedBox(height: ParentChildCardMetrics.pickerListGap),
                 StudyHubCard(
+                  title: l10n.messengerListTitle,
+                  tokens: chatHubCardTokens(),
+                  icon: HubCardIconKind.chat,
+                  onTap: () => ParentChildRoutes.pushForChild(
+                    context,
+                    childId: widget.childId,
+                    segment: 'chats',
+                  ),
+                ),
+                const SizedBox(height: ParentChildCardMetrics.pickerListGap),
+                StudyHubCard(
                   title: l10n.parentHomeworkTitle,
                   tokens: homeworkHubCardTokens(),
                   icon: HubCardIconKind.homework,

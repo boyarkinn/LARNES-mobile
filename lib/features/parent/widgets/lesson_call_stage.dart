@@ -12,6 +12,9 @@ import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
+import 'package:larnes_mobile/features/messenger/messenger_panel.dart';
+import 'package:larnes_mobile/features/messenger/messenger_room.dart';
+import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_dock.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -55,6 +58,7 @@ class LessonCallStage extends StatefulWidget {
     this.claimRoster,
     this.handle,
     this.captureOnJoin = true,
+    this.messenger,
   });
 
   final Widget? body;
@@ -64,6 +68,7 @@ class LessonCallStage extends StatefulWidget {
   final String? inviteToken;
   final LessonCallStageHandle? handle;
   final bool captureOnJoin;
+  final MessengerScope? messenger;
   final Future<LessonCallPassOutcome> Function(String locale)? fetchPass;
   final Future<LessonChildBoard?> Function()? fetchBoard;
   final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
@@ -117,6 +122,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   bool _boardBusy = false;
   int _boardGen = 1;
   String _boardKey = '';
+  MessengerRoom? _messenger;
+  bool _messengerOpen = false;
   LessonChildBoard? _board;
   late final String _boardLink;
 
@@ -133,11 +140,17 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}${identityHashCode(this).toRadixString(16)}';
     widget.handle?.attach(endCall);
     WidgetsBinding.instance.addObserver(this);
+    _attachMessenger();
     _load();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _messenger?.resume();
+    } else {
+      _messenger?.pause();
+    }
     if (!_ended) {
       unawaited(_setAppVisibility(state == AppLifecycleState.resumed));
     }
@@ -1042,6 +1055,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       oldWidget.handle?.detach(endCall);
       widget.handle?.attach(endCall);
     }
+    if (oldWidget.messenger?.sessionKey != widget.messenger?.sessionKey) {
+      _attachMessenger();
+    }
     if (oldWidget.trainerOpen == widget.trainerOpen) {
       return;
     }
@@ -1064,6 +1080,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     _boardTimer?.cancel();
     _chromeTimer?.cancel();
     widget.handle?.detach(endCall);
+    _messenger?.removeListener(_onMessenger);
+    _messenger?.pause();
     if (!_ended) {
       _web?.evaluateJavascript(source: 'leave()');
     }
@@ -1183,7 +1201,39 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     widget.onLeave();
   }
 
-  Widget _dock() {
+  void _attachMessenger() {
+    _messenger?.removeListener(_onMessenger);
+    _messenger?.pause();
+    final scope = widget.messenger;
+    if (scope == null || !scope.canOpen) {
+      _messenger = null;
+      _messengerOpen = false;
+      return;
+    }
+    _messenger = MessengerRooms.retain(scope);
+    _messenger!.addListener(_onMessenger);
+    _messenger!.setVisible(_messengerOpen);
+  }
+
+  void _onMessenger() {
+    if (mounted) setState(() {});
+  }
+
+  void _toggleChat() {
+    final room = _messenger;
+    if (room == null) return;
+    setState(() => _messengerOpen = !_messengerOpen);
+    room.setVisible(_messengerOpen);
+  }
+
+  Widget _chatButton() {
+    final room = _messenger;
+    final unread = _messengerOpen ? 0 : room?.unread ?? 0;
+    final label = context.l10n.messengerOpen;
+    return _ChatButton(label: label, unread: unread, onPressed: _toggleChat);
+  }
+
+  Widget _dock({required bool showChat}) {
     return LessonCallDock(
       audioOn: _micOn,
       callReady: _inRoom,
@@ -1215,6 +1265,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _keepChrome();
         _toggleCamera();
       },
+      onChat: showChat ? _toggleChat : null,
+      unread: _messengerOpen ? 0 : _messenger?.unread ?? 0,
     );
   }
 
@@ -1287,7 +1339,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
                         : CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (_chromeOpen && !_hearBlocked) _dock(),
+                      if (_chromeOpen && !_hearBlocked) _dock(showChat: false),
                       Padding(
                         padding: EdgeInsets.fromLTRB(
                           12,
@@ -1295,16 +1347,73 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
                           12,
                           8 + MediaQuery.paddingOf(context).bottom,
                         ),
-                        child: _linkButton(),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.messenger != null) ...[
+                              _chatButton(),
+                              const SizedBox(width: 8),
+                            ],
+                            _linkButton(),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
+              if (_messengerOpen && _messenger != null)
+                Positioned.fill(
+                  child: MessengerPanel(room: _messenger!, onClose: _toggleChat),
+                ),
             ],
           ),
         ),
-        if (!handle) _dock(),
+        if (!handle) _dock(showChat: widget.messenger != null),
       ],
+    );
+  }
+}
+
+class _ChatButton extends StatelessWidget {
+  const _ChatButton({required this.label, required this.onPressed, required this.unread});
+
+  final String label;
+  final VoidCallback onPressed;
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Material(
+            color: ParentColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: ParentColors.line),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onPressed,
+              child: const SizedBox(width: 48, height: 48, child: Icon(Icons.chat_bubble_outline, size: 24)),
+            ),
+          ),
+          if (unread > 0)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0xFFB42318), shape: BoxShape.circle),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text('${unread > 99 ? 99 : unread}', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -21,6 +21,7 @@ import 'package:larnes_mobile/core/api/places_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/messenger/messenger_room.dart';
 
 class AuthSession extends ChangeNotifier {
   factory AuthSession({ApiClient? apiClient}) {
@@ -226,6 +227,7 @@ class AuthSession extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    await MessengerRooms.clear();
     await _authApi.logout();
     _user = null;
     UserTimeZone.manualZone = null;

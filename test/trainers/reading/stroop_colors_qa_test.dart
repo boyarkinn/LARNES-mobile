@@ -65,7 +65,7 @@ void main() {
       final definition = getTrainerDefinition('stroop-colors');
 
       expect(definition?.title, 'Струп-тест');
-      expect(definition?.direction, TrainerDirection.reading);
+      expect(definition?.direction, TrainerDirection.speedReading);
       expect(definition?.isInteractive, isTrue);
       expect(hasTrainerBuilder('stroop-colors'), isTrue);
       expect(isTrainerInteractive('stroop-colors'), isTrue);

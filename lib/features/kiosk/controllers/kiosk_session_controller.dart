@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
+import 'package:larnes_mobile/features/messenger/messenger_room.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_session_api.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart'
     show
@@ -90,6 +91,7 @@ class KioskSessionController extends ChangeNotifier {
       return;
     }
     await _childSessionTokenStorage.clearToken();
+    await MessengerRooms.clear();
     _scanResult = null;
     _scanError = null;
     _scanErrorCode = null;
@@ -252,6 +254,7 @@ class KioskSessionController extends ChangeNotifier {
 
           await _kioskApi.childLogout();
           await _childSessionTokenStorage.clearToken();
+          await MessengerRooms.clear();
 
           if (nextMode != previousMode) {
             _scanError = null;
@@ -394,6 +397,7 @@ class KioskSessionController extends ChangeNotifier {
 
     await _kioskApi.childLogout();
     await _childSessionTokenStorage.clearToken();
+    await MessengerRooms.clear();
     _scanResult = null;
     _scanError = null;
     _scanErrorCode = null;
@@ -503,6 +507,7 @@ class KioskSessionController extends ChangeNotifier {
     if (resolved == KioskSessionMode.idle) {
       await _kioskApi.childLogout();
       await _childSessionTokenStorage.clearToken();
+      await MessengerRooms.clear();
       _scanResult = null;
       _scanError = null;
       _scanErrorCode = null;

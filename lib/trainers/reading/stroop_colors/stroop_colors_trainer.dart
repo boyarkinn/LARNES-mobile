@@ -278,7 +278,10 @@ class _StroopColorsTrainerState extends State<StroopColorsTrainer> {
             StroopColorsScene(
               inkHex: stroopColors[current.ink]!.hex,
               itemIndex: _index,
-              word: stroopColors[current.word]!.label,
+              word: stroopColorLabel(
+                current.word,
+                Localizations.localeOf(context).languageCode,
+              ),
               wordKey: '${current.word}-${current.ink}-$_index',
             )
           else

@@ -6,6 +6,7 @@ import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/messenger/messenger_room.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
@@ -129,6 +130,7 @@ class _KioskSettingsScreenState extends State<KioskSettingsScreen> {
       await kioskApi.exitDevice(locale: locale);
       await kioskScope.clearDeviceToken();
       await _childSessionTokenStorage.clearToken();
+      await MessengerRooms.clear();
 
       if (!mounted) {
         return;

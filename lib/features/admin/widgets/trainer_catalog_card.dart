@@ -11,11 +11,13 @@ class TrainerCatalogCard extends StatelessWidget {
     required this.trainer,
     required this.l10n,
     required this.onOpen,
+    this.russianMaterial = false,
   });
 
   final TrainerCatalogItem trainer;
   final AppLocalizations l10n;
   final VoidCallback onOpen;
+  final bool russianMaterial;
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +43,39 @@ class TrainerCatalogCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
-                    trainer.title,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AdminColors.ink,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (russianMaterial) ...[
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AdminColors.surface,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: AdminColors.line),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            child: Text(
+                              l10n.trainerContentLanguageRussian,
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AdminColors.ink,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      Text(
+                        trainer.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AdminColors.ink,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 8),

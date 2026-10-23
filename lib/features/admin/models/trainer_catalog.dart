@@ -1,4 +1,4 @@
-enum TrainerCatalogDirection { mental, math, reading }
+enum TrainerCatalogDirection { mental, math, reading, speedReading, intel }
 
 enum TrainerPublicationStatus { inDevelopment, readyToPublish, published }
 
@@ -59,6 +59,10 @@ class TrainerCatalogGroup {
         return TrainerCatalogDirection.math;
       case 'reading':
         return TrainerCatalogDirection.reading;
+      case 'speed-reading':
+        return TrainerCatalogDirection.speedReading;
+      case 'intel':
+        return TrainerCatalogDirection.intel;
       case 'mental':
       default:
         return TrainerCatalogDirection.mental;

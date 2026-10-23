@@ -1118,6 +1118,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get adminTrainersDirectionReading => 'Чтение';
 
   @override
+  String get adminTrainersDirectionSpeedReading => 'Скорочтение';
+
+  @override
+  String get adminTrainersDirectionIntel => 'Интеллектуальный тренинг';
+
+  @override
+  String get trainerContentLanguageRussian => 'Русский';
+
+  @override
   String get adminTrainersPublicationInDevelopment => 'В разработке';
 
   @override
@@ -2831,4 +2840,114 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get catalogAudioRetry => 'Повторить';
+
+  @override
+  String get messengerArchive => 'Урок закончен. Можно читать.';
+
+  @override
+  String get messengerAttach => 'Файл';
+
+  @override
+  String get messengerCancelReply => 'Отменить ответ';
+
+  @override
+  String get messengerClose => 'Закрыть чат';
+
+  @override
+  String get messengerClosed => 'Отправка закрыта';
+
+  @override
+  String get messengerConflict => 'Это сообщение уже отправлено иначе';
+
+  @override
+  String get messengerEarlier => 'Раньше';
+
+  @override
+  String get messengerEmpty => 'Сообщений пока нет';
+
+  @override
+  String get messengerFile => 'Файл';
+
+  @override
+  String get messengerFileChecking => 'Проверяем файл';
+
+  @override
+  String get messengerFileError => 'Файл не прошёл проверку';
+
+  @override
+  String get messengerFileLimit => 'До 4 файлов, каждый до 20 МБ';
+
+  @override
+  String get messengerFileReady => 'Готово';
+
+  @override
+  String get messengerFileUploading => 'Загружаем';
+
+  @override
+  String get messengerForbidden => 'Нет доступа';
+
+  @override
+  String get messengerListEmpty => 'Переписок пока нет';
+
+  @override
+  String get messengerListMore => 'Ещё';
+
+  @override
+  String get messengerListTitle => 'Чаты уроков';
+
+  @override
+  String get messengerLoading => 'Открываем';
+
+  @override
+  String get messengerNewer => 'Новые сообщения';
+
+  @override
+  String get messengerOpen => 'Чат';
+
+  @override
+  String get messengerPlaceholder => 'Сообщение';
+
+  @override
+  String get messengerRate => 'Слишком часто';
+
+  @override
+  String get messengerRemoveFile => 'Убрать';
+
+  @override
+  String get messengerReply => 'Ответить';
+
+  @override
+  String get messengerRetry => 'Повторить';
+
+  @override
+  String get messengerSaving => 'Сохраняем';
+
+  @override
+  String get messengerSend => 'Отправить';
+
+  @override
+  String get messengerShare => 'Поделиться';
+
+  @override
+  String get messengerTitle => 'Общий чат урока';
+
+  @override
+  String get messengerUnavailable => 'Нет связи';
+
+  @override
+  String messengerUnread(int count) {
+    return 'Непрочитано: $count';
+  }
+
+  @override
+  String get messengerReport => 'Пожаловаться';
+
+  @override
+  String get messengerRemoveOwn => 'Удалить';
+
+  @override
+  String get messengerRemoved => 'Сообщение удалено';
+
+  @override
+  String get messengerReported => 'Жалоба отправлена';
 }

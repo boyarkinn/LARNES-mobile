@@ -181,6 +181,9 @@ class _TrainersListScreenState extends State<TrainersListScreen> {
                       if (i > 0) const SizedBox(height: ParentChildCardMetrics.pickerListGap),
                       StudyHubCard(
                         title: trainers[i].title,
+                        subtitle: _russianMaterial(widget.direction, trainers[i].key)
+                            ? l10n.trainerContentLanguageRussian
+                            : null,
                         tokens: trainerDirectionHubCardTokens(widget.direction),
                         icon: resolveTrainerDirectionHubIconKind(widget.direction),
                         onTap: () => ParentChildRoutes.pushForChild(
@@ -197,5 +200,12 @@ class _TrainersListScreenState extends State<TrainersListScreen> {
         ],
       ),
     );
+  }
+
+  bool _russianMaterial(String direction, String trainerKey) {
+    if (trainerKey == 'stroop-colors' || trainerKey == 'schulte-table' || trainerKey == 'wedge-tables') {
+      return false;
+    }
+    return direction == 'reading' || direction == 'speed-reading';
   }
 }

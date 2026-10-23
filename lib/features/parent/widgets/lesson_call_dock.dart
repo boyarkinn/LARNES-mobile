@@ -22,6 +22,8 @@ class LessonCallDock extends StatelessWidget {
     required this.onToggleVideo,
     required this.reconnecting,
     required this.videoOn,
+    this.onChat,
+    this.unread = 0,
   });
 
   final bool audioOn;
@@ -40,6 +42,8 @@ class LessonCallDock extends StatelessWidget {
   final VoidCallback onToggleVideo;
   final bool reconnecting;
   final bool videoOn;
+  final VoidCallback? onChat;
+  final int unread;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +141,10 @@ class LessonCallDock extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onChat != null) ...[
+                  _ChatDockButton(label: l10n.messengerOpen, onPressed: onChat!, unread: unread),
+                  const SizedBox(width: 8),
+                ],
                 _CallDockButton(
                   attention: false,
                   enabled: true,
@@ -166,6 +174,47 @@ class LessonCallDock extends StatelessWidget {
       'missing' => l10n.parentLiveLessonMicMissing,
       _ => l10n.parentLiveLessonMicAskAgain,
     };
+  }
+}
+
+class _ChatDockButton extends StatelessWidget {
+  const _ChatDockButton({required this.label, required this.onPressed, required this.unread});
+
+  final String label;
+  final VoidCallback onPressed;
+  final int unread;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: unread > 0 ? '$label, $unread' : label,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          IconButton(
+            tooltip: label,
+            onPressed: onPressed,
+            icon: const Icon(Icons.chat_bubble_outline),
+          ),
+          if (unread > 0)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0xFFB42318), shape: BoxShape.circle),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    unread > 99 ? '99' : '$unread',
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 

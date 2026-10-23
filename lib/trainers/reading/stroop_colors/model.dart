@@ -38,6 +38,51 @@ const stroopColors = <StroopColorId, StroopColorSwatch>{
   'violet': StroopColorSwatch(hex: '#8E24AA', label: 'Фиолетовый'),
 };
 
+const stroopColorLabels = <String, Map<String, String>>{
+  'ru': {
+    'red': 'Красный',
+    'orange': 'Оранжевый',
+    'yellow': 'Жёлтый',
+    'green': 'Зелёный',
+    'cyan': 'Голубой',
+    'blue': 'Синий',
+    'violet': 'Фиолетовый',
+  },
+  'en': {
+    'red': 'Red',
+    'orange': 'Orange',
+    'yellow': 'Yellow',
+    'green': 'Green',
+    'cyan': 'Cyan',
+    'blue': 'Blue',
+    'violet': 'Purple',
+  },
+  'ar': {
+    'red': 'أحمر',
+    'orange': 'برتقالي',
+    'yellow': 'أصفر',
+    'green': 'أخضر',
+    'cyan': 'سماوي',
+    'blue': 'أزرق',
+    'violet': 'بنفسجي',
+  },
+};
+
+String resolveStroopContentLocale(String? locale) {
+  final normalized = (locale ?? '').toLowerCase();
+  if (normalized == 'en' || normalized.startsWith('en-') || normalized.startsWith('en_')) {
+    return 'en';
+  }
+  if (normalized == 'ar' || normalized.startsWith('ar-') || normalized.startsWith('ar_')) {
+    return 'ar';
+  }
+  return 'ru';
+}
+
+String stroopColorLabel(String id, String? locale) {
+  return stroopColorLabels[resolveStroopContentLocale(locale)]![id]!;
+}
+
 class GenerateStroopItemsInput {
   const GenerateStroopItemsInput({
     required this.wordCount,

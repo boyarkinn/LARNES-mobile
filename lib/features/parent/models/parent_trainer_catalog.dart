@@ -1,4 +1,4 @@
-const trainerDirectionSlugs = ['mental', 'math', 'reading', 'intel'];
+const trainerDirectionSlugs = ['mental', 'math', 'reading', 'speed-reading', 'intel'];
 
 bool isTrainerDirectionSlug(String value) {
   return trainerDirectionSlugs.contains(value);

@@ -2132,6 +2132,24 @@ abstract class AppLocalizations {
   /// **'Reading'**
   String get adminTrainersDirectionReading;
 
+  /// No description provided for @adminTrainersDirectionSpeedReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed reading'**
+  String get adminTrainersDirectionSpeedReading;
+
+  /// No description provided for @adminTrainersDirectionIntel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cognitive training'**
+  String get adminTrainersDirectionIntel;
+
+  /// No description provided for @trainerContentLanguageRussian.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get trainerContentLanguageRussian;
+
   /// No description provided for @adminTrainersPublicationInDevelopment.
   ///
   /// In en, this message translates to:
@@ -5232,6 +5250,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again'**
   String get catalogAudioRetry;
+
+  /// No description provided for @messengerArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'The lesson has ended. You can read.'**
+  String get messengerArchive;
+
+  /// No description provided for @messengerAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get messengerAttach;
+
+  /// No description provided for @messengerCancelReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel reply'**
+  String get messengerCancelReply;
+
+  /// No description provided for @messengerClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close chat'**
+  String get messengerClose;
+
+  /// No description provided for @messengerClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending is closed'**
+  String get messengerClosed;
+
+  /// No description provided for @messengerConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This message was already sent differently'**
+  String get messengerConflict;
+
+  /// No description provided for @messengerEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get messengerEarlier;
+
+  /// No description provided for @messengerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get messengerEmpty;
+
+  /// No description provided for @messengerFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get messengerFile;
+
+  /// No description provided for @messengerFileChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking the file'**
+  String get messengerFileChecking;
+
+  /// No description provided for @messengerFileError.
+  ///
+  /// In en, this message translates to:
+  /// **'The file was not accepted'**
+  String get messengerFileError;
+
+  /// No description provided for @messengerFileLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 4 files, 20 MB each'**
+  String get messengerFileLimit;
+
+  /// No description provided for @messengerFileReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get messengerFileReady;
+
+  /// No description provided for @messengerFileUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get messengerFileUploading;
+
+  /// No description provided for @messengerForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'No access'**
+  String get messengerForbidden;
+
+  /// No description provided for @messengerListEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get messengerListEmpty;
+
+  /// No description provided for @messengerListMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get messengerListMore;
+
+  /// No description provided for @messengerListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lesson chats'**
+  String get messengerListTitle;
+
+  /// No description provided for @messengerLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get messengerLoading;
+
+  /// No description provided for @messengerNewer.
+  ///
+  /// In en, this message translates to:
+  /// **'New messages'**
+  String get messengerNewer;
+
+  /// No description provided for @messengerOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get messengerOpen;
+
+  /// No description provided for @messengerPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get messengerPlaceholder;
+
+  /// No description provided for @messengerRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many messages'**
+  String get messengerRate;
+
+  /// No description provided for @messengerRemoveFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get messengerRemoveFile;
+
+  /// No description provided for @messengerReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get messengerReply;
+
+  /// No description provided for @messengerRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get messengerRetry;
+
+  /// No description provided for @messengerSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get messengerSaving;
+
+  /// No description provided for @messengerSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get messengerSend;
+
+  /// No description provided for @messengerShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get messengerShare;
+
+  /// No description provided for @messengerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared lesson chat'**
+  String get messengerTitle;
+
+  /// No description provided for @messengerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection'**
+  String get messengerUnavailable;
+
+  /// No description provided for @messengerUnread.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread: {count}'**
+  String messengerUnread(int count);
+
+  /// No description provided for @messengerReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get messengerReport;
+
+  /// No description provided for @messengerRemoveOwn.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get messengerRemoveOwn;
+
+  /// No description provided for @messengerRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get messengerRemoved;
+
+  /// No description provided for @messengerReported.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent'**
+  String get messengerReported;
 }
 
 class _AppLocalizationsDelegate

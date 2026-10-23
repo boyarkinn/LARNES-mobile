@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.dart';
@@ -165,6 +166,18 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
     }
   }
 
+  MessengerScope? _chatScope(ParentLiveLessonRoomState room) {
+    final sessionId = room.sessionId?.trim() ?? '';
+    final accountId = AuthScope.of(context).user?.id ?? '';
+    if (sessionId.isEmpty || accountId.isEmpty) return null;
+    return MessengerScope.parent(
+      intent: MessengerIntent.child,
+      accountId: accountId,
+      childId: widget.childId,
+      lessonSessionId: sessionId,
+    );
+  }
+
   void _applyRoom(ParentLiveLessonRoomState room) {
     final seqChanged = room.commandSeq != _room?.commandSeq;
     setState(() {
@@ -275,6 +288,7 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
               body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
               childId: widget.childId,
               handle: _call,
+              messenger: _chatScope(_room!),
               onLeave: () {
                 unawaited(_leaveLesson());
               },

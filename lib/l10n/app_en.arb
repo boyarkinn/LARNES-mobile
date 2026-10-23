@@ -476,6 +476,9 @@
   "adminTrainersDirectionMental": "Mental arithmetic",
   "adminTrainersDirectionMath": "Math",
   "adminTrainersDirectionReading": "Reading",
+  "adminTrainersDirectionSpeedReading": "Speed reading",
+  "adminTrainersDirectionIntel": "Cognitive training",
+  "trainerContentLanguageRussian": "Russian",
   "adminTrainersPublicationInDevelopment": "In development",
   "adminTrainersPublicationReadyToPublish": "Ready to publish",
   "adminTrainersPublicationPublished": "Published",
@@ -1126,11 +1129,54 @@
   "catalogAudioPreparing": "Preparing the exercise sound",
   "catalogAudioBlocked": "The exercise sound is not ready yet",
   "catalogAudioRetry": "Try again",
+  "messengerArchive": "The lesson has ended. You can read.",
+  "messengerAttach": "File",
+  "messengerCancelReply": "Cancel reply",
+  "messengerClose": "Close chat",
+  "messengerClosed": "Sending is closed",
+  "messengerConflict": "This message was already sent differently",
+  "messengerEarlier": "Earlier",
+  "messengerEmpty": "No messages yet",
+  "messengerFile": "File",
+  "messengerFileChecking": "Checking the file",
+  "messengerFileError": "The file was not accepted",
+  "messengerFileLimit": "Up to 4 files, 20 MB each",
+  "messengerFileReady": "Ready",
+  "messengerFileUploading": "Uploading",
+  "messengerForbidden": "No access",
+  "messengerListEmpty": "No conversations yet",
+  "messengerListMore": "Earlier",
+  "messengerListTitle": "Lesson chats",
+  "messengerLoading": "Opening",
+  "messengerNewer": "New messages",
+  "messengerOpen": "Chat",
+  "messengerPlaceholder": "Message",
+  "messengerRate": "Too many messages",
+  "messengerRemoveFile": "Remove",
+  "messengerReply": "Reply",
+  "messengerRetry": "Retry",
+  "messengerSaving": "Saving",
+  "messengerSend": "Send",
+  "messengerShare": "Share",
+  "messengerTitle": "Shared lesson chat",
+  "messengerUnavailable": "No connection",
+  "messengerUnread": "Unread: {count}",
+  "@messengerUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@timeZoneSourceCity": {
     "placeholders": {
       "city": {
         "type": "String"
       }
     }
-  }
+  },
+  "messengerReport": "Report",
+  "messengerRemoveOwn": "Delete",
+  "messengerRemoved": "Message deleted",
+  "messengerReported": "Report sent"
 }

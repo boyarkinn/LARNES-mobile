@@ -36,7 +36,9 @@ class StroopColorsScene extends StatelessWidget {
         );
         final ink = stroopInkColor(inkHex);
         final direction = itemIndex.isEven ? 1.0 : -1.0;
-        final displayFontSize = word.length >= 9 ? fontSize * 0.78 : fontSize;
+        final arabicWord = RegExp(r'[\u0600-\u06FF]').hasMatch(word);
+        final displayFontSize =
+            word.length >= 8 || arabicWord ? fontSize * 0.78 : fontSize;
         final wordStyle = GoogleFonts.onest(
           fontSize: displayFontSize,
           fontWeight: FontWeight.w800,
@@ -47,7 +49,7 @@ class StroopColorsScene extends StatelessWidget {
         final wordPainter = TextPainter(
           text: TextSpan(text: word, style: wordStyle),
           maxLines: 1,
-          textDirection: TextDirection.ltr,
+          textDirection: Directionality.of(context),
         )..layout(maxWidth: boxSize * 0.74);
         final wordWidth = wordPainter.width;
 

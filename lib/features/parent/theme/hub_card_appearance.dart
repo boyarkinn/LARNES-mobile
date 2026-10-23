@@ -15,6 +15,7 @@ enum HubCardIconKind {
   schedule,
   payments,
   rewards,
+  chat,
 }
 
 enum ActivityHubKind {
@@ -32,6 +33,10 @@ const profileHubCardTokens = ChildCardColorTokens(
 
 ChildCardColorTokens homeworkHubCardTokens() {
   return childCardColorTokens(ChildCardColor.orange);
+}
+
+ChildCardColorTokens chatHubCardTokens() {
+  return childCardColorTokens(ChildCardColor.sky);
 }
 
 ChildCardColorTokens coursesHubCardTokens() {
@@ -108,6 +113,7 @@ const _trainerDirectionColor = <String, ChildCardColor>{
   'mental': ChildCardColor.amber,
   'math': ChildCardColor.emerald,
   'reading': ChildCardColor.sky,
+  'speed-reading': ChildCardColor.sky,
   'intel': ChildCardColor.violet,
 };
 
@@ -121,7 +127,7 @@ HubCardIconKind resolveTrainerDirectionHubIconKind(String direction) {
   return switch (direction) {
     'mental' => HubCardIconKind.trainers,
     'math' => HubCardIconKind.math,
-    'reading' => HubCardIconKind.reading,
+    'reading' || 'speed-reading' => HubCardIconKind.reading,
     'intel' => HubCardIconKind.direction,
     _ => HubCardIconKind.direction,
   };

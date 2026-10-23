@@ -1114,6 +1114,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminTrainersDirectionReading => 'Reading';
 
   @override
+  String get adminTrainersDirectionSpeedReading => 'Speed reading';
+
+  @override
+  String get adminTrainersDirectionIntel => 'Cognitive training';
+
+  @override
+  String get trainerContentLanguageRussian => 'Russian';
+
+  @override
   String get adminTrainersPublicationInDevelopment => 'In development';
 
   @override
@@ -2810,4 +2819,114 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalogAudioRetry => 'Try again';
+
+  @override
+  String get messengerArchive => 'The lesson has ended. You can read.';
+
+  @override
+  String get messengerAttach => 'File';
+
+  @override
+  String get messengerCancelReply => 'Cancel reply';
+
+  @override
+  String get messengerClose => 'Close chat';
+
+  @override
+  String get messengerClosed => 'Sending is closed';
+
+  @override
+  String get messengerConflict => 'This message was already sent differently';
+
+  @override
+  String get messengerEarlier => 'Earlier';
+
+  @override
+  String get messengerEmpty => 'No messages yet';
+
+  @override
+  String get messengerFile => 'File';
+
+  @override
+  String get messengerFileChecking => 'Checking the file';
+
+  @override
+  String get messengerFileError => 'The file was not accepted';
+
+  @override
+  String get messengerFileLimit => 'Up to 4 files, 20 MB each';
+
+  @override
+  String get messengerFileReady => 'Ready';
+
+  @override
+  String get messengerFileUploading => 'Uploading';
+
+  @override
+  String get messengerForbidden => 'No access';
+
+  @override
+  String get messengerListEmpty => 'No conversations yet';
+
+  @override
+  String get messengerListMore => 'Earlier';
+
+  @override
+  String get messengerListTitle => 'Lesson chats';
+
+  @override
+  String get messengerLoading => 'Opening';
+
+  @override
+  String get messengerNewer => 'New messages';
+
+  @override
+  String get messengerOpen => 'Chat';
+
+  @override
+  String get messengerPlaceholder => 'Message';
+
+  @override
+  String get messengerRate => 'Too many messages';
+
+  @override
+  String get messengerRemoveFile => 'Remove';
+
+  @override
+  String get messengerReply => 'Reply';
+
+  @override
+  String get messengerRetry => 'Retry';
+
+  @override
+  String get messengerSaving => 'Saving';
+
+  @override
+  String get messengerSend => 'Send';
+
+  @override
+  String get messengerShare => 'Share';
+
+  @override
+  String get messengerTitle => 'Shared lesson chat';
+
+  @override
+  String get messengerUnavailable => 'No connection';
+
+  @override
+  String messengerUnread(int count) {
+    return 'Unread: $count';
+  }
+
+  @override
+  String get messengerReport => 'Report';
+
+  @override
+  String get messengerRemoveOwn => 'Delete';
+
+  @override
+  String get messengerRemoved => 'Message deleted';
+
+  @override
+  String get messengerReported => 'Report sent';
 }

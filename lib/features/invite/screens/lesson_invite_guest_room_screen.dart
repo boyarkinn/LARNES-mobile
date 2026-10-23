@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
+import 'package:larnes_mobile/features/messenger/messenger_room.dart';
+import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_live_lesson_room.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.dart';
@@ -195,8 +197,19 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     } catch (_) {
       // Web also leaves the room even if the action fails.
     } finally {
+      await MessengerRooms.clearGuest();
       _goInvite();
     }
+  }
+
+  MessengerScope? _chatScope(ParentLiveLessonRoomState room) {
+    final sessionId = room.sessionId?.trim() ?? '';
+    if (sessionId.isEmpty) return null;
+    return MessengerScope.guest(
+      admissionId: room.admissionId,
+      childId: room.childId,
+      lessonSessionId: sessionId,
+    );
   }
 
   void _dismissPlayer({bool completed = false}) {
@@ -261,9 +274,10 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
           ? _buildBody(l10n)
           : LessonCallStage(
               body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
-              childId: '',
+              childId: _room!.childId ?? '',
               handle: _call,
               inviteToken: widget.token,
+              messenger: _chatScope(_room!),
               onLeave: () {
                 unawaited(_leaveLesson());
               },

@@ -70,6 +70,13 @@ class _TrainersCatalogScreenState extends State<TrainersCatalogScreen> {
     }
   }
 
+  bool _russianMaterial(TrainerCatalogDirection direction, String trainerKey) {
+    if (trainerKey == 'stroop-colors' || trainerKey == 'schulte-table' || trainerKey == 'wedge-tables') {
+      return false;
+    }
+    return direction == TrainerCatalogDirection.reading || direction == TrainerCatalogDirection.speedReading;
+  }
+
   void _openTrainer(String trainerKey) {
     context.push('/admin/trainers/$trainerKey');
   }
@@ -80,6 +87,10 @@ class _TrainersCatalogScreenState extends State<TrainersCatalogScreen> {
         return l10n.adminTrainersDirectionMath;
       case TrainerCatalogDirection.reading:
         return l10n.adminTrainersDirectionReading;
+      case TrainerCatalogDirection.speedReading:
+        return l10n.adminTrainersDirectionSpeedReading;
+      case TrainerCatalogDirection.intel:
+        return l10n.adminTrainersDirectionIntel;
       case TrainerCatalogDirection.mental:
         return l10n.adminTrainersDirectionMental;
     }
@@ -175,6 +186,10 @@ class _TrainersCatalogScreenState extends State<TrainersCatalogScreen> {
               TrainerCatalogCard(
                 trainer: groups[groupIndex].trainers[trainerIndex],
                 l10n: l10n,
+                russianMaterial: _russianMaterial(
+                  groups[groupIndex].direction,
+                  groups[groupIndex].trainers[trainerIndex].key,
+                ),
                 onOpen: () => _openTrainer(groups[groupIndex].trainers[trainerIndex].key),
               ),
             ],

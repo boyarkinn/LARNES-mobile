@@ -8,6 +8,7 @@ import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_scope.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
+import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_lesson_call_api.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
@@ -466,10 +467,18 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
   Widget _classroomCall(KioskSessionController controller) {
     final callApi = KioskLessonCallApi(_childSessionApiClient);
     final childId = controller.deviceContext.activeChild?.childId ?? '';
+    final lessonId = controller.deviceContext.lesson?.lessonSessionId ?? '';
     return LessonCallStage(
       body: null,
       captureOnJoin: false,
       childId: childId,
+      messenger: lessonId.isEmpty || childId.isEmpty
+          ? null
+          : MessengerScope.kiosk(
+              childId: childId,
+              deviceId: controller.deviceContext.deviceId,
+              lessonSessionId: lessonId,
+            ),
       trainerOpen: false,
       fetchPass: (locale) => callApi.fetchPass(locale: locale),
       fetchBoard: callApi.fetchBoard,

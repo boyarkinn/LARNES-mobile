@@ -17,6 +17,9 @@ void main() {
       expect(stroopColors.length, 7);
       expect(stroopColors['cyan']?.label, 'Голубой');
       expect(stroopColors['blue']?.label, 'Синий');
+      expect(stroopColorLabel('cyan', 'ru'), 'Голубой');
+      expect(stroopColorLabel('cyan', 'en'), 'Cyan');
+      expect(stroopColorLabel('violet', 'ar'), 'بنفسجي');
     });
 
     test('generates only incongruent items of the requested length', () {

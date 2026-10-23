@@ -427,6 +427,9 @@
   "adminTrainersDirectionMental": "Ментальная арифметика",
   "adminTrainersDirectionMath": "Математика",
   "adminTrainersDirectionReading": "Чтение",
+  "adminTrainersDirectionSpeedReading": "Скорочтение",
+  "adminTrainersDirectionIntel": "Интеллектуальный тренинг",
+  "trainerContentLanguageRussian": "Русский",
   "adminTrainersPublicationInDevelopment": "В разработке",
   "adminTrainersPublicationReadyToPublish": "Готов к публикации",
   "adminTrainersPublicationPublished": "Опубликован",
@@ -1077,11 +1080,54 @@
   "catalogAudioPreparing": "Готовим звук упражнения",
   "catalogAudioBlocked": "Звук упражнения ещё не готов",
   "catalogAudioRetry": "Повторить",
+  "messengerArchive": "Урок закончен. Можно читать.",
+  "messengerAttach": "Файл",
+  "messengerCancelReply": "Отменить ответ",
+  "messengerClose": "Закрыть чат",
+  "messengerClosed": "Отправка закрыта",
+  "messengerConflict": "Это сообщение уже отправлено иначе",
+  "messengerEarlier": "Раньше",
+  "messengerEmpty": "Сообщений пока нет",
+  "messengerFile": "Файл",
+  "messengerFileChecking": "Проверяем файл",
+  "messengerFileError": "Файл не прошёл проверку",
+  "messengerFileLimit": "До 4 файлов, каждый до 20 МБ",
+  "messengerFileReady": "Готово",
+  "messengerFileUploading": "Загружаем",
+  "messengerForbidden": "Нет доступа",
+  "messengerListEmpty": "Переписок пока нет",
+  "messengerListMore": "Ещё",
+  "messengerListTitle": "Чаты уроков",
+  "messengerLoading": "Открываем",
+  "messengerNewer": "Новые сообщения",
+  "messengerOpen": "Чат",
+  "messengerPlaceholder": "Сообщение",
+  "messengerRate": "Слишком часто",
+  "messengerRemoveFile": "Убрать",
+  "messengerReply": "Ответить",
+  "messengerRetry": "Повторить",
+  "messengerSaving": "Сохраняем",
+  "messengerSend": "Отправить",
+  "messengerShare": "Поделиться",
+  "messengerTitle": "Общий чат урока",
+  "messengerUnavailable": "Нет связи",
+  "messengerUnread": "Непрочитано: {count}",
+  "@messengerUnread": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "@timeZoneSourceCity": {
     "placeholders": {
       "city": {
         "type": "String"
       }
     }
-  }
+  },
+  "messengerReport": "Пожаловаться",
+  "messengerRemoveOwn": "Удалить",
+  "messengerRemoved": "Сообщение удалено",
+  "messengerReported": "Жалоба отправлена"
 }

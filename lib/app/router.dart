@@ -53,6 +53,7 @@ import 'package:larnes_mobile/features/parent/screens/account/account_password_s
 import 'package:larnes_mobile/features/parent/screens/account/account_profile_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/add_child_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/child_picker_screen.dart';
+import 'package:larnes_mobile/features/messenger/child_chats_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/child_profile_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/direction_programs_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/homework_list_screen.dart';
@@ -369,6 +370,16 @@ GoRouter createAppRouter({
                               state.uri.queryParameters['from'],
                             ),
                           );
+                        },
+                      ),
+                      GoRoute(
+                        path: 'chats',
+                        builder: (context, state) {
+                          final childId = state.pathParameters['childId'];
+                          if (childId == null || childId.isEmpty) {
+                            return const ChildPickerScreen();
+                          }
+                          return ChildChatsScreen(childId: childId);
                         },
                       ),
                       GoRoute(

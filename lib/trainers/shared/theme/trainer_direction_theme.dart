@@ -29,6 +29,14 @@ const trainerDirectionThemes = <TrainerDirection, TrainerDirectionTheme>{
     secondary: Color(0xFFF0A33A),
     surface: Color(0xFFFFF3ED),
   ),
+  TrainerDirection.speedReading: TrainerDirectionTheme(
+    base: Color(0xFF1D6F93),
+    deep: Color(0xFF155773),
+    soft: Color(0x3D7DD3FC),
+    glow: Color(0x4D1D6F93),
+    secondary: Color(0xFF7DD3FC),
+    surface: Color(0xFFF0F8FC),
+  ),
   TrainerDirection.reading: TrainerDirectionTheme(
     base: Color(0xFF249B73),
     deep: Color(0xFF187B5A),
@@ -209,7 +217,7 @@ class _TrainerDirectionStaticPainter extends CustomPainter {
           );
     canvas.drawRect(bounds, secondGlowPaint);
 
-    if (direction == TrainerDirection.reading) {
+    if (direction == TrainerDirection.reading || direction == TrainerDirection.speedReading) {
       canvas.drawRect(
         bounds,
         Paint()
@@ -319,7 +327,7 @@ class _TrainerDirectionAmbientPainter extends CustomPainter {
       _drawMentalRoutes(canvas, size);
       return;
     }
-    if (direction == TrainerDirection.reading) {
+    if (direction == TrainerDirection.reading || direction == TrainerDirection.speedReading) {
       _drawReadingFlow(canvas, size);
       return;
     }

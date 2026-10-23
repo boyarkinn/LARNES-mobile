@@ -100,7 +100,7 @@ void main() {
       final definition = getTrainerDefinition('wedge-tables');
 
       expect(definition?.title, 'Клиновидная таблица');
-      expect(definition?.direction, TrainerDirection.reading);
+      expect(definition?.direction, TrainerDirection.speedReading);
       expect(definition?.isInteractive, isTrue);
       expect(hasTrainerBuilder('wedge-tables'), isTrue);
       expect(isTrainerInteractive('wedge-tables'), isTrue);

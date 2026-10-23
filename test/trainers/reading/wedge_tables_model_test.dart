@@ -19,6 +19,10 @@ void main() {
       expect(kWedgeLetters.length, 33);
       expect(kWedgeLetters.first, 'А');
       expect(kWedgeLetters, contains('Ё'));
+      expect(kWedgeLettersLatin.length, 26);
+      expect(wedgeLettersForLocale('en').first, 'A');
+      expect(wedgeLettersForLocale('ar'), isNot(contains('А')));
+      expect(wedgeLettersForLocale('ru'), contains('Я'));
     });
 
     test('builds a digit pool and a diagnostics syllable pool', () {
@@ -27,6 +31,11 @@ void main() {
       expect(kWedgeSyllables.length, greaterThan(20));
       expect(getWedgePool('syllables').length, kWedgeSyllables.length);
       expect(kWedgeSyllables.every((token) => token.length > 1), isTrue);
+      final latin = getWedgePool('syllables', 'en');
+      expect(getWedgePool('syllables', 'ar'), latin);
+      expect(latin.every((token) => RegExp(r'^[A-Z]+$').hasMatch(token)), isTrue);
+      expect(getWedgePool('letters', 'en'), contains('A'));
+      expect(getWedgePool('letters', 'ar'), isNot(contains('Б')));
     });
 
     test('generates the requested number of side-token rows', () {

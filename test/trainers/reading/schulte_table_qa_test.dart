@@ -137,7 +137,7 @@ void main() {
       final definition = getTrainerDefinition('schulte-table');
 
       expect(definition?.title, 'Таблица Шульте');
-      expect(definition?.direction, TrainerDirection.reading);
+      expect(definition?.direction, TrainerDirection.speedReading);
       expect(definition?.isInteractive, isTrue);
       expect(hasTrainerBuilder('schulte-table'), isTrue);
       expect(isTrainerInteractive('schulte-table'), isTrue);

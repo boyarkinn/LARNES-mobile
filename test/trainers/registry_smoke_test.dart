@@ -60,8 +60,18 @@ void main() {
       final readingDefinitions = trainerDefinitions.values
           .where((definition) => definition.direction == TrainerDirection.reading);
 
-      expect(readingDefinitions.length, 46);
+      expect(readingDefinitions.length, 20);
       for (final definition in readingDefinitions) {
+        expect(definition.isInteractive, isTrue, reason: definition.key.apiValue);
+      }
+    });
+
+    test('speed-reading trainers keep the web interactive flags', () {
+      final definitions = trainerDefinitions.values
+          .where((definition) => definition.direction == TrainerDirection.speedReading);
+
+      expect(definitions.length, 26);
+      for (final definition in definitions) {
         expect(
           definition.isInteractive,
           definition.key != TrainerKey.readingBlocks &&

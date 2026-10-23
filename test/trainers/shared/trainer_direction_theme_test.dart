@@ -13,6 +13,7 @@ void main() {
         const {
           TrainerDirection.math: Color(0xFFE4573D),
           TrainerDirection.reading: Color(0xFF249B73),
+          TrainerDirection.speedReading: Color(0xFF1D6F93),
           TrainerDirection.mental: Color(0xFF7759D6),
           TrainerDirection.intel: Color(0xFF2F66D0),
         },

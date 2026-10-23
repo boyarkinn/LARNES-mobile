@@ -47,9 +47,16 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
   Timer? _slideTimer;
   Timer? _completeTimer;
 
+  String? _contentLocale;
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final locale = Localizations.localeOf(context).languageCode;
+    if (_contentLocale == locale) {
+      return;
+    }
+    _contentLocale = locale;
     _startSession();
   }
 
@@ -125,6 +132,7 @@ class _WedgeTablesTrainerState extends State<WedgeTablesTrainer> {
         (_) => generateWedgeRows(
           GenerateWedgeRowsInput(
             category: category,
+            locale: _contentLocale,
             rowCount: _rowCount,
             random: snapshotRandom?.nextDouble,
           ),

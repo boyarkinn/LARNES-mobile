@@ -28,8 +28,11 @@ class ParentLiveLessonWaiting {
 class ParentLiveLessonRoomState {
   const ParentLiveLessonRoomState({
     required this.status,
+    this.admissionId,
+    this.childId,
     this.commandSeq = 0,
     this.pendingCommand,
+    this.sessionId,
     this.waiting = const ParentLiveLessonWaiting(childName: '', lessonTitle: ''),
     this.snapshot,
   });
@@ -38,7 +41,10 @@ class ParentLiveLessonRoomState {
     final snapshot = json['snapshot'];
     return ParentLiveLessonRoomState(
       status: json['status'] as String? ?? 'error',
+      admissionId: json['admissionId'] as String?,
+      childId: json['childId'] as String?,
       commandSeq: (json['commandSeq'] as num?)?.toInt() ?? 0,
+      sessionId: json['sessionId'] as String?,
       pendingCommand: json['pendingCommand'] as String?,
       waiting: ParentLiveLessonWaiting.fromJson(
         json['waiting'] is Map ? Map<String, dynamic>.from(json['waiting'] as Map) : null,
@@ -50,8 +56,11 @@ class ParentLiveLessonRoomState {
   }
 
   final String status;
+  final String? admissionId;
+  final String? childId;
   final int commandSeq;
   final String? pendingCommand;
+  final String? sessionId;
   final ParentLiveLessonWaiting waiting;
   final ParentHomeworkPlaySnapshot? snapshot;
 

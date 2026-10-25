@@ -226,6 +226,13 @@ class AuthSession extends ChangeNotifier {
     return outcome;
   }
 
+  Future<void> saveInterfaceLocale(String code) async {
+    if (!isAuthenticated || (code != 'en' && code != 'ru')) return;
+    try {
+      await _authApi.saveInterfaceLocale(code);
+    } catch (_) {}
+  }
+
   Future<void> logout() async {
     await MessengerRooms.clear();
     await _authApi.logout();

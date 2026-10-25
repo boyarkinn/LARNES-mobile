@@ -69,6 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final userOutcome = outcome as UserLoginOutcome;
+      final saved = userOutcome.user.interfaceLocale;
+      if (saved == 'en' || saved == 'ru') {
+        await LocaleScope.read(context).applyAccountLocale(saved);
+      }
+      if (!mounted) return;
       final redirect = widget.redirectPath?.trim();
       context.go(
         resolvePostAuthDestination(

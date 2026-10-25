@@ -74,7 +74,9 @@ class _LarnesAppState extends State<LarnesApp> with WidgetsBindingObserver {
     );
     _authSession = AuthSession();
     _kioskRouteState = KioskRouteState();
-    _localeController = LocaleController()..load();
+    _localeController = LocaleController(
+      onAccountLocale: _authSession.saveInterfaceLocale,
+    )..load();
     _appUpdateController = AppUpdateController();
     _router = createAppRouter(
       authSession: _authSession,

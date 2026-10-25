@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocaleController extends ChangeNotifier {
+  LocaleController({this.onAccountLocale});
+
   static const _prefKey = 'locale_code';
 
+  final Future<void> Function(String code)? onAccountLocale;
   Locale _locale = const Locale('ru');
   bool _isLoaded = false;
 
@@ -29,5 +32,16 @@ class LocaleController extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefKey, locale.languageCode);
+    await onAccountLocale?.call(locale.languageCode);
+  }
+
+  /// Язык с сервера после входа. На телефоне есть только русский и английский.
+  Future<void> applyAccountLocale(String code) async {
+    if (code != 'en' && code != 'ru') return;
+    if (_locale.languageCode == code) return;
+    _locale = Locale(code);
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefKey, code);
   }
 }

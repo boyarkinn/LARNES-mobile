@@ -18,6 +18,7 @@ class AuthUser {
     this.login,
     this.timeZone,
     this.cityTimeZone,
+    this.interfaceLocale,
     this.phoneVerified = false,
     this.emailVerified = false,
   });
@@ -36,6 +37,7 @@ class AuthUser {
       login: json['login'] as String?,
       timeZone: json['timeZone'] as String?,
       cityTimeZone: json['cityTimeZone'] as String?,
+      interfaceLocale: json['interfaceLocale'] as String?,
       phoneVerified: json['phoneVerifiedAt'] != null,
       emailVerified: json['emailVerifiedAt'] != null,
     );
@@ -53,6 +55,7 @@ class AuthUser {
   final String? login;
   final String? timeZone;
   final String? cityTimeZone;
+  final String? interfaceLocale;
   final bool phoneVerified;
   final bool emailVerified;
 
@@ -187,6 +190,16 @@ class AuthApi {
         return null;
       }
       rethrow;
+    }
+  }
+
+  Future<void> saveInterfaceLocale(String locale) async {
+    final response = await _client.dio.post<Map<String, dynamic>>(
+      '/api/account/interface-locale',
+      data: {'locale': locale},
+    );
+    if (response.statusCode != 200) {
+      throw AuthApiException('interface locale');
     }
   }
 

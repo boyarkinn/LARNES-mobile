@@ -924,6 +924,7 @@
             elements: elements,
             epoch: childRoomEpoch,
             gen: childRoomGen,
+            sceneGeneration: childRoomPayload && childRoomPayload.sceneGeneration || 0,
             roomId: childRoomFocus
           }));
         };
@@ -2217,7 +2218,7 @@
         childRoomFocus = focus;
         childRoomGen = childRoomPayload && typeof childRoomPayload.gen === "number" ? childRoomPayload.gen : 0;
         childRoomEpoch = childRoomPayload && typeof childRoomPayload.epoch === "number" ? childRoomPayload.epoch : -1;
-        var documentKey = focus + ":" + childRoomEpoch;
+        var documentKey = focus + ":" + childRoomEpoch + ":" + (childRoomPayload && childRoomPayload.sceneGeneration || 0);
         var switched = documentKey !== childRoomDocument;
         var label = document.getElementById("room-label");
         if (focus === "main") {

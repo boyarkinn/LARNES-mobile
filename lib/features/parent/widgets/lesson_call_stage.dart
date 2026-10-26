@@ -407,7 +407,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     try {
       final board = await _fetchBoard();
       if (!mounted || board == null || _ended) return;
-      final key = '${board.focusRoomId}|${board.roomEpoch}|${board.instanceKey}';
+      final key = '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
       if (key != _boardKey) {
         _boardKey = key;
         _boardGen += 1;
@@ -427,6 +427,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           'gen': _boardGen,
           'revision': board.sceneRevision,
           'scene': board.scene,
+          'sceneGeneration': board.sceneGeneration,
           'serverNow': board.serverNow,
           'sound': board.sound,
           'conversation': board.conversation,
@@ -571,6 +572,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         'kind': 'scene',
         'roomEpoch': epoch,
         'roomId': roomId,
+        'sceneGeneration': board.sceneGeneration,
       });
     } catch (_) {
       // A stroke from the previous room is not written.

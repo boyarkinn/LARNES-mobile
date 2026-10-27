@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:larnes_mobile/core/api/native_homework_api.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/api/api_client.dart';
 import 'package:larnes_mobile/core/api/parent_panel_error.dart';
@@ -86,6 +87,7 @@ class SafetyCaseSummary {
 }
 
 class ParentApi {
+  NativeHomeworkApi get nativeHomework => NativeHomeworkApi(_client.dio);
   ParentApi(this._client);
 
   final ApiClient _client;

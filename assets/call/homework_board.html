@@ -50,7 +50,7 @@
         if (installed) return;
         if (typeof part === "string" && part) {
           boardChars += part.length;
-          if (boardParts.length >= 64 || boardChars > 12 * 1024 * 1024) { boardParts = []; boardChars = 0; post("failed", "size"); return; }
+          if (boardParts.length >= 96 || boardChars > 20 * 1024 * 1024) { boardParts = []; boardChars = 0; post("failed", "size"); return; }
           boardParts.push(part);
         }
         if (!last) return;
@@ -64,6 +64,7 @@
         var bridge = window.flutter_inappwebview;
         if (window.LarnesBoard.images === 1 && bridge && bridge.callHandler) {
           window.LarnesBoard.onImage = function (input) { return bridge.callHandler("boardImage", input); };
+          window.LarnesBoard.onImageData = function (input) { return bridge.callHandler("homeworkImage", input); };
         }
         post("installed");
       }

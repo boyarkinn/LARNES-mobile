@@ -853,7 +853,7 @@
         if (boardInstalled || boardEnded) return;
         if (typeof part === "string" && part) {
           boardSourceChars += part.length;
-          if (boardParts.length >= 64 || boardSourceChars > 12 * 1024 * 1024) {
+          if (boardParts.length >= 96 || boardSourceChars > 20 * 1024 * 1024) {
             boardParts = []; boardSourceChars = 0; boardState = "offline"; updateBoardNotice(); return;
           }
           boardParts.push(part);

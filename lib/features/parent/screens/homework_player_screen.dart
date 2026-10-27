@@ -208,7 +208,7 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
         menuExitLabel: l10n.parentHomeworkPlayExit,
         onExit: _exit,
         child: HomeworkBoardStep(
-          key: ValueKey(step.id),
+          key: ValueKey('${widget.childId}:${widget.assignmentId}:${step.id}'),
           assignmentId: widget.assignmentId,
           childId: widget.childId,
           step: step,

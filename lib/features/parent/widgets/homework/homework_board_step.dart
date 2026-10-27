@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:larnes_mobile/core/api/parent_api.dart';
+import 'package:larnes_mobile/core/api/native_homework_api.dart';
+import 'package:path_provider/path_provider.dart';
+import 'native_homework_outbox.dart';
+import 'native_homework_writer.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
-import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 
@@ -62,8 +64,13 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
   bool _failed = false;
   _BoardSave _save = _BoardSave.idle;
   late String _savedJson = jsonEncode(widget.step.boardWork ?? const []);
-  Future<_BoardSave>? _running;
-  List<dynamic>? _pending;
+  NativeHomeworkWriter? _writer;
+  Map<String, dynamic>? _native;
+  List<dynamic>? _restoredWork;
+  bool _booted = false;
+  NativeHomeworkTarget get _target =>
+      NativeHomeworkTarget(widget.childId, widget.assignmentId, widget.step.id);
+  NativeHomeworkApi get _api => AuthScope.of(context).parentApi.nativeHomework;
 
   @override
   void initState() {
@@ -72,9 +79,89 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
       _failed = true;
       return;
     }
-    rootBundle.loadString('assets/call/homework_board.html').then((html) {
-      if (mounted) setState(() => _html = html);
-    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_booted && !_failed) {
+      _booted = true;
+      unawaited(_boot());
+    }
+  }
+
+  Future<void> _boot() async {
+    try {
+      final api = _api, target = _target, state = await api.open(target);
+      if (!mounted) return;
+      final outbox =
+          NativeHomeworkOutbox(await getApplicationSupportDirectory(), [
+            state['actorUserId'] as String,
+            widget.childId,
+            widget.assignmentId,
+            widget.step.id,
+          ]);
+      final writer = NativeHomeworkWriter(
+        outbox: outbox,
+        retryable: (error) =>
+            error is! NativeHomeworkError ||
+            ![
+              'conflict',
+              'operation_conflict',
+              'forbidden',
+              'closed',
+              'invalid',
+              'size',
+            ].contains(error.code),
+        generation: state['generation'] as int,
+        versionId: state['versionId'] as String?,
+        cloudVersionId: state['cloudVersionId'] as String?,
+        save: (command) => api.save(
+          target,
+          command,
+          actorUserId: state['actorUserId'] as String,
+          sessionVersion: state['sessionVersion'] as int,
+        ),
+        waitCloud: (id) => api.waitCloud(target, id),
+        changed: (saving, error) {
+          if (mounted) {
+            setState(
+              () => _save = saving
+                  ? _BoardSave.saving
+                  : error == null
+                  ? _BoardSave.saved
+                  : error is NativeHomeworkError && error.code == 'closed'
+                  ? _BoardSave.closed
+                  : _BoardSave.failed,
+            );
+          }
+        },
+      );
+      _writer = writer;
+      _native = state;
+      await writer.restore();
+      _restoredWork = writer.recoveredWork;
+      final document = state['document'] as Map;
+      _savedJson = jsonEncode(
+        _restoredWork ?? (document['scene'] as Map)['elements'],
+      );
+      final html = await rootBundle.loadString(
+        'assets/call/homework_board.html',
+      );
+      if (mounted) {
+        setState(() => _html = html);
+      } else {
+        writer.dispose();
+      }
+    } catch (_) {
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _writer?.dispose();
+    super.dispose();
   }
 
   Future<void> _send(String function, String source) async {
@@ -113,10 +200,13 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
   Future<void> _mountScene() async {
     final locale = LocaleScope.read(context).localeCode;
     final scene = jsonEncode({
-      'base': homeworkBoardBase(widget.step.runtimeSnapshot) ?? const [],
-      'imageBase': boardImageBase(),
+      'base': (_native?['document'] as Map?)?['base']?['elements'] ?? const [],
+      'canEdit': _native?['canEdit'] == true,
       'locale': locale,
-      'work': widget.step.boardWork ?? const [],
+      'work':
+          _restoredWork ??
+          ((_native?['document'] as Map?)?['scene'] as Map?)?['elements'] ??
+          const [],
     });
     try {
       await _send('appendScene', scene);
@@ -126,7 +216,9 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
   }
 
   dynamic _onBridge(List<dynamic> args) {
-    final message = args.isNotEmpty && args.first is Map ? args.first as Map : null;
+    final message = args.isNotEmpty && args.first is Map
+        ? args.first as Map
+        : null;
     switch (message?['kind']) {
       case 'installed':
         unawaited(_mountScene());
@@ -136,50 +228,53 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
         if (mounted) setState(() => _failed = true);
       case 'work':
         final work = message?['detail'];
-        if (work is List) unawaited(_store(work));
+        if (work is List && _native?['canEdit'] == true) {
+          unawaited(_store(work));
+        }
     }
     return null;
   }
 
-  /// One write at a time; a newer drawing replaces a waiting one.
   Future<_BoardSave> _store(List<dynamic> work) async {
-    _pending = work;
-    while (_running != null) {
-      await _running;
-    }
-    final next = _pending;
-    _pending = null;
-    if (next == null) return _save;
-    final json = jsonEncode(next);
-    if (json == _savedJson) return _BoardSave.saved;
-    final run = _write(next, json);
-    _running = run;
+    final json = jsonEncode(work);
+    if (json == _savedJson || _native?['canEdit'] != true) return _save;
     try {
-      return await run;
-    } finally {
-      _running = null;
+      await _writer!.enqueue(work);
+      _savedJson = json;
+      return _BoardSave.saving;
+    } catch (_) {
+      if (mounted) setState(() => _save = _BoardSave.failed);
+      return _BoardSave.failed;
     }
   }
 
-  Future<_BoardSave> _write(List<dynamic> work, String json) async {
-    if (mounted) setState(() => _save = _BoardSave.saving);
-    var result = _BoardSave.saved;
+  Future<Map<String, String>> _uploadImage(List<dynamic> args) async {
     try {
-      await AuthScope.of(context).parentApi.saveHomeworkBoardWork(
-            childId: widget.childId,
-            assignmentId: widget.assignmentId,
-            itemId: widget.step.id,
-            elements: work,
-            locale: LocaleScope.read(context).localeCode,
-          );
-      _savedJson = json;
-    } on ParentApiException catch (error) {
-      result = error.code == 'closed' ? _BoardSave.closed : _BoardSave.failed;
+      final input = args.first as Map;
+      final id = await _api.upload(
+        _target,
+        base64Decode(input['data'] as String),
+        input['mimeType'] as String,
+        actorUserId: _native!['actorUserId'] as String,
+        sessionVersion: _native!['sessionVersion'] as int,
+      );
+      return {'fileId': id};
     } catch (_) {
-      result = _BoardSave.failed;
+      return {'code': 'failed'};
     }
-    if (mounted) setState(() => _save = result);
-    return result;
+  }
+
+  Future<Map<String, String>> _readImage(List<dynamic> args) async {
+    try {
+      return {
+        'dataURL': await _api.image(
+          _target,
+          (args.first as Map)['imageId'] as String,
+        ),
+      };
+    } catch (_) {
+      return {'code': 'failed'};
+    }
   }
 
   Future<void> _advance() async {
@@ -195,6 +290,11 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
         if (mounted) setState(() => _save = result);
       }
     }
+    if (result != _BoardSave.closed &&
+        _native?['canEdit'] == true &&
+        !await _writer!.flush()) {
+      result = _BoardSave.failed;
+    }
     // A closed homework still advances: the server then explains why it is closed.
     if (mounted && result != _BoardSave.failed) widget.chrome.onAdvance?.call();
   }
@@ -206,10 +306,10 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
     final error = _failed
         ? l10n.homeworkBoardUnavailable
         : _save == _BoardSave.failed
-            ? l10n.homeworkBoardSaveFailed
-            : _save == _BoardSave.closed
-                ? l10n.homeworkBoardClosed
-                : chrome.errorMessage;
+        ? l10n.homeworkBoardSaveFailed
+        : _save == _BoardSave.closed
+        ? l10n.homeworkBoardClosed
+        : chrome.errorMessage;
     final html = _html;
 
     // White sheet edge to edge; the shell's progress and menu lie on top, as on other trainers.
@@ -224,44 +324,43 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
               child: _failed
                   ? const SizedBox.expand()
                   : html == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : Stack(
-                          children: [
-                            InAppWebView(
-                              initialData: InAppWebViewInitialData(
-                                data: html,
-                                baseUrl: WebUri('https://larnes.app/'),
-                              ),
-                              initialSettings: InAppWebViewSettings(
-                                javaScriptEnabled: true,
-                                supportZoom: false,
-                                transparentBackground: false,
-                              ),
-                              onWebViewCreated: (controller) {
-                                _web = controller;
-                                controller.addJavaScriptHandler(
-                                  handlerName: 'homeworkBoard',
-                                  callback: _onBridge,
-                                );
-                                controller.addJavaScriptHandler(
-                                  handlerName: 'boardImage',
-                                  callback: (args) => uploadBoardImageFromPage(
-                                    AuthScope.of(context).parentApi,
-                                    args,
-                                  ),
-                                );
-                              },
-                              onLoadStop: (controller, url) => _install(),
-                            ),
-                            if (!_mounted)
-                              const ColoredBox(
-                                color: Colors.white,
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                          ],
+                  ? const Center(child: CircularProgressIndicator())
+                  : Stack(
+                      children: [
+                        InAppWebView(
+                          initialData: InAppWebViewInitialData(
+                            data: html,
+                            baseUrl: WebUri('https://larnes.app/'),
+                          ),
+                          initialSettings: InAppWebViewSettings(
+                            javaScriptEnabled: true,
+                            supportZoom: false,
+                            transparentBackground: false,
+                          ),
+                          onWebViewCreated: (controller) {
+                            _web = controller;
+                            controller.addJavaScriptHandler(
+                              handlerName: 'homeworkBoard',
+                              callback: _onBridge,
+                            );
+                            controller.addJavaScriptHandler(
+                              handlerName: 'boardImage',
+                              callback: _uploadImage,
+                            );
+                            controller.addJavaScriptHandler(
+                              handlerName: 'homeworkImage',
+                              callback: _readImage,
+                            );
+                          },
+                          onLoadStop: (controller, url) => _install(),
                         ),
+                        if (!_mounted)
+                          const ColoredBox(
+                            color: Colors.white,
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                      ],
+                    ),
             ),
           ),
           Padding(

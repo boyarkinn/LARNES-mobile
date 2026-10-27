@@ -1,5 +1,7 @@
 # LARNES Mobile
 
+**2026-10-27 — Диск, прогон22:** доска ДЗ использует общий native protocol2, CAS/operation receipts, app-private durable outbox и authenticated image bridge. Пересобран SDK, обе HTML принимают реальный пакет65 частей/около15MiB; browser feature flags не требуют Node process.5 Flutter/FS tests и4 настоящих Chromium сценария PASS; Dart analyze изменённых файлов чистый. Backend требует0304 и совместимого native endpoint; старые APK не могут писать перенесённое ДЗ (409 native_required). Новый APK/телефоны/visual/production не приняты, включать homework canary только после установки нового клиента. [Подробный журнал22](../platform/docs/active/larnes-drive-v1-implementation.md#прогон-22-проверяемое-переключение-чтениязаписи-и-совместимость). Старые срезы ниже — история.
+
 **2026-10-16 — доска урока, прогон 52:** общий плеер получил компактную рамку, название и вписывание по обеим сторонам. Пересобран `assets/call/larnes-board.js`. Модель `LessonChildBoard` и HTML передают/показывают краткоживущее уведомление о присутствии педагога в аудиокомнате; вне своей комнаты оно не показывается и без обновлений исчезает. Новый модельный тест и анализ изменённых Dart-файлов прошли. Живой телефон/звук и внешний вид Alex принимает позже; APK и production не менялись. [Прогон и ограничения](../platform/docs/completed/lesson-board-workspace-v2.md#прогон-52-комнаты-тренажёры-и-аудиосвязь).
 
 Flutter-приложение LARNES.

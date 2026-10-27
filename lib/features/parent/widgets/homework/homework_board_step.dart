@@ -141,10 +141,7 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
       _native = state;
       await writer.restore();
       _restoredWork = writer.recoveredWork;
-      final document = state['document'] as Map;
-      _savedJson = jsonEncode(
-        _restoredWork ?? (document['scene'] as Map)['elements'],
-      );
+      _savedJson = jsonEncode(_restoredWork ?? _nativeWork());
       final html = await rootBundle.loadString(
         'assets/call/homework_board.html',
       );
@@ -197,16 +194,22 @@ class _HomeworkBoardStepState extends State<HomeworkBoardStep> {
     }
   }
 
+  List<dynamic> _nativeWork() {
+    final document = _native?['document'] as Map?;
+    return [
+      ...?((document?['scene'] as Map?)?['elements'] as List?),
+      ...?(document?['tombstones'] as List?),
+    ];
+  }
+
   Future<void> _mountScene() async {
     final locale = LocaleScope.read(context).localeCode;
     final scene = jsonEncode({
       'base': (_native?['document'] as Map?)?['base']?['elements'] ?? const [],
       'canEdit': _native?['canEdit'] == true,
+      'protocol': 2,
       'locale': locale,
-      'work':
-          _restoredWork ??
-          ((_native?['document'] as Map?)?['scene'] as Map?)?['elements'] ??
-          const [],
+      'work': _restoredWork ?? _nativeWork(),
     });
     try {
       await _send('appendScene', scene);

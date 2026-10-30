@@ -2015,9 +2015,9 @@
 
       function renewFailed(code) {
         renewing = false;
-        if (code === "inactive" || code === "forbidden") closeBoard();
+        if (!boardWorkspace && (code === "inactive" || code === "forbidden")) closeBoard();
         var wasLive = callJoined || linkPhase === "rejoining" || linkPhase === "reconnecting";
-        dropSession();
+        if (boardWorkspace) pauseMedia(); else dropSession();
         if (code === "inactive") {
           post("closed");
           return;
@@ -2102,6 +2102,19 @@
             disconnectCall(currentConnection);
           },
         );
+      }
+
+      // Stop tracks and transport, keeping the server document and exercises mounted.
+      function pauseMedia() {
+        clearLinkTimer();
+        renewing = false;
+        var stopped = dropSession();
+        var generation = attempt;
+        return stopped.then(function () {
+          if (generation !== attempt || leaving) return;
+          ensurePerson("local", true);
+          render();
+        });
       }
 
       function disconnectCall(currentConnection) {

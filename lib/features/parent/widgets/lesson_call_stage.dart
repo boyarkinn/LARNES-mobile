@@ -12,6 +12,8 @@ import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_device_media.dart';
+import 'package:larnes_mobile/features/parent/widgets/lesson_device_media_controller.dart';
 import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/features/messenger/messenger_panel.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
@@ -61,6 +63,9 @@ class LessonCallStage extends StatefulWidget {
     this.captureOnJoin = true,
     this.mediaEnabled = true,
     this.workspaceFormat = 'classic',
+    this.lessonSessionId,
+    this.fetchMedia,
+    this.sendMedia,
     this.messenger,
   });
 
@@ -73,14 +78,18 @@ class LessonCallStage extends StatefulWidget {
   final bool captureOnJoin;
   final bool mediaEnabled;
   final String workspaceFormat;
+  final String? lessonSessionId;
+  final Future<LessonDeviceMedia?> Function()? fetchMedia;
+  final Future<LessonDeviceMedia?> Function(Map<String, dynamic>)? sendMedia;
   final MessengerScope? messenger;
-  final Future<LessonCallPassOutcome> Function(String locale)? fetchPass;
+  final Future<LessonCallPassOutcome> Function(String locale, {String? assignment})? fetchPass;
   final Future<LessonChildBoard?> Function({String? link})? fetchBoard;
   final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
   final Future<Map<String, dynamic>?> Function(Map<String, dynamic> body)? requestBoard;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
     required String locale,
+    String? assignment,
   })?
   claimRoster;
 
@@ -99,6 +108,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   String _boardAudioReady = '';
   bool _cameraOn = false;
   bool _micOn = false;
+  bool _cameraLive = false;
+  bool _micLive = false;
   bool _hearBlocked = false;
   bool _starting = false;
   bool _awaitingPage = false;
@@ -131,6 +142,13 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   bool _messengerOpen = false;
   LessonChildBoard? _board;
   late final String _boardLink;
+  LessonDeviceMediaController? _desk;
+  bool _pageReady = false;
+  bool _deskStarting = false;
+  bool _applyingDesk = false;
+  int _deskAttempt = -1;
+  String _deskAssignment = '';
+  bool get _mediaWanted => _desk?.needed ?? widget.mediaEnabled;
 
   bool get _boardWorkspace =>
       widget.workspaceFormat == 'board' || _pass?.workspaceFormat == 'board';
@@ -149,6 +167,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     widget.handle?.attach(endCall);
     WidgetsBinding.instance.addObserver(this);
     _attachMessenger();
+    if (widget.fetchMedia != null && widget.sendMedia != null && widget.lessonSessionId != null) {
+      _desk = LessonDeviceMediaController(childId: widget.childId, lessonSessionId: widget.lessonSessionId!,
+        fetch: widget.fetchMedia!, send: widget.sendMedia!)..addListener(_onDeskMedia);
+    }
     _load();
   }
 
@@ -186,6 +208,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     }
 
     _html = html;
+    _desk?.start();
+    if (_boardWorkspace) { _watchBoard(); _tryStart(); }
     if (!widget.mediaEnabled) {
       setState(() => _loading = false);
       if (_boardWorkspace) _watchBoard();
@@ -195,11 +219,70 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     await _openPass();
   }
 
+  void _onDeskMedia() {
+    final desk = _desk;
+    if (!mounted || _ended || desk == null) return;
+    final media = desk.media;
+    final changed = media != null && _deskAssignment != media.assignment;
+    if (changed) { _deskAssignment = media.assignment; _deskAttempt = -1; }
+    if (!_mediaWanted || changed) {
+      final hadMedia = _pass != null || _joined || _inRoom || _deskStarting;
+      setState(() {
+        _retireCall();
+        _joined = false;
+        _pass = null;
+        _holding = false;
+        _link = desk.failed || media?.error != null ? _LessonCallLink.failed : _LessonCallLink.none;
+      });
+      _roster?.cancel(); _roster = null;
+      _soundTimer?.cancel(); _soundTimer = null;
+      if (hadMedia) unawaited(_stopSession());
+      if (!_mediaWanted) return;
+    } else { setState(() {}); }
+    if (_inRoom) {
+      // A mute must cancel its own pending permission immediately, even while
+      // the other capture device keeps this conference connected.
+      for (final device in ['video', 'audio']) {
+        final wanted = desk.requested(device) &&
+            (device == 'video' ? media?.video == true : media?.audio == true);
+        final actual = device == 'video' ? _cameraOn : _micOn;
+        if (!wanted && actual) {
+          if (device == 'video') { _cameraSeq++; _cameraOn = false; _cameraLive = false; }
+          else { _micSeq++; _micOn = false; _micLive = false; }
+          unawaited(_web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, true)'));
+        }
+      }
+      unawaited(_applyDeskDevices());
+      return;
+    }
+    if (!_pageReady || _deskStarting || media == null || _deskAttempt == media.revision) return;
+    _deskAttempt = media.revision;
+    _deskStarting = true;
+    unawaited(_openPass().whenComplete(() {
+      _deskStarting = false;
+      if (mounted && !_ended && _mediaWanted && !_inRoom && _deskAttempt != _desk?.media?.revision) _onDeskMedia();
+    }));
+  }
+
+  Future<void> _applyDeskDevices() async {
+    if (_applyingDesk || _desk == null || !_inRoom) return;
+    _applyingDesk = true;
+    try {
+      for (final device in ['video', 'audio']) {
+        if (!mounted || !_inRoom || !_mediaWanted) return;
+        final on = _desk!.requested(device) &&
+            (device == 'audio' ? _desk!.media?.audio == true : _desk!.media?.video == true);
+        final actual = device == 'video' ? _cameraOn : _micOn;
+        if (on != actual) await _setDeviceWish(device, !on);
+      }
+    } finally { _applyingDesk = false; }
+  }
+
   Future<LessonCallPassOutcome> _fetchPass() async {
     final locale = LocaleScope.read(context).localeCode;
     final injected = widget.fetchPass;
     if (injected != null) {
-      return injected(locale);
+      return injected(locale, assignment: _desk?.media?.assignment);
     }
     final invite = widget.inviteToken;
     if (invite == null) {
@@ -213,9 +296,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _openPass() async {
+    final gen = _callGen;
     try {
       final outcome = await _fetchPass();
-      if (!mounted) {
+      if (!mounted || _ended || gen != _callGen || (_desk != null && !_mediaWanted)) {
         return;
       }
       if (outcome.moving) {
@@ -239,11 +323,13 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _watchSound();
         _watchBoard();
       }
-      _tryStart();
+      if (_boardWorkspace && _pageReady) { await _join(); } else { _tryStart(); }
     } on ParentApiException catch (error) {
-      _failOpen(error.code);
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(error.code);
     } on KioskApiException catch (error) {
-      _failOpen(error.code);
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(error.code);
+    } catch (_) {
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(null);
     }
   }
 
@@ -253,14 +339,15 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     }
     setState(() {
       _loading = false;
-      _link = code == 'inactive'
+      _link = code == 'inactive' && !_boardWorkspace
           ? _LessonCallLink.closed
           : _LessonCallLink.failed;
     });
+    if (_desk != null) unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
   }
 
   Future<void> _renewPass() async {
-    if (!widget.mediaEnabled || _renewing || _link == _LessonCallLink.closed) {
+    if (!_mediaWanted || _renewing || _link == _LessonCallLink.closed) {
       return;
     }
     _renewing = true;
@@ -318,7 +405,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (!_renewStill(callGen)) {
       return;
     }
-    final closed = code == 'inactive';
+    final closed = code == 'inactive' && !_boardWorkspace;
     setState(
       () => _link = closed ? _LessonCallLink.closed : _LessonCallLink.failed,
     );
@@ -331,13 +418,12 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (code == 'inactive' || code == 'forbidden') {
       _roster?.cancel();
       _roster = null;
-      _boardTimer?.cancel();
-      _boardTimer = null;
+      if (!_boardWorkspace) { _boardTimer?.cancel(); _boardTimer = null; }
     }
-    if (code == 'inactive' && mounted) {
+    if ((code == 'inactive' || code == 'forbidden') && mounted) {
       setState(() {
         _retireCall();
-        _link = _LessonCallLink.closed;
+        _link = _boardWorkspace ? _LessonCallLink.failed : _LessonCallLink.closed;
       });
       unawaited(_stopSession());
     }
@@ -355,7 +441,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _followRoom() async {
-    if (!widget.mediaEnabled || _following || _ended || _link == _LessonCallLink.closed) return;
+    if (!_mediaWanted || _following || _ended || _link == _LessonCallLink.closed) return;
     _following = true;
     try {
       final outcome = await _fetchPass();
@@ -599,7 +685,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final html = _html;
     final domain = pass?.domain ?? _movingDomain;
     if (web == null ||
-        (widget.mediaEnabled && domain.isEmpty) ||
+        (widget.mediaEnabled && !_boardWorkspace && domain.isEmpty) ||
         html == null ||
         _starting) {
       return;
@@ -613,7 +699,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       mimeType: 'text/html',
       encoding: 'utf-8',
       baseUrl: WebUri(
-        widget.mediaEnabled ? 'https://$domain/' : AppConfig.apiBaseUrl,
+        _boardWorkspace || !widget.mediaEnabled ? AppConfig.apiBaseUrl : 'https://$domain/',
       ),
     );
   }
@@ -652,7 +738,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   Future<void> _join() async {
     final web = _web;
     final pass = _pass;
-    if (!widget.mediaEnabled || web == null || pass == null || _joined) {
+    if (!_mediaWanted || web == null || pass == null || _joined || (_boardWorkspace && !_pageReady)) {
       return;
     }
 
@@ -724,7 +810,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final claim = widget.claimRoster;
     try {
       final teachers = claim != null
-          ? await claim(endpointId: endpointId, locale: locale)
+          ? await claim(endpointId: endpointId, locale: locale, assignment: _desk?.media?.assignment)
           : widget.inviteToken == null
           ? await AuthScope.of(context).parentApi.claimLessonCallRoster(
               childId: widget.childId,
@@ -793,11 +879,13 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     _inRoom = false;
     _cameraOn = false;
     _micOn = false;
+    _cameraLive = false;
+    _micLive = false;
   }
 
   Future<void> _stopSession() async {
     try {
-      await _web?.evaluateJavascript(source: 'dropSession()');
+      await _web?.evaluateJavascript(source: _boardWorkspace ? 'pauseMedia()' : 'dropSession()');
     } catch (_) {}
   }
 
@@ -810,10 +898,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _setDeviceWish(String device, bool muted) async {
-    if (!widget.mediaEnabled) return;
+    if (!_mediaWanted) return;
     final video = device == 'video';
     final seq = video ? ++_cameraSeq : ++_micSeq;
     final callGen = _callGen;
+    final expectedMedia = _desk?.media;
     setState(() {
       if (video) {
         _cameraNote = null;
@@ -824,19 +913,16 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       }
     });
     if (!muted) {
-      final statuses = await [
-        Permission.camera,
-        Permission.microphone,
-      ].request();
+      final permission = video ? Permission.camera : Permission.microphone;
+      final granted = (await permission.request()).isGranted;
       if (!_deviceWishCurrent(video, seq, callGen)) {
         return;
       }
-      final cameraGranted = statuses[Permission.camera]?.isGranted ?? false;
-      final micGranted = statuses[Permission.microphone]?.isGranted ?? false;
+      final cameraGranted = video ? granted : await Permission.camera.isGranted;
+      final micGranted = video ? await Permission.microphone.isGranted : granted;
       await _web?.evaluateJavascript(
         source: 'allowDevices($cameraGranted, $micGranted)',
       );
-      final granted = video ? cameraGranted : micGranted;
       if (!granted) {
         setState(() {
           if (video) {
@@ -847,6 +933,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
             _micNote = 'denied';
           }
         });
+        if (_desk != null) unawaited(_desk!.report(failedDevice: device, error: 'denied', expected: expectedMedia));
         if (!_deviceWishCurrent(video, seq, callGen)) {
           return;
         }
@@ -872,6 +959,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _toggleCamera() async {
+    if (_desk != null) { await _desk!.change('video', !_desk!.requested('video')); return; }
     if (!_inRoom) {
       return;
     }
@@ -879,6 +967,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _toggleMic() async {
+    if (_desk != null) { await _desk!.change('audio', !_desk!.requested('audio')); return; }
     if (!_inRoom) {
       return;
     }
@@ -890,6 +979,12 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _rejoin() async {
+    if (_desk != null) {
+      await _desk!.refresh();
+      _deskAttempt = -1;
+      _onDeskMedia();
+      return;
+    }
     if (_link == _LessonCallLink.closed) {
       return;
     }
@@ -994,6 +1089,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           _inRoom = true;
           _link = _LessonCallLink.none;
           openDevices = widget.captureOnJoin;
+          if (_desk != null) { unawaited(_applyDeskDevices()); }
         case 'endpoint':
           if (detail is String) {
             _watchRoster(detail);
@@ -1007,20 +1103,28 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           }
         case 'camera-on':
           _cameraOn = true;
+          _cameraLive = true;
           _cameraNote = null;
         case 'camera-off':
           _cameraOn = false;
+          _cameraLive = false;
         case 'camera-failed':
           _cameraOn = false;
+          _cameraLive = false;
           _cameraNote = block;
+          if (_desk != null) unawaited(_desk!.report(failedDevice: 'video', error: block));
         case 'mic-on':
           _micOn = true;
+          _micLive = true;
           _micNote = null;
         case 'mic-off':
           _micOn = false;
+          _micLive = false;
         case 'mic-failed':
           _micOn = false;
+          _micLive = false;
           _micNote = block;
+          if (_desk != null) unawaited(_desk!.report(failedDevice: 'audio', error: block));
         case 'hear-blocked':
           _hearBlocked = true;
         case 'hear-on':
@@ -1031,7 +1135,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           }
         case 'closed':
           _retireCall();
-          _link = _LessonCallLink.closed;
+          _link = _boardWorkspace ? _LessonCallLink.failed : _LessonCallLink.closed;
           stopSession = true;
         case 'mode':
           if (detail == 'grid' || detail == 'talk' || detail == 'workflow') {
@@ -1059,10 +1163,14 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         case 'failed':
           _inRoom = false;
           _link = _LessonCallLink.failed;
+          if (_desk != null) unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
       }
     });
     if (stopSession) {
       unawaited(_stopSession());
+    }
+    if (_desk != null && _inRoom && (kind == 'camera-on' || kind == 'mic-on' || kind == 'camera-off' || kind == 'mic-off')) {
+      unawaited(_desk!.report(joined: (!_desk!.requested('video') || _cameraLive) && (!_desk!.requested('audio') || _micLive)));
     }
     if (openDevices) {
       unawaited(_setDeviceWish('video', false));
@@ -1101,6 +1209,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     _soundTimer?.cancel();
     _boardTimer?.cancel();
     _chromeTimer?.cancel();
+    _desk?.removeListener(_onDeskMedia);
+    _desk?.dispose();
     widget.handle?.detach(endCall);
     _messenger?.removeListener(_onMessenger);
     _messenger?.pause();
@@ -1111,7 +1221,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Widget _callSurface() {
-    if (widget.mediaEnabled && _pass == null && !_holding) {
+    if (widget.mediaEnabled && !_boardWorkspace && _pass == null && !_holding) {
       return ColoredBox(
         color: const Color(0xFF111111),
         child: Center(
@@ -1161,12 +1271,15 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         if (!mounted) {
           return;
         }
-        if (!widget.mediaEnabled) {
+        if (_boardWorkspace || !widget.mediaEnabled) {
           await _syncPage();
           await controller.evaluateJavascript(
-            source: 'openWorkspace(${jsonEncode({'workspaceFormat': widget.workspaceFormat})})',
+            source: 'openWorkspace(${jsonEncode({'workspaceFormat': _boardWorkspace ? 'board' : widget.workspaceFormat})})',
           );
           await _pullBoard();
+          _pageReady = true;
+          _onDeskMedia();
+          if (widget.mediaEnabled) await _join();
           return;
         }
         if (_holding && _pass == null) {
@@ -1183,12 +1296,23 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           PermissionResourceType.CAMERA_AND_MICROPHONE,
         };
         if (resources.isEmpty ||
-            !widget.mediaEnabled ||
+            !_mediaWanted ||
             resources.any((type) => !capture.contains(type))) {
           return PermissionResponse(
             resources: resources,
             action: PermissionResponseAction.DENY,
           );
+        }
+        final desk = _desk;
+        if (desk != null) {
+          final camera = desk.requested('video') && desk.media?.video == true;
+          final mic = desk.requested('audio') && desk.media?.audio == true;
+          if (resources.any((type) =>
+              (type == PermissionResourceType.CAMERA && !camera) ||
+              (type == PermissionResourceType.MICROPHONE && !mic) ||
+              (type == PermissionResourceType.CAMERA_AND_MICROPHONE && (!camera || !mic)))) {
+            return PermissionResponse(resources: resources, action: PermissionResponseAction.DENY);
+          }
         }
         return PermissionResponse(
           resources: resources,
@@ -1266,8 +1390,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Widget _dock({required bool showChat}) {
     return LessonCallDock(
-      audioOn: _micOn,
-      callReady: _inRoom,
+      audioOn: _desk?.requested('audio') ?? _micOn,
+      callReady: _desk != null ? _desk!.media != null : _inRoom,
       cameraNote: _cameraNote,
       canRetry: _link != _LessonCallLink.closed,
       closed: _link == _LessonCallLink.closed,
@@ -1276,7 +1400,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       lost: _link == _LessonCallLink.lost,
       reconnecting: _link == _LessonCallLink.reconnecting,
       micNote: _micNote,
-      videoOn: _cameraOn,
+      videoOn: _desk?.requested('video') ?? _cameraOn,
       onHear: () {
         _keepChrome();
         _resumeHear();

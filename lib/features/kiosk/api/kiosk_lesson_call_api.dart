@@ -4,6 +4,7 @@ import 'package:larnes_mobile/core/api/child_session_api_client.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
+import 'package:larnes_mobile/features/parent/models/lesson_device_media.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 Map<String, dynamic>? _asJsonMap(dynamic body) {
@@ -29,12 +30,12 @@ class KioskLessonCallApi {
 
   final ChildSessionApiClient _client;
 
-  Future<LessonCallPassOutcome> fetchPass({String locale = 'ru'}) async {
+  Future<LessonCallPassOutcome> fetchPass({String locale = 'ru', String? assignment}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.get(
         '/api/classroom/devices/me/lesson/call-pass',
-        queryParameters: {'locale': locale},
+        queryParameters: {'locale': locale, 'assignment': ?assignment},
       );
       final outcome = LessonCallPassOutcome.fromBody(_asJsonMap(response.data));
       if (!outcome.moving && outcome.pass == null) {
@@ -86,12 +87,13 @@ class KioskLessonCallApi {
   Future<LessonCallTeachers> claimRoster({
     required String endpointId,
     String locale = 'ru',
+    String? assignment,
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/classroom/devices/me/lesson/call-roster',
-        data: {'endpointId': endpointId},
+        data: {'endpointId': endpointId, 'assignment': ?assignment},
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'success') {
@@ -105,5 +107,15 @@ class KioskLessonCallApi {
         statusCode: error.response?.statusCode,
       );
     }
+  }
+
+  Future<LessonDeviceMedia?> fetchMedia() async {
+    final response = await _client.dio.get('/api/classroom/devices/me/lesson/media');
+    return LessonDeviceMedia.fromJson(_asJsonMap(response.data)?['media']);
+  }
+
+  Future<LessonDeviceMedia?> sendMedia(Map<String, dynamic> body) async {
+    final response = await _client.dio.post('/api/classroom/devices/me/lesson/media', data: body);
+    return LessonDeviceMedia.fromJson(_asJsonMap(response.data)?['media']);
   }
 }

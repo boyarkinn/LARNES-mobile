@@ -33,6 +33,7 @@ class ParentLiveLessonRoomState {
     this.commandSeq = 0,
     this.pendingCommand,
     this.sessionId,
+    this.workspaceFormat = 'classic',
     this.waiting = const ParentLiveLessonWaiting(childName: '', lessonTitle: ''),
     this.snapshot,
   });
@@ -45,6 +46,7 @@ class ParentLiveLessonRoomState {
       childId: json['childId'] as String?,
       commandSeq: (json['commandSeq'] as num?)?.toInt() ?? 0,
       sessionId: json['sessionId'] as String?,
+      workspaceFormat: json['workspaceFormat'] == 'board' ? 'board' : 'classic',
       pendingCommand: json['pendingCommand'] as String?,
       waiting: ParentLiveLessonWaiting.fromJson(
         json['waiting'] is Map ? Map<String, dynamic>.from(json['waiting'] as Map) : null,
@@ -61,6 +63,7 @@ class ParentLiveLessonRoomState {
   final int commandSeq;
   final String? pendingCommand;
   final String? sessionId;
+  final String workspaceFormat;
   final ParentLiveLessonWaiting waiting;
   final ParentHomeworkPlaySnapshot? snapshot;
 

@@ -285,6 +285,8 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
       child: _room == null
           ? _buildBody(l10n)
           : LessonCallStage(
+              workspaceFormat: _room!.workspaceFormat,
+              lessonSessionId: _room!.sessionId,
               body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
               childId: widget.childId,
               handle: _call,

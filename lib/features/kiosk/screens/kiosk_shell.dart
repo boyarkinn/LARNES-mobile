@@ -477,6 +477,9 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
           controller.deviceContext.lesson?.workspaceFormat ?? 'classic',
       captureOnJoin: false,
       childId: childId,
+      lessonSessionId: lessonId,
+      fetchMedia: controller.lessonWorkspaceOn ? callApi.fetchMedia : null,
+      sendMedia: controller.lessonWorkspaceOn ? callApi.sendMedia : null,
       messenger: lessonId.isEmpty || childId.isEmpty
           ? null
           : MessengerScope.kiosk(
@@ -485,13 +488,14 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
               lessonSessionId: lessonId,
             ),
       trainerOpen: false,
-      fetchPass: (locale) => callApi.fetchPass(locale: locale),
+      fetchPass: (locale, {String? assignment}) => callApi.fetchPass(locale: locale, assignment: assignment),
       fetchBoard: callApi.fetchBoard,
       sendBoard: callApi.sendBoard,
       requestBoard: callApi.requestBoard,
-      claimRoster: ({required endpointId, required locale}) => callApi.claimRoster(
+      claimRoster: ({required endpointId, required locale, String? assignment}) => callApi.claimRoster(
         endpointId: endpointId,
         locale: locale,
+        assignment: assignment,
       ),
       onLeave: () {
         unawaited(controller.leaveDesk());

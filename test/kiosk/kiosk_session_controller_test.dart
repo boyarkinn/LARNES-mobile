@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_session_api.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
@@ -23,10 +25,15 @@ class FakeKioskSessionApi implements KioskSessionApi {
   });
 
   final List<KioskCommandsResponse> pollResponses;
-  final KioskScanResult? scanResult;
+  KioskScanResult? scanResult;
   final KioskApiException? scanError;
   final KioskApiException? pollError;
-  final KioskDeviceContext? deviceMeResponse;
+  KioskDeviceContext? deviceMeResponse;
+  Future<KioskDeviceContext> Function()? readDevice;
+  Future<KioskScanResult> Function()? resume;
+  Future<void> Function()? leave;
+  Future<KioskCommandsResponse> Function()? poll;
+  Map<String, String?>? leaveScope;
 
   int pollCalls = 0;
   int getDeviceMeCalls = 0;
@@ -40,6 +47,7 @@ class FakeKioskSessionApi implements KioskSessionApi {
   @override
   Future<KioskDeviceContext> getDeviceMe({String locale = 'ru'}) async {
     getDeviceMeCalls += 1;
+    if (readDevice != null) return readDevice!();
     return deviceMeResponse ??
         KioskDeviceContext(
           deviceId: '55555555-5555-4555-8555-555555555555',
@@ -53,6 +61,7 @@ class FakeKioskSessionApi implements KioskSessionApi {
     String locale = 'ru',
   }) async {
     pollCalls += 1;
+    if (poll != null) return poll!();
     if (pollError != null) {
       throw pollError!;
     }
@@ -78,8 +87,10 @@ class FakeKioskSessionApi implements KioskSessionApi {
   }
 
   @override
-  Future<void> leaveDesk({String locale = 'ru'}) async {
+  Future<void> leaveDesk({String locale = 'ru', String? childId, String? lessonSessionId, String? assignment}) async {
     leaveDeskCalls += 1;
+    leaveScope = {'childId': childId, 'lessonSessionId': lessonSessionId, 'assignment': assignment};
+    if (leave != null) return leave!();
   }
 
   @override
@@ -97,6 +108,7 @@ class FakeKioskSessionApi implements KioskSessionApi {
 
   @override
   Future<KioskScanResult> resumeChildSession({String locale = 'ru'}) async {
+    if (resume != null) return resume!();
     if (scanResult == null) {
       throw KioskApiException('resume failed');
     }
@@ -120,6 +132,17 @@ KioskDeviceContext _deviceContext({
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  late Directory cacheRoot;
+  const cacheChannel = MethodChannel('plugins.flutter.io/path_provider');
+  setUp(() async {
+    cacheRoot = await Directory.systemTemp.createTemp('larnes-kiosk-lifecycle-');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(cacheChannel, (_) async => cacheRoot.path);
+  });
+  tearDown(() async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(cacheChannel, null);
+    await cacheRoot.delete(recursive: true);
+  });
   group('KioskSessionController', () {
     test('assignment and play command in the same poll restore the shared board from idle', () async {
       const child = KioskActiveChild(childId: 'child-1', childDisplayName: 'Test',
@@ -146,10 +169,13 @@ void main() {
         childCardColor: ChildCardColor.violet, lessonSessionId: 'lesson-1');
       const lesson = KioskDeviceLessonBinding(commandSeq: 2, lessonSessionId: 'lesson-1',
         status: 'child_active', workspaceFormat: 'board', pendingCommand: 'play_trainer');
-      final api = FakeKioskSessionApi(pollResponses: [const KioskCommandsResponse(
+      final storage = MemoryChildSessionTokenStorage();
+      await storage.writeToken('child-token');
+      final api = FakeKioskSessionApi(deviceMeResponse: _deviceContext(activeChild: child, lesson: lesson),
+        pollResponses: [const KioskCommandsResponse(
         since: 1, commandSeq: 2, commands: [KioskDeviceCommand(command: KioskDeviceCommandKind.playTrainer, seq: 2)])]);
       final controller = KioskSessionController(kioskApi: api,
-        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+        childSessionTokenStorage: storage,
         deviceContext: _deviceContext(activeChild: child, lesson: lesson),
         initialScanResult: KioskScanResult.fromActiveChild(activeChild: child, childSessionToken: 'child-token'),
         initialMode: KioskSessionMode.result, onDeviceUnauthorized: () {});
@@ -450,7 +476,7 @@ void main() {
         expect(controller.activeProgramId, isNull);
         expect(await childStorage.hasToken(), isFalse);
         expect(api.childLogoutCalls, 1);
-        expect(api.getDeviceMeCalls, 0);
+        expect(api.getDeviceMeCalls, 1);
 
         controller.dispose();
       },
@@ -620,6 +646,8 @@ void main() {
             childSessionToken: 'child-jwt-token',
           ),
           deviceMeResponse: _deviceContext(
+            activeChild: const KioskActiveChild(childId: '88888888-8888-4888-8888-888888888888',
+              childDisplayName: 'Anna', childCardColor: ChildCardColor.violet, lessonSessionId: 'lesson-id'),
             lesson: const KioskDeviceLessonBinding(
               commandSeq: 1,
               lessonSessionId: 'lesson-id',

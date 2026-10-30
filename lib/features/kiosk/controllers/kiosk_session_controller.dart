@@ -28,16 +28,19 @@ class KioskSessionController extends ChangeNotifier {
     int? initialCommandSeq,
     KioskScanResult? initialScanResult,
     Duration syncInterval = kioskSyncInterval,
-  })  : _kioskApi = kioskApi,
-        _childSessionTokenStorage = childSessionTokenStorage,
-        _deviceContext = deviceContext,
-        _onDeviceUnauthorized = onDeviceUnauthorized,
-        _syncInterval = syncInterval,
-        _scanResult = initialScanResult,
-        _mode =
-            initialMode ?? resolveInitialModeFromLesson(deviceContext.lesson),
-        _since =
-            initialCommandSeq ?? resolveInitialCommandSeq(deviceContext.lesson);
+  }) : _kioskApi = kioskApi,
+       _childSessionTokenStorage = childSessionTokenStorage,
+       _deviceContext = deviceContext,
+       _onDeviceUnauthorized = onDeviceUnauthorized,
+       _syncInterval = syncInterval,
+       _scanResult = initialScanResult,
+       _restoredLessonId = initialScanResult == null
+           ? null
+           : deviceContext.lesson?.lessonSessionId,
+       _mode =
+           initialMode ?? resolveInitialModeFromLesson(deviceContext.lesson),
+       _since =
+           initialCommandSeq ?? resolveInitialCommandSeq(deviceContext.lesson);
 
   final KioskSessionApi _kioskApi;
   final ChildSessionTokenStorage _childSessionTokenStorage;
@@ -58,14 +61,17 @@ class KioskSessionController extends ChangeNotifier {
   bool _disposed = false;
   bool _paused = false;
   bool _syncInFlight = false;
+  bool _leaving = false;
+  int _generation = 0;
+  String? _restoredLessonId;
+  bool _current(int generation) => !_disposed && generation == _generation;
 
   KioskDeviceContext get deviceContext => _deviceContext;
   KioskSessionMode get mode => _mode;
   KioskStandbyKind get standbyKind => resolveKioskStandbyKind(
-        hasActiveLesson: _deviceContext.lesson != null,
-        hasAssignedChild:
-            _deviceContext.activeChild != null || _scanResult != null,
-      );
+    hasActiveLesson: _deviceContext.lesson != null,
+    hasAssignedChild: _deviceContext.activeChild != null || _scanResult != null,
+  );
   KioskScanResult? get scanResult => _scanResult;
   String? get scanError => _scanError;
   String? get scanErrorCode => _scanErrorCode;
@@ -73,7 +79,8 @@ class KioskSessionController extends ChangeNotifier {
   int get trainerReloadToken => _trainerReloadToken;
 
   bool get classroomCallOn =>
-      _deviceContext.lesson?.classroomCallEnabled == true && _deviceContext.activeChild != null;
+      _deviceContext.lesson?.classroomCallEnabled == true &&
+      _deviceContext.activeChild != null;
 
   bool get lessonWorkspaceOn {
     final lesson = _deviceContext.lesson;
@@ -82,7 +89,13 @@ class KioskSessionController extends ChangeNotifier {
     return lesson.workspaceFormat == 'board' &&
         child.lessonSessionId == lesson.lessonSessionId &&
         _scanResult?.childId == child.childId &&
-        const {'child_active', 'idle_child', 'no_program'}.contains(lesson.status);
+        _scanResult?.assignment == child.assignment &&
+        _restoredLessonId == lesson.lessonSessionId &&
+        const {
+          'child_active',
+          'idle_child',
+          'no_program',
+        }.contains(lesson.status);
   }
 
   Duration get _effectiveSyncInterval {
@@ -94,15 +107,29 @@ class KioskSessionController extends ChangeNotifier {
     return _syncInterval;
   }
 
-  Future<void> leaveDesk() async {
+  Future<bool> leaveDesk() async {
+    if (_disposed || _leaving) return false;
+    final childId = _deviceContext.activeChild?.childId ?? _scanResult?.childId;
+    final lessonId = _deviceContext.lesson?.lessonSessionId;
+    if (childId == null || lessonId == null) return false;
+    _leaving = true;
+    final generation = ++_generation;
     try {
-      await _kioskApi.leaveDesk();
+      await _kioskApi.leaveDesk(
+        childId: childId,
+        lessonSessionId: lessonId,
+        assignment: _deviceContext.activeChild?.assignment,
+      );
     } catch (_) {
-      return;
+      _leaving = false;
+      return false;
     }
-    await _childSessionTokenStorage.clearToken();
-    await MessengerRooms.clear();
+    if (!_current(generation)) {
+      _leaving = false;
+      return false;
+    }
     _scanResult = null;
+    _restoredLessonId = null;
     _scanError = null;
     _scanErrorCode = null;
     _deviceContext = KioskDeviceContext(
@@ -115,11 +142,22 @@ class KioskSessionController extends ChangeNotifier {
       lesson: _deviceContext.lesson,
     );
     _mode = KioskSessionMode.idle;
-    if (_disposed) {
-      return;
+    notifyListeners();
+    try {
+      await _childSessionTokenStorage.clearToken();
+      await MessengerRooms.clear();
+    } catch (_) {
+      // The server confirmed release. A cache error must not keep the old pupil
+      // mounted; authorization fences the old bearer and polling retries cleanup.
     }
+    if (!_current(generation)) {
+      _leaving = false;
+      return false;
+    }
+    _leaving = false;
     _restartSyncTimer();
     notifyListeners();
+    return true;
   }
 
   void _rememberDevice(KioskDeviceContext device) {
@@ -127,12 +165,14 @@ class KioskSessionController extends ChangeNotifier {
     final previousWorkspace = lessonWorkspaceOn;
     final previousChild = _deviceContext.activeChild?.childId;
     final previousLesson = _deviceContext.lesson?.lessonSessionId;
+    final previousAssignment = _deviceContext.activeChild?.assignment;
     _deviceContext = device;
     final next = device.lesson?.classroomCallEnabled ?? false;
     if (!_disposed &&
         (previous != next ||
             previousWorkspace != lessonWorkspaceOn ||
             previousChild != device.activeChild?.childId ||
+            previousAssignment != device.activeChild?.assignment ||
             previousLesson != device.lesson?.lessonSessionId)) {
       notifyListeners();
     }
@@ -201,9 +241,14 @@ class KioskSessionController extends ChangeNotifier {
   Future<void> runSyncCycle() => _syncSession();
 
   Future<void> submitScan(String token) async {
+    if (_disposed || _leaving) return;
+    final generation = ++_generation;
     try {
       final result = await _kioskApi.scan(token: token);
+      if (!_current(generation)) return;
       await _childSessionTokenStorage.writeToken(result.childSessionToken);
+      if (!_current(generation)) return;
+      _restoredLessonId = _deviceContext.lesson?.lessonSessionId;
       _scanResult = result;
       _scanError = null;
       _scanErrorCode = null;
@@ -218,6 +263,7 @@ class KioskSessionController extends ChangeNotifier {
       notifyListeners();
       _restartSyncTimer();
     } on KioskApiException catch (error) {
+      if (!_current(generation)) return;
       if (error.statusCode == 401) {
         _onDeviceUnauthorized();
         return;
@@ -229,14 +275,25 @@ class KioskSessionController extends ChangeNotifier {
   }
 
   Future<void> _syncSession() async {
-    if (_disposed || _paused || _syncInFlight) {
+    if (_disposed || _paused || _syncInFlight || _leaving) {
       return;
     }
 
     _syncInFlight = true;
+    final generation = _generation;
     var ackAlreadySent = false;
     try {
       final payload = await _kioskApi.pollCommands(since: _since);
+      if (!_current(generation)) return;
+      if (_deviceContext.lesson?.workspaceFormat == 'board') {
+        final device = await _kioskApi.getDeviceMe();
+        if (!_current(generation)) return;
+        await _reconcileBoardDevice(device, generation);
+        if (!_current(generation)) return;
+        await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
+        _since = payload.commandSeq;
+        return;
+      }
       var commandProcessed = false;
 
       if (payload.commands.isNotEmpty) {
@@ -251,8 +308,12 @@ class KioskSessionController extends ChangeNotifier {
         } else if (kioskQrScanFrozen &&
             latest.command == KioskDeviceCommandKind.openScan) {
           await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
+          if (!_current(generation)) return;
           ackAlreadySent = true;
           _since = payload.commandSeq;
+          if (_scanResult == null) {
+            await _reconcileTeacherAssignedChild(force: true);
+          }
         } else if (await _tryApplySupersededResetGuard(
           latest,
           payload.commandSeq,
@@ -265,13 +326,16 @@ class KioskSessionController extends ChangeNotifier {
           final nextMode = modeFromCommand(latest.command);
 
           await _kioskApi.heartbeat(ackSeq: payload.commandSeq);
+          if (!_current(generation)) return;
           ackAlreadySent = true;
           _since = payload.commandSeq;
           _appliedPlayTrainerSeq = null;
 
           await _kioskApi.childLogout();
+          if (!_current(generation)) return;
           await _childSessionTokenStorage.clearToken();
           await MessengerRooms.clear();
+          if (!_current(generation)) return;
 
           if (nextMode != previousMode) {
             _scanError = null;
@@ -301,7 +365,11 @@ class KioskSessionController extends ChangeNotifier {
           if (skipRefreshInResult) {
             ackAlreadySent = await _reconcilePendingPlayTrainerFromDevice();
           } else {
-            ackAlreadySent = await _refreshDeviceContextAndReconcileMode();
+            ackAlreadySent = await _refreshDeviceContextAndReconcileMode(
+              refresh:
+                  _mode != KioskSessionMode.scan &&
+                  _mode != KioskSessionMode.idle,
+            );
           }
         }
       }
@@ -311,7 +379,7 @@ class KioskSessionController extends ChangeNotifier {
       }
       _pendingAck = null;
     } on KioskApiException catch (error) {
-      if (error.statusCode == 401) {
+      if (_current(generation) && error.statusCode == 401) {
         _onDeviceUnauthorized();
       }
     } catch (_) {
@@ -373,11 +441,13 @@ class KioskSessionController extends ChangeNotifier {
     final pending = lesson?.pendingCommand;
     final commandName = kioskDeviceCommandKindToApiValue(command.command);
 
-    if (pending == commandName) {
+    if (lesson == null ||
+        pending == commandName ||
+        (pending == null && device.activeChild == null)) {
       return false;
     }
 
-    if (pending == 'play_trainer' && lesson != null) {
+    if (pending == 'play_trainer') {
       return _activatePlayTrainer(lesson.commandSeq);
     }
 
@@ -387,7 +457,9 @@ class KioskSessionController extends ChangeNotifier {
   }
 
   Future<bool> _reconcilePendingPlayTrainerFromDevice() async {
+    final generation = _generation;
     final device = await _kioskApi.getDeviceMe();
+    if (!_current(generation)) return false;
     _rememberDevice(device);
 
     final lesson = device.lesson;
@@ -416,7 +488,9 @@ class KioskSessionController extends ChangeNotifier {
       return false;
     }
 
+    final generation = _generation;
     final device = await _kioskApi.getDeviceMe();
+    if (!_current(generation)) return false;
     _rememberDevice(device);
 
     if (device.lesson != null) {
@@ -435,14 +509,86 @@ class KioskSessionController extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> _reconcileTeacherAssignedChild({bool workspaceOnly = false}) async {
-    if (!workspaceOnly &&
+  Future<bool> _reconcileBoardDevice(
+    KioskDeviceContext device,
+    int generation,
+  ) async {
+    _rememberDevice(device);
+    final lesson = device.lesson;
+    final child = device.activeChild;
+    final assigned =
+        lesson != null &&
+        child != null &&
+        child.lessonSessionId == lesson.lessonSessionId &&
+        const {
+          'child_active',
+          'idle_child',
+          'no_program',
+        }.contains(lesson.status);
+    if (assigned &&
+        lessonWorkspaceOn &&
+        await _childSessionTokenStorage.readToken() ==
+            _scanResult?.childSessionToken &&
+        _current(generation)) {
+      return true;
+    }
+    if (!_current(generation)) return false;
+    // Remove the old pupil before slow token/cache work; registration is separate.
+    _scanResult = null;
+    _restoredLessonId = null;
+    _scanError = null;
+    _scanErrorCode = null;
+    _appliedPlayTrainerSeq = null;
+    _mode = KioskSessionMode.idle;
+    notifyListeners();
+    await _childSessionTokenStorage.clearToken();
+    await MessengerRooms.clear();
+    if (!_current(generation) || !assigned) return false;
+    final resumed = await _kioskApi.resumeChildSession();
+    if (!_current(generation)) return false;
+    // Validate the current assignment again after a potentially slow response.
+    final latest = await _kioskApi.getDeviceMe();
+    if (!_current(generation)) return false;
+    _rememberDevice(latest);
+    if (latest.lesson?.lessonSessionId != lesson.lessonSessionId ||
+        latest.activeChild?.childId != child.childId ||
+        latest.activeChild?.assignment != child.assignment ||
+        resumed.childId != child.childId ||
+        resumed.assignment != child.assignment ||
+        !const {
+          'child_active',
+          'idle_child',
+          'no_program',
+        }.contains(latest.lesson?.status)) {
+      return false;
+    }
+    await _childSessionTokenStorage.writeToken(resumed.childSessionToken);
+    if (!_current(generation)) return false;
+    _scanResult = resumed;
+    _restoredLessonId = lesson.lessonSessionId;
+    _mode = KioskSessionMode.result;
+    _restartSyncTimer();
+    notifyListeners();
+    return true;
+  }
+
+  Future<bool> _reconcileTeacherAssignedChild({
+    bool workspaceOnly = false,
+    bool force = false,
+  }) async {
+    if (!force &&
+        !workspaceOnly &&
         ((_mode != KioskSessionMode.scan && _mode != KioskSessionMode.idle) ||
             _scanResult != null)) {
       return false;
     }
 
+    final generation = _generation;
     final device = await _kioskApi.getDeviceMe();
+    if (!_current(generation)) return false;
+    if (device.lesson?.workspaceFormat == 'board') {
+      return _reconcileBoardDevice(device, generation);
+    }
     _rememberDevice(device);
 
     final activeChild = device.activeChild;
@@ -470,8 +616,11 @@ class KioskSessionController extends ChangeNotifier {
 
     try {
       final resumed = await _kioskApi.resumeChildSession();
+      if (!_current(generation)) return false;
       await _childSessionTokenStorage.writeToken(resumed.childSessionToken);
+      if (!_current(generation)) return false;
       _scanResult = resumed;
+      _restoredLessonId = lesson.lessonSessionId;
       _scanError = null;
       _scanErrorCode = null;
       _mode = lesson.workspaceFormat == 'board'
@@ -495,14 +644,19 @@ class KioskSessionController extends ChangeNotifier {
     }
   }
 
-  Future<bool> _refreshDeviceContextAndReconcileMode() async {
-    final device = await _kioskApi.getDeviceMe();
+  Future<bool> _refreshDeviceContextAndReconcileMode({
+    bool refresh = true,
+  }) async {
+    final generation = _generation;
+    final device = refresh ? await _kioskApi.getDeviceMe() : _deviceContext;
+    if (!_current(generation)) return false;
     final previousLessonId = _deviceContext.lesson?.lessonSessionId;
     _rememberDevice(device);
 
     final lesson = device.lesson;
     if (lesson != null && lesson.pendingCommand == 'play_trainer') {
-      if (lessonWorkspaceOn || (lesson.classroomCallEnabled && device.activeChild != null)) {
+      if (lessonWorkspaceOn ||
+          (lesson.classroomCallEnabled && device.activeChild != null)) {
         return false;
       }
 
@@ -560,6 +714,8 @@ class KioskSessionController extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_disposed) return;
+    _generation++;
     _disposed = true;
     _timer?.cancel();
     _timer = null;

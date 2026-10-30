@@ -52,6 +52,7 @@ class LessonCallStage extends StatefulWidget {
     required this.body,
     required this.childId,
     required this.onLeave,
+    this.leaveLesson,
     required this.trainerOpen,
     this.inviteToken,
     this.fetchPass,
@@ -72,6 +73,7 @@ class LessonCallStage extends StatefulWidget {
   final Widget? body;
   final String childId;
   final VoidCallback onLeave;
+  final Future<bool> Function()? leaveLesson;
   final bool trainerOpen;
   final String? inviteToken;
   final LessonCallStageHandle? handle;
@@ -129,6 +131,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   Completer<void>? _left;
   Future<void>? _ending;
   bool _ended = false;
+  bool _leavingDesk = false;
+  bool _leaveFailed = false;
   _LessonCallLink _link = _LessonCallLink.none;
   String _movingDomain = '';
   bool _holding = false;
@@ -203,7 +207,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final html = await rootBundle.loadString(
       'assets/call/lesson_call_stage.html',
     );
-    if (!mounted) {
+    if (!mounted || _ended) {
       return;
     }
 
@@ -507,6 +511,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     try {
       final board = await _fetchBoard();
       if (!mounted || board == null || _ended) return;
+      if (widget.lessonSessionId != null && board.lessonSessionId != widget.lessonSessionId) return;
       final key = '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
       if (key != _boardKey) {
         _boardKey = key;
@@ -514,6 +519,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       }
       _board = board;
       await _web?.evaluateJavascript(source: 'noteLessonClock(${board.serverNow})');
+      if (!mounted || _ended) return;
       await _web?.evaluateJavascript(
         source: 'setChildRoom(${jsonEncode({
           'childId': widget.childId,
@@ -680,6 +686,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   void _tryStart() {
+    if (_ended || !mounted) return;
     final web = _web;
     final pass = _pass;
     final html = _html;
@@ -738,7 +745,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   Future<void> _join() async {
     final web = _web;
     final pass = _pass;
-    if (!_mediaWanted || web == null || pass == null || _joined || (_boardWorkspace && !_pageReady)) {
+    if (_ended || !_mediaWanted || web == null || pass == null || _joined || (_boardWorkspace && !_pageReady)) {
       return;
     }
 
@@ -1001,6 +1008,14 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       return;
     }
     _ended = true;
+    _retireCall();
+    _boardGen++;
+    _pageGen++;
+    _roster?.cancel(); _soundTimer?.cancel(); _boardTimer?.cancel(); _chromeTimer?.cancel();
+    _desk?.removeListener(_onDeskMedia);
+    _desk?.dispose();
+    _desk = null;
+    _messenger?.pause();
     final web = _web;
     if (web == null) {
       return;
@@ -1053,7 +1068,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         left.complete();
       }
     }
-    if (!mounted) {
+    if (!mounted || _ended) {
       return;
     }
     final detail = message['detail'];
@@ -1259,7 +1274,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _tryStart();
       },
       onLoadStop: (controller, url) async {
-        if (!_awaitingPage || _joined) {
+        if (_ended || !_awaitingPage || _joined) {
           return;
         }
         _awaitingPage = false;
@@ -1268,7 +1283,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         } catch (_) {
           // Доска не встала. Звонок всё равно открывается.
         }
-        if (!mounted) {
+        if (!mounted || _ended) {
           return;
         }
         if (_boardWorkspace || !widget.mediaEnabled) {
@@ -1349,6 +1364,18 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _leaveFromDock() async {
+    if (_leavingDesk || _ended) return;
+    final confirm = widget.leaveLesson;
+    if (confirm != null) {
+      setState(() { _leavingDesk = true; _leaveFailed = false; });
+      bool released;
+      try { released = await confirm(); } catch (_) { released = false; }
+      if (!mounted) return;
+      if (!released) {
+        setState(() { _leavingDesk = false; _leaveFailed = true; });
+        return;
+      }
+    }
     await endCall();
     if (!mounted) {
       return;
@@ -1473,6 +1500,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
     return Column(
       children: [
+        if (_leaveFailed) Text(context.l10n.parentLiveLessonLeaveFailed, style: const TextStyle(color: Colors.red)),
         Flexible(
           child: Stack(
             children: [

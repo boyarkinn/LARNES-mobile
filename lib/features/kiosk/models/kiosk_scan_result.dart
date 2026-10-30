@@ -1,4 +1,3 @@
-import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/parent/theme/child_card_colors.dart';
 
@@ -25,6 +24,7 @@ class KioskScanResult {
     required this.childSessionToken,
     this.childCardColor = defaultChildCardColor,
     this.childGender,
+    this.assignment,
     this.childGivenName,
     this.childLastName,
     this.programId,
@@ -34,6 +34,7 @@ class KioskScanResult {
     return KioskScanResult(
       outcome: kioskScanOutcomeFromString(json['outcome'] as String?),
       childId: json['childId'] as String,
+      assignment: json['assignment'] as String?,
       childDisplayName: json['childDisplayName'] as String,
       childSessionToken: json['childSessionToken'] as String,
       childCardColor: childCardColorFromString(json['childCardColor'] as String?),
@@ -53,6 +54,7 @@ class KioskScanResult {
     return KioskScanResult(
       outcome: outcome,
       childId: activeChild.childId,
+      assignment: activeChild.assignment,
       childDisplayName: activeChild.childDisplayName,
       childSessionToken: childSessionToken,
       childCardColor: activeChild.childCardColor,
@@ -65,6 +67,7 @@ class KioskScanResult {
 
   final KioskScanOutcome outcome;
   final String childId;
+  final String? assignment;
   final String childDisplayName;
   final String childSessionToken;
   final ChildCardColor childCardColor;

@@ -142,10 +142,12 @@ class KioskApi implements KioskSessionApi {
     }
   }
 
-  Future<void> leaveDesk({String locale = 'ru'}) async {
+  Future<void> leaveDesk({String locale = 'ru', String? childId, String? lessonSessionId, String? assignment}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
-      final response = await _client.dio.post('/api/classroom/devices/me/lesson/leave');
+      final response = await _client.dio.post('/api/classroom/devices/me/lesson/leave', data: {
+        'childId': childId, 'lessonSessionId': lessonSessionId, 'assignment': ?assignment,
+      });
       final data = _asJsonMap(response.data);
       if (data?['ok'] != true) {
         throw _apiExceptionFromBody(data, l10n, fallback: l10n.requestFailed);

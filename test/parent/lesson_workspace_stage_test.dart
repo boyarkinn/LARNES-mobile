@@ -107,6 +107,9 @@ class _MediaHarness {
     'phase': 'idle',
   };
   int passes = 0, boards = 0;
+  final handle = LessonCallStageHandle();
+  Future<bool> Function()? leaveLesson;
+  int leaves = 0;
   Future<LessonCallPassOutcome> Function()? pass;
   bool home = false;
   Future<void> pump(WidgetTester tester) async {
@@ -138,7 +141,9 @@ class _MediaHarness {
               body: null,
               childId: 'child-1',
               lessonSessionId: 'lesson-1',
-              onLeave: () {},
+              onLeave: () { leaves++; },
+              handle: handle,
+              leaveLesson: leaveLesson,
               trainerOpen: false,
               workspaceFormat: 'board',
               mediaEnabled: home,
@@ -227,6 +232,58 @@ class _MediaHarness {
 }
 
 void main() {
+  testWidgets('a failed desk exit keeps the same board and permits a confirmed retry', (tester) async {
+    var approved = false;
+    final f = _MediaHarness()..leaveLesson = () async => approved;
+    await f.pump(tester);
+    final board = tester.element(find.byType(InAppWebView));
+    await tester.tap(find.byIcon(Icons.call_end));
+    await tester.pumpAndSettle();
+    expect(find.text('Не удалось выйти из урока.'), findsOneWidget);
+    expect(f.platform.controller.scripts, isNot(contains('leave()')));
+    expect(tester.element(find.byType(InAppWebView)), same(board));
+    final before = f.boards;
+    await tester.pump(const Duration(seconds: 1));
+    expect(f.boards, greaterThan(before));
+    approved = true;
+    await tester.tap(find.byIcon(Icons.call_end));
+    await tester.pump();
+    expect(f.platform.controller.scripts, contains('leave()'));
+    await f.emit(tester, 'left');
+    expect(f.leaves, 1);
+    final after = f.boards;
+    await tester.pump(const Duration(seconds: 3));
+    expect(f.boards, after);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('ending the lesson cancels a pending permission and ignores late bridge events', (tester) async {
+    final permission = Completer<Map<int, int>>();
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') return permission.future;
+      return 1;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    final f = _MediaHarness();
+    await f.pump(tester);
+    await f.teacher(tester, 'video', true);
+    await f.emit(tester, 'joined');
+    final ending = f.handle.end();
+    await tester.pump();
+    await f.emit(tester, 'left');
+    await ending;
+    permission.complete({Permission.camera.value: 1});
+    await f.emit(tester, 'joined');
+    await tester.pumpAndSettle();
+    expect(f.platform.controller.scripts, isNot(contains('setDevice("video", false)')));
+    final before = f.boards;
+    await tester.pump(const Duration(seconds: 3));
+    expect(f.boards, before);
+    expect(f.platform.controller.loads, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'a late failed call-pass cannot cancel a newer microphone request',
     (tester) async {

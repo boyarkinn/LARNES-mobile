@@ -455,15 +455,12 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
             _ => controller.mode.name,
           };
 
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 220),
-      child: KeyedSubtree(
-        key: ValueKey(switchKey),
-        child: lessonOpen
-            ? _classroomCall(controller)
-            : _buildModeContent(context, controller, l10n, theme),
-      ),
+    final content = KeyedSubtree(
+      key: ValueKey('$switchKey-${controller.deviceContext.activeChild?.assignment ?? ""}'),
+      child: lessonOpen ? _classroomCall(controller) : _buildModeContent(context, controller, l10n, theme),
     );
+    // A pupil change must dispose the old media without overlapping live calls.
+    return lessonOpen ? content : AnimatedSwitcher(duration: const Duration(milliseconds: 220), child: content);
   }
 
   Widget _classroomCall(KioskSessionController controller) {
@@ -497,9 +494,8 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
         locale: locale,
         assignment: assignment,
       ),
-      onLeave: () {
-        unawaited(controller.leaveDesk());
-      },
+      onLeave: () {},
+      leaveLesson: controller.leaveDesk,
     );
   }
 

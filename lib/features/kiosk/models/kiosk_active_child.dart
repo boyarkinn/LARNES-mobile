@@ -6,6 +6,7 @@ class KioskActiveChild {
     required this.childDisplayName,
     required this.childCardColor,
     this.childGender,
+    this.assignment,
     this.childGivenName,
     this.childLastName,
     required this.lessonSessionId,
@@ -14,6 +15,7 @@ class KioskActiveChild {
   factory KioskActiveChild.fromJson(Map<String, dynamic> json) {
     return KioskActiveChild(
       childId: json['childId'] as String,
+      assignment: json['assignment'] as String?,
       childDisplayName: json['childDisplayName'] as String,
       childCardColor: childCardColorFromString(json['childCardColor'] as String?),
       childGender: json['childGender'] as String?,
@@ -24,6 +26,7 @@ class KioskActiveChild {
   }
 
   final String childId;
+  final String? assignment;
   final String childDisplayName;
   final ChildCardColor childCardColor;
   final String? childGender;

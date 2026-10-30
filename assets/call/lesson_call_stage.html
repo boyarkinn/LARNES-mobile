@@ -1099,6 +1099,13 @@
         document.head.appendChild(script);
       }
 
+      // The same pupil surface can open its server board without loading Jitsi.
+      function openWorkspace(context) {
+        applyBoardWorkspace(context);
+        ensurePerson("local", true);
+        render();
+      }
+
       function start(pass) {
         var meet = window.JitsiMeetJS;
         var thisAttempt = ++attempt;

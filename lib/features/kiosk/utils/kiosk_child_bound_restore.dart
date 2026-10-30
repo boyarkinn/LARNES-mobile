@@ -16,7 +16,10 @@ Future<KioskScanResult?> restoreKioskChildBoundSnapshot({
     return null;
   }
 
-  if (resolveInitialMode(
+  final workspace = lesson.workspaceFormat == 'board' &&
+      activeChild.lessonSessionId == lesson.lessonSessionId &&
+      const {'child_active', 'idle_child', 'no_program'}.contains(lesson.status);
+  if (!workspace && resolveInitialMode(
         pendingCommand: lesson.pendingCommand,
         status: lesson.status,
       ) !=
@@ -25,7 +28,7 @@ Future<KioskScanResult?> restoreKioskChildBoundSnapshot({
   }
 
   final storedToken = await childSessionTokenStorage.readToken();
-  if (storedToken != null && storedToken.isNotEmpty) {
+  if (!workspace && storedToken != null && storedToken.isNotEmpty) {
     return KioskScanResult.fromActiveChild(
       activeChild: activeChild,
       childSessionToken: storedToken,

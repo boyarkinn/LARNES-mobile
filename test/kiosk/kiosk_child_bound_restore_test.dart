@@ -78,6 +78,20 @@ KioskDeviceContext _deviceWithActiveChild({required bool withLessonStatus}) {
 
 void main() {
   group('restoreKioskChildBoundSnapshot', () {
+    test('board assignment restores its child bearer even with a pending legacy trainer command', () async {
+      final source = _deviceWithActiveChild(withLessonStatus: true);
+      final storage = MemoryChildSessionTokenStorage();
+      final api = _RestoreFakeApi(resumeResult: KioskScanResult.fromActiveChild(
+        activeChild: source.activeChild!, childSessionToken: 'fresh-board-token'));
+      final result = await restoreKioskChildBoundSnapshot(device: KioskDeviceContext(
+        deviceId: source.deviceId, kind: source.kind, activeChild: source.activeChild,
+        lesson: KioskDeviceLessonBinding(commandSeq: 3, lessonSessionId: source.lesson!.lessonSessionId,
+          status: 'child_active', workspaceFormat: 'board', pendingCommand: 'play_trainer')),
+        kioskApi: api, childSessionTokenStorage: storage);
+      expect(api.resumeCalls, 1);
+      expect(result?.childSessionToken, 'fresh-board-token');
+      expect(await storage.readToken(), 'fresh-board-token');
+    });
     test('uses stored child token when present', () async {
       final storage = MemoryChildSessionTokenStorage();
       await storage.writeToken('stored-child-jwt');

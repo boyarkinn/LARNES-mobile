@@ -12,7 +12,6 @@ import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
 import 'package:larnes_mobile/features/kiosk/api/kiosk_lesson_call_api.dart';
 import 'package:larnes_mobile/features/kiosk/controllers/kiosk_session_controller.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
-import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_child_bound_restore.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_placement.dart';
@@ -443,8 +442,11 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
-    final switchKey = controller.classroomCallOn
-        ? 'classroom-call'
+    final lessonOpen = controller.lessonWorkspaceOn ||
+        (controller.deviceContext.lesson?.workspaceFormat != 'board' &&
+            controller.classroomCallOn);
+    final switchKey = lessonOpen
+        ? 'lesson-${controller.deviceContext.lesson?.lessonSessionId}-${controller.deviceContext.activeChild?.childId}'
         : switch (controller.mode) {
             KioskSessionMode.play =>
               '${controller.mode.name}-${controller.activeProgramId}',
@@ -457,7 +459,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       duration: const Duration(milliseconds: 220),
       child: KeyedSubtree(
         key: ValueKey(switchKey),
-        child: controller.classroomCallOn
+        child: lessonOpen
             ? _classroomCall(controller)
             : _buildModeContent(context, controller, l10n, theme),
       ),
@@ -470,6 +472,9 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     final lessonId = controller.deviceContext.lesson?.lessonSessionId ?? '';
     return LessonCallStage(
       body: null,
+      mediaEnabled: !controller.lessonWorkspaceOn,
+      workspaceFormat:
+          controller.deviceContext.lesson?.workspaceFormat ?? 'classic',
       captureOnJoin: false,
       childId: childId,
       messenger: lessonId.isEmpty || childId.isEmpty

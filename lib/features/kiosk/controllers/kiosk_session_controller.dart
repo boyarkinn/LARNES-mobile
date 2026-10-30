@@ -75,6 +75,16 @@ class KioskSessionController extends ChangeNotifier {
   bool get classroomCallOn =>
       _deviceContext.lesson?.classroomCallEnabled == true && _deviceContext.activeChild != null;
 
+  bool get lessonWorkspaceOn {
+    final lesson = _deviceContext.lesson;
+    final child = _deviceContext.activeChild;
+    if (lesson == null || child == null) return false;
+    return lesson.workspaceFormat == 'board' &&
+        child.lessonSessionId == lesson.lessonSessionId &&
+        _scanResult?.childId == child.childId &&
+        const {'child_active', 'idle_child', 'no_program'}.contains(lesson.status);
+  }
+
   Duration get _effectiveSyncInterval {
     if (_mode == KioskSessionMode.result ||
         _mode == KioskSessionMode.scan ||
@@ -114,9 +124,16 @@ class KioskSessionController extends ChangeNotifier {
 
   void _rememberDevice(KioskDeviceContext device) {
     final previous = _deviceContext.lesson?.classroomCallEnabled ?? false;
+    final previousWorkspace = lessonWorkspaceOn;
+    final previousChild = _deviceContext.activeChild?.childId;
+    final previousLesson = _deviceContext.lesson?.lessonSessionId;
     _deviceContext = device;
     final next = device.lesson?.classroomCallEnabled ?? false;
-    if (previous != next && !_disposed) {
+    if (!_disposed &&
+        (previous != next ||
+            previousWorkspace != lessonWorkspaceOn ||
+            previousChild != device.activeChild?.childId ||
+            previousLesson != device.lesson?.lessonSessionId)) {
       notifyListeners();
     }
   }
@@ -305,6 +322,17 @@ class KioskSessionController extends ChangeNotifier {
   }
 
   Future<bool> _activatePlayTrainer(int commandSeq) async {
+    // Assignment and the first exercise may arrive in the same poll, before the
+    // idle-screen reconciliation has restored the child's bearer.
+    if (!lessonWorkspaceOn && _scanResult == null) {
+      await _reconcileTeacherAssignedChild(workspaceOnly: true);
+    }
+    if (lessonWorkspaceOn) {
+      await _kioskApi.heartbeat(ackSeq: commandSeq);
+      _since = commandSeq;
+      return true;
+    }
+    if (_deviceContext.lesson?.workspaceFormat == 'board') return false;
     if (classroomCallOn) {
       return false;
     }
@@ -364,7 +392,7 @@ class KioskSessionController extends ChangeNotifier {
 
     final lesson = device.lesson;
     if (lesson != null && lesson.pendingCommand == 'play_trainer') {
-      if (classroomCallOn) {
+      if (lessonWorkspaceOn || classroomCallOn) {
         return false;
       }
 
@@ -407,9 +435,10 @@ class KioskSessionController extends ChangeNotifier {
     return true;
   }
 
-  Future<bool> _reconcileTeacherAssignedChild() async {
-    if ((_mode != KioskSessionMode.scan && _mode != KioskSessionMode.idle) ||
-        _scanResult != null) {
+  Future<bool> _reconcileTeacherAssignedChild({bool workspaceOnly = false}) async {
+    if (!workspaceOnly &&
+        ((_mode != KioskSessionMode.scan && _mode != KioskSessionMode.idle) ||
+            _scanResult != null)) {
       return false;
     }
 
@@ -419,6 +448,11 @@ class KioskSessionController extends ChangeNotifier {
     final activeChild = device.activeChild;
     final lesson = device.lesson;
     if (activeChild == null || lesson == null) {
+      return false;
+    }
+    if (workspaceOnly && lesson.workspaceFormat != 'board') return false;
+    if (lesson.workspaceFormat == 'board' &&
+        activeChild.lessonSessionId != lesson.lessonSessionId) {
       return false;
     }
 
@@ -440,7 +474,9 @@ class KioskSessionController extends ChangeNotifier {
       _scanResult = resumed;
       _scanError = null;
       _scanErrorCode = null;
-      _mode = modeFromScanOutcome(resumed.outcome);
+      _mode = lesson.workspaceFormat == 'board'
+          ? KioskSessionMode.result
+          : modeFromScanOutcome(resumed.outcome);
 
       if (_mode == KioskSessionMode.play &&
           (resumed.programId == null || resumed.programId!.isEmpty)) {
@@ -466,7 +502,7 @@ class KioskSessionController extends ChangeNotifier {
 
     final lesson = device.lesson;
     if (lesson != null && lesson.pendingCommand == 'play_trainer') {
-      if (lesson.classroomCallEnabled && device.activeChild != null) {
+      if (lessonWorkspaceOn || (lesson.classroomCallEnabled && device.activeChild != null)) {
         return false;
       }
 

@@ -8,6 +8,7 @@ import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
+import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/core/locale/locale_scope.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_call_pass.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
@@ -58,6 +59,8 @@ class LessonCallStage extends StatefulWidget {
     this.claimRoster,
     this.handle,
     this.captureOnJoin = true,
+    this.mediaEnabled = true,
+    this.workspaceFormat = 'classic',
     this.messenger,
   });
 
@@ -68,9 +71,11 @@ class LessonCallStage extends StatefulWidget {
   final String? inviteToken;
   final LessonCallStageHandle? handle;
   final bool captureOnJoin;
+  final bool mediaEnabled;
+  final String workspaceFormat;
   final MessengerScope? messenger;
   final Future<LessonCallPassOutcome> Function(String locale)? fetchPass;
-  final Future<LessonChildBoard?> Function()? fetchBoard;
+  final Future<LessonChildBoard?> Function({String? link})? fetchBoard;
   final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
   final Future<Map<String, dynamic>?> Function(Map<String, dynamic> body)? requestBoard;
   final Future<LessonCallTeachers> Function({
@@ -127,6 +132,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   LessonChildBoard? _board;
   late final String _boardLink;
 
+  bool get _boardWorkspace =>
+      widget.workspaceFormat == 'board' || _pass?.workspaceFormat == 'board';
+
   /// Урок открыт входом родителя, а не гостевой ссылкой или экраном класса.
   bool get _parentSession =>
       widget.inviteToken == null &&
@@ -178,6 +186,12 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     }
 
     _html = html;
+    if (!widget.mediaEnabled) {
+      setState(() => _loading = false);
+      if (_boardWorkspace) _watchBoard();
+      _tryStart();
+      return;
+    }
     await _openPass();
   }
 
@@ -246,7 +260,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _renewPass() async {
-    if (_renewing || _link == _LessonCallLink.closed) {
+    if (!widget.mediaEnabled || _renewing || _link == _LessonCallLink.closed) {
       return;
     }
     _renewing = true;
@@ -341,7 +355,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _followRoom() async {
-    if (_following || _ended || _link == _LessonCallLink.closed) return;
+    if (!widget.mediaEnabled || _following || _ended || _link == _LessonCallLink.closed) return;
     _following = true;
     try {
       final outcome = await _fetchPass();
@@ -382,7 +396,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Future<LessonChildBoard?> _fetchBoard() {
     final injected = widget.fetchBoard;
-    if (injected != null) return injected();
+    if (injected != null) return injected(link: _boardLink);
     final invite = widget.inviteToken;
     if (invite != null) {
       return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink);
@@ -402,7 +416,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Future<void> _pullBoard() async {
     if (_boardBusy || _ended || !mounted) return;
-    if (_pass?.workspaceFormat != 'board' && !_holding) return;
+    if (!_boardWorkspace && !_holding) return;
     _boardBusy = true;
     try {
       final board = await _fetchBoard();
@@ -584,7 +598,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final pass = _pass;
     final html = _html;
     final domain = pass?.domain ?? _movingDomain;
-    if (web == null || domain.isEmpty || html == null || _starting) {
+    if (web == null ||
+        (widget.mediaEnabled && domain.isEmpty) ||
+        html == null ||
+        _starting) {
       return;
     }
 
@@ -595,7 +612,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       data: html,
       mimeType: 'text/html',
       encoding: 'utf-8',
-      baseUrl: WebUri('https://$domain/'),
+      baseUrl: WebUri(
+        widget.mediaEnabled ? 'https://$domain/' : AppConfig.apiBaseUrl,
+      ),
     );
   }
 
@@ -633,7 +652,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   Future<void> _join() async {
     final web = _web;
     final pass = _pass;
-    if (web == null || pass == null || _joined) {
+    if (!widget.mediaEnabled || web == null || pass == null || _joined) {
       return;
     }
 
@@ -791,6 +810,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _setDeviceWish(String device, bool muted) async {
+    if (!widget.mediaEnabled) return;
     final video = device == 'video';
     final seq = video ? ++_cameraSeq : ++_micSeq;
     final callGen = _callGen;
@@ -1091,7 +1111,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Widget _callSurface() {
-    if (_pass == null && !_holding) {
+    if (widget.mediaEnabled && _pass == null && !_holding) {
       return ColoredBox(
         color: const Color(0xFF111111),
         child: Center(
@@ -1141,6 +1161,14 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         if (!mounted) {
           return;
         }
+        if (!widget.mediaEnabled) {
+          await _syncPage();
+          await controller.evaluateJavascript(
+            source: 'openWorkspace(${jsonEncode({'workspaceFormat': widget.workspaceFormat})})',
+          );
+          await _pullBoard();
+          return;
+        }
         if (_holding && _pass == null) {
           await controller.evaluateJavascript(source: 'holdRoom()');
           return;
@@ -1155,6 +1183,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           PermissionResourceType.CAMERA_AND_MICROPHONE,
         };
         if (resources.isEmpty ||
+            !widget.mediaEnabled ||
             resources.any((type) => !capture.contains(type))) {
           return PermissionResponse(
             resources: resources,
@@ -1314,7 +1343,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   @override
   Widget build(BuildContext context) {
     final trainer = widget.trainerOpen && widget.body != null;
-    final boardFormat = _pass?.workspaceFormat == 'board';
+    final boardFormat = _boardWorkspace;
     final board = boardFormat || (_mode == 'workflow' && !trainer);
     final handle = !boardFormat && (board || trainer);
 

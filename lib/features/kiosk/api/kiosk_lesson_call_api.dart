@@ -50,9 +50,12 @@ class KioskLessonCallApi {
     }
   }
 
-  Future<LessonChildBoard?> fetchBoard() async {
+  Future<LessonChildBoard?> fetchBoard({String? link}) async {
     try {
-      final response = await _client.dio.get('/api/classroom/devices/me/lesson/board');
+      final response = await _client.dio.get(
+        '/api/classroom/devices/me/lesson/board',
+        queryParameters: link == null ? null : {'link': link},
+      );
       return LessonChildBoard.fromJson(_asJsonMap(response.data));
     } on DioException {
       return null;

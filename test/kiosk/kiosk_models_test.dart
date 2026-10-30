@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
-import 'package:larnes_mobile/features/kiosk/models/kiosk_active_child.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_commands_response.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
@@ -45,6 +43,13 @@ void main() {
   });
 
   group('KioskDeviceContext.fromJson', () {
+    test('board format is independent of class video, and older responses keep the classic path', () {
+      final lesson = {'commandSeq': 0, 'lessonSessionId': 'lesson-1', 'status': 'no_program'};
+      expect(KioskDeviceLessonBinding.fromJson(lesson).workspaceFormat, 'classic');
+      final board = KioskDeviceLessonBinding.fromJson({...lesson, 'workspaceFormat': 'board'});
+      expect(board.workspaceFormat, 'board');
+      expect(board.classroomCallEnabled, isFalse);
+    });
     test('parses activeChild payload', () {
       final device = KioskDeviceContext.fromJson({
         'deviceId': '55555555-5555-4555-8555-555555555555',

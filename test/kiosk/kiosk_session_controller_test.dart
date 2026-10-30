@@ -121,6 +121,63 @@ KioskDeviceContext _deviceContext({
 
 void main() {
   group('KioskSessionController', () {
+    test('assignment and play command in the same poll restore the shared board from idle', () async {
+      const child = KioskActiveChild(childId: 'child-1', childDisplayName: 'Test',
+        childCardColor: ChildCardColor.violet, lessonSessionId: 'lesson-1');
+      final storage = MemoryChildSessionTokenStorage();
+      final api = FakeKioskSessionApi(pollResponses: [const KioskCommandsResponse(
+        since: 0, commandSeq: 1, commands: [KioskDeviceCommand(command: KioskDeviceCommandKind.playTrainer, seq: 1)])],
+        deviceMeResponse: _deviceContext(activeChild: child, lesson: const KioskDeviceLessonBinding(
+          commandSeq: 1, lessonSessionId: 'lesson-1', status: 'child_active', workspaceFormat: 'board', pendingCommand: 'play_trainer')),
+        scanResult: KioskScanResult.fromActiveChild(activeChild: child, childSessionToken: 'fresh-board-token'));
+      final controller = KioskSessionController(kioskApi: api, childSessionTokenStorage: storage,
+        deviceContext: _deviceContext(), onDeviceUnauthorized: () {});
+      await controller.runSyncCycle();
+      expect(controller.lessonWorkspaceOn, isTrue);
+      expect(controller.classroomCallOn, isFalse);
+      expect(controller.mode, KioskSessionMode.result);
+      expect(controller.trainerReloadToken, 0);
+      expect(await storage.readToken(), 'fresh-board-token');
+      expect(api.lastHeartbeatAck, 1);
+      controller.dispose();
+    });
+    test('a restored board seat opens the shared workspace with class video off', () async {
+      const child = KioskActiveChild(childId: 'child-1', childDisplayName: 'Test',
+        childCardColor: ChildCardColor.violet, lessonSessionId: 'lesson-1');
+      const lesson = KioskDeviceLessonBinding(commandSeq: 2, lessonSessionId: 'lesson-1',
+        status: 'child_active', workspaceFormat: 'board', pendingCommand: 'play_trainer');
+      final api = FakeKioskSessionApi(pollResponses: [const KioskCommandsResponse(
+        since: 1, commandSeq: 2, commands: [KioskDeviceCommand(command: KioskDeviceCommandKind.playTrainer, seq: 2)])]);
+      final controller = KioskSessionController(kioskApi: api,
+        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+        deviceContext: _deviceContext(activeChild: child, lesson: lesson),
+        initialScanResult: KioskScanResult.fromActiveChild(activeChild: child, childSessionToken: 'child-token'),
+        initialMode: KioskSessionMode.result, onDeviceUnauthorized: () {});
+      expect(controller.classroomCallOn, isFalse);
+      expect(controller.lessonWorkspaceOn, isTrue);
+      await controller.runSyncCycle();
+      expect(controller.mode, KioskSessionMode.result);
+      expect(controller.trainerReloadToken, 0);
+      expect(api.lastHeartbeatAck, 2);
+      controller.updateDeviceContext(_deviceContext(lesson: lesson));
+      expect(controller.lessonWorkspaceOn, isFalse);
+      controller.updateDeviceContext(_deviceContext(activeChild: child, lesson: const KioskDeviceLessonBinding(
+        commandSeq: 0, lessonSessionId: 'another-lesson', status: 'child_active', workspaceFormat: 'board')));
+      expect(controller.lessonWorkspaceOn, isFalse);
+      controller.dispose();
+    });
+
+    test('an assignment without a restored child token keeps the workspace closed', () {
+      final controller = KioskSessionController(kioskApi: FakeKioskSessionApi(pollResponses: []),
+        childSessionTokenStorage: MemoryChildSessionTokenStorage(),
+        deviceContext: _deviceContext(activeChild: const KioskActiveChild(
+          childId: 'child-1', childDisplayName: 'Test', childCardColor: ChildCardColor.violet, lessonSessionId: 'lesson-1'),
+          lesson: const KioskDeviceLessonBinding(commandSeq: 0, lessonSessionId: 'lesson-1', status: 'no_program', workspaceFormat: 'board')),
+        onDeviceUnauthorized: () {});
+      expect(controller.lessonWorkspaceOn, isFalse);
+      controller.dispose();
+    });
+
     test('starts in idle without lesson binding', () {
       final controller = KioskSessionController(
         kioskApi: FakeKioskSessionApi(pollResponses: []),

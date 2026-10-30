@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_answer_bar_layout.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_audio.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_layout.dart';
@@ -16,7 +17,7 @@ import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-enum FruitCountTapPhase { instruction, countdown, announce, play }
+enum FruitCountTapPhase { instruction, countdown, play }
 
 /// Web v2: `platform/src/trainers/math/fruit-count-tap/component.tsx`
 class FruitCountTapTrainer extends StatefulWidget {
@@ -157,7 +158,10 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
   }
 
   Future<void> _runInstruction(Object runToken) async {
-    final durationMs = await loadTrainerInstructionDurationMs(
+    final targetFruit =
+        normalizeFruitSlug(widget.params['targetFruit'] as String? ?? 'watermelon');
+    final instructionText = getFruitCountTapInstructionText(targetFruit);
+    final instructionDurationMs = await loadTrainerInstructionDurationMs(
       assetPath: getFruitCountTapInstructionAudioAsset(),
       playbackRate: kFruitCountTapInstructionPlaybackRate,
       fallbackMs: kFruitCountTapInstructionDurationFallbackMs,
@@ -166,13 +170,22 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       const Duration(milliseconds: kFruitCountTapInstructionDurationFallbackMs),
       onTimeout: () => kFruitCountTapInstructionDurationFallbackMs,
     );
+    final targetDurationMs = await loadTrainerInstructionDurationMs(
+      assetPath: getFruitCountTapTargetAudioAsset(targetFruit),
+      playbackRate: kFruitCountTapInstructionPlaybackRate,
+      fallbackMs: kFruitCountTapTargetDurationFallbackMs,
+      semanticKey: fruitAudioKey(targetFruit),
+    ).timeout(
+      const Duration(milliseconds: kFruitCountTapTargetDurationFallbackMs),
+      onTimeout: () => kFruitCountTapTargetDurationFallbackMs,
+    );
+    final durationMs = instructionDurationMs + targetDurationMs;
     if (!mounted || !identical(runToken, _runToken)) {
       return;
     }
 
     _instructionTypewriter.start(
-      speechKey: 'instruction:fruit-count-tap',
-      text: fruitCountTapInstructionText,
+      text: instructionText,
       durationMs: durationMs,
       isCurrent: () => mounted && identical(runToken, _runToken),
       onLength: (length) {
@@ -183,20 +196,45 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       },
     );
 
-    unawaited(playFruitCountTapInstruction());
-    _instructionDelayTimer?.cancel();
-    _instructionDelayTimer = Timer(Duration(milliseconds: durationMs), () {
+    final elapsed = Stopwatch()..start();
+    try {
+      await playFruitCountTapInstruction(targetFruit).timeout(
+        Duration(milliseconds: durationMs + 3000),
+        onTimeout: () async {
+          if (mounted && identical(runToken, _runToken)) {
+            await cancelFruitCountTapAudio();
+          }
+        },
+      );
+    } catch (_) {
+      // Keep enough time to read the complete instruction if playback fails.
+    }
+    if (!mounted || !identical(runToken, _runToken)) {
+      return;
+    }
+
+    void finishInstruction() {
       if (!mounted || !identical(runToken, _runToken)) {
         return;
       }
 
       _instructionTypewriter.cancel();
       setState(() {
-        _instructionLength = fruitCountTapInstructionText.length;
+        _instructionLength = instructionText.length;
         _phase = FruitCountTapPhase.countdown;
       });
       _runCountdown(runToken);
-    });
+    }
+
+    final remainingMs = durationMs - elapsed.elapsedMilliseconds;
+    if (remainingMs > 0) {
+      _instructionDelayTimer = Timer(
+        Duration(milliseconds: remainingMs),
+        finishInstruction,
+      );
+    } else {
+      finishInstruction();
+    }
   }
 
   void _runCountdown(Object runToken) {
@@ -209,8 +247,8 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() => _phase = FruitCountTapPhase.announce);
-        unawaited(_runAnnounce(runToken));
+        setState(() => _phase = FruitCountTapPhase.play);
+        _scheduleFruitReveal();
         return;
       }
 
@@ -223,25 +261,6 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
     }
 
     showNext();
-  }
-
-  Future<void> _runAnnounce(Object runToken) async {
-    final targetFruit =
-        normalizeFruitSlug(widget.params['targetFruit'] as String? ?? 'watermelon');
-
-    try {
-      await playFruitCountTapTargetFruit(targetFruit)
-          .timeout(const Duration(seconds: 2));
-    } catch (_) {
-      // Tests / missing assets — still reveal the field.
-    }
-
-    if (!mounted || !identical(runToken, _runToken)) {
-      return;
-    }
-
-    setState(() => _phase = FruitCountTapPhase.play);
-    _scheduleFruitReveal();
   }
 
   void _scheduleFruitReveal() {
@@ -379,8 +398,9 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
           return switch (_phase) {
             FruitCountTapPhase.instruction => TrainerInstructionScene(
               length: _instructionLength,
-              speechKey: 'instruction:fruit-count-tap',
-              text: fruitCountTapInstructionText,
+              text: getFruitCountTapInstructionText(
+                widget.params['targetFruit'] as String? ?? 'watermelon',
+              ),
             ),
             FruitCountTapPhase.countdown => Center(
               child: Text(
@@ -394,7 +414,6 @@ class _FruitCountTapTrainerState extends State<FruitCountTapTrainer> {
                 ),
               ),
             ),
-            FruitCountTapPhase.announce => const SizedBox.expand(),
             FruitCountTapPhase.play => _buildPlayBody(constraints),
           };
         },

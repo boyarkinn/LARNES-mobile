@@ -7,10 +7,22 @@ import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_count_tap_mode
 
 const kFruitCountTapInstructionPlaybackRate = 1.5;
 const kFruitCountTapInstructionDurationFallbackMs = 1712;
+const kFruitCountTapTargetDurationFallbackMs = 1200;
 
 const kFruitCountTapInstructionText = 'Посчитай сколько на экране';
 
-String get fruitCountTapInstructionText => kFruitCountTapInstructionText;
+String getFruitCountTapInstructionText(String fruit) {
+  final target = normalizeFruitSlug(fruit);
+  final instruction = publishedSpeechText(
+    'instruction:fruit-count-tap',
+    kFruitCountTapInstructionText,
+  );
+  final targetText = publishedSpeechText(
+    fruitAudioKey(target),
+    fruitLabels[target]!,
+  );
+  return '$instruction $targetText';
+}
 
 String getFruitCountTapInstructionAudioAsset() =>
     spokenCueAsset('instruction:fruit-count-tap') ?? '';
@@ -19,10 +31,13 @@ String getFruitCountTapTargetAudioAsset(String fruit) {
   return speechPlaybackPath(fruitAudioKey(normalizeFruitSlug(fruit))) ?? '';
 }
 
-Future<void> playFruitCountTapInstruction() {
-  return playSpokenCue(
-    semanticKey: 'instruction:fruit-count-tap',
-    legacyRate: kFruitCountTapInstructionPlaybackRate,
+Future<void> playFruitCountTapInstruction(String fruit) {
+  // A single native playlist joins the phrase before the countdown.
+  return getSharedClipPlayer().play(
+    [
+      getFruitCountTapInstructionAudioAsset(),
+      getFruitCountTapTargetAudioAsset(fruit),
+    ],
   );
 }
 

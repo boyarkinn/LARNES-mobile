@@ -34,6 +34,12 @@ void main() {
       expect(find.byType(TrainerScene), findsAtLeast(1));
       expect(find.byType(TrainerShell), findsNothing);
       expect(find.byType(TrainerInstructionScene), findsOneWidget);
+      expect(
+        tester.widget<TrainerInstructionScene>(
+          find.byType(TrainerInstructionScene),
+        ).text,
+        'Посчитай сколько на экране арбузов',
+      );
       expect(find.textContaining('Молодец'), findsNothing);
 
       await tester.pump(const Duration(milliseconds: 1800));
@@ -66,11 +72,17 @@ void main() {
 
       expect(tester.getSize(find.byKey(stageKey)), const Size(320, 480));
       expect(tester.getSize(find.byType(TrainerScene).first), const Size(320, 480));
+      expect(
+        tester.widget<TrainerInstructionScene>(
+          find.byType(TrainerInstructionScene),
+        ).text,
+        'Посчитай сколько на экране яблок',
+      );
 
       await tester.pump(const Duration(milliseconds: 1800));
     });
 
-    testWidgets('shows answer bar after instruction, countdown and announce', (tester) async {
+    testWidgets('shows answer bar after the complete instruction and countdown', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

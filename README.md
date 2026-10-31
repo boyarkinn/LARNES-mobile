@@ -1,5 +1,7 @@
 # LARNES Mobile
 
+**2026-10-31 — девайсы, прогон 5:** собран release APK **1.0.7 (9)** для ARM32/ARM64/x86_64, minSdk24/targetSdk36; API по умолчанию `https://larnes.ru`. Пакет содержит текущий общий SDK с исправлением отменявшегося завершения задания. SHA встроенных SDK/HTML совпали с исходниками, подпись совпала с прежним APK с этого компьютера. Также исправлена nullable-проверка сохранённого языка в экране входа, мешавшая release-компиляции; поведение ru/en сохранено. 61 профильный Flutter + 2 auth-теста прошли. Порядок обновления без потери регистрации и аппаратная приёмка — [памятка пилота](../platform/docs/reference/classroom-devices-pilot.md), подробности/хеши — [прогон 5](../platform/docs/active/classroom-devices-unified-lesson-v1.md#прогон-5--сквозная-проверка-исправление-завершения-и-комплект-пилота-2026-10-31). Живые Android/Jitsi ещё проверяет владелец; production агент не менял.
+
 **2026-10-31 — девайсы, прогон 4:** общий экран ученика передаёт подготовку/ответы тренажёра без подключения к звонку; `ready` получает link текущего Flutter-подключения, старые поколения/комнаты отклоняются. `assets/call/larnes-board.js` заново собран из общих веб-исходников, включая последние «Арбузы», и проверен `node scripts/mobile-board/build.mjs --check` из `platform`. 46 профильных Flutter-тестов и целевой Dart analyze прошли; настоящий APK/устройства — следующий прогон 5. Использовать согласованные веб и приложение; миграций/env нет. [Общий журнал и ограничения](../platform/docs/active/classroom-devices-unified-lesson-v1.md#прогон-4--единый-учебный-маршрут-и-готовность-упражнений-2026-10-31).
 
 **2026-10-27 — Диск, прогон22:** доска ДЗ использует общий native protocol2, CAS/operation receipts, app-private durable outbox и authenticated image bridge. Пересобран SDK, обе HTML принимают реальный пакет65 частей/около15MiB; browser feature flags не требуют Node process.5 Flutter/FS tests и4 настоящих Chromium сценария PASS; Dart analyze изменённых файлов чистый. Backend требует0304 и совместимого native endpoint; старые APK не могут писать перенесённое ДЗ (409 native_required). Native protocol2 сохраняет служебные маркеры удаления при загрузке/сохранении, старый homework wire остаётся совместимым. Новый APK/телефоны/visual/production не приняты, включать homework canary только после установки нового клиента. [Подробный журнал22](../platform/docs/active/larnes-drive-v1-implementation.md#прогон-22-проверяемое-переключение-чтениязаписи-и-совместимость). Старые срезы ниже — история.
@@ -33,7 +35,7 @@ flutter build apk --release
 
 APK: `build/app/outputs/flutter-apk/app-release.apk`
 
-Перед установкой на планшет: удалить старую версию app (Settings → Apps) или `adb uninstall com.larnes.larnes_mobile`.
+Обновление планшета выполняется поверх установленного приложения: `adb install -r build/app/outputs/flutter-apk/app-release.apk`. Регистрация девайса и настройки сохраняются. Перед пилотом проверьте одинаковую подпись старого и нового APK; если Android сообщает о несовпадении подписи, используйте исходный ключ сборки. Не удаляйте приложение для обхода этой ошибки: удаление стирает локальную регистрацию.
 
 ## API: когда какой backend
 

@@ -66,50 +66,115 @@ class MessengerApi implements MessengerGateway {
           );
   final Dio _dio;
   final Map<String, Set<CancelToken>> _active = {};
+  final Map<String, Map<String, Object?>> _noticeInboxes = {};
+  Map<String, Object?>? noticeInbox(MessengerScope scope) =>
+      _noticeInboxes[scope.sessionKey];
 
   /// Shared web UI uses the same native API and authorization; JS never receives a credential.
-  Future<Map<String, dynamic>> webview(MessengerScope scope, Map<String, dynamic> input) async {
+  Future<Map<String, dynamic>> webview(
+    MessengerScope scope,
+    Map<String, dynamic> input,
+  ) async {
     final op = input['operation'];
     try {
       if ({'file-status', 'file-info', 'file-cancel', 'upload'}.contains(op)) {
         final id = input['id'];
-        if (id is! String || !RegExp(r'^[a-zA-Z0-9-]{8,80}$').hasMatch(id)) return {'error': 'file'};
+        if (id is! String || !RegExp(r'^[a-zA-Z0-9-]{8,80}$').hasMatch(id)) {
+          return {'error': 'file'};
+        }
         if (op == 'file-cancel') {
           final result = await cancelFile(scope, id);
-          return result is MessengerDenied<void> ? {'error': result.code} : {'ok': true};
+          return result is MessengerDenied<void>
+              ? {'error': result.code}
+              : {'ok': true};
         }
         MessengerValue<MessengerFileCard> result;
         if (op == 'upload') {
-          final data = input['data'], name = input['name'], mime = input['mime'];
-          if (data is! String || data.length > 28 * 1024 * 1024 || name is! String || name.length > 512 || mime is! String) return {'error': 'file'};
+          final data = input['data'],
+              name = input['name'],
+              mime = input['mime'];
+          if (data is! String ||
+              data.length > 28 * 1024 * 1024 ||
+              name is! String ||
+              name.length > 512 ||
+              mime is! String) {
+            return {'error': 'file'};
+          }
           final bytes = base64Decode(data);
-          if (bytes.isEmpty || bytes.length > 20 * 1024 * 1024) return {'error': 'file'};
-          result = await upload(scope, id: id, name: name, mime: mime, bytes: bytes);
+          if (bytes.isEmpty || bytes.length > 20 * 1024 * 1024) {
+            return {'error': 'file'};
+          }
+          result = await upload(
+            scope,
+            id: id,
+            name: name,
+            mime: mime,
+            bytes: bytes,
+          );
         } else {
-          result = op == 'file-info' ? await fileMeta(scope, id) : await fileStatus(scope, id);
+          result = op == 'file-info'
+              ? await fileMeta(scope, id)
+              : await fileStatus(scope, id);
         }
-        if (result is MessengerDenied<MessengerFileCard>) return {'error': result.code};
+        if (result is MessengerDenied<MessengerFileCard>) {
+          return {'error': result.code};
+        }
         final card = (result as MessengerOk<MessengerFileCard>).value;
-        return {'id': card.id, 'status': card.status, 'detail': card.detail, 'name': card.name, 'bytes': card.bytes};
+        return {
+          'id': card.id,
+          'status': card.status,
+          'detail': card.detail,
+          'name': card.name,
+          'bytes': card.bytes,
+        };
       }
       Response<Object> response;
       if (op == 'command') {
         final command = input['command'];
-        if (command is! Map || !{'read', 'send', 'report', 'redact', 'mute', 'unmute', 'close-report'}.contains(command['action'])) return {'error': 'forbidden'};
+        if (command is! Map ||
+            !{
+              'read',
+              'send',
+              'report',
+              'redact',
+              'mute',
+              'unmute',
+              'close-report',
+            }.contains(command['action'])) {
+          return {'error': 'forbidden'};
+        }
         response = await _post(scope, Map<String, Object?>.from(command));
       } else if (op == 'open' || op == 'history' || op == 'summary') {
-        response = await _run<Object>(scope, (headers, token) => _dio.get<Object>(_lessonPath(scope),
-          queryParameters: scope.query(view: op as String, before: input['before'] is String ? input['before'] as String : null,
-            after: input['after'] is String ? input['after'] as String : null),
-          options: Options(headers: headers), cancelToken: token));
-      } else { return {'error': 'forbidden'}; }
+        response = await _run<Object>(
+          scope,
+          (headers, token) => _dio.get<Object>(
+            _lessonPath(scope),
+            queryParameters: scope.query(
+              view: op as String,
+              before: input['before'] is String
+                  ? input['before'] as String
+                  : null,
+              after: input['after'] is String ? input['after'] as String : null,
+            ),
+            options: Options(headers: headers),
+            cancelToken: token,
+          ),
+        );
+      } else {
+        return {'error': 'forbidden'};
+      }
       final code = _code(response);
       if (code != null) return {'error': code};
-      return response.data is Map ? Map<String, dynamic>.from(response.data as Map) : {'ok': true};
-    } catch (_) { return {'error': 'unavailable'}; }
+      return response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : {'ok': true};
+    } catch (_) {
+      return {'error': 'unavailable'};
+    }
   }
 
   void cancelScope(MessengerScope scope) {
+    _noticeInboxes.remove(scope.sessionKey);
     for (final token in _active.remove(scope.sessionKey) ?? <CancelToken>{}) {
       token.cancel();
     }
@@ -166,7 +231,25 @@ class MessengerApi implements MessengerGateway {
   @override
   Future<MessengerValue<({int unread, int waitMs})>> summary(
     MessengerScope scope,
-  ) => _read(scope, view: 'summary', parse: messengerSummaryFromJson);
+  ) => _read(
+    scope,
+    view: 'summary',
+    parse: (raw) {
+      final result = messengerSummaryFromJson(raw);
+      if (result == null) return null;
+      final data = raw is Map ? raw : const {};
+      _noticeInboxes[scope.sessionKey] = {
+        'unread': result.unread,
+        'items': data['items'] is List
+            ? (data['items'] as List).take(20).toList()
+            : <Object>[],
+      };
+      if (_noticeInboxes.length > 8) {
+        _noticeInboxes.remove(_noticeInboxes.keys.first);
+      }
+      return result;
+    },
+  );
   @override
   Future<MessengerValue<void>> markRead(MessengerScope scope, String cursor) =>
       command(scope, {'action': 'read', 'cursor': cursor});

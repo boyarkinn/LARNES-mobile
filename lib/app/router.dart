@@ -75,7 +75,6 @@ import 'package:larnes_mobile/features/parent/screens/activity/parent_schedule_d
 import 'package:larnes_mobile/features/parent/screens/activity/parent_payments_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/activity/parent_payment_receipt_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/activity/parent_payment_accrual_screen.dart';
-import 'package:larnes_mobile/features/parent/theme/hub_card_appearance.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_shell_scaffold.dart';
 import 'package:larnes_mobile/features/shell/home_placeholder_screen.dart';
 
@@ -379,7 +378,10 @@ GoRouter createAppRouter({
                           if (childId == null || childId.isEmpty) {
                             return const ChildPickerScreen();
                           }
-                          return ChildChatsScreen(childId: childId);
+                          return ChildChatsScreen(
+                            childId: childId,
+                            initialLessonId: state.uri.queryParameters['chat'],
+                          );
                         },
                       ),
                       GoRoute(

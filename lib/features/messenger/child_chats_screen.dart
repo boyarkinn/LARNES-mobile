@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/features/messenger/message_sound.dart';
+import 'package:larnes_mobile/features/messenger/parent_message_notifications.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/features/messenger/messenger_api.dart';
@@ -11,9 +13,14 @@ import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 /// Lesson chats for one child. The parent writes as the adult, with no call open.
 class ChildChatsScreen extends StatefulWidget {
-  const ChildChatsScreen({super.key, required this.childId});
+  const ChildChatsScreen({
+    super.key,
+    required this.childId,
+    this.initialLessonId,
+  });
 
   final String childId;
+  final String? initialLessonId;
 
   @override
   State<ChildChatsScreen> createState() => _ChildChatsScreenState();
@@ -55,12 +62,15 @@ class _ChildChatsScreenState extends State<ChildChatsScreen>
   @override
   void didUpdateWidget(covariant ChildChatsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.childId != widget.childId) _switchScope();
+    if (oldWidget.childId != widget.childId ||
+        oldWidget.initialLessonId != widget.initialLessonId) {
+      _switchScope(force: true);
+    }
   }
 
-  void _switchScope() {
+  void _switchScope({bool force = false}) {
     final next = _buildScope();
-    if (_started && next?.sessionKey == _scope?.sessionKey) return;
+    if (!force && _started && next?.sessionKey == _scope?.sessionKey) return;
     _started = true;
     _generation++;
     final previous = _scope;
@@ -75,6 +85,15 @@ class _ChildChatsScreenState extends State<ChildChatsScreen>
     _error = null;
     _loading = true;
     _load(reset: true);
+    final target = widget.initialLessonId;
+    if (target != null && RegExp(r'^[a-zA-Z0-9-]{36}$').hasMatch(target)) {
+      _gateway ??= MessengerApi();
+      final targetScope = next?.forLesson(target);
+      if (targetScope != null) {
+        _open = MessengerRooms.retain(targetScope, gateway: _gateway);
+        _open!.setVisible(true);
+      }
+    }
   }
 
   MessengerScope? _buildScope() {
@@ -157,6 +176,18 @@ class _ChildChatsScreenState extends State<ChildChatsScreen>
           open == null ? l10n.messengerListTitle : l10n.messengerTitle,
         ),
         backgroundColor: ParentColors.surface,
+        actions: [
+          ValueListenableBuilder<bool>(
+            valueListenable: NativeMessageSound.enabled,
+            builder: (context, enabled, _) => IconButton(
+              tooltip: enabled ? l10n.messengerSoundOff : l10n.messengerSoundOn,
+              onPressed: () => NativeMessageSound.setEnabled(!enabled),
+              icon: Icon(
+                enabled ? Icons.volume_up_outlined : Icons.volume_off_outlined,
+              ),
+            ),
+          ),
+        ],
         foregroundColor: ParentColors.ink,
       ),
       body: open != null
@@ -200,9 +231,15 @@ class _ChildChatsScreenState extends State<ChildChatsScreen>
                   if (row.preview.isNotEmpty) row.preview,
                 ].where((part) => part.isNotEmpty).join('\n'),
               ),
-              trailing: row.unread > 0
-                  ? Text(l10n.messengerUnread(row.unread))
-                  : null,
+              trailing: ValueListenableBuilder<Map<String, int>>(
+                valueListenable: parentLessonUnread,
+                builder: (context, counts, _) {
+                  final count = counts[row.lessonSessionId] ?? row.unread;
+                  return count > 0
+                      ? Text(l10n.messengerUnread(count))
+                      : const SizedBox.shrink();
+                },
+              ),
               onTap: () => _show(row),
             ),
           ),

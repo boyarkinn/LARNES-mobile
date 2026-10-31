@@ -2920,4 +2920,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String appUpdateDownloadedSize(String size) {
     return '$size MB';
   }
+
+  @override
+  String get messengerSoundOff => 'Mute message sounds';
+
+  @override
+  String get messengerSoundOn => 'Enable message sounds';
+
+  @override
+  String get messengerNotificationClose => 'Dismiss notification';
 }

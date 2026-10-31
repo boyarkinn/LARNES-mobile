@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:larnes_mobile/features/messenger/parent_message_notifications.dart';
 import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -134,7 +135,13 @@ class _LarnesAppState extends State<LarnesApp> with WidgetsBindingObserver {
                   authSession: _authSession,
                   child: KioskScope(
                     kioskRouteState: _kioskRouteState,
-                    child: child ?? const SizedBox.shrink(),
+                    child: ParentMessageNotifications(
+                      router: _router,
+                      accountId: _authSession.user?.accountType == 'parent'
+                          ? _authSession.user?.id
+                          : null,
+                      child: child ?? const SizedBox.shrink(),
+                    ),
                   ),
                 ),
               ),

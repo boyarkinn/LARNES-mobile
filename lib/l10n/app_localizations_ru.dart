@@ -2941,4 +2941,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String appUpdateDownloadedSize(String size) {
     return '$size МБ';
   }
+
+  @override
+  String get messengerSoundOff => 'Выключить звук сообщений';
+
+  @override
+  String get messengerSoundOn => 'Включить звук сообщений';
+
+  @override
+  String get messengerNotificationClose => 'Закрыть уведомление';
 }

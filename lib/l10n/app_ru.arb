@@ -1134,5 +1134,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messengerSoundOff": "Выключить звук сообщений",
+  "messengerSoundOn": "Включить звук сообщений",
+  "messengerNotificationClose": "Закрыть уведомление"
 }

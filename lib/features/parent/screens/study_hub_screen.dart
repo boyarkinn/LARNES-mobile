@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/features/messenger/parent_message_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -68,7 +69,10 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
 
   Future<bool> _liveRewardsVisible(ParentApi parentApi, String locale) async {
     try {
-      return (await parentApi.fetchRewardShops(widget.childId, locale: locale)).visible;
+      return (await parentApi.fetchRewardShops(
+        widget.childId,
+        locale: locale,
+      )).visible;
     } catch (_) {
       return false;
     }
@@ -95,7 +99,9 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       }
       setState(() {
         _hasPublishedCourses = results[0]! as bool;
-        _childFirstName = childHubHeaderTitle((results[1]! as ParentChildDetail).child);
+        _childFirstName = childHubHeaderTitle(
+          (results[1]! as ParentChildDetail).child,
+        );
         _hasLiveRewards = results[2]! as bool;
         _hasPublishedTrainers = results[3]! as bool;
         _isLoading = false;
@@ -123,10 +129,7 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return ParentScaffold(
-      title: _childFirstName,
-      body: _buildBody(),
-    );
+    return ParentScaffold(title: _childFirstName, body: _buildBody());
   }
 
   Widget _buildBody() {
@@ -140,7 +143,9 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+            constraints: const BoxConstraints(
+              maxWidth: ParentChildCardMetrics.pickerMaxWidth,
+            ),
             child: Column(
               children: [
                 StudyHubCard(
@@ -154,14 +159,21 @@ class _StudyHubScreenState extends State<StudyHubScreen> {
                   ),
                 ),
                 const SizedBox(height: ParentChildCardMetrics.pickerListGap),
-                StudyHubCard(
-                  title: l10n.messengerListTitle,
-                  tokens: chatHubCardTokens(),
-                  icon: HubCardIconKind.chat,
-                  onTap: () => ParentChildRoutes.pushForChild(
-                    context,
-                    childId: widget.childId,
-                    segment: 'chats',
+                ValueListenableBuilder<Map<String, int>>(
+                  valueListenable: parentChildUnread,
+                  builder: (context, counts, _) => Badge.count(
+                    count: counts[widget.childId] ?? 0,
+                    isLabelVisible: (counts[widget.childId] ?? 0) > 0,
+                    child: StudyHubCard(
+                      title: l10n.messengerListTitle,
+                      tokens: chatHubCardTokens(),
+                      icon: HubCardIconKind.chat,
+                      onTap: () => ParentChildRoutes.pushForChild(
+                        context,
+                        childId: widget.childId,
+                        segment: 'chats',
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: ParentChildCardMetrics.pickerListGap),

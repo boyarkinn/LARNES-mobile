@@ -1183,5 +1183,8 @@
         "type": "String"
       }
     }
-  }
+  },
+  "messengerSoundOff": "Mute message sounds",
+  "messengerSoundOn": "Enable message sounds",
+  "messengerNotificationClose": "Dismiss notification"
 }

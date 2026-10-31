@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/features/messenger/message_bubble.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
 import 'package:larnes_mobile/features/messenger/messenger_wire.dart';
@@ -208,13 +209,7 @@ class _MessengerPanelState extends State<MessengerPanel> {
     MessengerRoom room,
     MessengerEntry entry,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: ParentColors.parchment,
-        borderRadius: BorderRadius.circular(8),
-      ),
+    return MessengerBubbleSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

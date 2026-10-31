@@ -20,6 +20,7 @@ import 'package:larnes_mobile/features/messenger/messenger_panel.dart';
 import 'package:larnes_mobile/features/messenger/messenger_api.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
 import 'package:larnes_mobile/features/messenger/messenger_scope.dart';
+import 'package:larnes_mobile/features/messenger/message_sound.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_dock.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -188,6 +189,8 @@ class _LessonCallStageState extends State<LessonCallStage>
     widget.handle?.attach(endCall);
     WidgetsBinding.instance.addObserver(this);
     _attachMessenger();
+    unawaited(NativeMessageSound.load());
+    NativeMessageSound.enabled.addListener(_onMessenger);
     if (widget.fetchMedia != null &&
         widget.sendMedia != null &&
         widget.lessonSessionId != null) {
@@ -844,6 +847,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       'chat': widget.messenger != null,
       'chatLabel': l10n.messengerOpen,
       'messengerOpen': _messengerOpen,
+      'messageSoundEnabled': NativeMessageSound.enabled.value,
       'messenger': widget.messenger == null
           ? null
           : {
@@ -854,6 +858,9 @@ class _LessonCallStageState extends State<LessonCallStage>
               'intent': widget.messenger!.intent.name,
             },
       'unread': _messengerOpen ? 0 : _messenger?.unread ?? 0,
+      'noticeInbox': _messenger?.gateway is MessengerApi
+          ? (_messenger!.gateway as MessengerApi).noticeInbox(_messenger!.scope)
+          : null,
       'retry': _link == _LessonCallLink.lost || _link == _LessonCallLink.failed,
       'hearBlocked': _hearBlocked,
       'retryLabel': _hearBlocked
@@ -1213,6 +1220,10 @@ class _LessonCallStageState extends State<LessonCallStage>
     final input = Map<String, dynamic>.from(args.first as Map),
         identity = _messengerBridgeIdentity;
     if (input['identity'] != identity) return {'error': 'forbidden'};
+    if (input['operation'] == 'sound' && input['enabled'] is bool) {
+      NativeMessageSound.setEnabled(input['enabled'] as bool);
+      return {'ok': true};
+    }
     final headers = await scope.authorization();
     if (!mounted || _ended || identity != _messengerBridgeIdentity)
       return {'error': 'forbidden'};
@@ -1426,6 +1437,7 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   @override
   void dispose() {
+    NativeMessageSound.enabled.removeListener(_onMessenger);
     if (widget.messenger != null)
       _workspaceMessengerApi.cancelScope(widget.messenger!);
     _callGen += 1;

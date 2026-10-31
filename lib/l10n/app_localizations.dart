@@ -5454,6 +5454,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{size} MB'**
   String appUpdateDownloadedSize(String size);
+
+  /// No description provided for @messengerSoundOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute message sounds'**
+  String get messengerSoundOff;
+
+  /// No description provided for @messengerSoundOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable message sounds'**
+  String get messengerSoundOn;
+
+  /// No description provided for @messengerNotificationClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss notification'**
+  String get messengerNotificationClose;
 }
 
 class _AppLocalizationsDelegate

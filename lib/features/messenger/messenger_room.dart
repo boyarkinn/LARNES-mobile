@@ -589,6 +589,13 @@ class MessengerRoom extends ChangeNotifier {
 }
 
 class MessengerRooms {
+  static bool reading(String lessonId) => _rooms.values.any(
+    (room) =>
+        room.visible &&
+        !room.paused &&
+        room.stuck &&
+        room.scope.lessonSessionId == lessonId,
+  );
   static const _max = 8;
   static final Map<String, MessengerRoom> _rooms = {};
 

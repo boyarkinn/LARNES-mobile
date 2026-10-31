@@ -107,6 +107,9 @@ class _MediaHarness {
     'phase': 'idle',
   };
   int passes = 0, boards = 0;
+  final boardRequests = <Map<String, dynamic>>[];
+  String? boardLink;
+  String focusRoomId = 'main';
   final handle = LessonCallStageHandle();
   Future<bool> Function()? leaveLesson;
   int leaves = 0;
@@ -188,14 +191,19 @@ class _MediaHarness {
               },
               fetchBoard: ({String? link}) async {
                 boards++;
+                boardLink = link;
                 return LessonChildBoard.fromJson({
                   'status': 'ok',
                   'lessonSessionId': 'lesson-1',
-                  'focusRoomId': 'main',
+                  'focusRoomId': focusRoomId,
                   'roomEpoch': 0,
                   'scene': [],
                   'exercises': [],
                 });
+              },
+              requestBoard: (body) async {
+                boardRequests.add(body);
+                return {'accepted': true, 'revision': 7};
               },
             ),
           ),
@@ -232,6 +240,36 @@ class _MediaHarness {
 }
 
 void main() {
+  testWidgets('the shared exercise bridge saves answers and confirms sound without joining a call', (tester) async {
+    final f = _MediaHarness();
+    await f.pump(tester);
+    final request = f.platform.controller.handlers['boardExercise']!;
+    int generation() => int.parse(RegExp(r'"gen":(\d+)').allMatches(f.platform.controller.scripts.join('\n')).last.group(1)!);
+    final gen = generation();
+    for (final kind in ['audio', 'field', 'ready', 'command']) {
+      final response = await request([{
+        'gen': gen, 'roomId': 'main',
+        'body': {'kind': kind, 'roomId': 'main', 'instanceId': 'exercise', 'link': 'untrusted-html-link'},
+      }]);
+      expect(response, {'accepted': true, 'revision': 7});
+    }
+    expect(f.boardRequests.map((body) => body['kind']), ['audio', 'field', 'ready', 'command']);
+    expect(f.boardRequests[2]['link'], f.boardLink);
+    expect(f.passes, 0);
+    expect(f.platform.controller.scripts.any((script) => script.startsWith('join(')), isFalse);
+    final before = f.boardRequests.length;
+    f.focusRoomId = 'room-2';
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(generation(), greaterThan(gen));
+    for (final kind in ['ready', 'field', 'command']) {
+      expect(await request([{'gen': gen, 'roomId': 'main', 'body': {'kind': kind}}]), {'accepted': false});
+    }
+    expect(await request([{'gen': generation(), 'roomId': 'room-2', 'body': {'kind': 'register'}}]), {'accepted': false});
+    expect(f.boardRequests.length, before);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('a failed desk exit keeps the same board and permits a confirmed retry', (tester) async {
     var approved = false;
     final f = _MediaHarness()..leaveLesson = () async => approved;

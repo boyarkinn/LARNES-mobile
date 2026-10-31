@@ -92,6 +92,19 @@ class ParentApi {
 
   final ApiClient _client;
 
+  /// Technical diagnostics use the same adult Bearer as the homework itself.
+  Future<int> reportTrainerRuntimeError(Map<String, Object?> event) async {
+    try {
+      final response = await _client.dio.post(
+        '/api/mobile/trainers/runtime-errors',
+        data: event,
+      );
+      return response.statusCode ?? 0;
+    } on DioException catch (error) {
+      return error.response?.statusCode ?? 0;
+    }
+  }
+
   Future<List<ParentChild>> listChildren({String locale = 'ru'}) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {

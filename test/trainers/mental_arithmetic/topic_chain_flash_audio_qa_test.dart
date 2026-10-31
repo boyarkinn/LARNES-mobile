@@ -45,7 +45,7 @@ void main() {
         'lib/trainers/mental_arithmetic/audio/clip_player.dart',
       ).readAsStringSync();
 
-      expect(source, contains('player.setAudioSources('));
+      expect(RegExp(r'player\s*\.setAudioSources\(').hasMatch(source), isTrue);
       expect(source, contains("AudioSource.asset('assets/\$path')"));
       expect(source, contains('preload: true'));
       expect(RegExp(r'AudioPlayer\(\)').allMatches(source).length, 1);

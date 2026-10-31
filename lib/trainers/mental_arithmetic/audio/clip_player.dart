@@ -58,10 +58,12 @@ class ClipPlayer {
     _active = player;
 
     try {
-      await player.setAudioSources(
-        queue.map(_sourceFor).toList(growable: false),
-        preload: true,
-      );
+      await player
+          .setAudioSources(
+            queue.map(_sourceFor).toList(growable: false),
+            preload: true,
+          )
+          .timeout(const Duration(seconds: 3));
       await player.setSpeed(rate);
 
       if (runId != _generation) {
@@ -84,8 +86,9 @@ class ClipPlayer {
       await playback;
     } catch (_) {
       // Required playback failure blocks the exercise instead of starting its timer.
-      if (runId == _generation && !reportRequiredCatalogFailure(queue))
+      if (runId == _generation && !reportRequiredCatalogFailure(queue)) {
         notifyStarted();
+      }
     } finally {
       if (identical(_active, player)) {
         _active = null;

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
@@ -107,6 +108,7 @@ class LessonCallStage extends StatefulWidget {
 
 class _LessonCallStageState extends State<LessonCallStage>
     with WidgetsBindingObserver {
+  Map<String, Object?> _clientVersion = const {};
   InAppWebViewController? _web;
   LessonCallPass? _pass;
   String? _html;
@@ -176,6 +178,11 @@ class _LessonCallStageState extends State<LessonCallStage>
   @override
   void initState() {
     super.initState();
+    unawaited(
+      nativeTrainerVersionMetadata().then((version) {
+        _clientVersion = version;
+      }),
+    );
     _boardLink =
         '${DateTime.now().microsecondsSinceEpoch.toRadixString(16)}${identityHashCode(this).toRadixString(16)}';
     widget.handle?.attach(endCall);
@@ -622,7 +629,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       if (!mounted || _ended) return;
       await _web?.evaluateJavascript(
         source:
-            'setChildRoom(${jsonEncode({'childId': widget.childId, 'drawMode': board.drawMode, 'exercises': board.exercises, 'personalRuns': board.personalRuns, 'link': _boardLink, 'epoch': board.roomEpoch, 'focus': board.focusRoomId, 'lessonSessionId': board.lessonSessionId, 'presence': board.presence, 'participants': board.participants, 'rulerScale': board.rulerScale, 'navigation': board.navigation, 'gen': _boardGen, 'revision': board.sceneRevision, 'scene': board.scene, 'sceneGeneration': board.sceneGeneration, 'serverNow': board.serverNow, 'sound': board.sound, 'conversation': board.conversation, 'title': board.title})})',
+            'setChildRoom(${jsonEncode({..._clientVersion, 'childId': widget.childId, 'drawMode': board.drawMode, 'exercises': board.exercises, 'personalRuns': board.personalRuns, 'link': _boardLink, 'epoch': board.roomEpoch, 'focus': board.focusRoomId, 'lessonSessionId': board.lessonSessionId, 'presence': board.presence, 'participants': board.participants, 'rulerScale': board.rulerScale, 'navigation': board.navigation, 'gen': _boardGen, 'revision': board.sceneRevision, 'scene': board.scene, 'sceneGeneration': board.sceneGeneration, 'serverNow': board.serverNow, 'sound': board.sound, 'conversation': board.conversation, 'title': board.title})})',
       );
       await _syncLessonChrome();
     } catch (_) {

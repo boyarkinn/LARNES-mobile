@@ -3,7 +3,21 @@ import 'package:larnes_mobile/trainers/audio/catalog_playback_failure.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 void main() {
-  tearDown(() => setRequiredCatalogPaths(const []));
+  tearDown(() {
+    setRequiredCatalogPaths(const []);
+    setObservedCatalogPaths(const []);
+  });
+  test(
+    'optional narration emits a diagnostic without blocking the current exercise',
+    () {
+      final before = catalogPlaybackFailures.value;
+      setObservedCatalogPaths(['/cache/optional.mp3']);
+      expect(reportRequiredCatalogFailure(['/cache/optional.mp3']), false);
+      expect(catalogPlaybackFailures.value, before);
+      expect(catalogPlaybackIssues.value?.blocking, false);
+      expect(catalogPlaybackIssues.value?.paths, ['/cache/optional.mp3']);
+    },
+  );
   test(
     'only the active exercise required sound reports a blocking failure',
     () {

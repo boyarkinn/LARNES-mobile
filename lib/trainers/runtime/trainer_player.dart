@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:larnes_mobile/trainers/audio/catalog_playback_failure.dart';
-import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 import 'package:flutter/material.dart';
@@ -30,6 +29,7 @@ class TrainerPlayer extends StatefulWidget {
     this.onComplete,
     this.runtimeSnapshot,
     this.stepChrome,
+    this.onAudioIssue,
   });
 
   final String trainerKey;
@@ -39,6 +39,7 @@ class TrainerPlayer extends StatefulWidget {
   final VoidCallback? onComplete;
   final Map<String, dynamic>? runtimeSnapshot;
   final TrainerStepChrome? stepChrome;
+  final void Function(Map<String, Object?> issue)? onAudioIssue;
 
   @override
   State<TrainerPlayer> createState() => _TrainerPlayerState();
@@ -52,8 +53,8 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
   var _pack = CatalogPack.missing;
   var _attempt = 0;
   var _alive = true;
-
-  bool get _expectsStimuli => catalogExpectsStimuli(_pinnedAudio);
+  final _reportedIssues = <String>{};
+  final _audioElapsed = Stopwatch();
 
   TrainerDirection? get _direction {
     final key = TrainerKey.tryParse(widget.trainerKey);
@@ -69,18 +70,21 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     // Первый кадр запуска фиксирует набор. Поздний ответ каталога его не меняет.
     _music.bind(_direction);
     setRequiredCatalogPaths(const []);
-    catalogPlaybackFailures.addListener(_onPlaybackFailure);
+    setObservedCatalogPaths(const []);
+    catalogPlaybackIssues.addListener(_onPlaybackFailure);
     _pinnedAudio = widget.audioManifest;
-    final hasClips = widget.audioManifest?.clips.isNotEmpty ?? false;
-    _pack = _expectsStimuli || hasClips ? CatalogPack.preparing : CatalogPack.missing;
+    _pack = catalogNeedsPreparation(_pinnedAudio)
+        ? CatalogPack.preparing
+        : CatalogPack.missing;
     _prepare();
   }
 
   @override
   void dispose() {
     _alive = false;
-    catalogPlaybackFailures.removeListener(_onPlaybackFailure);
+    catalogPlaybackIssues.removeListener(_onPlaybackFailure);
     setRequiredCatalogPaths(const []);
+    setObservedCatalogPaths(const []);
     _signal?.cancel();
     _launch?.release();
     setNumberAudioFiles(const {});
@@ -92,24 +96,64 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
 
   Future<void> _prepare() async {
     final manifest = _pinnedAudio;
-    final expects = catalogExpectsStimuli(manifest);
+    final expects = catalogNeedsPreparation(manifest);
     final hasClips = manifest?.clips.isNotEmpty ?? false;
 
-    if (!expects && !hasClips) {
+    if (!hasClips) {
+      if (manifest?.missing.any(
+            (item) =>
+                catalogBindingRequired(item.semanticKey, item.required) ||
+                isCatalogInstructionKey(item.semanticKey),
+          ) ==
+          true) {
+        _reportIssue('AUDIO-MISSING', 'audio-preparation');
+        if (expects && mounted) {
+          setState(() {
+            _pack = CatalogPack.blocked;
+          });
+        }
+      }
       return;
     }
 
     final signal = CatalogSignal();
     _signal = signal;
+    _audioElapsed
+      ..reset()
+      ..start();
+    final startup = Timer(
+      catalogStartupTimeout,
+      () => signal.stop(CatalogFetchStop.timedOut),
+    );
 
     try {
-      final store = await sharedCatalogAudioStore();
+      final store = await signal.guard(sharedCatalogAudioStore());
 
       if (!_alive || !identical(_signal, signal)) {
         return;
       }
 
-      final launch = await store.prepare(manifest, signal: signal);
+      final launch = await signal.guard(
+        store.prepare(
+          manifest,
+          signal: signal,
+          onLoaded: (clip, path) {
+            if (_alive &&
+                identical(_signal, signal) &&
+                !signal.isStopped &&
+                _launch != null) {
+              _bindNumberFiles(_launch!);
+            }
+          },
+          onOptionalIssue: (clip, code) {
+            if (_alive && identical(_signal, signal) && !signal.isStopped) {
+              _reportIssue(_issueCode(code), 'audio-preparation', [
+                clip.sha256,
+              ]);
+            }
+          },
+        ),
+      );
 
       if (!_alive || !identical(_signal, signal)) {
         launch.release();
@@ -119,33 +163,102 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
       _launch?.release();
       _launch = launch;
       _bindNumberFiles(launch);
+      for (final code in launch.failureCodes) {
+        _reportIssue(
+          _issueCode(code),
+          'audio-preparation',
+          launch.failedSha256,
+        );
+      }
 
       if (!mounted) {
         return;
       }
 
       setState(() {
-        _pack = launch.packReady
+        _pack = launch.launchReady
             ? CatalogPack.ready
             : expects
-                ? CatalogPack.blocked
-                : CatalogPack.missing;
+            ? CatalogPack.blocked
+            : CatalogPack.missing;
       });
-    } catch (_) {
+    } on CatalogStopped catch (error) {
+      if (!_alive ||
+          !mounted ||
+          !identical(_signal, signal) ||
+          error.reason == CatalogFetchStop.cancelled) {
+        return;
+      }
+      _reportIssue('AUDIO-TIMEOUT', 'audio-preparation');
+      setState(() {
+        _pack = expects ? CatalogPack.blocked : CatalogPack.missing;
+      });
+    } catch (error) {
       if (!_alive || !mounted || !identical(_signal, signal)) {
         return;
       }
 
+      _reportIssue(
+        error is TimeoutException ? 'AUDIO-TIMEOUT' : 'AUDIO-UNKNOWN',
+        'audio-preparation',
+      );
       setState(() {
         _pack = expects ? CatalogPack.blocked : CatalogPack.missing;
       });
+    } finally {
+      startup.cancel();
+    }
+  }
+
+  String _issueCode(String code) {
+    if (code.startsWith('http-')) return 'AUDIO-HTTP-${code.substring(5)}';
+    return switch (code) {
+      'timeout' => 'AUDIO-TIMEOUT',
+      'integrity' => 'AUDIO-INTEGRITY',
+      'missing-publication' => 'AUDIO-MISSING',
+      'invalid-url' => 'AUDIO-URL',
+      'memory' => 'AUDIO-MEMORY',
+      'storage' => 'AUDIO-STORAGE',
+      _ => 'AUDIO-UNKNOWN',
+    };
+  }
+
+  void _reportIssue(
+    String code,
+    String stage, [
+    List<String> sha256s = const [],
+  ]) {
+    if (!_alive) return;
+    final key = '$code:$stage:${sha256s.join(',')}';
+    if (!_reportedIssues.add(key)) return;
+    try {
+      widget.onAudioIssue?.call({
+        'code': code,
+        'stage': stage,
+        'trainerKey': widget.trainerKey,
+        'elapsedMs': _audioElapsed.elapsedMilliseconds,
+        'failedSha256': sha256s.take(5).toList(),
+      });
+    } catch (_) {
+      /* Reporting cannot change playback or retry behavior. */
     }
   }
 
   void _onPlaybackFailure() {
     if (!_alive || !mounted) return;
-    unawaited(getSharedClipPlayer().cancel());
-    setState(() { _pack = CatalogPack.blocked; });
+    final issue = catalogPlaybackIssues.value;
+    if (issue == null) return;
+    _reportIssue('AUDIO-PLAYBACK', 'audio-playback', [
+      for (final clip in _pinnedAudio?.clips ?? <PublishedAudioClip>[])
+        if (issue.paths.contains(_launch?.pathFor(clip.semanticKey)))
+          clip.sha256,
+    ]);
+    if (issue.blocking) {
+      unawaited(getSharedClipPlayer().cancel());
+      setState(() {
+        _pack = CatalogPack.blocked;
+      });
+    }
   }
 
   void _bindNumberFiles(CatalogLaunch launch) {
@@ -160,14 +273,22 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
           continue;
         }
 
-        files[clip.semanticKey] = NumberAudioFile(durationMs: clip.durationMs, path: path);
+        files[clip.semanticKey] = NumberAudioFile(
+          durationMs: clip.durationMs,
+          path: path,
+        );
       }
     }
 
     setRequiredCatalogPaths([
-      for (final entry in files.entries)
-        if (!isCatalogInstructionKey(entry.key) && !isBackgroundMusicAudioKey(entry.key) && !isSpokenCueAudioKey(entry.key)) entry.value.path,
+      for (final clip in manifest?.clips ?? <PublishedAudioClip>[])
+        if ((catalogBindingRequired(clip.semanticKey, clip.isRequired) ||
+                identical(clip, catalogPrimaryInstruction(manifest)) &&
+                    clip.isRequired != false) &&
+            files[clip.semanticKey] != null)
+          files[clip.semanticKey]!.path,
     ]);
+    setObservedCatalogPaths(files.values.map((file) => file.path));
     setNumberAudioFiles(files);
     setSpeechAudioFiles(
       {
@@ -179,7 +300,8 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
             text: _clipText(manifest, entry.key),
           ),
       },
-      catalogKeys: manifest?.clips.map((clip) => clip.semanticKey).toSet() ?? const {},
+      catalogKeys:
+          manifest?.clips.map((clip) => clip.semanticKey).toSet() ?? const {},
     );
   }
 
@@ -207,9 +329,12 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     _signal?.cancel();
     _launch?.release();
     _launch = null;
+    _reportedIssues.clear();
     setState(() {
       _attempt += 1;
-      _pack = _expectsStimuli ? CatalogPack.preparing : CatalogPack.missing;
+      _pack = catalogNeedsPreparation(_pinnedAudio)
+          ? CatalogPack.preparing
+          : CatalogPack.missing;
     });
     _prepare();
   }
@@ -255,12 +380,12 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
             onRetry: _retry,
           )
         : builder != null
-            ? builder(params: validatedParams, onComplete: onComplete)
-            : UnimplementedTrainer(
-                title: definition.title,
-                trainerKey: trainerKey,
-                l10n: l10n,
-              );
+        ? builder(params: validatedParams, onComplete: onComplete)
+        : UnimplementedTrainer(
+            title: definition.title,
+            trainerKey: trainerKey,
+            l10n: l10n,
+          );
     final chrome = stepChrome == null
         ? null
         : TrainerStepChrome(
@@ -352,7 +477,10 @@ class _CatalogAudioStatus extends StatelessWidget {
             ),
             if (blocked) ...[
               const SizedBox(height: 16),
-              TextButton(onPressed: onRetry, child: Text(l10n.catalogAudioRetry)),
+              TextButton(
+                onPressed: onRetry,
+                child: Text(l10n.catalogAudioRetry),
+              ),
             ],
           ],
         ),
@@ -362,7 +490,11 @@ class _CatalogAudioStatus extends StatelessWidget {
 }
 
 class CatalogAudioScope extends InheritedWidget {
-  const CatalogAudioScope({required this.launch, required super.child, super.key});
+  const CatalogAudioScope({
+    required this.launch,
+    required super.child,
+    super.key,
+  });
 
   final CatalogLaunch? launch;
 
@@ -371,7 +503,8 @@ class CatalogAudioScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(CatalogAudioScope oldWidget) => oldWidget.launch != launch;
+  bool updateShouldNotify(CatalogAudioScope oldWidget) =>
+      oldWidget.launch != launch;
 }
 
 bool isTrainerInteractive(String trainerKey) {

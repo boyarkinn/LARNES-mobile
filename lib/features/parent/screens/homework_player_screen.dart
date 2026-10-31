@@ -8,10 +8,10 @@ import 'package:larnes_mobile/features/parent/widgets/homework/homework_board_st
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
-import 'package:larnes_mobile/trainers/audio/catalog_audio_cache.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
+import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
 
 class HomeworkPlayerScreen extends StatefulWidget {
   const HomeworkPlayerScreen({
@@ -54,11 +54,12 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final snapshot = await AuthScope.of(context).parentApi.fetchHomeworkSnapshot(
-        widget.childId,
-        widget.assignmentId,
-        locale: locale,
-      );
+      final snapshot = await AuthScope.of(context).parentApi
+          .fetchHomeworkSnapshot(
+            widget.childId,
+            widget.assignmentId,
+            locale: locale,
+          );
 
       if (!mounted) {
         return;
@@ -70,7 +71,6 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
         _isCompleted = snapshot.isCompleted;
         _isLoading = false;
       });
-      await warmCatalogManifests(snapshot.steps.map((step) => step.audioManifest));
     } on ParentApiException catch (error) {
       if (mounted) {
         setState(() {
@@ -197,6 +197,8 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
     }
 
     final step = snapshot.steps[_stepIndex];
+    final incidentChildId = widget.childId,
+        incidentAssignmentId = widget.assignmentId;
     final isLast = _stepIndex >= totalSteps - 1;
     final isInteractive = isTrainerInteractive(step.trainerKey);
 
@@ -234,6 +236,17 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
       child: TrainerPlayer(
         key: ValueKey(step.id),
         audioManifest: step.audioManifest,
+        onAudioIssue: (issue) {
+          if (!mounted) return;
+          reportNativeTrainerAudioIssue(
+            api: AuthScope.of(context).parentApi,
+            issue: issue,
+            trainerKey: step.trainerKey,
+            childId: incidentChildId,
+            assignmentId: incidentAssignmentId,
+            stepIndex: snapshot.steps.indexOf(step),
+          );
+        },
         trainerKey: step.trainerKey,
         params: step.params,
         runtimeSnapshot: step.runtimeSnapshot,

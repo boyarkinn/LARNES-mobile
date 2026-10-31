@@ -1,4 +1,4 @@
-/// Контракт опубликованного каталога. Совпадает с web `wire.ts` / `resolve.ts`.
+// Контракт опубликованного каталога. Совпадает с web `wire.ts` / `resolve.ts`.
 
 class PublishedAudioClip {
   const PublishedAudioClip({
@@ -10,11 +10,13 @@ class PublishedAudioClip {
     required this.url,
     required this.versionId,
     this.contentLocale,
+    this.isRequired,
     this.text = '',
   });
 
   final int bytes;
   final String? contentLocale;
+  final bool? isRequired;
   final int durationMs;
   final String locale;
   final String semanticKey;
@@ -73,21 +75,27 @@ class ExerciseAudioManifest {
         final bytes = item['bytes'];
         final durationMs = item['durationMs'];
 
-        if (url is! String || !url.startsWith('https://') || bytes is! int || durationMs is! int) {
+        if (url is! String ||
+            !url.startsWith('https://') ||
+            bytes is! int ||
+            durationMs is! int) {
           continue;
         }
 
-        clips.add(PublishedAudioClip(
-          bytes: bytes,
-          contentLocale: item['contentLocale'] as String?,
-          durationMs: durationMs,
-          locale: item['locale'] as String? ?? '',
-          semanticKey: item['semanticKey'] as String? ?? '',
-          sha256: item['sha256'] as String? ?? '',
-          text: item['text'] as String? ?? '',
-          url: url,
-          versionId: item['versionId'] as String? ?? '',
-        ));
+        clips.add(
+          PublishedAudioClip(
+            bytes: bytes,
+            contentLocale: item['contentLocale'] as String?,
+            isRequired: item['required'] as bool?,
+            durationMs: durationMs,
+            locale: item['locale'] as String? ?? '',
+            semanticKey: item['semanticKey'] as String? ?? '',
+            sha256: item['sha256'] as String? ?? '',
+            text: item['text'] as String? ?? '',
+            url: url,
+            versionId: item['versionId'] as String? ?? '',
+          ),
+        );
       }
     }
 
@@ -106,12 +114,14 @@ class ExerciseAudioManifest {
           continue;
         }
 
-        missing.add(MissingAudioBinding(
-          locale: item['locale'] as String? ?? '',
-          reason: reason as String,
-          required: item['required'] as bool?,
-          semanticKey: item['semanticKey'] as String? ?? '',
-        ));
+        missing.add(
+          MissingAudioBinding(
+            locale: item['locale'] as String? ?? '',
+            reason: reason as String,
+            required: item['required'] as bool?,
+            semanticKey: item['semanticKey'] as String? ?? '',
+          ),
+        );
       }
     }
 

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/audio/background_music.dart';
@@ -13,6 +14,8 @@ const catalogAudioPublicBase = 'https://audio.larnes.ru';
 const catalogAudioTimeout = Duration(seconds: 10);
 const catalogAudioMaxBytes = 48 * 1024 * 1024;
 const catalogAudioConcurrency = 4;
+const catalogStartupTimeout = Duration(seconds: 20);
+const catalogCacheReadTimeout = Duration(milliseconds: 250);
 
 enum CatalogPack { preparing, blocked, ready, missing }
 
@@ -24,6 +27,11 @@ class CatalogStopped implements Exception {
   const CatalogStopped(this.reason);
 
   final CatalogFetchStop reason;
+}
+
+class CatalogAudioFailure implements Exception {
+  const CatalogAudioFailure(this.code);
+  final String code;
 }
 
 class CatalogSignal {
@@ -42,7 +50,9 @@ class CatalogSignal {
 
     _reason = reason;
 
-    for (final listener in List<void Function(CatalogFetchStop)>.of(_listeners)) {
+    for (final listener in List<void Function(CatalogFetchStop)>.of(
+      _listeners,
+    )) {
       listener(reason);
     }
   }
@@ -69,9 +79,17 @@ class CatalogSignal {
     listen(done.complete);
     return done.future;
   }
+
+  Future<T> guard<T>(Future<T> work) {
+    return Future.any<T>([
+      work,
+      stopped.then<T>((reason) => throw CatalogStopped(reason)),
+    ]);
+  }
 }
 
-typedef CatalogAudioFetch = Future<List<int>> Function(Uri url, CatalogSignal signal);
+typedef CatalogAudioFetch =
+    Future<List<int>> Function(Uri url, CatalogSignal signal);
 
 typedef CatalogAudioRead = Future<List<int>> Function(File file);
 
@@ -87,6 +105,9 @@ class CatalogLaunch {
     required this.release,
     required this.stimuliReady,
     required this.stimulusPaths,
+    this.primaryInstructionFailed = false,
+    this.failureCodes = const [],
+    this.failedSha256 = const [],
   });
 
   final bool aborted;
@@ -97,11 +118,16 @@ class CatalogLaunch {
   final void Function() release;
   final bool stimuliReady;
   final List<String> stimulusPaths;
+  final bool primaryInstructionFailed;
+  final List<String> failureCodes;
+  final List<String> failedSha256;
+  bool get launchReady => stimuliReady && !primaryInstructionFailed && !aborted;
 
   String? pathFor(String semanticKey) => pathsByKey[semanticKey];
 }
 
-bool isCatalogInstructionKey(String semanticKey) => semanticKey.startsWith('instruction:');
+bool isCatalogInstructionKey(String semanticKey) =>
+    semanticKey.startsWith('instruction:');
 
 bool catalogExpectsStimuli(ExerciseAudioManifest? manifest) {
   if (manifest == null) {
@@ -109,10 +135,48 @@ bool catalogExpectsStimuli(ExerciseAudioManifest? manifest) {
   }
 
   final publishedStimulus = manifest.clips.any(
-    (clip) => !isCatalogInstructionKey(clip.semanticKey) && !isBackgroundMusicAudioKey(clip.semanticKey),
+    (clip) => catalogBindingRequired(clip.semanticKey, clip.isRequired),
   );
-  final missingRequired = manifest.missing.any((item) => item.required != false && _isRequiredLaunchStimulus(item.semanticKey));
+  final missingRequired = manifest.missing.any(
+    (item) => catalogBindingRequired(item.semanticKey, item.required),
+  );
   return publishedStimulus || missingRequired;
+}
+
+bool catalogBindingRequired(String key, bool? required) {
+  if (required == false) return false;
+  if (required == true) {
+    return !isCatalogInstructionKey(key) && !isBackgroundMusicAudioKey(key);
+  }
+  return _isRequiredLaunchStimulus(key);
+}
+
+PublishedAudioClip? catalogPrimaryInstruction(ExerciseAudioManifest? manifest) {
+  final clips =
+      manifest?.clips
+          .where((clip) => isCatalogInstructionKey(clip.semanticKey))
+          .toList() ??
+      [];
+  if (clips.isEmpty) return null;
+  return clips
+          .where(
+            (clip) => clip.semanticKey == 'instruction:${manifest?.trainerKey}',
+          )
+          .firstOrNull ??
+      clips.where((clip) => clip.semanticKey.endsWith(':intro')).firstOrNull ??
+      clips.first;
+}
+
+bool catalogNeedsPreparation(ExerciseAudioManifest? manifest) {
+  final primary = catalogPrimaryInstruction(manifest);
+  return catalogExpectsStimuli(manifest) ||
+      primary != null && primary.isRequired != false ||
+      (manifest?.missing.any(
+            (item) =>
+                isCatalogInstructionKey(item.semanticKey) &&
+                item.required == true,
+          ) ??
+          false);
 }
 
 bool _isRequiredLaunchStimulus(String semanticKey) {
@@ -131,27 +195,35 @@ bool isCatalogClipUrl(
   String publicBase = catalogAudioPublicBase,
 }) {
   final base = publicBase.replaceAll(RegExp(r'/+$'), '');
-  return RegExp(r'^[a-f0-9]{64}$').hasMatch(sha256) && url == '$base/v1/$sha256.mp3';
+  return RegExp(r'^[a-f0-9]{64}$').hasMatch(sha256) &&
+      url == '$base/v1/$sha256.mp3';
 }
 
 class _IndexEntry {
-  _IndexEntry({required this.bytes, required this.lastUsed, required this.sha256});
+  _IndexEntry({
+    required this.bytes,
+    required this.lastUsed,
+    required this.sha256,
+  });
 
   final int bytes;
   int lastUsed;
   final String sha256;
 
   Map<String, Object> toJson() => {
-        'bytes': bytes,
-        'lastUsed': lastUsed,
-        'sha256': sha256,
-      };
+    'bytes': bytes,
+    'lastUsed': lastUsed,
+    'sha256': sha256,
+  };
 }
 
 class _Job {
   int consumers = 0;
   bool settled = false;
   bool timedOut = false;
+  String? failureCode;
+  final nonce = '${DateTime.now().microsecondsSinceEpoch}-${_nextJob++}';
+  static int _nextJob = 0;
   final signal = CatalogSignal();
   Timer? timer;
   late final Future<File?> task;
@@ -167,6 +239,8 @@ class CatalogAudioStore {
     this.maxBytes = catalogAudioMaxBytes,
     this.concurrency = catalogAudioConcurrency,
     this.timeout = catalogAudioTimeout,
+    this.startupTimeout = catalogStartupTimeout,
+    this.apiBase,
   });
 
   final Directory directory;
@@ -177,14 +251,42 @@ class CatalogAudioStore {
   final int maxBytes;
   final int concurrency;
   final Duration timeout;
+  final Duration startupTimeout;
+  final String? apiBase;
 
   final Map<String, _IndexEntry> _index = {};
   final Map<String, int> _pins = {};
   final Map<String, _Job> _jobs = {};
   var _clock = 0;
   var _active = 0;
-  final List<Completer<void>> _waiters = [];
+  final List<Completer<bool>> _waiters = [];
   var _opened = false;
+  final _maintenance = <Future<void>>{};
+
+  void _background(Future<void> work) {
+    late final Future<void> pending;
+    pending = work
+        .catchError((Object _) {})
+        .whenComplete(() => _maintenance.remove(pending));
+    _maintenance.add(pending);
+  }
+
+  /// Flushes best-effort local bookkeeping when closing/testing a cache. Never used by startup.
+  Future<void> waitForMaintenance() async {
+    final until = DateTime.now().add(const Duration(seconds: 2));
+    while (DateTime.now().isBefore(until)) {
+      final index = _indexWrite;
+      try {
+        await Future.wait([
+          ..._maintenance,
+          index,
+        ]).timeout(until.difference(DateTime.now()));
+      } on TimeoutException {
+        return;
+      }
+      if (_maintenance.isEmpty && identical(index, _indexWrite)) return;
+    }
+  }
 
   Future<void>? _opening;
   Future<void> open() => _opening ??= _open();
@@ -226,7 +328,11 @@ class CatalogAudioStore {
               continue;
             }
 
-            _index[sha] = _IndexEntry(bytes: bytes, lastUsed: lastUsed, sha256: sha);
+            _index[sha] = _IndexEntry(
+              bytes: bytes,
+              lastUsed: lastUsed,
+              sha256: sha,
+            );
 
             if (lastUsed > _clock) {
               _clock = lastUsed;
@@ -244,127 +350,192 @@ class CatalogAudioStore {
   Future<CatalogLaunch> prepare(
     ExerciseAudioManifest? manifest, {
     CatalogSignal? signal,
+    void Function(PublishedAudioClip clip, String path)? onLoaded,
+    void Function(PublishedAudioClip clip, String code)? onOptionalIssue,
   }) async {
-    await open();
-    final allClips = manifest?.clips ?? const <PublishedAudioClip>[];
-    final musicCandidates = allClips.where((clip) => isBackgroundMusicAudioKey(clip.semanticKey)).toList();
-    final selectedMusic = musicCandidates.isEmpty ? null : musicCandidates[Random().nextInt(musicCandidates.length)];
-    final clips = allClips.where((clip) => !isBackgroundMusicAudioKey(clip.semanticKey) || identical(clip, selectedMusic)).toList();
-    final missingRequired = manifest?.missing.any((item) => item.required != false && _isRequiredLaunchStimulus(item.semanticKey)) ?? false;
-    final paths = <String, String>{};
-    var aborted = false;
-    var timedOut = false;
+    final scope = CatalogSignal();
+    signal?.listen(scope.stop);
+    final clips = manifest?.clips ?? const <PublishedAudioClip>[];
     final hold = _retain([
       for (final clip in clips)
-        if (isCatalogClipUrl(clip.url, clip.sha256, publicBase: publicBase)) clip.sha256,
+        if (isCatalogClipUrl(clip.url, clip.sha256, publicBase: publicBase))
+          clip.sha256,
     ]);
+    final timer = Timer(
+      startupTimeout,
+      () => scope.stop(CatalogFetchStop.timedOut),
+    );
+    CatalogLaunch stopped(CatalogFetchStop reason, [String? code]) {
+      hold();
+      return CatalogLaunch(
+        aborted: reason == CatalogFetchStop.cancelled,
+        instruction: catalogPrimaryInstruction(manifest) == null
+            ? CatalogInstruction.absent
+            : CatalogInstruction.fallback,
+        instructionPath: null,
+        packReady: false,
+        pathsByKey: {},
+        release: hold,
+        stimuliReady: false,
+        stimulusPaths: const [],
+        primaryInstructionFailed: catalogPrimaryInstruction(manifest) != null,
+        failureCodes: reason == CatalogFetchStop.cancelled
+            ? const []
+            : [code ?? 'timeout'],
+        failedSha256: clips
+            .where(
+              (clip) =>
+                  catalogBindingRequired(clip.semanticKey, clip.isRequired) ||
+                  identical(clip, catalogPrimaryInstruction(manifest)),
+            )
+            .map((clip) => clip.sha256)
+            .take(5)
+            .toList(),
+      );
+    }
 
-    Future<void> take(PublishedAudioClip clip) async {
-      if (signal?.isStopped == true) {
-        aborted = signal?.reason == CatalogFetchStop.cancelled;
-        timedOut = signal?.reason == CatalogFetchStop.timedOut;
-        return;
+    try {
+      return await Future.any<CatalogLaunch>([
+        _prepareCatalog(manifest, scope, hold, onLoaded, onOptionalIssue),
+        scope.stopped.then(stopped),
+      ]);
+    } on CatalogStopped catch (error) {
+      return stopped(error.reason);
+    } catch (_) {
+      return stopped(CatalogFetchStop.timedOut, 'storage');
+    } finally {
+      timer.cancel();
+    }
+  }
+
+  Future<CatalogLaunch> _prepareCatalog(
+    ExerciseAudioManifest? manifest,
+    CatalogSignal signal,
+    void Function() hold,
+    void Function(PublishedAudioClip clip, String path)? onLoaded,
+    void Function(PublishedAudioClip clip, String code)? onOptionalIssue,
+  ) async {
+    final allClips = manifest?.clips ?? const <PublishedAudioClip>[];
+    if (allClips.isNotEmpty) await signal.guard(open());
+    if (signal.isStopped) throw CatalogStopped(signal.reason!);
+    final musicCandidates = allClips
+        .where((clip) => isBackgroundMusicAudioKey(clip.semanticKey))
+        .toList();
+    final selectedMusic = musicCandidates.isEmpty
+        ? null
+        : musicCandidates[Random().nextInt(musicCandidates.length)];
+    final clips = allClips
+        .where(
+          (clip) =>
+              !isBackgroundMusicAudioKey(clip.semanticKey) ||
+              identical(clip, selectedMusic),
+        )
+        .toList();
+    final primary = catalogPrimaryInstruction(manifest);
+    final missing = manifest?.missing ?? const <MissingAudioBinding>[];
+    final missingRequired = missing.any(
+      (item) => catalogBindingRequired(item.semanticKey, item.required),
+    );
+    final missingInstruction = missing.any(
+      (item) => isCatalogInstructionKey(item.semanticKey),
+    );
+    final missingInstructionRequired = missing.any(
+      (item) =>
+          isCatalogInstructionKey(item.semanticKey) && item.required == true,
+    );
+    final paths = <String, String>{};
+    final codes = <String>{
+      if (missingRequired || missingInstruction) 'missing-publication',
+    };
+    final failedSha = <String>{};
+    final requiredClips = clips
+        .where(
+          (clip) =>
+              catalogBindingRequired(clip.semanticKey, clip.isRequired) ||
+              identical(clip, primary) && clip.isRequired != false,
+        )
+        .toList();
+
+    Future<void> take(PublishedAudioClip clip, {bool optional = false}) async {
+      void fail(String code) {
+        if (signal.isStopped) return;
+        if (optional) {
+          if (!isBackgroundMusicAudioKey(clip.semanticKey)) {
+            onOptionalIssue?.call(clip, code);
+          }
+        } else {
+          codes.add(code);
+          failedSha.add(clip.sha256);
+        }
       }
 
+      if (signal.isStopped) return;
       if (!isCatalogClipUrl(clip.url, clip.sha256, publicBase: publicBase)) {
+        fail('invalid-url');
         return;
       }
-
-      final outcome = await _acquire(clip, signal);
-
-      if (outcome == _Outcome.aborted) {
-        aborted = true;
+      final result = await _acquire(clip, signal);
+      if (signal.isStopped || result.cancelled) return;
+      if (result.file == null) {
+        fail(result.failureCode ?? 'network');
         return;
       }
-
-      if (outcome == _Outcome.timedOut) {
-        timedOut = true;
-        return;
-      }
-
-      final file = _index.containsKey(clip.sha256) ? _finalFile(clip.sha256) : null;
-
-      if (file == null || !await file.exists()) {
-        return;
-      }
-
-      paths[clip.semanticKey] = file.path;
-
+      paths[clip.semanticKey] = result.file!.path;
       if (isBackgroundMusicAudioKey(clip.semanticKey)) {
-        rememberBackgroundMusicFile(clip.semanticKey, file.path);
+        rememberBackgroundMusicFile(clip.semanticKey, result.file!.path);
       }
+      onLoaded?.call(clip, result.file!.path);
     }
 
-    final blocking = [
-      for (final clip in clips)
-        if (!isBackgroundMusicAudioKey(clip.semanticKey)) clip,
-    ];
-    final music = [
-      for (final clip in clips)
-        if (isBackgroundMusicAudioKey(clip.semanticKey)) clip,
-    ];
-    await Future.wait(blocking.map(take));
-    unawaited(Future.wait(music.map(take)));
-
-    if (!aborted) {
-      await _evict();
+    // The current exercise owns foreground slots. Optional clips are scheduled only afterwards.
+    await Future.wait(requiredClips.map((clip) => take(clip)));
+    if (signal.isStopped) throw CatalogStopped(signal.reason!);
+    final stimulusClips = clips
+        .where(
+          (clip) => catalogBindingRequired(clip.semanticKey, clip.isRequired),
+        )
+        .toList();
+    final stimuliReady =
+        !missingRequired &&
+        stimulusClips.every((clip) => paths.containsKey(clip.semanticKey));
+    final instructionPath = primary == null ? null : paths[primary.semanticKey];
+    final primaryFailed =
+        missingInstructionRequired ||
+        primary != null &&
+            primary.isRequired != false &&
+            instructionPath == null;
+    // Optional speech/music may fill the same launch map later, but never hold its start.
+    final optional = clips
+        .where((clip) => !requiredClips.contains(clip))
+        .toList();
+    if (optional.isNotEmpty) {
+      _background(
+        Future.wait(
+          optional.map((clip) => take(clip, optional: true)),
+        ).then((_) => _evict()),
+      );
+    } else {
+      _background(_evict());
     }
-
-    final missingFiles = <String>[];
-
-    for (final entry in paths.entries) {
-      if (!await File(entry.value).exists()) {
-        missingFiles.add(entry.key);
-      }
-    }
-
-    for (final key in missingFiles) {
-      paths.remove(key);
-    }
-
-    final stimulusPaths = <String>[];
-    var stimuliReady = !missingRequired;
-
-    for (final clip in clips) {
-      if (isCatalogInstructionKey(clip.semanticKey) || isBackgroundMusicAudioKey(clip.semanticKey)) {
-        continue;
-      }
-
-      final path = paths[clip.semanticKey];
-
-      if (path == null) {
-        stimuliReady = false;
-        continue;
-      }
-
-      stimulusPaths.add(path);
-    }
-
-    PublishedAudioClip? instructionClip;
-
-    for (final clip in clips) {
-      if (isCatalogInstructionKey(clip.semanticKey)) {
-        instructionClip = clip;
-        break;
-      }
-    }
-    final instructionMissing = manifest?.missing.any((item) => isCatalogInstructionKey(item.semanticKey)) ?? false;
-    final instructionPath = instructionClip == null ? null : paths[instructionClip.semanticKey];
-    final instruction = instructionPath != null
-        ? CatalogInstruction.ready
-        : instructionClip != null || instructionMissing
-            ? CatalogInstruction.fallback
-            : CatalogInstruction.absent;
-
     return CatalogLaunch(
-      aborted: aborted && !timedOut,
-      instruction: instruction,
+      aborted: false,
+      instruction: instructionPath != null
+          ? CatalogInstruction.ready
+          : primary != null || missingInstruction
+          ? CatalogInstruction.fallback
+          : CatalogInstruction.absent,
       instructionPath: instructionPath,
-      packReady: stimuliReady && stimulusPaths.isNotEmpty && !aborted && !timedOut,
+      packReady: stimuliReady && stimulusClips.isNotEmpty && !primaryFailed,
       pathsByKey: paths,
       release: hold,
-      stimuliReady: stimuliReady && !aborted,
-      stimulusPaths: stimulusPaths,
+      stimuliReady: stimuliReady,
+      stimulusPaths: [
+        for (final clip in stimulusClips)
+          if (paths[clip.semanticKey] != null) paths[clip.semanticKey]!,
+      ],
+      primaryInstructionFailed: primaryFailed,
+      failureCodes: codes.toList(),
+      failedSha256: failedSha.take(5).toList(),
     );
   }
 
@@ -394,174 +565,160 @@ class CatalogAudioStore {
     };
   }
 
-  Future<_Outcome> _acquire(PublishedAudioClip clip, CatalogSignal? consumer) async {
-    final job = _jobs[clip.sha256] ?? _start(clip);
-    job.consumers += 1;
-    final done = Completer<_Outcome>();
-
-    void leave() {
-      if (done.isCompleted) {
-        return;
-      }
-
-      job.consumers -= 1;
-
-      if (job.consumers <= 0 && !job.settled) {
-        job.signal.stop(CatalogFetchStop.cancelled);
-      }
-
-      done.complete(_Outcome.aborted);
+  Future<_AcquireResult> _acquire(
+    PublishedAudioClip clip,
+    CatalogSignal consumer,
+  ) async {
+    final prior = _jobs[clip.sha256];
+    final job = prior != null && !prior.signal.isStopped ? prior : _start(clip);
+    job.consumers++;
+    final done = Completer<_AcquireResult>();
+    void leave(CatalogFetchStop reason) {
+      if (done.isCompleted) return;
+      job.consumers--;
+      if (job.consumers <= 0 && !job.settled) job.signal.stop(reason);
+      done.complete(
+        _AcquireResult(
+          cancelled: reason == CatalogFetchStop.cancelled,
+          failureCode: reason == CatalogFetchStop.timedOut ? 'timeout' : null,
+        ),
+      );
     }
 
-    if (consumer?.isStopped == true) {
-      leave();
-      return done.future;
-    }
-
-    consumer?.listen((_) => leave());
-    unawaited(job.task.then((file) {
-      if (done.isCompleted) {
-        return;
-      }
-
-      if (job.timedOut && file == null) {
-        done.complete(_Outcome.timedOut);
-        return;
-      }
-
-      done.complete(file == null ? _Outcome.failed : _Outcome.ready);
-    }));
+    consumer.listen(leave);
+    unawaited(
+      job.task.then(
+        (file) {
+          if (done.isCompleted) return;
+          job.consumers--;
+          done.complete(
+            _AcquireResult(
+              file: file,
+              cancelled: job.signal.reason == CatalogFetchStop.cancelled,
+              failureCode: job.failureCode,
+            ),
+          );
+        },
+        onError: (Object _) {
+          if (done.isCompleted) return;
+          job.consumers--;
+          done.complete(const _AcquireResult(failureCode: 'storage'));
+        },
+      ),
+    );
     return done.future;
   }
 
   _Job _start(PublishedAudioClip clip) {
     final job = _Job();
     _jobs[clip.sha256] = job;
-    job.timer = Timer(timeout, () {
-      job.timedOut = true;
-      job.signal.stop(CatalogFetchStop.timedOut);
-    });
     job.task = _run(clip, job);
     return job;
   }
 
   Future<File?> _run(PublishedAudioClip clip, _Job job) async {
-    File? stored;
-
     try {
-      stored = await _readReady(clip);
-
-      if (stored != null || job.signal.isStopped) {
-        job.timedOut = job.signal.reason == CatalogFetchStop.timedOut;
-        return stored;
-      }
-
-      await _acquireSlot();
-
+      final cacheSignal = CatalogSignal();
+      job.signal.listen(cacheSignal.stop);
+      final cacheTimer = Timer(
+        catalogCacheReadTimeout,
+        () => cacheSignal.stop(CatalogFetchStop.timedOut),
+      );
+      File? cached;
       try {
-        for (var attempt = 0; attempt < 2; attempt++) {
-          if (job.signal.reason == CatalogFetchStop.timedOut) {
-            job.timedOut = true;
-            return null;
-          }
-
-          if (job.signal.isStopped) {
-            return null;
-          }
-
-          try {
-            final bytes = await _fetchUntilStop(_clipUri(clip), job.signal);
-
-            if (bytes.length != clip.bytes || sha256.convert(bytes).toString() != clip.sha256) {
-              return null;
-            }
-
-            stored = await _commit(clip, bytes);
-            return stored;
-          } on CatalogStopped catch (error) {
-            job.timedOut = error.reason == CatalogFetchStop.timedOut;
-            return null;
-          } catch (_) {
-            if (attempt == 1) {
-              return null;
-            }
-          }
+        cached = await cacheSignal.guard(_readReady(clip, cacheSignal));
+      } on CatalogStopped {
+        /* Optional cache must not hold a network request. */
+      } finally {
+        cacheTimer.cancel();
+      }
+      if (job.signal.isStopped) return null;
+      if (cached != null) return cached;
+      if (!await _acquireSlot(job.signal)) return null;
+      try {
+        if (job.signal.isStopped) return null;
+        // Network time starts when this request actually has a slot.
+        job.timer = Timer(timeout, () {
+          job.timedOut = true;
+          job.failureCode = 'timeout';
+          job.signal.stop(CatalogFetchStop.timedOut);
+        });
+        final bytes = await _fetchUntilStop(_clipUri(clip), job.signal);
+        if (bytes.length != clip.bytes ||
+            sha256.convert(bytes).toString() != clip.sha256) {
+          job.failureCode = 'integrity';
+          return null;
         }
+        return await _commit(clip, bytes, job);
       } finally {
         _releaseSlot();
       }
-
+    } on CatalogStopped catch (error) {
+      job.timedOut = error.reason == CatalogFetchStop.timedOut;
+      if (job.timedOut) job.failureCode = 'timeout';
+      return null;
+    } on CatalogAudioFailure catch (error) {
+      job.failureCode = error.code;
+      return null;
+    } on FileSystemException {
+      job.failureCode = 'storage';
+      return null;
+    } catch (_) {
+      job.failureCode = 'network';
       return null;
     } finally {
       job.settled = true;
       job.timer?.cancel();
-      await _deleteQuiet(_partialFile(clip.sha256));
-
-      if (identical(_jobs[clip.sha256], job)) {
-        _jobs.remove(clip.sha256);
-      }
+      await _deleteQuiet(
+        _partialFile(clip.sha256, job.nonce),
+      ).timeout(catalogCacheReadTimeout, onTimeout: () {});
+      if (identical(_jobs[clip.sha256], job)) _jobs.remove(clip.sha256);
     }
   }
 
-  Future<List<int>> _fetchUntilStop(Uri url, CatalogSignal signal) async {
-    if (signal.isStopped) {
-      throw CatalogStopped(signal.reason!);
-    }
-
-    final loader = fetch ?? _defaultFetch;
-    final result = await Future.any<Object>([
-      loader(url, signal).then<Object>((bytes) => bytes),
-      signal.stopped.then<Object>((reason) => reason),
-    ]);
-
-    if (result is CatalogFetchStop) {
-      throw CatalogStopped(result);
-    }
-
-    return result as List<int>;
-  }
+  Future<List<int>> _fetchUntilStop(Uri url, CatalogSignal signal) =>
+      signal.guard((fetch ?? _defaultFetch)(url, signal));
 
   Future<List<int>> _defaultFetch(Uri url, CatalogSignal signal) async {
-    final client = HttpClient();
-
+    final client = HttpClient()..connectionTimeout = timeout;
+    signal.listen((_) => client.close(force: true));
     try {
+      if (signal.isStopped) throw CatalogStopped(signal.reason!);
       final request = await client.getUrl(url);
-      signal.listen((_) => request.abort());
-
-      if (signal.isStopped) {
-        throw CatalogStopped(signal.reason!);
-      }
-
       final response = await request.close();
-
       if (response.statusCode != 200) {
-        throw HttpException('catalog audio ${response.statusCode}', uri: url);
+        throw CatalogAudioFailure('http-${response.statusCode}');
       }
-
       final builder = BytesBuilder(copy: false);
       await for (final chunk in response) {
         builder.add(chunk);
+        if (builder.length > catalogAudioMaxBytes) {
+          throw const CatalogAudioFailure('memory');
+        }
       }
-
       return builder.takeBytes();
     } finally {
       client.close(force: true);
     }
   }
 
-  Future<File?> _readReady(PublishedAudioClip clip) async {
+  Future<File?> _readReady(
+    PublishedAudioClip clip,
+    CatalogSignal signal,
+  ) async {
     final file = _finalFile(clip.sha256);
 
     try {
-      if (!await file.exists()) {
+      if (!await signal.guard(file.exists())) {
         _index.remove(clip.sha256);
         return null;
       }
 
-      final bytes = await (readBytes ?? _readFile)(file);
+      final bytes = await signal.guard((readBytes ?? _readFile)(file));
 
-      if (bytes.length != clip.bytes || sha256.convert(bytes).toString() != clip.sha256) {
-        await _deleteQuiet(file);
+      if (bytes.length != clip.bytes ||
+          sha256.convert(bytes).toString() != clip.sha256) {
+        await signal.guard(_deleteQuiet(file));
         _index.remove(clip.sha256);
         return null;
       }
@@ -569,38 +726,58 @@ class CatalogAudioStore {
       final entry = _index[clip.sha256];
 
       if (entry == null) {
-        _index[clip.sha256] = _IndexEntry(bytes: bytes.length, lastUsed: ++_clock, sha256: clip.sha256);
+        _index[clip.sha256] = _IndexEntry(
+          bytes: bytes.length,
+          lastUsed: ++_clock,
+          sha256: clip.sha256,
+        );
       } else {
         entry.lastUsed = ++_clock;
       }
 
-      await _saveIndex();
+      unawaited(_saveIndex().catchError((Object _) {}));
       return file;
     } catch (_) {
       return null;
     }
   }
 
-  Future<File> _commit(PublishedAudioClip clip, List<int> bytes) async {
-    final partial = _partialFile(clip.sha256);
+  Future<File> _commit(
+    PublishedAudioClip clip,
+    List<int> bytes,
+    _Job job,
+  ) async {
+    final signal = job.signal;
+    final partial = _partialFile(clip.sha256, job.nonce);
     final writer = writeBytes ?? _writeFile;
-    await writer(partial, bytes);
-    final verified = await partial.readAsBytes();
+    final writing = writer(partial, bytes);
+    unawaited(
+      writing.then((_) {
+        if (signal.isStopped) unawaited(_deleteQuiet(partial));
+      }, onError: (Object _) {}),
+    );
+    await signal.guard(writing);
+    final verified = await signal.guard(partial.readAsBytes());
 
-    if (verified.length != clip.bytes || sha256.convert(verified).toString() != clip.sha256) {
+    if (verified.length != clip.bytes ||
+        sha256.convert(verified).toString() != clip.sha256) {
       await _deleteQuiet(partial);
       throw const FileSystemException('catalog audio verify failed');
     }
 
     final target = _finalFile(clip.sha256);
 
-    if (await target.exists()) {
-      await _deleteQuiet(target);
+    if (await signal.guard(target.exists())) {
+      await signal.guard(_deleteQuiet(target));
     }
 
-    await partial.rename(target.path);
-    _index[clip.sha256] = _IndexEntry(bytes: bytes.length, lastUsed: ++_clock, sha256: clip.sha256);
-    await _saveIndex();
+    await signal.guard(partial.rename(target.path));
+    _index[clip.sha256] = _IndexEntry(
+      bytes: bytes.length,
+      lastUsed: ++_clock,
+      sha256: clip.sha256,
+    );
+    unawaited(_saveIndex().catchError((Object _) {}));
     return target;
   }
 
@@ -611,7 +788,8 @@ class CatalogAudioStore {
   }
 
   Future<void> _evict() async {
-    final entries = _index.values.toList()..sort((a, b) => a.lastUsed.compareTo(b.lastUsed));
+    final entries = _index.values.toList()
+      ..sort((a, b) => a.lastUsed.compareTo(b.lastUsed));
     var total = entries.fold<int>(0, (sum, entry) => sum + entry.bytes);
 
     for (final entry in entries) {
@@ -631,23 +809,28 @@ class CatalogAudioStore {
     await _saveIndex();
   }
 
-  Future<void> _acquireSlot() async {
+  Future<bool> _acquireSlot(CatalogSignal signal) async {
+    if (signal.isStopped) return false;
     if (_active < concurrency) {
       _active += 1;
-      return;
+      return true;
     }
 
-    final waiter = Completer<void>();
+    final waiter = Completer<bool>();
     _waiters.add(waiter);
-    await waiter.future;
-    _active += 1;
+    signal.listen((_) {
+      if (!waiter.isCompleted && _waiters.remove(waiter)) {
+        waiter.complete(false);
+      }
+    });
+    return waiter.future;
   }
 
   void _releaseSlot() {
-    _active -= 1;
-
     if (_waiters.isNotEmpty) {
-      _waiters.removeAt(0).complete();
+      _waiters.removeAt(0).complete(true);
+    } else {
+      _active -= 1;
     }
   }
 
@@ -660,7 +843,9 @@ class CatalogAudioStore {
     final partial = File(
       '$_indexPath.${DateTime.now().microsecondsSinceEpoch}.${_indexWrite.hashCode}.partial',
     );
-    final next = _indexWrite.then((_) => _writeIndexSnapshot(partial, snapshot));
+    final next = _indexWrite.then(
+      (_) => _writeIndexSnapshot(partial, snapshot),
+    );
     _indexWrite = next.catchError((Object _) {});
     return next;
   }
@@ -676,13 +861,19 @@ class CatalogAudioStore {
     await partial.rename(target.path);
   }
 
-  File _finalFile(String sha256) => File('${directory.path}${Platform.pathSeparator}$sha256.mp3');
+  File _finalFile(String sha256) =>
+      File('${directory.path}${Platform.pathSeparator}$sha256.mp3');
 
-  File _partialFile(String sha256) => File('${directory.path}${Platform.pathSeparator}$sha256.mp3.partial');
+  File _partialFile(String sha256, String nonce) => File(
+    '${directory.path}${Platform.pathSeparator}$sha256.$nonce.mp3.partial',
+  );
 
-  String get _indexPath => '${directory.path}${Platform.pathSeparator}index.json';
+  String get _indexPath =>
+      '${directory.path}${Platform.pathSeparator}index.json';
 
-  Uri _clipUri(PublishedAudioClip clip) => Uri.parse(clip.url);
+  Uri _clipUri(PublishedAudioClip clip) => Uri.parse(
+    apiBase ?? AppConfig.apiBaseUrl,
+  ).resolve('/api/trainers/audio-fallback/${clip.sha256}');
 
   Future<void> _deleteQuiet(File file) async {
     try {
@@ -693,4 +884,9 @@ class CatalogAudioStore {
   }
 }
 
-enum _Outcome { aborted, failed, ready, timedOut }
+class _AcquireResult {
+  const _AcquireResult({this.file, this.failureCode, this.cancelled = false});
+  final File? file;
+  final String? failureCode;
+  final bool cancelled;
+}

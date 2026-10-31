@@ -7,10 +7,10 @@ import 'package:larnes_mobile/features/parent/models/parent_program.dart';
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
-import 'package:larnes_mobile/trainers/audio/catalog_audio_cache.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
+import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
 
 class ProgramPlayerScreen extends StatefulWidget {
   const ProgramPlayerScreen({
@@ -53,11 +53,12 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final snapshot = await AuthScope.of(context).parentApi.fetchProgramSnapshot(
-        widget.childId,
-        widget.programId,
-        locale: locale,
-      );
+      final snapshot = await AuthScope.of(context).parentApi
+          .fetchProgramSnapshot(
+            widget.childId,
+            widget.programId,
+            locale: locale,
+          );
 
       if (!mounted) {
         return;
@@ -69,7 +70,6 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
         _isCompleted = snapshot.isCompleted;
         _isLoading = false;
       });
-      await warmCatalogManifests(snapshot.steps.map((step) => step.audioManifest));
     } on ParentApiException catch (error) {
       if (mounted) {
         setState(() {
@@ -111,13 +111,14 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final result = await AuthScope.of(context).parentApi.completeProgramLesson(
-        childId: widget.childId,
-        programId: widget.programId,
-        topicOrdinal: step.topicOrdinal,
-        lessonOrdinal: step.lessonOrdinal,
-        locale: locale,
-      );
+      final result = await AuthScope.of(context).parentApi
+          .completeProgramLesson(
+            childId: widget.childId,
+            programId: widget.programId,
+            topicOrdinal: step.topicOrdinal,
+            lessonOrdinal: step.lessonOrdinal,
+            locale: locale,
+          );
 
       if (!mounted) {
         return;
@@ -184,7 +185,9 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     final snapshot = _snapshot!;
 
     if (snapshot.steps.isEmpty && !_isCompleted) {
-      final message = snapshot.unavailableReason == ParentProgramUnavailableReason.emptyLesson
+      final message =
+          snapshot.unavailableReason ==
+              ParentProgramUnavailableReason.emptyLesson
           ? l10n.parentProgramPlayEmptyLesson(
               snapshot.topicOrdinal,
               snapshot.lessonOrdinal,
@@ -220,6 +223,14 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       child: TrainerPlayer(
         key: ValueKey(step.id),
         audioManifest: step.audioManifest,
+        onAudioIssue: (issue) {
+          if (!mounted) return;
+          reportNativeTrainerAudioIssue(
+            api: AuthScope.of(context).parentApi,
+            issue: issue,
+            trainerKey: step.trainerKey,
+          );
+        },
         trainerKey: step.trainerKey,
         params: step.params,
         l10n: l10n,

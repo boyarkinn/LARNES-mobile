@@ -41,10 +41,11 @@ Future<void> playSpokenCue({
   final file = speechAudioFile(semanticKey);
 
   if (file == null) {
-    if (semanticKey.startsWith('instruction:'))
+    if (semanticKey.startsWith('instruction:')) {
       await getSharedClipPlayer().waitForFallback(
         Duration(milliseconds: fallbackMs),
       );
+    }
     return;
   }
 

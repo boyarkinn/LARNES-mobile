@@ -186,12 +186,13 @@ ValidateTrainerParamsResult validateLetterConnectDotsParams(
 ValidateTrainerParamsResult validateLetterBuildParams(
   Map<String, dynamic> raw,
 ) {
-  final letterResult = _validateSingleLetterField(raw);
+  final letterResult = _validateSingleLetterField(raw, requireRussian: false);
   if (!letterResult.ok) {
     return letterResult;
   }
-  final letter = normalizeTargetLetter(raw['letter'] as String);
-  if (!isSupportedBuildLetter(letter)) {
+  final letterRaw = (raw['letter'] as String).trim();
+  final letter = normalizeDrawShowLetter(letterRaw);
+  if (letterRaw.length != 1 || !isSupportedBuildLetter(letter)) {
     return _fail('Для этой буквы пока нет палочек в каталоге.');
   }
   return _withLetterCase(raw, {'letter': letter});

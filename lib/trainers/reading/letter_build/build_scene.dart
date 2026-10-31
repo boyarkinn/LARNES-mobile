@@ -4,22 +4,17 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/trainers/math/digit_find_tap/digit_found_burst.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/digit_paths.dart';
-import 'package:larnes_mobile/trainers/math/digit_trace/trace_feedback.dart';
 import 'package:larnes_mobile/trainers/math/digit_trace/trace_reveal.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/build_pad_size.dart';
-import 'package:larnes_mobile/trainers/reading/letter_build/build_phase_dots.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/build_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/letter_build_model.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/path_geometry.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_sticks.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_types.dart';
-import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
-const _wrongShakeMs = 550;
 const _stickHitThreshold = 0.08;
 
 /// Web: `platform/src/trainers/reading/letter-build/build-scene.tsx`
@@ -28,17 +23,13 @@ class BuildScene extends StatefulWidget {
     super.key,
     required this.displayLetter,
     required this.guideLetter,
-    required this.phase,
     required this.onGuideComplete,
-    required this.onFreePassed,
     this.disabled = false,
   });
 
   final String displayLetter;
   final String guideLetter;
-  final BuildPhase phase;
   final VoidCallback onGuideComplete;
-  final ValueChanged<int> onFreePassed;
   final bool disabled;
 
   @override
@@ -48,18 +39,14 @@ class BuildScene extends StatefulWidget {
 class _BuildSceneState extends State<BuildScene> {
   late List<StickPieceDef> _pieces;
   late ZaitsevLetterDrawing? _drawing;
+  late BuildLayout? _layout;
   late List<PiecePlacement> _placements;
 
   _DragState? _dragState;
   var _hasPassed = false;
-  var _isShaking = false;
   var _isInteractionReady = false;
-  var _guideCompleteScheduled = false;
-  var _passedReported = false;
 
   Timer? _interactionTimer;
-  Timer? _guideCompleteTimer;
-  Timer? _shakeTimer;
 
   @override
   void initState() {
@@ -72,8 +59,7 @@ class _BuildSceneState extends State<BuildScene> {
   void didUpdateWidget(BuildScene oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (oldWidget.guideLetter != widget.guideLetter ||
-        oldWidget.phase != widget.phase) {
+    if (oldWidget.guideLetter != widget.guideLetter) {
       _resetScene();
     }
   }
@@ -81,20 +67,16 @@ class _BuildSceneState extends State<BuildScene> {
   void _loadLetterData() {
     _pieces = getPiecesForLetter(widget.guideLetter);
     _drawing = getBuildDrawing(widget.guideLetter);
+    _layout = getBuildLayout(widget.guideLetter);
     _placements = createInitialPlacements(_pieces);
   }
 
   void _resetScene() {
     _interactionTimer?.cancel();
-    _guideCompleteTimer?.cancel();
-    _shakeTimer?.cancel();
     _loadLetterData();
     _dragState = null;
     _hasPassed = false;
-    _isShaking = false;
     _isInteractionReady = false;
-    _guideCompleteScheduled = false;
-    _passedReported = false;
     _scheduleInteractionReady();
   }
 
@@ -110,63 +92,31 @@ class _BuildSceneState extends State<BuildScene> {
     );
   }
 
-  bool get _isLocked =>
-      widget.disabled || _hasPassed || !_isInteractionReady;
-
-  bool get _hasMovedSticks {
-    final initial = createInitialPlacements(_pieces);
-
-    for (var index = 0; index < _placements.length; index++) {
-      final placement = _placements[index];
-      final start = initial[index];
-      final dx = placement.offset.x - start.offset.x;
-      final dy = placement.offset.y - start.offset.y;
-
-      if (math.sqrt(dx * dx + dy * dy) > 0.01) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  void _triggerLowScoreShake() {
-    _shakeTimer?.cancel();
-    setState(() => _isShaking = true);
-    _shakeTimer = Timer(const Duration(milliseconds: _wrongShakeMs), () {
-      if (mounted) {
-        setState(() => _isShaking = false);
-      }
-    });
-  }
+  bool get _isLocked => widget.disabled || _hasPassed || !_isInteractionReady;
 
   void _tryCompleteGuide(List<PiecePlacement> nextPlacements) {
-    if (widget.phase != BuildPhase.guide ||
-        _guideCompleteScheduled ||
-        !isGuidePhaseComplete(_pieces, nextPlacements)) {
+    if (_hasPassed || !isGuidePhaseComplete(_pieces, nextPlacements)) {
       return;
     }
 
-    _guideCompleteScheduled = true;
-    _guideCompleteTimer = Timer(
-      const Duration(milliseconds: TrainerTimings.guideCompleteDelayMs),
-      () {
-        if (mounted) {
-          widget.onGuideComplete();
-        }
-      },
-    );
+    setState(() => _hasPassed = true);
+    widget.onGuideComplete();
   }
 
   String? _hitTestPiece(Offset local, Size size) {
+    final layout = _layout;
+    if (layout == null) return null;
+    final scale = size.width / layout.width;
     final pointer = TracePoint(
-      x: local.dx / size.width,
-      y: local.dy / size.height,
+      x: (layout.minX + local.dx / scale) / zaitsevCoordSize,
+      y: (layout.minY + local.dy / scale) / zaitsevCoordSize,
     );
+    final hitThreshold = math.max(_stickHitThreshold, 16 / (scale * zaitsevCoordSize));
 
     for (var index = _pieces.length - 1; index >= 0; index--) {
       final piece = _pieces[index];
       final placement = _placements[index];
+      if (placement.snapped) continue;
       final piecePointer = TracePoint(
         x: pointer.x - placement.offset.x,
         y: pointer.y - placement.offset.y,
@@ -177,7 +127,7 @@ class _BuildSceneState extends State<BuildScene> {
         final dx = piecePointer.x - sample.x;
         final dy = piecePointer.y - sample.y;
 
-        if (math.sqrt(dx * dx + dy * dy) <= _stickHitThreshold) {
+        if (math.sqrt(dx * dx + dy * dy) <= hitThreshold) {
           return piece.id;
         }
       }
@@ -199,7 +149,7 @@ class _BuildSceneState extends State<BuildScene> {
 
     final placement = _placements.firstWhere((item) => item.id == pieceId);
 
-    if (widget.phase == BuildPhase.guide && placement.snapped) {
+    if (placement.snapped) {
       return;
     }
 
@@ -222,18 +172,22 @@ class _BuildSceneState extends State<BuildScene> {
 
     final deltaPixelsX = event.position.dx - dragState.startX;
     final deltaPixelsY = event.position.dy - dragState.startY;
-    final deltaX = deltaPixelsX / size.width;
-    final deltaY = deltaPixelsY / size.height;
+    final layout = _layout;
+    if (layout == null) return;
+    final scale = size.width / layout.width;
+    final piece = _pieces.firstWhere((item) => item.id == dragState.pieceId);
+    final deltaX = deltaPixelsX / (scale * zaitsevCoordSize);
+    final deltaY = deltaPixelsY / (scale * zaitsevCoordSize);
 
     setState(() {
       _placements = [
         for (final placement in _placements)
           placement.id == dragState.pieceId
-              ? translatePlacement(
+              ? constrainBuildPlacement(piece, translatePlacement(
                   placement.copyWith(offset: dragState.startOffset),
                   deltaX,
                   deltaY,
-                )
+                ), layout)
               : placement,
       ];
     });
@@ -246,79 +200,16 @@ class _BuildSceneState extends State<BuildScene> {
       return;
     }
 
-    StickPieceDef? piece;
-
-    for (final item in _pieces) {
-      if (item.id == dragState.pieceId) {
-        piece = item;
-        break;
-      }
-    }
-
-    if (piece == null) {
-      setState(() => _dragState = null);
-      return;
-    }
-
     setState(() {
-      _placements = [
-        for (final placement in _placements)
-          placement.id == dragState.pieceId
-              ? () {
-                  if (widget.phase == BuildPhase.guide &&
-                      canSnapPiece(piece!, placement)) {
-                    return snapPiece(piece, placement);
-                  }
-
-                  return placement;
-                }()
-              : placement,
-      ];
+      _placements = snapBuildPiece(_pieces, _placements, dragState.pieceId);
       _dragState = null;
     });
 
-    if (widget.phase == BuildPhase.guide) {
-      _tryCompleteGuide(_placements);
-    }
-  }
-
-  void _handleCheck() {
-    if (widget.phase != BuildPhase.free ||
-        _isLocked ||
-        _passedReported) {
-      return;
-    }
-
-    final result = scoreBuildPlacements(widget.guideLetter, _placements);
-
-    if (result.similarityPercent == null) {
-      return;
-    }
-
-    if (result.similarityPercent! >= tracePassPercent) {
-      _passedReported = true;
-      setState(() => _hasPassed = true);
-      widget.onFreePassed(result.similarityPercent!);
-      return;
-    }
-
-    _triggerLowScoreShake();
-  }
-
-  void _handleClear() {
-    if (widget.phase != BuildPhase.free || _isLocked || _hasPassed) {
-      return;
-    }
-
-    setState(() {
-      _placements = createInitialPlacements(_pieces);
-      _dragState = null;
-      _isShaking = false;
-    });
+    _tryCompleteGuide(_placements);
   }
 
   Color _strokeColorForPiece(String pieceId, PiecePlacement placement) {
-    if (widget.phase == BuildPhase.guide && placement.snapped) {
+    if (placement.snapped) {
       return buildStickSnappedColor;
     }
 
@@ -332,16 +223,15 @@ class _BuildSceneState extends State<BuildScene> {
   @override
   void dispose() {
     _interactionTimer?.cancel();
-    _guideCompleteTimer?.cancel();
-    _shakeTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final drawing = _drawing;
+    final layout = _layout;
 
-    if (drawing == null || _pieces.isEmpty) {
+    if (drawing == null || layout == null || _pieces.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: DecoratedBox(
@@ -366,115 +256,86 @@ class _BuildSceneState extends State<BuildScene> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final padSize = buildPadSize(constraints.maxHeight, constraints.maxWidth);
+        final scale = math.min(
+          math.max(1.0, constraints.maxWidth - 32) / layout.width,
+          math.max(1.0, constraints.maxHeight - 32) / layout.height,
+        );
+        final padWidth = layout.width * scale;
+        final padHeight = layout.height * scale;
 
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
               child: Center(
-                child: _BuildPadShake(
-                  isShaking: _isShaking,
-                  child: SizedBox(
-                    width: padSize,
-                    height: padSize,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        if (_hasPassed)
-                          DigitFoundBurst(
-                            color: buildStickSnappedColor,
-                            size: padSize,
-                          ),
-                        LayoutBuilder(
-                          builder: (context, padConstraints) {
-                            final size = Size(
-                              padConstraints.maxWidth,
-                              padConstraints.maxHeight,
-                            );
-                            final viewBoxSize =
-                                parseZaitsevViewBoxSize(drawing.viewBox);
-
-                            return Semantics(
-                              label: 'Собери букву ${widget.displayLetter}',
-                              child: Listener(
-                                behavior: HitTestBehavior.opaque,
-                                onPointerDown: (event) =>
-                                    _handlePointerDown(event, size),
-                                onPointerMove: (event) =>
-                                    _handlePointerMove(event, size),
-                                onPointerUp: (_) => _handlePointerEnd(),
-                                onPointerCancel: (_) => _handlePointerEnd(),
-                                child: Stack(
-                                  children: [
-                                    if (widget.phase == BuildPhase.guide)
-                                      for (final stroke in drawing.strokes)
-                                        _BuildGhostStroke(
-                                          path: stroke.path,
-                                          strokeWidth: drawing.strokeWidth,
-                                          size: size,
-                                          viewBox: drawing.viewBox,
-                                        ),
-                                    for (var index = 0;
-                                        index < _pieces.length;
-                                        index++)
-                                      _BuildStickPath(
-                                        key: ValueKey(
-                                          '${_pieces[index].id}-${widget.phase.name}',
-                                        ),
-                                        path: _pieces[index].path,
-                                        strokeWidth: drawing.strokeWidth,
-                                        viewBoxSize: viewBoxSize,
-                                        padSize: size,
-                                        offset: _placements[index].offset,
-                                        stroke: _strokeColorForPiece(
-                                          _pieces[index].id,
-                                          _placements[index],
-                                        ),
-                                        revealDelayMs: getStickRevealDelayMs(
-                                          index,
-                                          _pieces.length,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                child: SizedBox(
+                  width: padWidth,
+                  height: padHeight,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      if (_hasPassed)
+                        DigitFoundBurst(
+                          color: buildStickSnappedColor,
+                          size: math.min(padWidth, padHeight),
                         ),
-                      ],
-                    ),
+                      LayoutBuilder(
+                        builder: (context, padConstraints) {
+                          final size = Size(
+                            padConstraints.maxWidth,
+                            padConstraints.maxHeight,
+                          );
+
+                          return Semantics(
+                            label: 'Собери букву ${widget.displayLetter}',
+                            child: Listener(
+                              behavior: HitTestBehavior.opaque,
+                              onPointerDown: (event) =>
+                                  _handlePointerDown(event, size),
+                              onPointerMove: (event) =>
+                                  _handlePointerMove(event, size),
+                              onPointerUp: (_) => _handlePointerEnd(),
+                              onPointerCancel: (_) => _handlePointerEnd(),
+                              child: Stack(
+                                children: [
+                                  for (final stroke in drawing.strokes)
+                                    _BuildGhostStroke(
+                                      path: stroke.path,
+                                      strokeWidth: drawing.strokeWidth,
+                                      size: size,
+                                      layout: layout,
+                                    ),
+                                  for (var index = 0;
+                                      index < _pieces.length;
+                                      index++)
+                                    _BuildStickPath(
+                                      key: ValueKey(_pieces[index].id),
+                                      path: _pieces[index].path,
+                                      strokeWidth: drawing.strokeWidth,
+                                      layout: layout,
+                                      padSize: size,
+                                      offset: _placements[index].offset,
+                                      stroke: _strokeColorForPiece(
+                                        _pieces[index].id,
+                                        _placements[index],
+                                      ),
+                                      revealDelayMs: getStickRevealDelayMs(
+                                        index,
+                                        _pieces.length,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            BuildPhaseDots(
-              hasPassed: _hasPassed,
-              phase: widget.phase,
-            ),
-            if (widget.phase == BuildPhase.free && !_hasPassed) ...[
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _BuildActionButton(
-                    label: 'Стереть',
-                    primary: false,
-                    disabled: _isLocked || !_hasMovedSticks,
-                    onPressed: _handleClear,
-                  ),
-                  const SizedBox(width: 12),
-                  _BuildActionButton(
-                    label: 'Проверить',
-                    primary: true,
-                    disabled: _isLocked,
-                    onPressed: _handleCheck,
-                  ),
-                ],
-              ),
-            ],
           ],
         );
       },
@@ -501,7 +362,7 @@ class _BuildStickPath extends StatefulWidget {
     super.key,
     required this.path,
     required this.strokeWidth,
-    required this.viewBoxSize,
+    required this.layout,
     required this.padSize,
     required this.offset,
     required this.stroke,
@@ -510,7 +371,7 @@ class _BuildStickPath extends StatefulWidget {
 
   final String path;
   final double strokeWidth;
-  final double viewBoxSize;
+  final BuildLayout layout;
   final Size padSize;
   final TracePoint offset;
   final Color stroke;
@@ -567,7 +428,7 @@ class _BuildStickPathState extends State<_BuildStickPath>
               painter: _BuildStickPathPainter(
                 path: widget.path,
                 strokeWidth: widget.strokeWidth,
-                viewBoxSize: widget.viewBoxSize,
+                layout: widget.layout,
                 offset: widget.offset,
                 stroke: widget.stroke,
               ),
@@ -583,20 +444,20 @@ class _BuildStickPathPainter extends CustomPainter {
   _BuildStickPathPainter({
     required this.path,
     required this.strokeWidth,
-    required this.viewBoxSize,
+    required this.layout,
     required this.offset,
     required this.stroke,
   });
 
   final String path;
   final double strokeWidth;
-  final double viewBoxSize;
+  final BuildLayout layout;
   final TracePoint offset;
   final Color stroke;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.width / viewBoxSize;
+    final scale = size.width / layout.width;
     final sourcePath = buildZaitsevSvgPath(path);
     final paint = Paint()
       ..color = stroke
@@ -607,7 +468,8 @@ class _BuildStickPathPainter extends CustomPainter {
 
     canvas.save();
     canvas.scale(scale);
-    canvas.translate(offset.x * viewBoxSize, offset.y * viewBoxSize);
+    canvas.translate(-layout.minX, -layout.minY);
+    canvas.translate(offset.x * zaitsevCoordSize, offset.y * zaitsevCoordSize);
     canvas.drawPath(sourcePath, paint);
     canvas.restore();
   }
@@ -616,7 +478,7 @@ class _BuildStickPathPainter extends CustomPainter {
   bool shouldRepaint(covariant _BuildStickPathPainter oldDelegate) {
     return oldDelegate.path != path ||
         oldDelegate.offset != offset ||
-        oldDelegate.stroke != stroke;
+        oldDelegate.stroke != stroke || oldDelegate.layout != layout;
   }
 }
 
@@ -625,13 +487,13 @@ class _BuildGhostStroke extends StatefulWidget {
     required this.path,
     required this.strokeWidth,
     required this.size,
-    required this.viewBox,
+    required this.layout,
   });
 
   final String path;
   final double strokeWidth;
   final Size size;
-  final String viewBox;
+  final BuildLayout layout;
 
   @override
   State<_BuildGhostStroke> createState() => _BuildGhostStrokeState();
@@ -678,7 +540,7 @@ class _BuildGhostStrokeState extends State<_BuildGhostStroke>
               painter: _BuildGhostStrokePainter(
                 path: widget.path,
                 strokeWidth: widget.strokeWidth,
-                viewBox: widget.viewBox,
+                layout: widget.layout,
               ),
             ),
           ),
@@ -692,17 +554,16 @@ class _BuildGhostStrokePainter extends CustomPainter {
   _BuildGhostStrokePainter({
     required this.path,
     required this.strokeWidth,
-    required this.viewBox,
+    required this.layout,
   });
 
   final String path;
   final double strokeWidth;
-  final String viewBox;
+  final BuildLayout layout;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final viewBoxSize = parseZaitsevViewBoxSize(viewBox);
-    final scale = size.width / viewBoxSize;
+    final scale = size.width / layout.width;
     final sourcePath = buildZaitsevSvgPath(path);
     final paint = Paint()
       ..color = buildGhostStrokeColor
@@ -713,6 +574,7 @@ class _BuildGhostStrokePainter extends CustomPainter {
 
     canvas.save();
     canvas.scale(scale);
+    canvas.translate(-layout.minX, -layout.minY);
     canvas.drawPath(
       buildDashedPath(sourcePath, dashArray: const [10, 8]),
       paint,
@@ -722,118 +584,6 @@ class _BuildGhostStrokePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _BuildGhostStrokePainter oldDelegate) {
-    return oldDelegate.path != path;
-  }
-}
-
-class _BuildPadShake extends StatefulWidget {
-  const _BuildPadShake({
-    required this.isShaking,
-    required this.child,
-  });
-
-  final bool isShaking;
-  final Widget child;
-
-  @override
-  State<_BuildPadShake> createState() => _BuildPadShakeState();
-}
-
-class _BuildPadShakeState extends State<_BuildPadShake>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _offset;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: _wrongShakeMs),
-    );
-    _offset = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -7.0, end: 7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 7.0, end: -5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 5.0, end: 0.0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
-    if (widget.isShaking) {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void didUpdateWidget(_BuildPadShake oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!oldWidget.isShaking && widget.isShaking) {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(_offset.value, 0),
-          child: child,
-        );
-      },
-      child: widget.child,
-    );
-  }
-}
-
-class _BuildActionButton extends StatelessWidget {
-  const _BuildActionButton({
-    required this.label,
-    required this.primary,
-    required this.disabled,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool primary;
-  final bool disabled;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: disabled ? 0.4 : 1,
-      child: Material(
-        color: primary ? ParentColors.shell : Colors.white.withValues(alpha: 0.85),
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: ParentColors.shell,
-            width: 2,
-          ),
-        ),
-        child: InkWell(
-          onTap: disabled ? null : onPressed,
-          customBorder: const StadiumBorder(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            child: Text(
-              label,
-              style: GoogleFonts.onest(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: primary ? Colors.white : ParentColors.shell,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
+    return oldDelegate.path != path || oldDelegate.layout != layout;
   }
 }

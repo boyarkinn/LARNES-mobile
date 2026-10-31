@@ -16,7 +16,7 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 175 40 A 120 130 0 1 1 174.9 40 Z', durationMs: 3000),
+      ZaitsevLetterStroke(path: r'M 175 60 A 110 130 0 0 1 175 320 A 110 130 0 0 1 175 60 Z', durationMs: 3000),
     ],
   ),
   'У': ZaitsevLetterDrawing(
@@ -24,7 +24,7 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 250 60 Q 240 150 140 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 120 70 L 200 220', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 120 60 L 198.975 210.8', durationMs: 1000),
     ],
   ),
   'Ы': ZaitsevLetterDrawing(
@@ -32,7 +32,7 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 80 60 L 80 320', durationMs: 700),
-      ZaitsevLetterStroke(path: r'M 80 160 A 340 110 0 0 1 80 315', durationMs: 1100),
+      ZaitsevLetterStroke(path: r'M 80 190 L 135 190 A 65 65 0 0 1 135 320 L 80 320', durationMs: 1100),
       ZaitsevLetterStroke(path: r'M 250 60 L 250 320', durationMs: 700),
     ],
   ),
@@ -98,8 +98,8 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 80 60 L 80 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 80 190 A 270 80 0 0 1 80 320', durationMs: 1500),
-      ZaitsevLetterStroke(path: r'M 80 60 L 200 60', durationMs: 800),
+      ZaitsevLetterStroke(path: r'M 80 185 L 180 185 A 67.5 67.5 0 0 1 180 320 L 80 320', durationMs: 1500),
+      ZaitsevLetterStroke(path: r'M 80 60 L 250 60', durationMs: 800),
     ],
   ),
   'П': ZaitsevLetterDrawing(
@@ -116,8 +116,8 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 80 60 L 80 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 80 60 A 250 100 0 0 1 80 190', durationMs: 1200),
-      ZaitsevLetterStroke(path: r'M 80 190 A 250 90 0 0 1 80 320', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 80 60 L 180 60 A 65 65 0 0 1 180 190 L 80 190', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 80 190 L 180 190 A 65 65 0 0 1 180 320 L 80 320', durationMs: 1200),
     ],
   ),
   'Ф': ZaitsevLetterDrawing(
@@ -125,8 +125,8 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 175 60 L 175 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 175 60 A 250 80 0 0 0 175 190', durationMs: 1200),
-      ZaitsevLetterStroke(path: r'M 175 60 A 250 80 0 0 1 175 190', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 175 90 A 110 100 0 0 0 175 290', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 175 90 A 110 100 0 0 1 175 290', durationMs: 1200),
     ],
   ),
   'Г': ZaitsevLetterDrawing(
@@ -142,8 +142,8 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 80 60 L 80 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 80 190 L 200 70', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 80 190 L 200 310', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 80 190 L 200 60', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 80 190 L 200 320', durationMs: 1000),
     ],
   ),
   'Д': ZaitsevLetterDrawing(
@@ -152,7 +152,7 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokes: [
       ZaitsevLetterStroke(path: r'M 175 50 L 100 250', durationMs: 1000),
       ZaitsevLetterStroke(path: r'M 175 50 L 250 250', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 50 250 L 300 250', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 60 250 L 290 250', durationMs: 1000),
       ZaitsevLetterStroke(path: r'M 60 250 L 60 320', durationMs: 1000),
       ZaitsevLetterStroke(path: r'M 290 250 L 290 320', durationMs: 1000),
     ],
@@ -190,15 +190,15 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 125 100 A 50 50 0 0 1 225 200', durationMs: 1500),
-      ZaitsevLetterStroke(path: r'M 225 200 A 50 50 0 0 1 125 300', durationMs: 1500),
+      ZaitsevLetterStroke(path: r'M 100 75 Q 135 60 175 60 Q 270 60 270 125 Q 270 190 175 190', durationMs: 1500),
+      ZaitsevLetterStroke(path: r'M 175 190 Q 280 190 280 255 Q 280 320 175 320 Q 135 320 100 300', durationMs: 1500),
     ],
   ),
   'С': ZaitsevLetterDrawing(
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 250 100 A 125 100 0 0 0 250 300', durationMs: 2000),
+      ZaitsevLetterStroke(path: r'M 260 90 A 110 130 0 1 0 260 290', durationMs: 2000),
     ],
   ),
   'Л': ZaitsevLetterDrawing(
@@ -233,7 +233,7 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 75 60 L 75 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 75 60 A 100 65 0 0 1 75 190', durationMs: 1500),
+      ZaitsevLetterStroke(path: r'M 75 60 L 180 60 A 65 65 0 0 1 180 190 L 75 190', durationMs: 1500),
     ],
   ),
   'Й': ZaitsevLetterDrawing(
@@ -255,12 +255,12 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     ],
   ),
   'Ц': ZaitsevLetterDrawing(
-    viewBox: '0 0 400 350',
+    viewBox: '0 0 400 400',
     strokeWidth: 22,
     strokes: [
       ZaitsevLetterStroke(path: r'M 85 60 L 85 320', durationMs: 1000),
       ZaitsevLetterStroke(path: r'M 275 60 L 275 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 75 320 L 325 320', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 85 320 L 315 320', durationMs: 1000),
       ZaitsevLetterStroke(path: r'M 315 320 L 315 380', durationMs: 1000),
     ],
   ),
@@ -268,8 +268,8 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 100 100 A 60 90 0 0 0 275 100', durationMs: 1500),
-      ZaitsevLetterStroke(path: r'M 275 100 L 275 350', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 100 60 L 100 145 A 45 45 0 0 0 145 190 L 275 190', durationMs: 1500),
+      ZaitsevLetterStroke(path: r'M 275 60 L 275 320', durationMs: 1000),
     ],
   ),
   'Щ': ZaitsevLetterDrawing(

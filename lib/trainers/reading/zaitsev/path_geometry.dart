@@ -7,6 +7,30 @@ import 'package:larnes_mobile/trainers/math/digit_trace/digit_paths.dart';
 
 const zaitsevCoordSize = 350.0;
 
+class PathBounds {
+  const PathBounds({
+    required this.minX, required this.minY,
+    required this.maxX, required this.maxY,
+  });
+
+  final double minX;
+  final double minY;
+  final double maxX;
+  final double maxY;
+  double get width => maxX - minX;
+  double get height => maxY - minY;
+}
+
+PathBounds getPathBounds(String path) {
+  final points = sampleSvgPath(path, curveSteps: 64);
+  return PathBounds(
+    minX: points.map((point) => point.x).reduce(math.min) * zaitsevCoordSize,
+    minY: points.map((point) => point.y).reduce(math.min) * zaitsevCoordSize,
+    maxX: points.map((point) => point.x).reduce(math.max) * zaitsevCoordSize,
+    maxY: points.map((point) => point.y).reduce(math.max) * zaitsevCoordSize,
+  );
+}
+
 TracePoint normalizeZaitsevPoint(double x, double y) {
   return TracePoint(
     x: x / zaitsevCoordSize,
@@ -304,7 +328,7 @@ double parseZaitsevViewBoxSize(String viewBox) {
   return zaitsevCoordSize;
 }
 
-Path buildZaitsevSvgPath(String path, {int curveSteps = 14}) {
+Path buildZaitsevSvgPath(String path, {int curveSteps = 64}) {
   final commands = _tokenizeSvgPath(path);
   final flutterPath = Path();
   var x = 0.0;

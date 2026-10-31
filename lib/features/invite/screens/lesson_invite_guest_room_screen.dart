@@ -13,10 +13,6 @@ import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.d
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
-import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
-import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
-import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
-import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 
 class LessonInviteGuestRoomScreen extends StatefulWidget {
   const LessonInviteGuestRoomScreen({super.key, required this.token});
@@ -28,15 +24,14 @@ class LessonInviteGuestRoomScreen extends StatefulWidget {
       _LessonInviteGuestRoomScreenState();
 }
 
-class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScreen>
+class _LessonInviteGuestRoomScreenState
+    extends State<LessonInviteGuestRoomScreen>
     with WidgetsBindingObserver {
   static const _pollInterval = Duration(seconds: 3);
 
   bool _isLoading = true;
   String? _loadError;
   ParentLiveLessonRoomState? _room;
-  int _stepIndex = 0;
-  int? _dismissedSeq;
   bool _leaving = false;
   final _call = LessonCallStageHandle();
   bool _exited = false;
@@ -72,13 +67,6 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
 
   String get _locale => LocaleScope.read(context).localeCode;
 
-  bool get _showingPlayer {
-    final room = _room;
-    return room != null &&
-        room.hasPlayCommand &&
-        _dismissedSeq != room.commandSeq;
-  }
-
   void _ensurePoll() {
     _poll ??= Timer.periodic(_pollInterval, (_) {
       if (!mounted || _leaving) {
@@ -96,10 +84,9 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     });
 
     try {
-      final room = await AuthScope.of(context).lessonInviteGuestApi.fetchRoom(
-            token: widget.token,
-            locale: _locale,
-          );
+      final room = await AuthScope.of(
+        context,
+      ).lessonInviteGuestApi.fetchRoom(token: widget.token, locale: _locale);
       if (!mounted) {
         return;
       }
@@ -135,10 +122,10 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
   Future<void> _pollRoom() async {
     try {
       final poll = await AuthScope.of(context).lessonInviteGuestApi.fetchRoom(
-            token: widget.token,
-            locale: _locale,
-            poll: true,
-          );
+        token: widget.token,
+        locale: _locale,
+        poll: true,
+      );
       if (!mounted || _leaving) {
         return;
       }
@@ -157,14 +144,10 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
   }
 
   void _applyRoom(ParentLiveLessonRoomState room) {
-    final seqChanged = room.commandSeq != _room?.commandSeq;
     setState(() {
       _room = room;
       _isLoading = false;
       _loadError = null;
-      if (seqChanged) {
-        _stepIndex = room.snapshot?.currentStepIndex ?? 0;
-      }
     });
   }
 
@@ -190,10 +173,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     await _call.end();
 
     try {
-      await api.leave(
-            token: widget.token,
-            locale: locale,
-          );
+      await api.leave(token: widget.token, locale: locale);
     } catch (_) {
       // Web also leaves the room even if the action fails.
     } finally {
@@ -212,46 +192,6 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
     );
   }
 
-  void _dismissPlayer({bool completed = false}) {
-    final room = _room;
-    if (room == null) {
-      return;
-    }
-
-    final telemetry = room.snapshot?.telemetry;
-    if (!completed && telemetry != null) {
-      unawaited(
-        reportTrainerAbandoned(
-          descriptor: telemetry,
-          sender: AuthScope.of(context)
-              .lessonInviteGuestApi
-              .reportLessonTrainerEvent,
-          stepIndex: _stepIndex,
-        ).catchError((_) {}),
-      );
-    }
-    setState(() {
-      _dismissedSeq = room.commandSeq;
-    });
-  }
-
-  void _advanceStep() {
-    final snapshot = _room?.snapshot;
-    if (snapshot == null) {
-      return;
-    }
-
-    final nextStepIndex = _stepIndex + 1;
-    if (nextStepIndex >= snapshot.steps.length) {
-      _dismissPlayer(completed: true);
-      return;
-    }
-
-    setState(() {
-      _stepIndex = nextStepIndex;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -263,11 +203,6 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
           return;
         }
 
-        if (_showingPlayer) {
-          _dismissPlayer();
-          return;
-        }
-
         unawaited(_leaveLesson());
       },
       child: _room == null
@@ -275,7 +210,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
           : LessonCallStage(
               workspaceFormat: _room!.workspaceFormat,
               lessonSessionId: _room!.sessionId,
-              body: _showingPlayer ? _buildPlayer(l10n, _room!) : null,
+              body: null,
               childId: _room!.childId ?? '',
               handle: _call,
               inviteToken: widget.token,
@@ -283,7 +218,7 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
               onLeave: () {
                 unawaited(_leaveLesson());
               },
-              trainerOpen: _showingPlayer,
+              trainerOpen: false,
             ),
     );
   }
@@ -308,10 +243,6 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
       return const ParentPlayerLoading();
     }
 
-    if (_showingPlayer) {
-      return _buildPlayer(l10n, room);
-    }
-
     return LiveLessonWaitingView(
       waiting: room.waiting,
       untitledLabel: l10n.parentLiveLessonUntitled,
@@ -321,85 +252,6 @@ class _LessonInviteGuestRoomScreenState extends State<LessonInviteGuestRoomScree
       onLeave: () {
         unawaited(_leaveLesson());
       },
-    );
-  }
-
-  Widget _buildPlayer(AppLocalizations l10n, ParentLiveLessonRoomState room) {
-    final snapshot = room.snapshot!;
-    final totalSteps = snapshot.steps.length;
-
-    if (totalSteps == 0) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _dismissPlayer();
-        }
-      });
-      return const ParentPlayerLoading();
-    }
-
-    if (_stepIndex >= totalSteps) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _dismissPlayer();
-        }
-      });
-      return const ParentPlayerLoading();
-    }
-
-    final step = snapshot.steps[_stepIndex];
-    final isLast = _stepIndex >= totalSteps - 1;
-    final isInteractive = isTrainerInteractive(step.trainerKey);
-    final guestApi = AuthScope.of(context).lessonInviteGuestApi;
-    Widget buildPlayer() {
-      return Builder(
-        builder: (telemetryContext) {
-          void completeStep() {
-            TrainerTelemetryScope.maybeOf(telemetryContext)?.complete();
-            _advanceStep();
-          }
-
-          return TrainerPlayer(
-            key: ValueKey(step.id),
-            audioManifest: step.audioManifest,
-            trainerKey: step.trainerKey,
-            params: step.params,
-            runtimeSnapshot: step.runtimeSnapshot,
-            l10n: l10n,
-            onComplete: isInteractive ? completeStep : null,
-            stepChrome: TrainerStepChrome(
-              finishLabel: l10n.parentHomeworkPlayFinish,
-              isInteractive: isInteractive,
-              isLast: isLast,
-              isPending: false,
-              nextLabel: l10n.parentHomeworkPlayNext,
-              onAdvance: completeStep,
-            ),
-          );
-        },
-      );
-    }
-
-    final telemetry = snapshot.telemetry;
-
-    return TrainerPlayShell(
-      key: ValueKey(room.commandSeq),
-      currentStep: _stepIndex + 1,
-      totalSteps: totalSteps,
-      menuContinueLabel: l10n.parentHomeworkPlayMenuContinue,
-      menuExitLabel: l10n.parentHomeworkPlayExit,
-      onExit: _dismissPlayer,
-      child: telemetry == null
-          ? buildPlayer()
-          : TrainerTelemetryScope(
-              key: ValueKey('${telemetry.runId}-$_stepIndex'),
-              descriptor: telemetry,
-              sender: guestApi.reportLessonTrainerEvent,
-              stepIndex: _stepIndex,
-              totalSteps: totalSteps,
-              trainerKey: step.trainerKey,
-              trainerTitle: trainerTitleForKey(step.trainerKey),
-              child: buildPlayer(),
-            ),
     );
   }
 }

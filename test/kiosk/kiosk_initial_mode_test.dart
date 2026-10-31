@@ -38,7 +38,10 @@ void main() {
 
     test('resolves standby copy from lesson presence', () {
       expect(
-        resolveKioskStandbyKind(hasActiveLesson: false, hasAssignedChild: false),
+        resolveKioskStandbyKind(
+          hasActiveLesson: false,
+          hasAssignedChild: false,
+        ),
         KioskStandbyKind.lessonNotStarted,
       );
       expect(
@@ -58,10 +61,7 @@ void main() {
 
   group('resolveInitialCommandSeq', () {
     test('returns lesson commandSeq or zero', () {
-      expect(
-        resolveInitialCommandSeq(null),
-        0,
-      );
+      expect(resolveInitialCommandSeq(null), 0);
       expect(
         resolveInitialCommandSeq(
           const KioskDeviceLessonBinding(
@@ -93,7 +93,7 @@ void main() {
     test('maps scan outcomes to session modes', () {
       expect(
         modeFromScanOutcome(KioskScanOutcome.play),
-        KioskSessionMode.play,
+        KioskSessionMode.result,
       );
       expect(
         modeFromScanOutcome(KioskScanOutcome.noProgram),

@@ -7,7 +7,7 @@ class KioskDeviceLessonBinding {
     required this.lessonSessionId,
     required this.status,
     this.classroomCallEnabled = false,
-    this.workspaceFormat = 'classic',
+    this.workspaceFormat = 'board',
     this.pendingCommand,
   });
 
@@ -17,7 +17,7 @@ class KioskDeviceLessonBinding {
       lessonSessionId: json['lessonSessionId'] as String,
       status: json['status'] as String,
       classroomCallEnabled: json['classroomCallEnabled'] == true,
-      workspaceFormat: json['workspaceFormat'] == 'board' ? 'board' : 'classic',
+      workspaceFormat: 'board',
       pendingCommand: json['pendingCommand'] as String?,
     );
   }

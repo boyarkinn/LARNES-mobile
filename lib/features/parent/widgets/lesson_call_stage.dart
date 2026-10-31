@@ -64,7 +64,7 @@ class LessonCallStage extends StatefulWidget {
     this.handle,
     this.captureOnJoin = true,
     this.mediaEnabled = true,
-    this.workspaceFormat = 'classic',
+    this.workspaceFormat = 'board',
     this.lessonSessionId,
     this.fetchMedia,
     this.sendMedia,
@@ -85,10 +85,15 @@ class LessonCallStage extends StatefulWidget {
   final Future<LessonDeviceMedia?> Function()? fetchMedia;
   final Future<LessonDeviceMedia?> Function(Map<String, dynamic>)? sendMedia;
   final MessengerScope? messenger;
-  final Future<LessonCallPassOutcome> Function(String locale, {String? assignment})? fetchPass;
+  final Future<LessonCallPassOutcome> Function(
+    String locale, {
+    String? assignment,
+  })?
+  fetchPass;
   final Future<LessonChildBoard?> Function({String? link})? fetchBoard;
   final Future<bool> Function(Map<String, dynamic> body)? sendBoard;
-  final Future<Map<String, dynamic>?> Function(Map<String, dynamic> body)? requestBoard;
+  final Future<Map<String, dynamic>?> Function(Map<String, dynamic> body)?
+  requestBoard;
   final Future<LessonCallTeachers> Function({
     required String endpointId,
     required String locale,
@@ -100,7 +105,8 @@ class LessonCallStage extends StatefulWidget {
   State<LessonCallStage> createState() => _LessonCallStageState();
 }
 
-class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingObserver {
+class _LessonCallStageState extends State<LessonCallStage>
+    with WidgetsBindingObserver {
   InAppWebViewController? _web;
   LessonCallPass? _pass;
   String? _html;
@@ -147,7 +153,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   bool _messengerOpen = false;
   final _workspaceMessengerApi = MessengerApi();
   int _messengerBridgeEpoch = 0;
-  String get _messengerBridgeIdentity => '${widget.messenger?.sessionKey ?? ''}:$_messengerBridgeEpoch:$_pageGen';
+  String get _messengerBridgeIdentity =>
+      '${widget.messenger?.sessionKey ?? ''}:$_messengerBridgeEpoch:$_pageGen';
   LessonChildBoard? _board;
   late final String _boardLink;
   LessonDeviceMediaController? _desk;
@@ -158,8 +165,7 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   String _deskAssignment = '';
   bool get _mediaWanted => _desk?.needed ?? widget.mediaEnabled;
 
-  bool get _boardWorkspace =>
-      widget.workspaceFormat == 'board' || _pass?.workspaceFormat == 'board';
+  bool get _boardWorkspace => true;
 
   /// Урок открыт входом родителя, а не гостевой ссылкой или экраном класса.
   bool get _parentSession =>
@@ -175,9 +181,15 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     widget.handle?.attach(endCall);
     WidgetsBinding.instance.addObserver(this);
     _attachMessenger();
-    if (widget.fetchMedia != null && widget.sendMedia != null && widget.lessonSessionId != null) {
-      _desk = LessonDeviceMediaController(childId: widget.childId, lessonSessionId: widget.lessonSessionId!,
-        fetch: widget.fetchMedia!, send: widget.sendMedia!)..addListener(_onDeskMedia);
+    if (widget.fetchMedia != null &&
+        widget.sendMedia != null &&
+        widget.lessonSessionId != null) {
+      _desk = LessonDeviceMediaController(
+        childId: widget.childId,
+        lessonSessionId: widget.lessonSessionId!,
+        fetch: widget.fetchMedia!,
+        send: widget.sendMedia!,
+      )..addListener(_onDeskMedia);
     }
     _load();
   }
@@ -201,7 +213,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Future<void> _setAppVisibility(bool visible) async {
     try {
-      await _web?.evaluateJavascript(source: 'if (typeof setLessonAppVisible === "function") setLessonAppVisible($visible)');
+      await _web?.evaluateJavascript(
+        source:
+            'if (typeof setLessonAppVisible === "function") setLessonAppVisible($visible)',
+      );
     } catch (_) {
       // The WebView may already be gone or still installing the lesson page.
     }
@@ -217,7 +232,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
     _html = html;
     _desk?.start();
-    if (_boardWorkspace) { _watchBoard(); _tryStart(); }
+    if (_boardWorkspace) {
+      _watchBoard();
+      _tryStart();
+    }
     if (!widget.mediaEnabled) {
       setState(() => _loading = false);
       if (_boardWorkspace) _watchBoard();
@@ -234,8 +252,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final media = desk.media;
     final changed = media != null && _deskAssignment != media.assignment;
     if (changed) {
-      if (widget.messenger != null) _workspaceMessengerApi.cancelScope(widget.messenger!);
-      _deskAssignment = media.assignment; _deskAttempt = -1; _messengerBridgeEpoch++;
+      if (widget.messenger != null)
+        _workspaceMessengerApi.cancelScope(widget.messenger!);
+      _deskAssignment = media.assignment;
+      _deskAttempt = -1;
+      _messengerBridgeEpoch++;
     }
     if (!_mediaWanted || changed) {
       final hadMedia = _pass != null || _joined || _inRoom || _deskStarting;
@@ -244,36 +265,65 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _joined = false;
         _pass = null;
         _holding = false;
-        _link = desk.failed || media?.error != null ? _LessonCallLink.failed : _LessonCallLink.none;
+        _link = desk.failed || media?.error != null
+            ? _LessonCallLink.failed
+            : _LessonCallLink.none;
       });
-      _roster?.cancel(); _roster = null;
-      _soundTimer?.cancel(); _soundTimer = null;
+      _roster?.cancel();
+      _roster = null;
+      _soundTimer?.cancel();
+      _soundTimer = null;
       if (hadMedia) unawaited(_stopSession());
       if (!_mediaWanted) return;
-    } else { setState(() {}); }
+    } else {
+      setState(() {});
+    }
     if (_inRoom) {
       // A mute must cancel its own pending permission immediately, even while
       // the other capture device keeps this conference connected.
       for (final device in ['video', 'audio']) {
-        final wanted = desk.requested(device) &&
+        final wanted =
+            desk.requested(device) &&
             (device == 'video' ? media?.video == true : media?.audio == true);
         final actual = device == 'video' ? _cameraOn : _micOn;
         if (!wanted && actual) {
-          if (device == 'video') { _cameraSeq++; _cameraOn = false; _cameraLive = false; }
-          else { _micSeq++; _micOn = false; _micLive = false; }
-          unawaited(_web?.evaluateJavascript(source: 'setDevice(${jsonEncode(device)}, true)'));
+          if (device == 'video') {
+            _cameraSeq++;
+            _cameraOn = false;
+            _cameraLive = false;
+          } else {
+            _micSeq++;
+            _micOn = false;
+            _micLive = false;
+          }
+          unawaited(
+            _web?.evaluateJavascript(
+              source: 'setDevice(${jsonEncode(device)}, true)',
+            ),
+          );
         }
       }
       unawaited(_applyDeskDevices());
       return;
     }
-    if (!_pageReady || _deskStarting || media == null || _deskAttempt == media.revision) return;
+    if (!_pageReady ||
+        _deskStarting ||
+        media == null ||
+        _deskAttempt == media.revision)
+      return;
     _deskAttempt = media.revision;
     _deskStarting = true;
-    unawaited(_openPass().whenComplete(() {
-      _deskStarting = false;
-      if (mounted && !_ended && _mediaWanted && !_inRoom && _deskAttempt != _desk?.media?.revision) _onDeskMedia();
-    }));
+    unawaited(
+      _openPass().whenComplete(() {
+        _deskStarting = false;
+        if (mounted &&
+            !_ended &&
+            _mediaWanted &&
+            !_inRoom &&
+            _deskAttempt != _desk?.media?.revision)
+          _onDeskMedia();
+      }),
+    );
   }
 
   Future<void> _applyDeskDevices() async {
@@ -282,12 +332,17 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     try {
       for (final device in ['video', 'audio']) {
         if (!mounted || !_inRoom || !_mediaWanted) return;
-        final on = _desk!.requested(device) &&
-            (device == 'audio' ? _desk!.media?.audio == true : _desk!.media?.video == true);
+        final on =
+            _desk!.requested(device) &&
+            (device == 'audio'
+                ? _desk!.media?.audio == true
+                : _desk!.media?.video == true);
         final actual = device == 'video' ? _cameraOn : _micOn;
         if (on != actual) await _setDeviceWish(device, !on);
       }
-    } finally { _applyingDesk = false; }
+    } finally {
+      _applyingDesk = false;
+    }
   }
 
   Future<LessonCallPassOutcome> _fetchPass() async {
@@ -311,7 +366,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final gen = _callGen;
     try {
       final outcome = await _fetchPass();
-      if (!mounted || _ended || gen != _callGen || (_desk != null && !_mediaWanted)) {
+      if (!mounted ||
+          _ended ||
+          gen != _callGen ||
+          (_desk != null && !_mediaWanted)) {
         return;
       }
       if (outcome.moving) {
@@ -335,13 +393,20 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         _watchSound();
         _watchBoard();
       }
-      if (_boardWorkspace && _pageReady) { await _join(); } else { _tryStart(); }
+      if (_boardWorkspace && _pageReady) {
+        await _join();
+      } else {
+        _tryStart();
+      }
     } on ParentApiException catch (error) {
-      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(error.code);
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted))
+        _failOpen(error.code);
     } on KioskApiException catch (error) {
-      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(error.code);
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted))
+        _failOpen(error.code);
     } catch (_) {
-      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted)) _failOpen(null);
+      if (gen == _callGen && !_ended && (_desk == null || _mediaWanted))
+        _failOpen(null);
     }
   }
 
@@ -355,7 +420,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           ? _LessonCallLink.closed
           : _LessonCallLink.failed;
     });
-    if (_desk != null) unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
+    if (_desk != null)
+      unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
   }
 
   Future<void> _renewPass() async {
@@ -381,7 +447,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       if (outcome.moving) {
         setState(() {
           _holding = true;
-          _movingDomain = outcome.domain.isEmpty ? _movingDomain : outcome.domain;
+          _movingDomain = outcome.domain.isEmpty
+              ? _movingDomain
+              : outcome.domain;
         });
         await _web?.evaluateJavascript(source: 'holdRoom()');
         return;
@@ -430,12 +498,17 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (code == 'inactive' || code == 'forbidden') {
       _roster?.cancel();
       _roster = null;
-      if (!_boardWorkspace) { _boardTimer?.cancel(); _boardTimer = null; }
+      if (!_boardWorkspace) {
+        _boardTimer?.cancel();
+        _boardTimer = null;
+      }
     }
     if ((code == 'inactive' || code == 'forbidden') && mounted) {
       setState(() {
         _retireCall();
-        _link = _boardWorkspace ? _LessonCallLink.failed : _LessonCallLink.closed;
+        _link = _boardWorkspace
+            ? _LessonCallLink.failed
+            : _LessonCallLink.closed;
       });
       unawaited(_stopSession());
     }
@@ -453,7 +526,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _followRoom() async {
-    if (!_mediaWanted || _following || _ended || _link == _LessonCallLink.closed) return;
+    if (!_mediaWanted ||
+        _following ||
+        _ended ||
+        _link == _LessonCallLink.closed)
+      return;
     _following = true;
     try {
       final outcome = await _fetchPass();
@@ -461,7 +538,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       if (outcome.moving) {
         setState(() {
           _holding = true;
-          _movingDomain = outcome.domain.isEmpty ? _movingDomain : outcome.domain;
+          _movingDomain = outcome.domain.isEmpty
+              ? _movingDomain
+              : outcome.domain;
         });
         await _web?.evaluateJavascript(source: 'holdRoom()');
         return;
@@ -497,9 +576,13 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (injected != null) return injected(link: _boardLink);
     final invite = widget.inviteToken;
     if (invite != null) {
-      return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink);
+      return AuthScope.of(
+        context,
+      ).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink);
     }
-    return AuthScope.of(context).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink);
+    return AuthScope.of(
+      context,
+    ).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink);
   }
 
   Future<bool> _sendBoard(Map<String, dynamic> body) {
@@ -507,9 +590,13 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (injected != null) return injected(body);
     final invite = widget.inviteToken;
     if (invite != null) {
-      return AuthScope.of(context).lessonInviteGuestApi.sendBoard(token: invite, body: body);
+      return AuthScope.of(
+        context,
+      ).lessonInviteGuestApi.sendBoard(token: invite, body: body);
     }
-    return AuthScope.of(context).parentApi.sendChildBoard(childId: widget.childId, body: body);
+    return AuthScope.of(
+      context,
+    ).parentApi.sendChildBoard(childId: widget.childId, body: body);
   }
 
   Future<void> _pullBoard() async {
@@ -519,158 +606,29 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     try {
       final board = await _fetchBoard();
       if (!mounted || board == null || _ended) return;
-      if (widget.lessonSessionId != null && board.lessonSessionId != widget.lessonSessionId) return;
-      final key = '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
+      if (widget.lessonSessionId != null &&
+          board.lessonSessionId != widget.lessonSessionId)
+        return;
+      final key =
+          '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
       if (key != _boardKey) {
         _boardKey = key;
         _boardGen += 1;
       }
       _board = board;
-      await _web?.evaluateJavascript(source: 'noteLessonClock(${board.serverNow})');
+      await _web?.evaluateJavascript(
+        source: 'noteLessonClock(${board.serverNow})',
+      );
       if (!mounted || _ended) return;
       await _web?.evaluateJavascript(
-        source: 'setChildRoom(${jsonEncode({
-          'childId': widget.childId,
-          'drawMode': board.drawMode,
-          'exercises': board.exercises,
-          'personalRuns': board.personalRuns,
-          'link': _boardLink,
-          'epoch': board.roomEpoch,
-          'focus': board.focusRoomId,
-          'lessonSessionId': board.lessonSessionId,
-          'presence': board.presence,
-          'participants': board.participants,
-          'rulerScale': board.rulerScale,
-          'navigation': board.navigation,
-          'gen': _boardGen,
-          'revision': board.sceneRevision,
-          'scene': board.scene,
-          'sceneGeneration': board.sceneGeneration,
-          'serverNow': board.serverNow,
-          'sound': board.sound,
-          'conversation': board.conversation,
-          'title': board.title,
-        })})',
+        source:
+            'setChildRoom(${jsonEncode({'childId': widget.childId, 'drawMode': board.drawMode, 'exercises': board.exercises, 'personalRuns': board.personalRuns, 'link': _boardLink, 'epoch': board.roomEpoch, 'focus': board.focusRoomId, 'lessonSessionId': board.lessonSessionId, 'presence': board.presence, 'participants': board.participants, 'rulerScale': board.rulerScale, 'navigation': board.navigation, 'gen': _boardGen, 'revision': board.sceneRevision, 'scene': board.scene, 'sceneGeneration': board.sceneGeneration, 'serverNow': board.serverNow, 'sound': board.sound, 'conversation': board.conversation, 'title': board.title})})',
       );
       await _syncLessonChrome();
     } catch (_) {
       // A missed snapshot does not end the lesson or the call.
     } finally {
       _boardBusy = false;
-    }
-  }
-
-  Future<void> _answerRoom(String detail) async {
-    final board = _board;
-    if (board == null) return;
-    try {
-      final body = jsonDecode(detail);
-      if (body is! Map) return;
-      final gen = body['gen'];
-      final tile = body['tileId'];
-      final instance = body['instanceId'];
-      final room = body['roomId'];
-      final generation = body['instanceGeneration'];
-      final revision = body['expectedRevision'];
-      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
-      if (tile is! String || instance is! String || room is! String) return;
-      if (generation is! int || revision is! int) return;
-      await _sendBoard({
-        'kind': 'command',
-        'command': {
-          'expectedRevision': revision,
-          'instanceGeneration': generation,
-          'lessonSessionId': board.lessonSessionId,
-          'operationId': 'ans${DateTime.now().microsecondsSinceEpoch}',
-          'payload': {'tileId': tile},
-          'protocolVersion': 1,
-          'roomId': room,
-          'trainerInstanceId': instance,
-          'type': 'commit',
-        },
-      });
-    } catch (_) {
-      // A late or broken tap is dropped.
-    }
-  }
-
-  Future<void> _previewRoom(String detail) async {
-    final board = _board;
-    if (board == null) return;
-    try {
-      final body = jsonDecode(detail);
-      if (body is! Map) return;
-      final gen = body['gen'];
-      final instance = body['instanceId'];
-      final room = body['roomId'];
-      final generation = body['instanceGeneration'];
-      final x = body['x'];
-      final y = body['y'];
-      final tile = body['tileId'];
-      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
-      if (instance is! String || room is! String || generation is! int) return;
-      if (x is! num || y is! num) return;
-      if (tile != null && tile is! String) return;
-      await _sendBoard({
-        'instanceGeneration': generation,
-        'instanceId': instance,
-        'kind': 'preview',
-        'roomId': room,
-        'tileId': tile,
-        'x': x.round(),
-        'y': y.round(),
-      });
-    } catch (_) {
-      // A late drag is dropped.
-    }
-  }
-
-  Future<void> _readyRoom(String detail) async {
-    final board = _board;
-    if (board == null) return;
-    try {
-      final body = jsonDecode(detail);
-      if (body is! Map) return;
-      final gen = body['gen'];
-      final instance = body['instanceId'];
-      final room = body['roomId'];
-      final generation = body['instanceGeneration'];
-      final fence = body['fence'];
-      final renderer = body['renderer'];
-      final playback = body['playback'];
-      final hashes = body['hashes'];
-      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
-      if (instance is! String || room is! String || generation is! int || fence is! String) return;
-      if (renderer is! bool || playback is! bool || hashes is! List) return;
-      await _sendBoard({
-        'kind': 'ready',
-        'link': _boardLink,
-        'fence': fence,
-        'hashes': hashes,
-        'instanceGeneration': generation,
-        'instanceId': instance,
-        'playback': playback,
-        'renderer': renderer,
-        'roomId': room,
-      });
-    } catch (_) {
-      // A late confirmation is dropped.
-    }
-  }
-
-  Future<void> _listenRoom(String detail) async {
-    final board = _board;
-    if (board == null) return;
-    try {
-      final body = jsonDecode(detail);
-      if (body is! Map) return;
-      final gen = body['gen'];
-      final room = body['roomId'];
-      if (gen is! int || gen != _boardGen || room != board.focusRoomId) return;
-      // A published clip is played only when this lesson has already stored it.
-      // An old bundled file is not a substitute, and a missing clip stays silent.
-    } catch (_) {
-      // A late listen is dropped.
     }
   }
 
@@ -685,7 +643,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       final roomId = body['roomId'];
       final epoch = body['epoch'];
       if (gen is! int || gen != _boardGen || elements is! List) return;
-      if (roomId is! String || epoch is! int || roomId != board.focusRoomId || epoch != board.roomEpoch) return;
+      if (roomId is! String ||
+          epoch is! int ||
+          roomId != board.focusRoomId ||
+          epoch != board.roomEpoch)
+        return;
       await _sendBoard({
         'elements': elements,
         'kind': 'scene',
@@ -719,7 +681,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       mimeType: 'text/html',
       encoding: 'utf-8',
       baseUrl: WebUri(
-        _boardWorkspace || !widget.mediaEnabled ? AppConfig.apiBaseUrl : 'https://$domain/',
+        _boardWorkspace || !widget.mediaEnabled
+            ? AppConfig.apiBaseUrl
+            : 'https://$domain/',
       ),
     );
   }
@@ -758,7 +722,12 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   Future<void> _join() async {
     final web = _web;
     final pass = _pass;
-    if (_ended || !_mediaWanted || web == null || pass == null || _joined || (_boardWorkspace && !_pageReady)) {
+    if (_ended ||
+        !_mediaWanted ||
+        web == null ||
+        pass == null ||
+        _joined ||
+        (_boardWorkspace && !_pageReady)) {
       return;
     }
 
@@ -804,17 +773,50 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     await _syncLessonChrome();
   }
 
-  Future<Map<String, String>> _lessonImage(List<dynamic> args, bool upload) async {
+  Future<Map<String, String>> _lessonImage(
+    List<dynamic> args,
+    bool upload,
+  ) async {
     final scope = widget.messenger, board = _board;
-    if (scope == null || board == null || args.isEmpty || args.first is! Map || !mounted || _ended) return {'code': 'forbidden'};
+    if (scope == null ||
+        board == null ||
+        args.isEmpty ||
+        args.first is! Map ||
+        !mounted ||
+        _ended)
+      return {'code': 'forbidden'};
     final input = args.first as Map, gen = _boardGen;
-    if (input['gen'] != gen || input['roomId'] != board.focusRoomId || input['roomEpoch'] != board.roomEpoch || scope.lessonSessionId != board.lessonSessionId) return {'code': 'forbidden'};
+    if (input['gen'] != gen ||
+        input['roomId'] != board.focusRoomId ||
+        input['roomEpoch'] != board.roomEpoch ||
+        scope.lessonSessionId != board.lessonSessionId)
+      return {'code': 'forbidden'};
     final headers = await scope.authorization();
-    if (!mounted || _ended || gen != _boardGen || widget.messenger?.sessionKey != scope.sessionKey) return {'code': 'forbidden'};
-    final frozen = MessengerScope(authorization: () async => headers, credential: scope.credential, intent: scope.intent,
-      lessonSessionId: scope.lessonSessionId, ownerKey: scope.ownerKey, admissionId: scope.admissionId, childId: scope.childId);
-    final result = await lessonBoardImageFromPage(scope: frozen, roomId: board.focusRoomId, input: input, upload: upload);
-    if (!mounted || _ended || gen != _boardGen || widget.messenger?.sessionKey != scope.sessionKey) return {'code': 'forbidden'};
+    if (!mounted ||
+        _ended ||
+        gen != _boardGen ||
+        widget.messenger?.sessionKey != scope.sessionKey)
+      return {'code': 'forbidden'};
+    final frozen = MessengerScope(
+      authorization: () async => headers,
+      credential: scope.credential,
+      intent: scope.intent,
+      lessonSessionId: scope.lessonSessionId,
+      ownerKey: scope.ownerKey,
+      admissionId: scope.admissionId,
+      childId: scope.childId,
+    );
+    final result = await lessonBoardImageFromPage(
+      scope: frozen,
+      roomId: board.focusRoomId,
+      input: input,
+      upload: upload,
+    );
+    if (!mounted ||
+        _ended ||
+        gen != _boardGen ||
+        widget.messenger?.sessionKey != scope.sessionKey)
+      return {'code': 'forbidden'};
     return result;
   }
 
@@ -822,9 +824,19 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final web = _web;
     if (web == null || !_boardWorkspace || !mounted || _ended) return;
     final l10n = context.l10n;
-    String? deviceNote(String? note, bool video) => note == null ? null : video
-        ? note == 'denied' ? l10n.parentLiveLessonCameraDenied : note == 'missing' ? l10n.parentLiveLessonCameraMissing : l10n.parentLiveLessonCameraAskAgain
-        : note == 'denied' ? l10n.parentLiveLessonMicDenied : note == 'missing' ? l10n.parentLiveLessonMicMissing : l10n.parentLiveLessonMicAskAgain;
+    String? deviceNote(String? note, bool video) => note == null
+        ? null
+        : video
+        ? note == 'denied'
+              ? l10n.parentLiveLessonCameraDenied
+              : note == 'missing'
+              ? l10n.parentLiveLessonCameraMissing
+              : l10n.parentLiveLessonCameraAskAgain
+        : note == 'denied'
+        ? l10n.parentLiveLessonMicDenied
+        : note == 'missing'
+        ? l10n.parentLiveLessonMicMissing
+        : l10n.parentLiveLessonMicAskAgain;
     final state = {
       'callReady': _desk != null ? _desk!.media != null : widget.mediaEnabled,
       'videoOn': _desk?.requested('video') ?? _cameraOn,
@@ -833,25 +845,38 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       'chat': widget.messenger != null,
       'chatLabel': l10n.messengerOpen,
       'messengerOpen': _messengerOpen,
-      'messenger': widget.messenger == null ? null : {
-        'identity': _messengerBridgeIdentity,
-        'lessonSessionId': widget.messenger!.lessonSessionId,
-        'childId': widget.messenger!.childId ?? widget.childId,
-        'credential': widget.messenger!.credential.name,
-        'intent': widget.messenger!.intent.name,
-      },
+      'messenger': widget.messenger == null
+          ? null
+          : {
+              'identity': _messengerBridgeIdentity,
+              'lessonSessionId': widget.messenger!.lessonSessionId,
+              'childId': widget.messenger!.childId ?? widget.childId,
+              'credential': widget.messenger!.credential.name,
+              'intent': widget.messenger!.intent.name,
+            },
       'unread': _messengerOpen ? 0 : _messenger?.unread ?? 0,
       'retry': _link == _LessonCallLink.lost || _link == _LessonCallLink.failed,
       'hearBlocked': _hearBlocked,
-      'retryLabel': _hearBlocked ? l10n.parentLiveLessonHear : l10n.parentLiveLessonLinkRetry,
+      'retryLabel': _hearBlocked
+          ? l10n.parentLiveLessonHear
+          : l10n.parentLiveLessonLinkRetry,
       'note': [
         if (_link == _LessonCallLink.failed) l10n.parentLiveLessonCallFailed,
         if (_link == _LessonCallLink.lost) l10n.parentLiveLessonLinkLost,
-        if (_link == _LessonCallLink.reconnecting) l10n.parentLiveLessonLinkReconnecting,
-        deviceNote(_cameraNote, true), deviceNote(_micNote, false),
+        if (_link == _LessonCallLink.reconnecting)
+          l10n.parentLiveLessonLinkReconnecting,
+        deviceNote(_cameraNote, true),
+        deviceNote(_micNote, false),
       ].whereType<String>().join(' '),
     };
-    try { await web.evaluateJavascript(source: 'if(window.LarnesBoard?.setChrome)window.LarnesBoard.setChrome(${jsonEncode(state)})'); } catch (_) { /* Page may be closing. */ }
+    try {
+      await web.evaluateJavascript(
+        source:
+            'if(window.LarnesBoard?.setChrome)window.LarnesBoard.setChrome(${jsonEncode(state)})',
+      );
+    } catch (_) {
+      /* Page may be closing. */
+    }
   }
 
   void _watchRoster(String endpointId) {
@@ -882,7 +907,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final claim = widget.claimRoster;
     try {
       final teachers = claim != null
-          ? await claim(endpointId: endpointId, locale: locale, assignment: _desk?.media?.assignment)
+          ? await claim(
+              endpointId: endpointId,
+              locale: locale,
+              assignment: _desk?.media?.assignment,
+            )
           : widget.inviteToken == null
           ? await AuthScope.of(context).parentApi.claimLessonCallRoster(
               childId: widget.childId,
@@ -957,7 +986,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Future<void> _stopSession() async {
     try {
-      await _web?.evaluateJavascript(source: _boardWorkspace ? 'pauseMedia()' : 'dropSession()');
+      await _web?.evaluateJavascript(
+        source: _boardWorkspace ? 'pauseMedia()' : 'dropSession()',
+      );
     } catch (_) {}
   }
 
@@ -991,7 +1022,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         return;
       }
       final cameraGranted = video ? granted : await Permission.camera.isGranted;
-      final micGranted = video ? await Permission.microphone.isGranted : granted;
+      final micGranted = video
+          ? await Permission.microphone.isGranted
+          : granted;
       await _web?.evaluateJavascript(
         source: 'allowDevices($cameraGranted, $micGranted)',
       );
@@ -1005,7 +1038,14 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
             _micNote = 'denied';
           }
         });
-        if (_desk != null) unawaited(_desk!.report(failedDevice: device, error: 'denied', expected: expectedMedia));
+        if (_desk != null)
+          unawaited(
+            _desk!.report(
+              failedDevice: device,
+              error: 'denied',
+              expected: expectedMedia,
+            ),
+          );
         if (!_deviceWishCurrent(video, seq, callGen)) {
           return;
         }
@@ -1031,7 +1071,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _toggleCamera() async {
-    if (_desk != null) { await _desk!.change('video', !_desk!.requested('video')); return; }
+    if (_desk != null) {
+      await _desk!.change('video', !_desk!.requested('video'));
+      return;
+    }
     if (!_inRoom) {
       return;
     }
@@ -1039,7 +1082,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
   }
 
   Future<void> _toggleMic() async {
-    if (_desk != null) { await _desk!.change('audio', !_desk!.requested('audio')); return; }
+    if (_desk != null) {
+      await _desk!.change('audio', !_desk!.requested('audio'));
+      return;
+    }
     if (!_inRoom) {
       return;
     }
@@ -1076,7 +1122,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     _retireCall();
     _boardGen++;
     _pageGen++;
-    _roster?.cancel(); _soundTimer?.cancel(); _boardTimer?.cancel(); _chromeTimer?.cancel();
+    _roster?.cancel();
+    _soundTimer?.cancel();
+    _boardTimer?.cancel();
+    _chromeTimer?.cancel();
     _desk?.removeListener(_onDeskMedia);
     _desk?.dispose();
     _desk = null;
@@ -1102,13 +1151,38 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   Future<Map<String, dynamic>> _requestBoardExercise(List<dynamic> args) async {
     final board = _board;
-    if (!mounted || _ended || board == null || args.isEmpty || args.first is! Map) return {'accepted': false};
+    if (!mounted ||
+        _ended ||
+        board == null ||
+        args.isEmpty ||
+        args.first is! Map)
+      return {'accepted': false};
     final request = Map<String, dynamic>.from(args.first as Map);
-    if (request['gen'] != _boardGen || request['roomId'] != board.focusRoomId || request['body'] is! Map) return {'accepted': false};
+    if (request['gen'] != _boardGen ||
+        request['roomId'] != board.focusRoomId ||
+        request['body'] is! Map)
+      return {'accepted': false};
     final body = Map<String, dynamic>.from(request['body'] as Map);
-    if (!{'audio', 'field', 'command', 'preview', 'presence', 'ready', 'scene', 'personal'}.contains(body['kind'])) return {'accepted': false};
-    if (body['kind'] == 'scene' && (body['roomId'] != board.focusRoomId || body['roomEpoch'] != board.roomEpoch || body['lessonSessionId'] != board.lessonSessionId)) return {'accepted': false};
-    if (body['kind'] == 'presence' && (body['roomId'] != board.focusRoomId || body['roomEpoch'] != board.roomEpoch)) return {'accepted': false};
+    if (!{
+      'audio',
+      'field',
+      'command',
+      'preview',
+      'presence',
+      'ready',
+      'scene',
+      'personal',
+    }.contains(body['kind']))
+      return {'accepted': false};
+    if (body['kind'] == 'scene' &&
+        (body['roomId'] != board.focusRoomId ||
+            body['roomEpoch'] != board.roomEpoch ||
+            body['lessonSessionId'] != board.lessonSessionId))
+      return {'accepted': false};
+    if (body['kind'] == 'presence' &&
+        (body['roomId'] != board.focusRoomId ||
+            body['roomEpoch'] != board.roomEpoch))
+      return {'accepted': false};
     if (body['kind'] == 'ready') body['link'] = _boardLink;
     if (body['kind'] == 'personal') body['writer'] = _boardLink;
     final injected = widget.requestBoard;
@@ -1118,28 +1192,50 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final invite = widget.inviteToken;
     final auth = AuthScope.of(context);
     final result = invite != null
-        ? await auth.lessonInviteGuestApi.requestBoard(token: invite, body: body)
-        : await auth.parentApi.requestChildBoard(childId: widget.childId, body: body);
+        ? await auth.lessonInviteGuestApi.requestBoard(
+            token: invite,
+            body: body,
+          )
+        : await auth.parentApi.requestChildBoard(
+            childId: widget.childId,
+            body: body,
+          );
     return result ?? {'accepted': false};
   }
 
   Future<Map<String, dynamic>> _lessonMessenger(List<dynamic> args) async {
     final scope = widget.messenger;
-    if (scope == null || !mounted || _ended || args.isEmpty || args.first is! Map) return {'error': 'forbidden'};
-    final input = Map<String, dynamic>.from(args.first as Map), identity = _messengerBridgeIdentity;
+    if (scope == null ||
+        !mounted ||
+        _ended ||
+        args.isEmpty ||
+        args.first is! Map)
+      return {'error': 'forbidden'};
+    final input = Map<String, dynamic>.from(args.first as Map),
+        identity = _messengerBridgeIdentity;
     if (input['identity'] != identity) return {'error': 'forbidden'};
     final headers = await scope.authorization();
-    if (!mounted || _ended || identity != _messengerBridgeIdentity) return {'error': 'forbidden'};
-    final frozen = MessengerScope(authorization: () async => headers, credential: scope.credential, intent: scope.intent,
-      lessonSessionId: scope.lessonSessionId, ownerKey: scope.ownerKey, admissionId: scope.admissionId, childId: scope.childId);
+    if (!mounted || _ended || identity != _messengerBridgeIdentity)
+      return {'error': 'forbidden'};
+    final frozen = MessengerScope(
+      authorization: () async => headers,
+      credential: scope.credential,
+      intent: scope.intent,
+      lessonSessionId: scope.lessonSessionId,
+      ownerKey: scope.ownerKey,
+      admissionId: scope.admissionId,
+      childId: scope.childId,
+    );
     if (input['operation'] == 'open-file') {
       final id = input['id'];
-      if (id is! String || !RegExp(r'^[a-zA-Z0-9-]{8,80}$').hasMatch(id)) return {'error': 'file'};
+      if (id is! String || !RegExp(r'^[a-zA-Z0-9-]{8,80}$').hasMatch(id))
+        return {'error': 'file'};
       await _messenger?.openFile(id);
       return {'ok': true};
     }
     final result = await _workspaceMessengerApi.webview(frozen, input);
-    if (!mounted || _ended || identity != _messengerBridgeIdentity) return {'error': 'forbidden'};
+    if (!mounted || _ended || identity != _messengerBridgeIdentity)
+      return {'error': 'forbidden'};
     return result;
   }
 
@@ -1162,29 +1258,22 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final detail = message['detail'];
     if (kind == 'workspace-action') {
       switch (detail) {
-        case 'video': _toggleCamera();
-        case 'audio': _toggleMic();
-        case 'chat': _toggleChat();
-        case 'leave': unawaited(_leaveFromDock());
-        case 'restore': if (_hearBlocked) { _resumeHear(); } else { _rejoin(); }
+        case 'video':
+          _toggleCamera();
+        case 'audio':
+          _toggleMic();
+        case 'chat':
+          _toggleChat();
+        case 'leave':
+          unawaited(_leaveFromDock());
+        case 'restore':
+          if (_hearBlocked) {
+            _resumeHear();
+          } else {
+            _rejoin();
+          }
       }
       unawaited(_syncLessonChrome());
-      return;
-    }
-    if (kind == 'room-answer' && detail is String) {
-      unawaited(_answerRoom(detail));
-      return;
-    }
-    if (kind == 'room-preview' && detail is String) {
-      unawaited(_previewRoom(detail));
-      return;
-    }
-    if (kind == 'room-ready' && detail is String) {
-      unawaited(_readyRoom(detail));
-      return;
-    }
-    if (kind == 'room-listen' && detail is String) {
-      unawaited(_listenRoom(detail));
       return;
     }
     if (kind == 'room-scene' && detail is String) {
@@ -1198,12 +1287,16 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       switch (kind) {
         case 'board-widgets':
           _boardWidgets = true;
-          _boardAudioReady = detail is String && detail.isNotEmpty ? detail : 'not-started';
+          _boardAudioReady = detail is String && detail.isNotEmpty
+              ? detail
+              : 'not-started';
         case 'joined':
           _inRoom = true;
           _link = _LessonCallLink.none;
           openDevices = widget.captureOnJoin;
-          if (_desk != null) { unawaited(_applyDeskDevices()); }
+          if (_desk != null) {
+            unawaited(_applyDeskDevices());
+          }
         case 'endpoint':
           if (detail is String) {
             _watchRoster(detail);
@@ -1226,7 +1319,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           _cameraOn = false;
           _cameraLive = false;
           _cameraNote = block;
-          if (_desk != null) unawaited(_desk!.report(failedDevice: 'video', error: block));
+          if (_desk != null)
+            unawaited(_desk!.report(failedDevice: 'video', error: block));
         case 'mic-on':
           _micOn = true;
           _micLive = true;
@@ -1238,7 +1332,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           _micOn = false;
           _micLive = false;
           _micNote = block;
-          if (_desk != null) unawaited(_desk!.report(failedDevice: 'audio', error: block));
+          if (_desk != null)
+            unawaited(_desk!.report(failedDevice: 'audio', error: block));
         case 'hear-blocked':
           _hearBlocked = true;
         case 'hear-on':
@@ -1249,7 +1344,9 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           }
         case 'closed':
           _retireCall();
-          _link = _boardWorkspace ? _LessonCallLink.failed : _LessonCallLink.closed;
+          _link = _boardWorkspace
+              ? _LessonCallLink.failed
+              : _LessonCallLink.closed;
           stopSession = true;
         case 'mode':
           if (detail == 'grid' || detail == 'talk' || detail == 'workflow') {
@@ -1277,15 +1374,27 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         case 'failed':
           _inRoom = false;
           _link = _LessonCallLink.failed;
-          if (_desk != null) unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
+          if (_desk != null)
+            unawaited(_desk!.report(failedDevice: 'call', error: 'failed'));
       }
     });
     if (stopSession) {
       unawaited(_stopSession());
     }
     unawaited(_syncLessonChrome());
-    if (_desk != null && _inRoom && (kind == 'camera-on' || kind == 'mic-on' || kind == 'camera-off' || kind == 'mic-off')) {
-      unawaited(_desk!.report(joined: (!_desk!.requested('video') || _cameraLive) && (!_desk!.requested('audio') || _micLive)));
+    if (_desk != null &&
+        _inRoom &&
+        (kind == 'camera-on' ||
+            kind == 'mic-on' ||
+            kind == 'camera-off' ||
+            kind == 'mic-off')) {
+      unawaited(
+        _desk!.report(
+          joined:
+              (!_desk!.requested('video') || _cameraLive) &&
+              (!_desk!.requested('audio') || _micLive),
+        ),
+      );
     }
     if (openDevices) {
       unawaited(_setDeviceWish('video', false));
@@ -1302,7 +1411,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     }
     if (oldWidget.messenger?.sessionKey != widget.messenger?.sessionKey) {
       _messengerBridgeEpoch++;
-      if (oldWidget.messenger != null) _workspaceMessengerApi.cancelScope(oldWidget.messenger!);
+      if (oldWidget.messenger != null)
+        _workspaceMessengerApi.cancelScope(oldWidget.messenger!);
       _attachMessenger();
     }
     if (oldWidget.trainerOpen == widget.trainerOpen) {
@@ -1317,7 +1427,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
   @override
   void dispose() {
-    if (widget.messenger != null) _workspaceMessengerApi.cancelScope(widget.messenger!);
+    if (widget.messenger != null)
+      _workspaceMessengerApi.cancelScope(widget.messenger!);
     _callGen += 1;
     _pageGen += 1;
     _cameraSeq += 1;
@@ -1360,7 +1471,10 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
       ),
       onWebViewCreated: (controller) {
         _web = controller;
-        controller.addJavaScriptHandler(handlerName: 'lessonMessenger', callback: _lessonMessenger);
+        controller.addJavaScriptHandler(
+          handlerName: 'lessonMessenger',
+          callback: _lessonMessenger,
+        );
         controller.addJavaScriptHandler(
           handlerName: 'lessonCall',
           callback: _onBridge,
@@ -1371,11 +1485,16 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         );
         controller.addJavaScriptHandler(
           handlerName: 'boardImage',
-          callback: (args) => _boardWorkspace ? _lessonImage(args, true) : _parentSession
+          callback: (args) => _boardWorkspace
+              ? _lessonImage(args, true)
+              : _parentSession
               ? uploadBoardImageFromPage(AuthScope.of(context).parentApi, args)
               : Future.value(const {'code': 'forbidden'}),
         );
-        controller.addJavaScriptHandler(handlerName: 'boardImageData', callback: (args) => _lessonImage(args, false));
+        controller.addJavaScriptHandler(
+          handlerName: 'boardImageData',
+          callback: (args) => _lessonImage(args, false),
+        );
         _tryStart();
       },
       onLoadStop: (controller, url) async {
@@ -1394,7 +1513,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         if (_boardWorkspace || !widget.mediaEnabled) {
           await _syncPage();
           await controller.evaluateJavascript(
-            source: 'openWorkspace(${jsonEncode({'workspaceFormat': _boardWorkspace ? 'board' : widget.workspaceFormat})})',
+            source:
+                'openWorkspace(${jsonEncode({'workspaceFormat': _boardWorkspace ? 'board' : widget.workspaceFormat})})',
           );
           await _pullBoard();
           _pageReady = true;
@@ -1427,11 +1547,17 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
         if (desk != null) {
           final camera = desk.requested('video') && desk.media?.video == true;
           final mic = desk.requested('audio') && desk.media?.audio == true;
-          if (resources.any((type) =>
-              (type == PermissionResourceType.CAMERA && !camera) ||
-              (type == PermissionResourceType.MICROPHONE && !mic) ||
-              (type == PermissionResourceType.CAMERA_AND_MICROPHONE && (!camera || !mic)))) {
-            return PermissionResponse(resources: resources, action: PermissionResponseAction.DENY);
+          if (resources.any(
+            (type) =>
+                (type == PermissionResourceType.CAMERA && !camera) ||
+                (type == PermissionResourceType.MICROPHONE && !mic) ||
+                (type == PermissionResourceType.CAMERA_AND_MICROPHONE &&
+                    (!camera || !mic)),
+          )) {
+            return PermissionResponse(
+              resources: resources,
+              action: PermissionResponseAction.DENY,
+            );
           }
         }
         return PermissionResponse(
@@ -1472,12 +1598,22 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     if (_leavingDesk || _ended) return;
     final confirm = widget.leaveLesson;
     if (confirm != null) {
-      setState(() { _leavingDesk = true; _leaveFailed = false; });
+      setState(() {
+        _leavingDesk = true;
+        _leaveFailed = false;
+      });
       bool released;
-      try { released = await confirm(); } catch (_) { released = false; }
+      try {
+        released = await confirm();
+      } catch (_) {
+        released = false;
+      }
       if (!mounted) return;
       if (!released) {
-        setState(() { _leavingDesk = false; _leaveFailed = true; });
+        setState(() {
+          _leavingDesk = false;
+          _leaveFailed = true;
+        });
         return;
       }
     }
@@ -1609,7 +1745,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
 
     return Column(
       children: [
-        if (_leaveFailed) Text(context.l10n.parentLiveLessonLeaveFailed, style: const TextStyle(color: Colors.red)),
+        if (_leaveFailed)
+          Text(
+            context.l10n.parentLiveLessonLeaveFailed,
+            style: const TextStyle(color: Colors.red),
+          ),
         Flexible(
           child: Stack(
             children: [
@@ -1653,21 +1793,31 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
                     ],
                   ),
                 ),
-              if (_messengerOpen && _messenger != null && (!boardFormat || !_boardWidgets))
+              if (_messengerOpen &&
+                  _messenger != null &&
+                  (!boardFormat || !_boardWidgets))
                 Positioned.fill(
-                  child: MessengerPanel(room: _messenger!, onClose: _toggleChat),
+                  child: MessengerPanel(
+                    room: _messenger!,
+                    onClose: _toggleChat,
+                  ),
                 ),
             ],
           ),
         ),
-        if (!handle && (!boardFormat || !_boardWidgets)) _dock(showChat: widget.messenger != null),
+        if (!handle && (!boardFormat || !_boardWidgets))
+          _dock(showChat: widget.messenger != null),
       ],
     );
   }
 }
 
 class _ChatButton extends StatelessWidget {
-  const _ChatButton({required this.label, required this.onPressed, required this.unread});
+  const _ChatButton({
+    required this.label,
+    required this.onPressed,
+    required this.unread,
+  });
 
   final String label;
   final VoidCallback onPressed;
@@ -1689,7 +1839,11 @@ class _ChatButton extends StatelessWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
               onTap: onPressed,
-              child: const SizedBox(width: 48, height: 48, child: Icon(Icons.chat_bubble_outline, size: 24)),
+              child: const SizedBox(
+                width: 48,
+                height: 48,
+                child: Icon(Icons.chat_bubble_outline, size: 24),
+              ),
             ),
           ),
           if (unread > 0)
@@ -1697,10 +1851,16 @@ class _ChatButton extends StatelessWidget {
               right: -2,
               top: -2,
               child: DecoratedBox(
-                decoration: const BoxDecoration(color: Color(0xFFB42318), shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFB42318),
+                  shape: BoxShape.circle,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
-                  child: Text('${unread > 99 ? 99 : unread}', style: const TextStyle(color: Colors.white, fontSize: 10)),
+                  child: Text(
+                    '${unread > 99 ? 99 : unread}',
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
                 ),
               ),
             ),

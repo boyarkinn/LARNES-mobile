@@ -17,8 +17,6 @@ import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_labels.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_device_placement.dart';
 import 'package:larnes_mobile/features/kiosk/utils/kiosk_scan_error_message.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_qr_scanner.dart';
-import 'package:larnes_mobile/features/kiosk/widgets/kiosk_program_player_view.dart';
-import 'package:larnes_mobile/features/kiosk/widgets/kiosk_trainer_player_view.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/features/kiosk/theme/kiosk_theme.dart';
 import 'package:larnes_mobile/features/kiosk/widgets/kiosk_child_bound_view.dart';
@@ -65,9 +63,9 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       widget.childSessionTokenStorage ?? ChildSessionTokenStorage();
   late final ChildSessionApiClient _childSessionApiClient =
       widget.childSessionApiClient ??
-          ChildSessionApiClient(
-            childSessionTokenStorage: _childSessionTokenStorage,
-          );
+      ChildSessionApiClient(
+        childSessionTokenStorage: _childSessionTokenStorage,
+      );
 
   bool _isLoading = true;
   bool _needsRegistration = false;
@@ -281,7 +279,9 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       unawaited(tickHeartbeat());
     });
     unawaited(tickPlacementPoll());
-    _unplacedPlacementPollTimer = Timer.periodic(widget.placementPollInterval, (_) {
+    _unplacedPlacementPollTimer = Timer.periodic(widget.placementPollInterval, (
+      _,
+    ) {
       unawaited(tickPlacementPoll());
     });
   }
@@ -310,7 +310,7 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
   }
 
   bool _isFullscreenPlayerMode(KioskSessionMode? mode) {
-    return mode == KioskSessionMode.play || mode == KioskSessionMode.trainer;
+    return false;
   }
 
   bool _usesFullBleedLayout(KioskSessionController? controller) {
@@ -358,8 +358,8 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     final bodyPadding = fullscreenPlayer || fullBleed
         ? 0.0
         : isScanMode
-            ? 12.0
-            : 0.0;
+        ? 12.0
+        : 0.0;
 
     final body = Stack(
       children: [
@@ -442,25 +442,26 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
-    final lessonOpen = controller.lessonWorkspaceOn ||
-        (controller.deviceContext.lesson?.workspaceFormat != 'board' &&
-            controller.classroomCallOn);
+    final lessonOpen = controller.lessonWorkspaceOn;
     final switchKey = lessonOpen
         ? 'lesson-${controller.deviceContext.lesson?.lessonSessionId}-${controller.deviceContext.activeChild?.childId}'
-        : switch (controller.mode) {
-            KioskSessionMode.play =>
-              '${controller.mode.name}-${controller.activeProgramId}',
-            KioskSessionMode.trainer =>
-              '${controller.mode.name}-${controller.trainerReloadToken}',
-            _ => controller.mode.name,
-          };
+        : controller.mode.name;
 
     final content = KeyedSubtree(
-      key: ValueKey('$switchKey-${controller.deviceContext.activeChild?.assignment ?? ""}'),
-      child: lessonOpen ? _classroomCall(controller) : _buildModeContent(context, controller, l10n, theme),
+      key: ValueKey(
+        '$switchKey-${controller.deviceContext.activeChild?.assignment ?? ""}',
+      ),
+      child: lessonOpen
+          ? _classroomCall(controller)
+          : _buildModeContent(context, controller, l10n, theme),
     );
     // A pupil change must dispose the old media without overlapping live calls.
-    return lessonOpen ? content : AnimatedSwitcher(duration: const Duration(milliseconds: 220), child: content);
+    return lessonOpen
+        ? content
+        : AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            child: content,
+          );
   }
 
   Widget _classroomCall(KioskSessionController controller) {
@@ -469,14 +470,13 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
     final lessonId = controller.deviceContext.lesson?.lessonSessionId ?? '';
     return LessonCallStage(
       body: null,
-      mediaEnabled: !controller.lessonWorkspaceOn,
-      workspaceFormat:
-          controller.deviceContext.lesson?.workspaceFormat ?? 'classic',
+      mediaEnabled: false,
+      workspaceFormat: 'board',
       captureOnJoin: false,
       childId: childId,
       lessonSessionId: lessonId,
-      fetchMedia: controller.lessonWorkspaceOn ? callApi.fetchMedia : null,
-      sendMedia: controller.lessonWorkspaceOn ? callApi.sendMedia : null,
+      fetchMedia: callApi.fetchMedia,
+      sendMedia: callApi.sendMedia,
       messenger: lessonId.isEmpty || childId.isEmpty
           ? null
           : MessengerScope.kiosk(
@@ -485,15 +485,18 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
               lessonSessionId: lessonId,
             ),
       trainerOpen: false,
-      fetchPass: (locale, {String? assignment}) => callApi.fetchPass(locale: locale, assignment: assignment),
+      fetchPass: (locale, {String? assignment}) =>
+          callApi.fetchPass(locale: locale, assignment: assignment),
       fetchBoard: callApi.fetchBoard,
       sendBoard: callApi.sendBoard,
       requestBoard: callApi.requestBoard,
-      claimRoster: ({required endpointId, required locale, String? assignment}) => callApi.claimRoster(
-        endpointId: endpointId,
-        locale: locale,
-        assignment: assignment,
-      ),
+      claimRoster:
+          ({required endpointId, required locale, String? assignment}) =>
+              callApi.claimRoster(
+                endpointId: endpointId,
+                locale: locale,
+                assignment: assignment,
+              ),
       onLeave: () {},
       leaveLesson: controller.leaveDesk,
     );
@@ -512,8 +515,8 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
           placement: kioskDevicePlacementLine(controller.deviceContext, l10n),
         );
       case KioskSessionMode.scan:
-        final viewportSide =
-            (MediaQuery.sizeOf(context).shortestSide * 0.72).clamp(240.0, 520.0);
+        final viewportSide = (MediaQuery.sizeOf(context).shortestSide * 0.72)
+            .clamp(240.0, 520.0);
 
         return Center(
           child: SizedBox(
@@ -523,9 +526,10 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
               mockScanEnabled: widget.mockScanner,
               externalError: controller.scanErrorCode != null
                   ? kioskScanErrorMessageFromApiCode(
-                      l10n,
-                      controller.scanErrorCode,
-                    ) ?? controller.scanError
+                          l10n,
+                          controller.scanErrorCode,
+                        ) ??
+                        controller.scanError
                   : controller.scanError,
               onScan: (token) async {
                 controller.clearScanError();
@@ -533,27 +537,6 @@ class _KioskShellState extends State<KioskShell> with WidgetsBindingObserver {
               },
             ),
           ),
-        );
-      case KioskSessionMode.play:
-        final programId = controller.activeProgramId;
-        if (programId == null) {
-          return const SizedBox.shrink();
-        }
-
-        return KioskProgramPlayerView(
-          programId: programId,
-          programApi: _childSessionApiClient.kioskProgramApi,
-          childDisplayName: controller.scanResult?.childDisplayName,
-          locale: Localizations.localeOf(context).languageCode,
-          onExit: controller.exitProgram,
-        );
-      case KioskSessionMode.trainer:
-        final kioskScope = KioskScope.of(context);
-        return KioskTrainerPlayerView(
-          trainerApi: kioskScope.kioskApiClient.trainerApi,
-          reloadToken: controller.trainerReloadToken,
-          locale: Localizations.localeOf(context).languageCode,
-          onExit: controller.exitTrainer,
         );
       case KioskSessionMode.result:
         final result = controller.scanResult;

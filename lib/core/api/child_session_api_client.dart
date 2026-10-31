@@ -1,22 +1,24 @@
 import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:dio/dio.dart';
-import 'package:larnes_mobile/core/api/kiosk_program_api.dart';
 import 'package:larnes_mobile/core/auth/child_session_token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
 
 class ChildSessionApiClient {
-  ChildSessionApiClient({ChildSessionTokenStorage? childSessionTokenStorage, Dio? dio})
-      : _childSessionTokenStorage =
-            childSessionTokenStorage ?? ChildSessionTokenStorage(),
-        _dio = dio ??
-            Dio(
-              BaseOptions(
-                baseUrl: AppConfig.apiBaseUrl,
-                connectTimeout: const Duration(seconds: 20),
-                receiveTimeout: const Duration(seconds: 20),
-                headers: {'Content-Type': 'application/json'},
-              ),
-            ) {
+  ChildSessionApiClient({
+    ChildSessionTokenStorage? childSessionTokenStorage,
+    Dio? dio,
+  }) : _childSessionTokenStorage =
+           childSessionTokenStorage ?? ChildSessionTokenStorage(),
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: AppConfig.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 20),
+               receiveTimeout: const Duration(seconds: 20),
+               headers: {'Content-Type': 'application/json'},
+             ),
+           ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -36,11 +38,9 @@ class ChildSessionApiClient {
 
   final Dio _dio;
   final ChildSessionTokenStorage _childSessionTokenStorage;
-  KioskProgramApi? _kioskProgramApi;
 
   Dio get dio => _dio;
 
-  ChildSessionTokenStorage get childSessionTokenStorage => _childSessionTokenStorage;
-
-  KioskProgramApi get kioskProgramApi => _kioskProgramApi ??= KioskProgramApi(this);
+  ChildSessionTokenStorage get childSessionTokenStorage =>
+      _childSessionTokenStorage;
 }

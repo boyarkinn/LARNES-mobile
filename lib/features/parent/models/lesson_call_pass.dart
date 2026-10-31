@@ -27,7 +27,7 @@ class LessonCallPass {
     required this.room,
     required this.xmppDomain,
     this.teacherName = '',
-    this.workspaceFormat = 'classic',
+    this.workspaceFormat = 'board',
   });
 
   final String displayName;
@@ -71,7 +71,7 @@ class LessonCallPass {
       room: room,
       xmppDomain: xmppDomain,
       teacherName: teacherName is String ? teacherName : '',
-      workspaceFormat: json['workspaceFormat'] == 'board' ? 'board' : 'classic',
+      workspaceFormat: 'board',
     );
   }
 

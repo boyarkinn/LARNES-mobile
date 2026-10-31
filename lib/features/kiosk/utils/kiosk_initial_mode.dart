@@ -2,18 +2,9 @@ import 'package:larnes_mobile/features/kiosk/models/kiosk_device_command.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_device_context.dart';
 import 'package:larnes_mobile/features/kiosk/models/kiosk_scan_result.dart';
 
-enum KioskSessionMode {
-  idle,
-  scan,
-  result,
-  play,
-  trainer,
-}
+enum KioskSessionMode { idle, scan, result }
 
-enum KioskStandbyKind {
-  lessonNotStarted,
-  childNotAssigned,
-}
+enum KioskStandbyKind { lessonNotStarted, childNotAssigned }
 
 KioskStandbyKind resolveKioskStandbyKind({
   required bool hasActiveLesson,
@@ -29,7 +20,7 @@ KioskStandbyKind resolveKioskStandbyKind({
 KioskSessionMode modeFromScanOutcome(KioskScanOutcome outcome) {
   switch (outcome) {
     case KioskScanOutcome.play:
-      return KioskSessionMode.play;
+      return KioskSessionMode.result;
     case KioskScanOutcome.noProgram:
       return KioskSessionMode.result;
   }
@@ -44,18 +35,15 @@ KioskSessionMode modeFromCommand(KioskDeviceCommandKind command) {
     case KioskDeviceCommandKind.resetChild:
       return kioskQrScanFrozen ? KioskSessionMode.idle : KioskSessionMode.scan;
     case KioskDeviceCommandKind.playTrainer:
-      return KioskSessionMode.trainer;
+      return KioskSessionMode.idle;
     case KioskDeviceCommandKind.idle:
       return KioskSessionMode.idle;
   }
 }
 
-KioskSessionMode resolveInitialMode({
-  String? pendingCommand,
-  String? status,
-}) {
+KioskSessionMode resolveInitialMode({String? pendingCommand, String? status}) {
   if (pendingCommand == 'play_trainer') {
-    return KioskSessionMode.trainer;
+    return KioskSessionMode.idle;
   }
 
   if (status == 'child_active' || status == 'no_program') {
@@ -77,7 +65,9 @@ KioskSessionMode resolveInitialMode({
   return KioskSessionMode.idle;
 }
 
-KioskSessionMode resolveInitialModeFromLesson(KioskDeviceLessonBinding? lesson) {
+KioskSessionMode resolveInitialModeFromLesson(
+  KioskDeviceLessonBinding? lesson,
+) {
   if (lesson == null) {
     return KioskSessionMode.idle;
   }

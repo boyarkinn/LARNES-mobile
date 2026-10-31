@@ -1,5 +1,3 @@
-import 'package:larnes_mobile/features/parent/models/parent_homework.dart';
-
 class ParentLiveLessonWaiting {
   const ParentLiveLessonWaiting({
     required this.childName,
@@ -33,27 +31,27 @@ class ParentLiveLessonRoomState {
     this.commandSeq = 0,
     this.pendingCommand,
     this.sessionId,
-    this.workspaceFormat = 'classic',
-    this.waiting = const ParentLiveLessonWaiting(childName: '', lessonTitle: ''),
-    this.snapshot,
+    this.workspaceFormat = 'board',
+    this.waiting = const ParentLiveLessonWaiting(
+      childName: '',
+      lessonTitle: '',
+    ),
   });
 
   factory ParentLiveLessonRoomState.fromJson(Map<String, dynamic> json) {
-    final snapshot = json['snapshot'];
     return ParentLiveLessonRoomState(
       status: json['status'] as String? ?? 'error',
       admissionId: json['admissionId'] as String?,
       childId: json['childId'] as String?,
       commandSeq: (json['commandSeq'] as num?)?.toInt() ?? 0,
       sessionId: json['sessionId'] as String?,
-      workspaceFormat: json['workspaceFormat'] == 'board' ? 'board' : 'classic',
+      workspaceFormat: 'board',
       pendingCommand: json['pendingCommand'] as String?,
       waiting: ParentLiveLessonWaiting.fromJson(
-        json['waiting'] is Map ? Map<String, dynamic>.from(json['waiting'] as Map) : null,
+        json['waiting'] is Map
+            ? Map<String, dynamic>.from(json['waiting'] as Map)
+            : null,
       ),
-      snapshot: snapshot is Map
-          ? ParentHomeworkPlaySnapshot.fromJson(Map<String, dynamic>.from(snapshot))
-          : null,
     );
   }
 
@@ -65,7 +63,6 @@ class ParentLiveLessonRoomState {
   final String? sessionId;
   final String workspaceFormat;
   final ParentLiveLessonWaiting waiting;
-  final ParentHomeworkPlaySnapshot? snapshot;
 
   bool get isOk => status == 'ok';
 
@@ -74,6 +71,4 @@ class ParentLiveLessonRoomState {
       status == 'ended' ||
       status == 'expired' ||
       status == 'guest';
-
-  bool get hasPlayCommand => pendingCommand == 'play_trainer' && snapshot != null;
 }

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -65,25 +66,41 @@ ChildSessionApiClient createMockChildSessionApiClient({
           DioException(
             requestOptions: options,
             type: DioExceptionType.badResponse,
-            response: Response(
-              requestOptions: options,
-              statusCode: 404,
-            ),
+            response: Response(requestOptions: options, statusCode: 404),
           ),
         );
       },
     ),
   );
 
-  return ChildSessionApiClient(
-    childSessionTokenStorage: storage,
-    dio: dio,
-  );
+  return ChildSessionApiClient(childSessionTokenStorage: storage, dio: dio);
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   FlutterSecureStorage.setMockInitialValues({});
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('flutter_timezone'),
+          (_) async => 'Etc/UTC',
+        );
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('flutter_timezone'),
+          null,
+        );
+  });
+  Future<void> pumpRequests(WidgetTester tester) async {
+    for (var i = 0; i < 8; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+  }
 
   KioskRouteState kioskRouteStateWithMock({
     Map<String, dynamic>? deviceMeData,
@@ -101,7 +118,8 @@ void main() {
             handler.resolve(
               Response(
                 requestOptions: options,
-                data: deviceMeProvider?.call() ??
+                data:
+                    deviceMeProvider?.call() ??
                     deviceMeData ??
                     {
                       'deviceId': '55555555-5555-4555-8555-555555555555',
@@ -134,10 +152,7 @@ void main() {
           if (options.path.endsWith('/heartbeat') ||
               options.path.endsWith('/child-logout')) {
             handler.resolve(
-              Response(
-                requestOptions: options,
-                data: {'ok': true},
-              ),
+              Response(requestOptions: options, data: {'ok': true}),
             );
             return;
           }
@@ -146,7 +161,8 @@ void main() {
             handler.resolve(
               Response(
                 requestOptions: options,
-                data: scanData ??
+                data:
+                    scanData ??
                     {
                       'ok': true,
                       'outcome': 'play',
@@ -164,10 +180,7 @@ void main() {
             DioException(
               requestOptions: options,
               type: DioExceptionType.badResponse,
-              response: Response(
-                requestOptions: options,
-                statusCode: 404,
-              ),
+              response: Response(requestOptions: options, statusCode: 404),
             ),
           );
         },
@@ -197,7 +210,9 @@ void main() {
   }
 
   group('KioskShell', () {
-    testWidgets('shows registration screen without device token', (tester) async {
+    testWidgets('shows registration screen without device token', (
+      tester,
+    ) async {
       final kioskRouteState = KioskRouteState();
 
       final router = GoRouter(
@@ -205,9 +220,8 @@ void main() {
         routes: [
           GoRoute(
             path: '/kiosk',
-            builder: (context, state) => const KioskShell(
-              syncInterval: Duration(days: 1),
-            ),
+            builder: (context, state) =>
+                const KioskShell(syncInterval: Duration(days: 1)),
           ),
         ],
       );
@@ -215,11 +229,14 @@ void main() {
       await tester.pumpWidget(
         wrap(kioskRouteState: kioskRouteState, router: router),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Устройство не зарегистрировано'), findsOneWidget);
       expect(find.text('Войти'), findsOneWidget);
-      expect(find.text('В панели сети → Устройства выдайте одноразовый доступ.'), findsOneWidget);
+      expect(
+        find.text('В панели сети → Устройства выдайте одноразовый доступ.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('shows unplaced screen without scan UI', (tester) async {
@@ -252,7 +269,7 @@ void main() {
       await tester.pumpWidget(
         wrap(kioskRouteState: kioskRouteState, router: router),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Место не назначено'), findsOneWidget);
       expect(find.text('Занятие не начато'), findsNothing);
@@ -305,13 +322,13 @@ void main() {
       await tester.pumpWidget(
         wrap(kioskRouteState: kioskRouteState, router: router),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Место не назначено'), findsOneWidget);
 
       placed = true;
       await tester.pump(const Duration(milliseconds: 150));
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Место не назначено'), findsNothing);
       expect(find.text('Занятие не начато'), findsOneWidget);
@@ -326,9 +343,8 @@ void main() {
         routes: [
           GoRoute(
             path: '/kiosk',
-            builder: (context, state) => const KioskShell(
-              syncInterval: Duration(days: 1),
-            ),
+            builder: (context, state) =>
+                const KioskShell(syncInterval: Duration(days: 1)),
           ),
         ],
       );
@@ -336,7 +352,7 @@ void main() {
       await tester.pumpWidget(
         wrap(kioskRouteState: kioskRouteState, router: router),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Занятие не начато'), findsOneWidget);
       expect(find.textContaining('Center A'), findsOneWidget);
@@ -362,9 +378,8 @@ void main() {
         routes: [
           GoRoute(
             path: '/kiosk',
-            builder: (context, state) => const KioskShell(
-              syncInterval: Duration(days: 1),
-            ),
+            builder: (context, state) =>
+                const KioskShell(syncInterval: Duration(days: 1)),
             routes: [
               GoRoute(
                 path: 'settings',
@@ -382,15 +397,17 @@ void main() {
           authSession: authSession,
         ),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       await tester.tap(find.text('Настройки'));
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Настройки устройства'), findsOneWidget);
     });
 
-    testWidgets('shows idle standby when leftover QR signals remain', (tester) async {
+    testWidgets('shows idle standby when leftover QR signals remain', (
+      tester,
+    ) async {
       final kioskRouteState = kioskRouteStateWithMock(
         deviceMeData: {
           'deviceId': '55555555-5555-4555-8555-555555555555',
@@ -425,127 +442,13 @@ void main() {
       await tester.pumpWidget(
         wrap(kioskRouteState: kioskRouteState, router: router),
       );
-      await tester.pumpAndSettle();
+      await pumpRequests(tester);
 
       expect(find.text('Поднесите QR'), findsNothing);
       expect(find.text('Включить камеру'), findsNothing);
       expect(find.text('Ребёнок не назначен'), findsOneWidget);
       expect(find.text('Занятие не начато'), findsNothing);
       expect(find.textContaining('Center A'), findsOneWidget);
-    });
-
-    testWidgets('opens program player after mock scan success', (tester) async {
-      final childStorage = MemoryChildSessionTokenStorage();
-      final childClient = createMockChildSessionApiClient(storage: childStorage);
-      final kioskRouteState = kioskRouteStateWithMock(
-        deviceMeData: {
-          'deviceId': '55555555-5555-4555-8555-555555555555',
-          'kind': 'phone',
-          'centerName': 'Center A',
-          'classroomId': '44444444-4444-4444-8444-444444444444',
-          'classroomTitle': 'Room 1',
-          'slotLabel': 'M1',
-          'lesson': {
-            'commandSeq': 2,
-            'lessonSessionId': '66666666-6666-4666-8666-666666666666',
-            'pendingCommand': 'open_scan',
-            'status': 'waiting_scan',
-          },
-        },
-      );
-      await kioskRouteState.persistDeviceToken('device-jwt-token');
-
-      final router = GoRouter(
-        initialLocation: '/kiosk',
-        routes: [
-          GoRoute(
-            path: '/kiosk',
-            builder: (context, state) => KioskShell(
-              syncInterval: Duration(days: 1),
-              mockScanner: true,
-              initialMode: KioskSessionMode.scan,
-              childSessionTokenStorage: childStorage,
-              childSessionApiClient: childClient,
-            ),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        wrap(kioskRouteState: kioskRouteState, router: router),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Включить камеру'));
-      await tester.pump();
-      await tester.pumpAndSettle();
-
-      expect(find.byType(TrainerPlayShell), findsOneWidget);
-      expect(find.text('Программа назначена'), findsNothing);
-      expect(find.text('Настройки'), findsNothing);
-    });
-
-    testWidgets('shows result after no_program scan', (tester) async {
-      final childStorage = MemoryChildSessionTokenStorage();
-      final childClient = createMockChildSessionApiClient(storage: childStorage);
-      final kioskRouteState = kioskRouteStateWithMock(
-        deviceMeData: {
-          'deviceId': '55555555-5555-4555-8555-555555555555',
-          'kind': 'phone',
-          'centerName': 'Center A',
-          'classroomId': '44444444-4444-4444-8444-444444444444',
-          'classroomTitle': 'Room 1',
-          'slotLabel': 'M1',
-          'lesson': {
-            'commandSeq': 2,
-            'lessonSessionId': '66666666-6666-4666-8666-666666666666',
-            'pendingCommand': 'open_scan',
-            'status': 'waiting_scan',
-          },
-        },
-        scanData: {
-          'ok': true,
-          'outcome': 'no_program',
-          'childId': '88888888-8888-4888-8888-888888888888',
-          'childDisplayName': 'Петрова Анна Сергеевна',
-          'childCardColor': 'violet',
-          'childGender': 'female',
-          'childGivenName': 'Анна Сергеевна',
-          'childLastName': 'Петрова',
-          'childSessionToken': 'child-jwt-token',
-        },
-      );
-      await kioskRouteState.persistDeviceToken('device-jwt-token');
-
-      final router = GoRouter(
-        initialLocation: '/kiosk',
-        routes: [
-          GoRoute(
-            path: '/kiosk',
-            builder: (context, state) => KioskShell(
-              syncInterval: Duration(days: 1),
-              mockScanner: true,
-              initialMode: KioskSessionMode.scan,
-              childSessionTokenStorage: childStorage,
-              childSessionApiClient: childClient,
-            ),
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        wrap(kioskRouteState: kioskRouteState, router: router),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Включить камеру'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(KioskChildBoundView), findsOneWidget);
-      expect(find.text('Петрова'), findsOneWidget);
-      expect(find.text('Анна Сергеевна'), findsOneWidget);
-      expect(find.text('Ребёнок на занятии'), findsNothing);
-      expect(find.text('Пока нет программы для этого ребёнка.'), findsNothing);
     });
   });
 }

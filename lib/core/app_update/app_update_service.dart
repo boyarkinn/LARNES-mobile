@@ -30,7 +30,7 @@ class AppUpdateService {
     return Dio(
       BaseOptions(
         connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(minutes: 10),
+        receiveTimeout: const Duration(seconds: 60),
       ),
     );
   }
@@ -80,7 +80,10 @@ class AppUpdateService {
     }
 
     final localVersionCode = await readLocalVersionCode();
-    if (!isRemoteAppUpdateNewer(remote: remote, localVersionCode: localVersionCode)) {
+    if (!isRemoteAppUpdateNewer(
+      remote: remote,
+      localVersionCode: localVersionCode,
+    )) {
       return null;
     }
 
@@ -90,20 +93,35 @@ class AppUpdateService {
   Future<String> downloadApk({
     required AppUpdateInfo update,
     void Function(int received, int? total)? onProgress,
+    CancelToken? cancelToken,
   }) async {
-    final directory = await getTemporaryDirectory();
+    final directory = await getApplicationSupportDirectory();
     final targetPath = '${directory.path}/larnes-${update.versionCode}.apk';
     final file = File(targetPath);
     if (await file.exists()) {
-      await file.delete();
+      try {
+        await verifySha256(filePath: targetPath, expectedSha256: update.sha256);
+        final size = await file.length();
+        onProgress?.call(size, size);
+        return targetPath;
+      } on AppUpdateVerificationException {
+        await file.delete();
+      }
     }
-
-    await _downloadDio().download(
-      update.url,
-      targetPath,
-      onReceiveProgress: onProgress,
-    );
-
+    final partial = File('$targetPath.part');
+    try {
+      await _downloadDio().download(
+        update.url,
+        partial.path,
+        onReceiveProgress: onProgress,
+        cancelToken: cancelToken,
+      );
+      if (cancelToken?.isCancelled == true) throw cancelToken!.cancelError!;
+      await partial.rename(targetPath);
+    } catch (_) {
+      if (await partial.exists()) await partial.delete();
+      rethrow;
+    }
     return targetPath;
   }
 
@@ -111,8 +129,8 @@ class AppUpdateService {
     required String filePath,
     required String expectedSha256,
   }) async {
-    final bytes = await File(filePath).readAsBytes();
-    final digest = sha256.convert(bytes).toString();
+    final digest = (await sha256.bind(File(filePath).openRead()).first)
+        .toString();
     if (digest.toLowerCase() != expectedSha256.toLowerCase()) {
       throw AppUpdateVerificationException();
     }
@@ -124,7 +142,7 @@ class AppUpdateService {
       type: 'application/vnd.android.package-archive',
     );
 
-    if (result.type != ResultType.done && result.type != ResultType.noAppToOpen) {
+    if (result.type != ResultType.done) {
       throw AppUpdateInstallException(result.message);
     }
   }

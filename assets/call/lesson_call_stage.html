@@ -162,13 +162,6 @@
         background: #fff;
         font-size: 18px;
       }
-      #board-note {
-        display: none; position: absolute; z-index: 5; inset-inline: 12px;
-        bottom: 64px; padding: 8px; border-radius: 10px; color: #57534e;
-        background: #fafaf9e8; pointer-events: none; font-size: 12px;
-      }
-      #board-retry { pointer-events: auto; border: 0; background: transparent; text-decoration: underline; color: inherit; padding: 8px; min-height: 44px; min-width: 44px; }
-      #board-announcement { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
       .board .excalidraw,
       .board .excalidraw-container {
         width: 100%;
@@ -183,8 +176,6 @@
     <p id="room-conversation" role="status"></p>
     <p id="sound-note"></p>
     <div id="room-work"></div>
-    <div id="board-note" aria-live="off"><span id="board-status-text"></span><button id="board-retry" type="button" onclick="retryBoard()"></button></div>
-    <div id="board-announcement" role="status" aria-live="polite" aria-atomic="true"></div>
     <script>
       var connection = null;
       var room = null;
@@ -256,8 +247,6 @@
       var boardImageBase = null;
       var boardImageUpload = false;
       var boardDetails = {};
-      var boardNoticeText = "";
-      var boardNoticeTimer = null;
       var speakerId = "";
       var workspaceSlots = {};
       var localEndpoint = "";
@@ -827,29 +816,6 @@
         if (boardInboxTimer === null) boardInboxTimer = window.setTimeout(clearBoardInbox, 5000);
       }
 
-      function updateBoardNotice() {
-        var note = document.getElementById("board-note");
-        if (!note) return;
-        var open = boardWorkspace || (shownMode === "workflow" && !band);
-        var text = boardLabels[boardState] || "";
-        if (boardDetails.hydrated && !boardDetails.writable && boardDetails.mode === "teacher" && (boardState === "ready" || boardState === "recovering")) text += " " + (boardLabels.readOnly || "");
-        document.getElementById("board-status-text").textContent = text;
-        var retry = document.getElementById("board-retry");
-        retry.textContent = boardLabels.retry || "";
-        retry.style.display = boardDetails.canRetry && retry.textContent ? "inline-block" : "none";
-        note.style.display = open && text ? "block" : "none";
-        var announcement = open ? text : "";
-        if (announcement !== boardNoticeText) {
-          boardNoticeText = announcement;
-          if (boardNoticeTimer !== null) window.clearTimeout(boardNoticeTimer);
-          boardNoticeTimer = window.setTimeout(function () {
-            boardNoticeTimer = null;
-            document.getElementById("board-announcement").textContent = boardNoticeText;
-          }, 600);
-        }
-      }
-
-      function retryBoard() { if (boardInstalled) window.LarnesBoard.retry(); }
       var lessonAppVisible = true;
       function setLessonAppVisible(value) { lessonAppVisible = value === true; syncBoard(); }
 
@@ -859,7 +825,7 @@
         var open = boardWorkspace || (shownMode === "workflow" && !band);
         host.className = open ? "board on" : "board";
         if (boardInstalled) window.LarnesBoard.setVisible(open && lessonAppVisible);
-        updateBoardNotice();
+
         if (open && boardInstalled) window.requestAnimationFrame(function () { window.LarnesBoard.refresh(); });
       }
 
@@ -869,16 +835,16 @@
         if (typeof part === "string" && part) {
           boardSourceChars += part.length;
           if (boardParts.length >= 96 || boardSourceChars > 20 * 1024 * 1024) {
-            boardParts = []; boardSourceChars = 0; boardState = "offline"; updateBoardNotice(); return;
+            boardParts = []; boardSourceChars = 0; boardState = "offline";  return;
           }
           boardParts.push(part);
         }
         if (!last) return;
         var code = boardParts.join("");
         boardParts = []; boardSourceChars = 0;
-        try { (0, eval)(code); } catch (_) { boardState = "offline"; updateBoardNotice(); return; }
+        try { (0, eval)(code); } catch (_) { boardState = "offline";  return; }
         if (!window.LarnesBoard || window.LarnesBoard.version !== 2) {
-          boardState = "unsupported"; updateBoardNotice(); return;
+          boardState = "unsupported";  return;
         }
         boardInstalled = true;
         window.LarnesBoard.onAction = function (action) {
@@ -886,7 +852,7 @@
           post("workspace-action", action);
         };
         window.LarnesBoard.onBindVideo = bindBoardVideo;
-        window.LarnesBoard.onStatus = function (state, details) { if (boardEnded) return; boardState = state; boardDetails = details || {}; updateBoardNotice(); };
+        window.LarnesBoard.onStatus = function (state, details) { if (boardEnded) return; boardState = state; boardDetails = details || {};  };
         applyBoardImages();
         window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
         window.LarnesBoard.setLocale(nameLocale);
@@ -1027,7 +993,7 @@
           window.LarnesBoard.setLocale(nameLocale);
           window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
         }
-        updateBoardNotice();
+
         render();
       }
 
@@ -2324,11 +2290,7 @@
         if (boardEnded) return;
         boardEnded = true;
         clearBoardInbox(); boardParts = []; boardSourceChars = 0; boardRoster = null;
-        if (boardNoticeTimer !== null) window.clearTimeout(boardNoticeTimer);
-        boardNoticeTimer = null;
         if (boardInstalled) window.LarnesBoard.endSession();
-        document.getElementById("board-note").style.display = "none";
-        document.getElementById("board-announcement").textContent = "";
       }
     </script>
   </body>

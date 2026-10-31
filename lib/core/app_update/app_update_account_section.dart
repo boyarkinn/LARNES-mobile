@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/core/app_update/app_update_controller.dart';
 import 'package:larnes_mobile/core/app_update/app_update_dialog.dart';
 import 'package:larnes_mobile/core/app_update/app_update_scope.dart';
@@ -8,7 +9,8 @@ class AppUpdateAccountSection extends StatefulWidget {
   const AppUpdateAccountSection({super.key});
 
   @override
-  State<AppUpdateAccountSection> createState() => _AppUpdateAccountSectionState();
+  State<AppUpdateAccountSection> createState() =>
+      _AppUpdateAccountSectionState();
 }
 
 class _AppUpdateAccountSectionState extends State<AppUpdateAccountSection> {
@@ -51,7 +53,7 @@ class _AppUpdateAccountSectionState extends State<AppUpdateAccountSection> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: Material(
-                  color: const Color(0xFFE8F5E9),
+                  color: ParentColors.shellSoft,
                   borderRadius: BorderRadius.circular(12),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -59,22 +61,33 @@ class _AppUpdateAccountSectionState extends State<AppUpdateAccountSection> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.appUpdateAvailableTitle,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
                           l10n.appUpdateAvailableMessage(
                             update.versionName,
                             update.versionCode,
                           ),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
+                        if (controller.isBusy ||
+                            controller.status ==
+                                AppUpdateStatus.installerReady ||
+                            controller.status == AppUpdateStatus.error) ...[
+                          const SizedBox(height: 12),
+                          AppUpdateProgress(controller: controller),
+                        ],
                         const SizedBox(height: 12),
                         FilledButton(
-                          onPressed: controller.status == AppUpdateStatus.downloading
-                              ? null
-                              : () => showAppUpdateDialog(context, controller: controller),
-                          child: Text(l10n.appUpdateInstallButton),
+                          onPressed: () => showAppUpdateDialog(
+                            context,
+                            controller: controller,
+                          ),
+                          child: Text(
+                            controller.isBusy
+                                ? l10n.appUpdateDownloadingButton
+                                : controller.status ==
+                                      AppUpdateStatus.installerReady
+                                ? l10n.appUpdateOpenInstaller
+                                : l10n.appUpdateInstallButton,
+                          ),
                         ),
                       ],
                     ),
@@ -84,8 +97,14 @@ class _AppUpdateAccountSectionState extends State<AppUpdateAccountSection> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: OutlinedButton(
-                onPressed: _checking ? null : () => _check(controller),
-                child: Text(_checking ? l10n.appUpdateCheckingButton : l10n.appUpdateCheckButton),
+                onPressed: _checking || controller.isBusy
+                    ? null
+                    : () => _check(controller),
+                child: Text(
+                  _checking
+                      ? l10n.appUpdateCheckingButton
+                      : l10n.appUpdateCheckButton,
+                ),
               ),
             ),
           ],

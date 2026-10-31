@@ -5044,7 +5044,7 @@ abstract class AppLocalizations {
   /// No description provided for @appUpdateAvailableMessage.
   ///
   /// In en, this message translates to:
-  /// **'Version {versionName} ({versionCode}) is ready to install.'**
+  /// **'Download update {versionName}'**
   String appUpdateAvailableMessage(String versionName, int versionCode);
 
   /// No description provided for @appUpdateInstalledVersion.
@@ -5068,7 +5068,7 @@ abstract class AppLocalizations {
   /// No description provided for @appUpdateInstallButton.
   ///
   /// In en, this message translates to:
-  /// **'Update'**
+  /// **'Download'**
   String get appUpdateInstallButton;
 
   /// No description provided for @appUpdateLaterButton.
@@ -5094,54 +5094,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the installer.'**
   String get appUpdateInstallFailed;
-
-  /// No description provided for @parentLiveLessonBoardWaiting.
-  ///
-  /// In en, this message translates to:
-  /// **'Connecting to the shared board…'**
-  String get parentLiveLessonBoardWaiting;
-
-  /// No description provided for @parentLiveLessonBoardUnsupported.
-  ///
-  /// In en, this message translates to:
-  /// **'The shared board is unavailable: the teacher may be using an older version. Ask them to refresh the lesson page.'**
-  String get parentLiveLessonBoardUnsupported;
-
-  /// No description provided for @parentLiveLessonBoardOffline.
-  ///
-  /// In en, this message translates to:
-  /// **'Board is not syncing. Content remains on this screen; check the connection and retry.'**
-  String get parentLiveLessonBoardOffline;
-
-  /// No description provided for @parentLiveLessonBoardReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Board channel is working. This does not confirm delivery to every participant.'**
-  String get parentLiveLessonBoardReady;
-
-  /// No description provided for @parentLiveLessonBoardRecovering.
-  ///
-  /// In en, this message translates to:
-  /// **'Sending changes or checking the board. Retrying after interruptions; delivery is not confirmed yet.'**
-  String get parentLiveLessonBoardRecovering;
-
-  /// No description provided for @parentLiveLessonBoardLimited.
-  ///
-  /// In en, this message translates to:
-  /// **'A board or stroke limit was reached, or the change is unsupported. Recent changes may not be shared; simplify the drawing.'**
-  String get parentLiveLessonBoardLimited;
-
-  /// No description provided for @parentLiveLessonBoardReadOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'The teacher is drawing. Together mode is required for shared drawing.'**
-  String get parentLiveLessonBoardReadOnly;
-
-  /// No description provided for @parentLiveLessonBoardRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry connection'**
-  String get parentLiveLessonBoardRetry;
 
   /// No description provided for @parentLiveLessonBoardPresenceTeacher.
   ///
@@ -5466,6 +5418,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report sent'**
   String get messengerReported;
+
+  /// No description provided for @appUpdateVerifying.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking file…'**
+  String get appUpdateVerifying;
+
+  /// No description provided for @appUpdateInstallerReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm installation in the Android window.'**
+  String get appUpdateInstallerReady;
+
+  /// No description provided for @appUpdateOpenInstaller.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get appUpdateOpenInstaller;
+
+  /// No description provided for @appUpdateCancelDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get appUpdateCancelDownload;
+
+  /// No description provided for @appUpdateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed. Please try again.'**
+  String get appUpdateDownloadFailed;
+
+  /// No description provided for @appUpdateDownloadedSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} MB'**
+  String appUpdateDownloadedSize(String size);
 }
 
 class _AppLocalizationsDelegate

@@ -533,6 +533,8 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
           'childId': widget.childId,
           'drawMode': board.drawMode,
           'exercises': board.exercises,
+          'personalRuns': board.personalRuns,
+          'link': _boardLink,
           'epoch': board.roomEpoch,
           'focus': board.focusRoomId,
           'lessonSessionId': board.lessonSessionId,
@@ -1104,10 +1106,11 @@ class _LessonCallStageState extends State<LessonCallStage> with WidgetsBindingOb
     final request = Map<String, dynamic>.from(args.first as Map);
     if (request['gen'] != _boardGen || request['roomId'] != board.focusRoomId || request['body'] is! Map) return {'accepted': false};
     final body = Map<String, dynamic>.from(request['body'] as Map);
-    if (!{'audio', 'field', 'command', 'preview', 'presence', 'ready', 'scene'}.contains(body['kind'])) return {'accepted': false};
+    if (!{'audio', 'field', 'command', 'preview', 'presence', 'ready', 'scene', 'personal'}.contains(body['kind'])) return {'accepted': false};
     if (body['kind'] == 'scene' && (body['roomId'] != board.focusRoomId || body['roomEpoch'] != board.roomEpoch || body['lessonSessionId'] != board.lessonSessionId)) return {'accepted': false};
     if (body['kind'] == 'presence' && (body['roomId'] != board.focusRoomId || body['roomEpoch'] != board.roomEpoch)) return {'accepted': false};
     if (body['kind'] == 'ready') body['link'] = _boardLink;
+    if (body['kind'] == 'personal') body['writer'] = _boardLink;
     final injected = widget.requestBoard;
     if (injected != null) return await injected(body) ?? {'accepted': false};
     // Never fall through from a kiosk identity to the parent's credentials.

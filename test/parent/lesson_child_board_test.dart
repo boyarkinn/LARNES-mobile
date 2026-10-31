@@ -15,4 +15,30 @@ void main() {
     expect(LessonChildBoard.fromJson({...base, 'conversation': {'mode': 'recording', 'remainingMs': 1000}})!.conversation, isNull);
     expect(LessonChildBoard.fromJson({...base, 'conversation': {'mode': 'listening', 'remainingMs': -1}})!.conversation, isNull);
   });
+
+  test('personal runs retain separate children, activation and frozen state', () {
+    final board = LessonChildBoard.fromJson({
+      'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',
+      'roomEpoch': 3,
+      'personalRuns': [
+        {'id': 'run-one', 'childId': 'child-one', 'activation': 2, 'state': {'answer': '12'}},
+        {'id': 'run-two', 'childId': 'child-two', 'activation': 1, 'state': {'answer': '7'}},
+      ],
+    });
+    expect(board, isNotNull);
+    expect(board!.roomEpoch, 3);
+    expect(board.personalRuns.length, 2);
+    expect(board.personalRuns.first['activation'], 2);
+    expect(board.personalRuns.first['state']['answer'], '12');
+    expect(board.personalRuns.last['state']['answer'], '7');
+  });
+
+  test('a snapshot without personal runs still decodes its legacy exercise', () {
+    final board = LessonChildBoard.fromJson({
+      'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',
+      'exercises': [{'instanceId': 'legacy-card'}],
+    });
+    expect(board!.personalRuns, isEmpty);
+    expect(board.exercises.single['instanceId'], 'legacy-card');
+  });
 }

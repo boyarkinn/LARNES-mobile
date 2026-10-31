@@ -13,6 +13,7 @@ class LessonChildBoard {
     this.navigation = const [],
     this.sceneGeneration = 0,
     this.participants = const [],
+    this.personalRuns = const [],
     this.rulerScale,
     required this.sound,
     required this.title,
@@ -31,6 +32,7 @@ class LessonChildBoard {
   final List<dynamic> navigation;
   final int sceneGeneration;
   final List<dynamic> participants;
+  final List<dynamic> personalRuns;
   final num? rulerScale;
   final String sound;
   final String title;
@@ -41,7 +43,10 @@ class LessonChildBoard {
     }
     final session = json['lessonSessionId'];
     final focus = json['focusRoomId'];
-    if (session is! String || session.isEmpty || focus is! String || focus.isEmpty) {
+    if (session is! String ||
+        session.isEmpty ||
+        focus is! String ||
+        focus.isEmpty) {
       return null;
     }
     final exercises = <Map<String, dynamic>>[];
@@ -58,10 +63,19 @@ class LessonChildBoard {
     final epoch = json['roomEpoch'];
     final conversation = json['conversation'];
     return LessonChildBoard(
-      conversation: conversation is Map &&
-              (conversation['mode'] == 'listening' || conversation['mode'] == 'talking') &&
-              conversation['remainingMs'] is int && (conversation['remainingMs'] as int) > 0
-          ? {'mode': conversation['mode'], 'remainingMs': (conversation['remainingMs'] as int).clamp(0, 10000)}
+      conversation:
+          conversation is Map &&
+              (conversation['mode'] == 'listening' ||
+                  conversation['mode'] == 'talking') &&
+              conversation['remainingMs'] is int &&
+              (conversation['remainingMs'] as int) > 0
+          ? {
+              'mode': conversation['mode'],
+              'remainingMs': (conversation['remainingMs'] as int).clamp(
+                0,
+                10000,
+              ),
+            }
           : null,
       drawMode: json['drawMode'] == 'all' ? 'all' : 'teacher',
       exercises: exercises,
@@ -72,18 +86,29 @@ class LessonChildBoard {
       sceneRevision: revision is int ? revision : 0,
       serverNow: json['serverNow'] is int ? json['serverNow'] as int : 0,
       presence: json['presence'] is List ? json['presence'] as List : const [],
-      navigation: json['navigation'] is List ? json['navigation'] as List : const [],
-      sceneGeneration: json['sceneGeneration'] is int ? json['sceneGeneration'] as int : 0,
-      participants: json['participants'] is List ? json['participants'] as List : const [],
+      navigation: json['navigation'] is List
+          ? json['navigation'] as List
+          : const [],
+      sceneGeneration: json['sceneGeneration'] is int
+          ? json['sceneGeneration'] as int
+          : 0,
+      personalRuns: json['personalRuns'] is List
+          ? json['personalRuns'] as List
+          : const [],
+      participants: json['participants'] is List
+          ? json['participants'] as List
+          : const [],
       rulerScale: json['rulerScale'] is num ? json['rulerScale'] as num : null,
       sound: json['sound'] is String ? json['sound'] as String : 'main',
       title: json['title'] is String ? json['title'] as String : '',
     );
   }
 
-  String get instanceKey => exercises.map((item) {
+  String get instanceKey => exercises
+      .map((item) {
         final resources = item['resources'];
         final fence = resources is Map ? resources['fence'] : '';
         return '${item['instanceId']}:${item['instanceGeneration']}:${item['revision']}:${item['stepIndex']}:$fence';
-      }).join(',');
+      })
+      .join(',');
 }

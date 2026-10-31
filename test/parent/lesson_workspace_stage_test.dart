@@ -108,6 +108,7 @@ class _MediaHarness {
   };
   int passes = 0, boards = 0;
   final boardRequests = <Map<String, dynamic>>[];
+  Map<String, dynamic>? boardAck;
   String? boardLink;
   String focusRoomId = 'main';
   final handle = LessonCallStageHandle();
@@ -203,7 +204,7 @@ class _MediaHarness {
               },
               requestBoard: (body) async {
                 boardRequests.add(body);
-                return {'accepted': true, 'revision': 7};
+                return boardAck ?? {'accepted': true, 'revision': 7};
               },
             ),
           ),
@@ -240,6 +241,27 @@ class _MediaHarness {
 }
 
 void main() {
+  testWidgets('scene writes preserve their token and full durable receipt without a call; stale room writes are rejected', (tester) async {
+    final token = {'clientId': '29292929-2929-4292-8292-292929292929', 'sequence': 3, 'generation': 0};
+    final receipt = {...token, 'durable': true};
+    final f = _MediaHarness()..boardAck = {'accepted': true, 'revision': 8, 'receipt': receipt};
+    await f.pump(tester);
+    final request = f.platform.controller.handlers['boardExercise']!;
+    final gen = int.parse(RegExp(r'"gen":(\d+)').allMatches(f.platform.controller.scripts.join('\n')).last.group(1)!);
+    final body = {'kind': 'scene', 'lessonSessionId': 'lesson-1', 'roomId': 'main', 'roomEpoch': 0,
+      'elements': [{'id': 'stroke'}], 'write': token};
+    expect(await request([{'gen': gen, 'roomId': 'main', 'body': body}]), f.boardAck);
+    expect(f.boardRequests.single, body);
+    expect(f.passes, 0);
+    expect(await request([{'gen': gen, 'roomId': 'main', 'body': {...body, 'roomEpoch': 1}}]), {'accepted': false});
+    expect(f.boardRequests.length, 1);
+    f.focusRoomId = 'room-2';
+    await tester.pump(const Duration(seconds: 1)); await tester.pumpAndSettle();
+    expect(await request([{'gen': gen, 'roomId': 'main', 'body': body}]), {'accepted': false});
+    expect(f.boardRequests.length, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('the shared exercise bridge saves answers and confirms sound without joining a call', (tester) async {
     final f = _MediaHarness();
     await f.pump(tester);

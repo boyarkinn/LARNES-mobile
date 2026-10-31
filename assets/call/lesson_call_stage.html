@@ -174,20 +174,6 @@
         width: 100%;
         height: 100%;
       }
-      .board .main-menu-trigger,
-      .board .help-icon,
-      .board .sidebar-trigger,
-      .board .sidebar-trigger__label-element,
-      .board .App-toolbar__extra-tools-trigger,
-      .board .App-toolbar__divider,
-      .board .ToolIcon__penMode,
-      .board .ToolIcon__lock,
-      .board .App-toolbar .ToolIcon:not(.Shape),
-      .board .Shape:not(:has([data-testid="toolbar-hand"])):not(:has([data-testid="toolbar-freedraw"])):not(:has([data-testid="toolbar-eraser"])):not(:has([data-testid="toolbar-selection"])):not(:has([data-testid="toolbar-image"])),
-      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-selection"]),
-      .board:not([data-larnes-images]) .Shape:has([data-testid="toolbar-image"]) {
-        display: none;
-      }
     </style>
   </head>
   <body>
@@ -356,6 +342,7 @@
             desktop: null,
             sharing: false,
             shareStartedAt: null,
+            audioMuted: true,
             videoMuted: true,
           };
         }
@@ -539,6 +526,33 @@
         playMedia(video);
       }
 
+      var boardVideoTracks = new WeakMap();
+      var boardTrackSerial = 0;
+      var boardVideoBindings = new Map();
+      function bindBoardVideo(endpoint, element) {
+        var person = endpoint === localEndpoint ? people.local : people[endpoint];
+        var track = person && shownTrack(person);
+        boardVideoBindings.forEach(function (oldTrack, video) {
+          if (!video.isConnected || video === element && oldTrack !== track) {
+            try { oldTrack.detach(video); } catch (_) {}
+            boardVideoBindings.delete(video);
+          }
+        });
+        if (element && track && boardVideoBindings.get(element) !== track) {
+          boardVideoBindings.set(element, track); attach(track, element); playMedia(element);
+        }
+      }
+      function syncBoardPeople() {
+        if (!boardInstalled || !window.LarnesBoard.setParticipantMedia) return;
+        window.LarnesBoard.onBindVideo = bindBoardVideo;
+        window.LarnesBoard.setParticipantMedia({ connected: callJoined, endpoints: orderedPeople().map(function (person) {
+          var track = shownTrack(person);
+          if (track && !boardVideoTracks.has(track)) boardVideoTracks.set(track, ++boardTrackSerial);
+          return { endpointId: person.local ? localEndpoint : person.id, local: person.local,
+            audioMuted: person.local ? audioMuted : person.audioMuted !== false, videoMuted: person.videoMuted,
+            sharing: person.sharing, videoSerial: track ? boardVideoTracks.get(track) : 0 };
+        }) });
+      }
       function render() {
         var root = document.getElementById("grid");
         if (!root) {
@@ -574,6 +588,7 @@
           }
           delete tileNodes[id];
         }
+        syncBoardPeople();
         syncBoard();
       }
 
@@ -866,6 +881,11 @@
           boardState = "unsupported"; updateBoardNotice(); return;
         }
         boardInstalled = true;
+        window.LarnesBoard.onAction = function (action) {
+          if (action === "share") { toggleShare(); return; }
+          post("workspace-action", action);
+        };
+        window.LarnesBoard.onBindVideo = bindBoardVideo;
         window.LarnesBoard.onStatus = function (state, details) { if (boardEnded) return; boardState = state; boardDetails = details || {}; updateBoardNotice(); };
         applyBoardImages();
         window.LarnesBoard.setPresenceLabels({ teacher: boardLabels.presenceTeacher, participant: boardLabels.presenceParticipant });
@@ -1025,11 +1045,13 @@
       function applyBoardImages() {
         if (!boardInstalled || window.LarnesBoard.images !== 1) return;
         window.LarnesBoard.setImageBase(boardImageBase);
-        // Only an app signed in as a parent uploads pictures; a guest link just sees them.
         var bridge = window.flutter_inappwebview;
+        function scoped(input) { return Object.assign({ gen: childRoomGen, roomId: childRoomFocus, roomEpoch: childRoomEpoch }, input); }
         window.LarnesBoard.onImage = boardImageUpload && bridge && bridge.callHandler
-          ? function (input) { return bridge.callHandler("boardImage", input); }
+          ? function (input) { return bridge.callHandler("boardImage", scoped(input)); }
           : null;
+        window.LarnesBoard.onImageData = boardWorkspace && bridge && bridge.callHandler
+          ? function (input) { return bridge.callHandler("boardImageData", scoped(input)); } : null;
       }
 
       function setLabels(labels) {
@@ -1062,6 +1084,7 @@
 
       function applyBoardWorkspace(pass) {
         if (pass && pass.workspaceFormat === "board") boardWorkspace = true;
+        if (boardInstalled) applyBoardImages();
         var label = document.getElementById("room-label");
         if (!label) return;
         label.className = boardWorkspace ? "on" : "";
@@ -1152,6 +1175,9 @@
             }
             if (track.getType() === "audio" && !track.isLocal()) {
               attachRemoteAudio(track);
+              var audioId = track.getParticipantId && track.getParticipantId();
+              if (audioId) ensurePerson(audioId, false).audioMuted = track.isMuted();
+              render();
             }
           });
           room.on(meet.events.conference.TRACK_REMOVED, function (track) {
@@ -1215,9 +1241,13 @@
               }
               render();
             }
-            if (track.getType() === "audio" && track.isLocal()) {
-              audioMuted = track.isMuted();
-              post(audioMuted ? "mic-off" : "mic-on");
+            if (track.getType() === "audio") {
+              if (person) person.audioMuted = track.isMuted();
+              if (track.isLocal()) {
+                audioMuted = track.isMuted();
+                post(audioMuted ? "mic-off" : "mic-on");
+              }
+              render();
             }
           });
           room.on(meet.events.conference.USER_JOINED, function (id, participant) {
@@ -2230,6 +2260,8 @@
         conversationTimer = window.setTimeout(function () { note.className = ""; }, Math.min(10000, value.remainingMs));
       }
       function setChildRoom(payload) {
+        if (window.LarnesBoard && window.LarnesBoard.setLessonContext) window.LarnesBoard.setLessonContext(payload);
+        if (window.LarnesBoard && window.LarnesBoard.setParticipants) window.LarnesBoard.setParticipants(payload && payload.participants, payload && payload.childId);
         showRoomConversation(payload);
         childRoomPayload = payload && typeof payload === "object" ? payload : null;
         if (childRoomPayload && typeof childRoomPayload.serverNow === "number") noteLessonClock(childRoomPayload.serverNow);

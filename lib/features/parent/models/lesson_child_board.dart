@@ -12,6 +12,8 @@ class LessonChildBoard {
     this.presence = const [],
     this.navigation = const [],
     this.sceneGeneration = 0,
+    this.participants = const [],
+    this.rulerScale,
     required this.sound,
     required this.title,
   });
@@ -28,6 +30,8 @@ class LessonChildBoard {
   final List<dynamic> presence;
   final List<dynamic> navigation;
   final int sceneGeneration;
+  final List<dynamic> participants;
+  final num? rulerScale;
   final String sound;
   final String title;
 
@@ -70,6 +74,8 @@ class LessonChildBoard {
       presence: json['presence'] is List ? json['presence'] as List : const [],
       navigation: json['navigation'] is List ? json['navigation'] as List : const [],
       sceneGeneration: json['sceneGeneration'] is int ? json['sceneGeneration'] as int : 0,
+      participants: json['participants'] is List ? json['participants'] as List : const [],
+      rulerScale: json['rulerScale'] is num ? json['rulerScale'] as num : null,
       sound: json['sound'] is String ? json['sound'] as String : 'main',
       title: json['title'] is String ? json['title'] as String : '',
     );

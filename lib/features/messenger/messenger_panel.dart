@@ -334,6 +334,7 @@ class _MessengerPanelState extends State<MessengerPanel> {
               ),
               const Spacer(),
               FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
                 onPressed: blocked || empty ? null : room.send,
                 child: Text(
                   room.sending

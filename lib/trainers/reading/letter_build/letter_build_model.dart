@@ -77,6 +77,113 @@ PiecePlacement snapPiece(
   );
 }
 
+class _PieceShape {
+  const _PieceShape(this.center, this.points);
+
+  final TracePoint center;
+  final List<TracePoint> points;
+}
+
+final _pieceShapes = Expando<_PieceShape>();
+const _shapeTolerance = 0.000001;
+
+_PieceShape _pieceShape(StickPieceDef piece) {
+  final cached = _pieceShapes[piece];
+  if (cached != null) return cached;
+
+  final points = sampleSvgPath(piece.path);
+  var minX = double.infinity;
+  var minY = double.infinity;
+  var maxX = -double.infinity;
+  var maxY = -double.infinity;
+  for (final point in points) {
+    minX = math.min(minX, point.x);
+    minY = math.min(minY, point.y);
+    maxX = math.max(maxX, point.x);
+    maxY = math.max(maxY, point.y);
+  }
+  final center = points.isEmpty
+      ? piece.centroid
+      : TracePoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2);
+  final shape = _PieceShape(center, [
+    for (final point in points)
+      TracePoint(x: point.x - center.x, y: point.y - center.y),
+  ]);
+  _pieceShapes[piece] = shape;
+  return shape;
+}
+
+bool areBuildPiecesInterchangeable(StickPieceDef a, StickPieceDef b) {
+  if (a.id == b.id) return true;
+  final first = _pieceShape(a).points;
+  final second = _pieceShape(b).points;
+  return first.isNotEmpty &&
+      second.isNotEmpty &&
+      first.every((point) => second.any(
+          (other) => distancePoint(point, other) <= _shapeTolerance)) &&
+      second.every((point) => first.any(
+          (other) => distancePoint(point, other) <= _shapeTolerance));
+}
+
+List<PiecePlacement> snapBuildPiece(
+  List<StickPieceDef> pieces,
+  List<PiecePlacement> placements,
+  String pieceId,
+) {
+  final pieceIndex = pieces.indexWhere((item) => item.id == pieceId);
+  final placementIndex = placements.indexWhere((item) => item.id == pieceId);
+  if (pieceIndex < 0 || placementIndex < 0) return placements;
+  final piece = pieces[pieceIndex];
+  final placement = placements[placementIndex];
+  if (placement.snapped) return placements;
+
+  final center = _pieceShape(piece).center;
+  StickPieceDef? bestPiece;
+  PiecePlacement? bestPlacement;
+  TracePoint? bestOffset;
+  var closest = snapOffsetThreshold;
+  for (final target in pieces) {
+    final index = placements.indexWhere((item) => item.id == target.id);
+    if (index < 0 || placements[index].snapped ||
+        !areBuildPiecesInterchangeable(piece, target)) {
+      continue;
+    }
+    final targetCenter = _pieceShape(target).center;
+    final offset = TracePoint(
+      x: targetCenter.x - center.x,
+      y: targetCenter.y - center.y,
+    );
+    final error = distancePoint(placement.offset, offset);
+    if (error <= closest) {
+      closest = error;
+      bestPiece = target;
+      bestPlacement = placements[index];
+      bestOffset = offset;
+    }
+  }
+  final target = bestPiece;
+  final targetPlacement = bestPlacement;
+  final offset = bestOffset;
+  if (target == null || targetPlacement == null || offset == null) {
+    return placements;
+  }
+
+  // IDs describe filled contour slots; identical remaining pieces keep their
+  // visible positions when the dragged piece is assigned to another slot.
+  return [
+    for (final item in placements)
+      if (item.id == target.id)
+        snapPiece(target, item)
+      else if (item.id == pieceId)
+        item.copyWith(offset: TracePoint(
+          x: targetPlacement.offset.x + offset.x,
+          y: targetPlacement.offset.y + offset.y,
+        ))
+      else
+        item,
+  ];
+}
+
 bool isGuidePhaseComplete(
   List<StickPieceDef> pieces,
   List<PiecePlacement> placements,
@@ -154,4 +261,17 @@ PiecePlacement translatePlacement(
 
 List<StickPieceDef> getPiecesForLetter(String letter) {
   return getLetterBuildPieces(letter);
+}
+
+PiecePlacement constrainBuildPlacement(
+  StickPieceDef piece, PiecePlacement placement, BuildLayout layout,
+) {
+  final minX = (layout.minX + layout.padding - piece.bounds.minX) / zaitsevCoordSize;
+  final maxX = (layout.maxX - layout.padding - piece.bounds.maxX) / zaitsevCoordSize;
+  final minY = (layout.minY + layout.padding - piece.bounds.minY) / zaitsevCoordSize;
+  final maxY = (layout.maxY - layout.padding - piece.bounds.maxY) / zaitsevCoordSize;
+  final x = placement.offset.x.clamp(minX, maxX).toDouble();
+  final y = placement.offset.y.clamp(minY, maxY).toDouble();
+  return x == placement.offset.x && y == placement.offset.y
+      ? placement : placement.copyWith(offset: TracePoint(x: x, y: y));
 }

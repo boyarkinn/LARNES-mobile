@@ -102,13 +102,26 @@ void main() {
       expect(result.ok, isTrue);
     });
 
-    test('rejects unsupported letter-build catalog letter', () {
-      final result = validateTrainerParams('letter-build', {
-        'letter': 'Ё',
-        'letterCase': 'upper',
-      });
+    test('accepts letter-build Yo in both cases', () {
+      for (final letter in ['Ё', 'ё', ' ё ']) {
+        for (final letterCase in ['upper', 'lower']) {
+          final result = validateTrainerParams('letter-build', {
+            'letter': letter,
+            'letterCase': letterCase,
+          });
 
-      expect(result.ok, isFalse);
+          expect(result.ok, isTrue);
+          expect(result.params?['letter'], 'Ё');
+          expect(result.params?['letterCase'], letterCase);
+        }
+      }
+    });
+
+    test('rejects unsupported letter-build input', () {
+      for (final letter in ['A', 'ЁЕ', '1']) {
+        expect(validateTrainerParams('letter-build', {'letter': letter}).ok,
+            isFalse);
+      }
     });
 
     test('accepts letter-grid-match admin form aliases', () {

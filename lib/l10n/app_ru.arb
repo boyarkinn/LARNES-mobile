@@ -16,6 +16,7 @@
   "loginFieldLabel": "Email или телефон",
   "passwordLabel": "Пароль",
   "forgotPassword": "Забыли пароль?",
+  "rememberMe": "Запомнить меня",
   "passwordResetTitle": "Восстановление пароля",
   "passwordResetStep1Subtitle": "Шаг 1 из 3 — контакт",
   "passwordResetStep2Subtitle": "Шаг 2 из 3 — код подтверждения",

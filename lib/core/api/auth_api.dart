@@ -126,12 +126,18 @@ class AuthApi {
     required String login,
     required String password,
     String locale = 'ru',
+    bool rememberMe = false,
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post<Map<String, dynamic>>(
         '/api/mobile/auth/login',
-        data: {'login': login, 'password': password, 'locale': locale},
+        data: {
+          'login': login,
+          'password': password,
+          'locale': locale,
+          'rememberMe': rememberMe,
+        },
       );
       final data = response.data;
       if (data == null || data['status'] != 'success') {

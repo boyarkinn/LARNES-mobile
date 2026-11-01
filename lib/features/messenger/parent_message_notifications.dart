@@ -6,8 +6,9 @@ import 'package:larnes_mobile/core/auth/token_storage.dart';
 import 'package:larnes_mobile/core/config/app_config.dart';
 import 'package:larnes_mobile/features/messenger/message_inbox.dart';
 import 'package:larnes_mobile/features/messenger/message_sound.dart';
-import 'package:larnes_mobile/features/messenger/message_bubble.dart';
+import 'package:larnes_mobile/features/messenger/message_notice_card.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_navigation.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 
 final parentMessageUnread = ValueNotifier<int>(0);
@@ -98,6 +99,8 @@ class _ParentMessageNotificationsState extends State<ParentMessageNotifications>
       _request?.cancel();
       _hide?.cancel();
       if (mounted && _preview != null) setState(() => _preview = null);
+    } else if (mounted && _preview != null) {
+      setState(() {}); // Keep the preview above the current route's navigation.
     }
     _schedule();
   }
@@ -199,7 +202,8 @@ class _ParentMessageNotificationsState extends State<ParentMessageNotifications>
             right: 12,
             left: MediaQuery.sizeOf(context).width < 600 ? 12 : null,
             bottom:
-                96 +
+                12 +
+                (ParentNavigation.showsBottomNav(_path) ? 56 : 0) +
                 MediaQuery.viewInsetsOf(context).bottom +
                 MediaQuery.paddingOf(context).bottom,
             child: Semantics(
@@ -219,76 +223,25 @@ class _ParentMessageNotificationsState extends State<ParentMessageNotifications>
                   child: MouseRegion(
                     onEnter: (_) => _hide?.cancel(),
                     onExit: (_) => _resumeHide(),
-                    child: Material(
-                      color: Colors.transparent,
-                      elevation: 5,
-                      borderRadius: BorderRadius.circular(8),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        child: MessengerBubbleSurface(
-                          margin: EdgeInsets.zero,
-                          child: Stack(
-                            children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: () {
-                                  _close();
-                                  final target =
-                                      '/parent/${notice.childId}/chats?chat=${notice.lessonId}';
-                                  if (_path.endsWith('/chats')) {
-                                    widget.router.go(target);
-                                  } else {
-                                    widget.router.push(target);
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    4,
-                                    4,
-                                    32,
-                                    4,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        notice.author,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 3),
-                                      Text(
-                                        notice.text.isEmpty
-                                            ? context.l10n.messengerFile
-                                            : notice.text,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(fontSize: 14),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: -5,
-                                top: -5,
-                                child: IconButton(
-                                  tooltip:
-                                      context.l10n.messengerNotificationClose,
-                                  visualDensity: VisualDensity.compact,
-                                  onPressed: _close,
-                                  icon: const Icon(Icons.close, size: 18),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: MessageNoticeCard(
+                        author: notice.author,
+                        text: notice.text.isEmpty
+                            ? context.l10n.messengerFile
+                            : notice.text,
+                        closeLabel: context.l10n.messengerNotificationClose,
+                        onClose: _close,
+                        onOpen: () {
+                          _close();
+                          final target =
+                              '/parent/${notice.childId}/chats?chat=${notice.lessonId}';
+                          if (_path.endsWith('/chats')) {
+                            widget.router.go(target);
+                          } else {
+                            widget.router.push(target);
+                          }
+                        },
                       ),
                     ),
                   ),

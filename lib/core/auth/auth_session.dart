@@ -208,11 +208,13 @@ class AuthSession extends ChangeNotifier {
     required String login,
     required String password,
     String locale = 'ru',
+    bool rememberMe = false,
   }) async {
     final outcome = await _authApi.login(
       login: login,
       password: password,
       locale: locale,
+      rememberMe: rememberMe,
     );
 
     if (outcome is UserLoginOutcome) {

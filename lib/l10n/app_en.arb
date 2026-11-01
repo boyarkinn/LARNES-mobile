@@ -16,6 +16,7 @@
   "loginFieldLabel": "Email or phone",
   "passwordLabel": "Password",
   "forgotPassword": "Forgot password?",
+  "rememberMe": "Remember me",
   "passwordResetTitle": "Password reset",
   "passwordResetStep1Subtitle": "Step 1 of 3 — contact",
   "passwordResetStep2Subtitle": "Step 2 of 3 — verification code",

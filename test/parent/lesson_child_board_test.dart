@@ -21,7 +21,15 @@ void main() {
       'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',
       'roomEpoch': 3,
       'personalRuns': [
-        {'id': 'run-one', 'childId': 'child-one', 'activation': 2, 'state': {'answer': '12'}},
+        {
+          'id': 'run-one', 'childId': 'child-one', 'activation': 2,
+          'stepIndex': 1,
+          'steps': [
+            {'id': 'first', 'trainerKey': 'digit-find-tap', 'params': {'values': '7'}},
+            {'id': 'second', 'trainerKey': 'digit-find-tap', 'params': {'values': '8'}, 'snapshot': {'version': 1, 'payload': {'seed': 42}}},
+          ],
+          'state': {'answer': '12'},
+        },
         {'id': 'run-two', 'childId': 'child-two', 'activation': 1, 'state': {'answer': '7'}},
       ],
     });
@@ -30,6 +38,10 @@ void main() {
     expect(board.personalRuns.length, 2);
     expect(board.personalRuns.first['activation'], 2);
     expect(board.personalRuns.first['state']['answer'], '12');
+    expect(board.personalRuns.first['stepIndex'], 1);
+    expect(board.personalRuns.first['steps'][1]['id'], 'second');
+    expect(board.personalRuns.first['steps'][1]['params']['values'], '8');
+    expect(board.personalRuns.first['steps'][1]['snapshot']['payload']['seed'], 42);
     expect(board.personalRuns.last['state']['answer'], '7');
   });
 

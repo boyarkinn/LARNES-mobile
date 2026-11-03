@@ -35,7 +35,9 @@ class TrainerSnapshotRandom implements math.Random {
     _state = (_state + 0x6d2b79f5) & 0xffffffff;
     var value = _state;
     value = _imul32(value ^ (value >>> 15), value | 1);
-    value ^= value + _imul32(value ^ (value >>> 7), value | 61);
+    // JavaScript's XOR truncates to 32 bits before the final unsigned shift.
+    value = (value ^ (value + _imul32(value ^ (value >>> 7), value | 61))) &
+        0xffffffff;
     return ((value ^ (value >>> 14)) & 0xffffffff) / 4294967296;
   }
 

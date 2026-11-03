@@ -2,7 +2,13 @@ import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
 import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
 
-final fillGapWordSlugs = [for (final word in firstWords) word.slug];
+const maxFillGapWordLength = 4;
+
+final fillGapWordSlugs = [
+  for (final word in firstWords)
+    if (normalizeFillGapWordLabel(word.label).length <= maxFillGapWordLength)
+      word.slug,
+];
 
 String normalizeFillGapWordLabel(String label) {
   return label.replaceFirst(RegExp(r'\d+$'), '');
@@ -201,8 +207,8 @@ bool _isWordEligibleForPractice(String label, List<String> practiceLetters) {
 
 int countEligibleFillGapWords(List<String> practiceLetters) {
   final eligibleLabels = <String>{};
-  for (final word in firstWords) {
-    final label = normalizeFillGapWordLabel(word.label);
+  for (final slug in fillGapWordSlugs) {
+    final label = getFillGapWordLabel(slug);
     if (_isWordEligibleForPractice(label, practiceLetters)) {
       eligibleLabels.add(label.toLowerCase());
     }

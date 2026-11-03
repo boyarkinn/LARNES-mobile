@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:larnes_mobile/trainers/reading/letter_pair_connect/definition.dart';
+import 'package:larnes_mobile/trainers/reading/letter_pair_connect/letter_pair_connect_trainer.dart';
 import 'package:larnes_mobile/trainers/catalog/reading_param_validators.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_definition.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_direction.dart';
@@ -118,6 +120,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       LetterBuildTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterGridMatch: ({required params, onComplete}) =>
       LetterGridMatchTrainer(params: params, onComplete: onComplete),
+  TrainerKey.letterPairConnect: ({required params, onComplete}) =>
+      LetterPairConnectTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterCaseMatch: ({required params, onComplete}) =>
       LetterCaseMatchTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterOrientationPick: ({required params, onComplete}) =>
@@ -371,6 +375,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateLetterPlaceInWordParams,
+  ),
+  TrainerKey.letterPairConnect: TrainerDefinition(
+    key: TrainerKey.letterPairConnect,
+    title: 'Соедини одинаковые буквы',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateLetterPairConnectParams,
   ),
   TrainerKey.letterCaseMatch: TrainerDefinition(
     key: TrainerKey.letterCaseMatch,

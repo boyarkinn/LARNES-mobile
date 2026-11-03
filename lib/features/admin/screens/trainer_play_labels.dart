@@ -3,6 +3,8 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
   switch (labelKey) {
+    case 'syllableTypeLabel':
+      return _passageLabel(l10n, ru: 'Тип слогов', en: 'Syllable type', ar: 'نوع المقاطع');
     case 'letterCaseLabel':
       return l10n.adminTrainerPlayLetterCaseLabel;
     case 'wordCaseLabel':
@@ -218,6 +220,12 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
   }
 
   switch (option.labelKey) {
+    case 'syllableTypeAll':
+      return _passageLabel(l10n, ru: 'Оба вида', en: 'Both types', ar: 'النوعان');
+    case 'syllableTypeOpen':
+      return _passageLabel(l10n, ru: 'Открытые', en: 'Open', ar: 'مفتوحة');
+    case 'syllableTypeClosed':
+      return _passageLabel(l10n, ru: 'Закрытые', en: 'Closed', ar: 'مغلقة');
     case 'letterCaseUpper':
       return l10n.adminTrainerPlayLetterCaseUpper;
     case 'letterCaseLower':

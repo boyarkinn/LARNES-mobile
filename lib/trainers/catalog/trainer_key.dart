@@ -10,6 +10,8 @@ enum TrainerKey {
   fruitCountTap('fruit-count-tap'),
   letterBuild('letter-build'),
   letterCaseColor('letter-case-color'),
+  letterPairConnect('letter-pair-connect'),
+  syllablePairConnect('syllable-pair-connect'),
   letterCaseMatch('letter-case-match'),
   letterColor('letter-color'),
   letterComplete('letter-complete'),

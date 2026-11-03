@@ -35313,9 +35313,6 @@ body:has([data-messenger-archive]) {
   .max-h-40 {
     max-height: calc(var(--spacing) * 40);
   }
-  .max-h-64 {
-    max-height: calc(var(--spacing) * 64);
-  }
   .max-h-80 {
     max-height: calc(var(--spacing) * 80);
   }
@@ -36814,9 +36811,6 @@ body:has([data-messenger-archive]) {
   }
   .py-1 {
     padding-block: calc(var(--spacing) * 1);
-  }
-  .py-1\\.5 {
-    padding-block: calc(var(--spacing) * 1.5);
   }
   .py-2 {
     padding-block: calc(var(--spacing) * 2);

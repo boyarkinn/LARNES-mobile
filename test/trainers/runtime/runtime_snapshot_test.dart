@@ -41,5 +41,31 @@ void main() {
       isNull,
     );
   });
+
+  test('Mulberry32 keeps Web uint32 semantics when the intermediate sum carries', () {
+    // Frozen vectors from Web createTrainerSnapshotRng, snapshot version 1.
+    const vectors = {
+      42: [
+        2581720956, 1925393290, 3661312704, 2876485805,
+        750819978, 2261697747, 1173505300, 2683257857,
+        3717185310, 2028586305, 1073414265, 3788413843,
+        3202918453, 1318561460, 847198783, 2150616774,
+      ],
+      123456: [
+        1642107918, 3424218114, 4280064779, 687244953,
+        895809828, 1000027720, 2040167411, 2611339366,
+        1346086115, 2820032742, 1328815579, 780101124,
+        1581451774, 3661800343, 3465109817, 4130232914,
+      ],
+    };
+    for (final vector in vectors.entries) {
+      final random = TrainerSnapshotRandom(vector.key);
+      expect(
+        List.generate(vector.value.length, (_) => (random.nextDouble() * 4294967296).toInt()),
+        vector.value,
+        reason: 'seed ${vector.key}',
+      );
+    }
+  });
 }
 

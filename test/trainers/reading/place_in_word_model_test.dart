@@ -4,8 +4,51 @@ import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_wor
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_sizes.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
+import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
 
 void main() {
+  group('short word selection', () {
+    test('keeps four-letter words without changing the shared catalog', () {
+      for (final slug in ['1_аист', '7_ёжик', '15_гусь', '31_щука']) {
+        expect(fillGapWordSlugs, contains(slug));
+      }
+      for (final slug in [
+        '1_арбуз', '17_дверь', '1_автобус', '21_замок1', '21_замок2',
+      ]) {
+        expect(fillGapWordSlugs, isNot(contains(slug)));
+        expect(firstWords.any((word) => word.slug == slug), isTrue);
+      }
+    });
+
+    test('generates only short words across repeated rounds', () {
+      for (var seed = 0; seed < 20; seed++) {
+        final slugs = pickWordsForRound(
+          entityCount: 6,
+          practiceLetters: ['А', 'О', 'И', 'Е', 'У', 'Ы', 'Я', 'Ю', 'Ё', 'Э'],
+          rng: createSeededRng(seed),
+        );
+        expect(slugs.length, 6);
+        expect(slugs.toSet().length, 6);
+        expect(
+          slugs.every((slug) => getFillGapWordLabel(slug).length <= 4),
+          isTrue,
+        );
+      }
+    });
+
+    test('counts only the remaining words for the selected letters', () {
+      expect(countEligibleWords(['Э']), 1);
+      expect(
+        pickWordsForRound(
+          entityCount: 2,
+          practiceLetters: ['Э'],
+          rng: createSeededRng(1),
+        ),
+        isEmpty,
+      );
+    });
+  });
+
   group('parsePracticeLetters', () {
     test('parses comma-separated letters in order', () {
       expect(parsePracticeLetters('Д, А, М'), ['Д', 'А', 'М']);

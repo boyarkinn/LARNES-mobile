@@ -45,6 +45,19 @@ void main() {
     expect(board.personalRuns.last['state']['answer'], '7');
   });
 
+  test('keeps viewport resize dimensions and corner for the shared SDK', () {
+    final resized = LessonChildBoard.fromJson({
+      'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',
+      'navigation': [
+        {'connectionId': 'tablet', 'x': -100, 'y': 20,
+         'resize': {'corner': 'sw', 'width': 400, 'height': 800}},
+      ],
+    });
+    expect(resized!.navigation.single['resize'], {
+      'corner': 'sw', 'width': 400, 'height': 800,
+    });
+  });
+
   test('a snapshot without personal runs still decodes its legacy exercise', () {
     final board = LessonChildBoard.fromJson({
       'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',

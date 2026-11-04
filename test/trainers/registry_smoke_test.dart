@@ -6,9 +6,10 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('trainer registry', () {
     test('registers the Web trainer keys with native implementations', () {
-      expect(TrainerKey.values.length, 62);
-      expect(trainerDefinitions.length, 62);
+      expect(TrainerKey.values.length, 64);
+      expect(trainerDefinitions.length, 64);
       expect(isTrainerKey('letter-pair-connect'), isTrue);
+      expect(isTrainerKey('syllable-pair-connect'), isTrue);
       expect(isTrainerKey('letter-find-tap'), isTrue);
       expect(isTrainerKey('example-visualization'), isTrue);
       expect(isTrainerKey('static-example-show'), isTrue);
@@ -45,8 +46,23 @@ void main() {
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
+    test('letter and syllable pairs keep independent registrations and settings', () {
+      final letters = getTrainerDefinition('letter-pair-connect')!;
+      final syllables = getTrainerDefinition('syllable-pair-connect')!;
+      expect(letters.title, 'Соедини одинаковые буквы');
+      expect(syllables.title, 'Соедини одинаковые слоги');
+      expect(hasTrainerBuilder('letter-pair-connect'), isTrue);
+      expect(hasTrainerBuilder('syllable-pair-connect'), isTrue);
+      final letterParams = letters.validate({}).params!;
+      final syllableParams = syllables.validate({}).params!;
+      expect(letterParams['practiceLetters'], 'А,О,У,М,С');
+      expect(letterParams.containsKey('pairCount'), isFalse);
+      expect(syllableParams['practiceLetters'], 'А,О,У');
+      expect(syllableParams['pairCount'], 5);
+    });
+
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 62);
+      expect(trainerBuilders.length, 64);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -61,7 +77,7 @@ void main() {
       final readingDefinitions = trainerDefinitions.values
           .where((definition) => definition.direction == TrainerDirection.reading);
 
-      expect(readingDefinitions.length, 21);
+      expect(readingDefinitions.length, 23);
       for (final definition in readingDefinitions) {
         expect(definition.isInteractive, isTrue, reason: definition.key.apiValue);
       }

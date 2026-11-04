@@ -11,6 +11,7 @@ enum TrainerKey {
   letterBuild('letter-build'),
   letterCaseColor('letter-case-color'),
   letterPairConnect('letter-pair-connect'),
+  wordCubes('word-cubes'),
   syllablePairConnect('syllable-pair-connect'),
   letterCaseMatch('letter-case-match'),
   letterColor('letter-color'),

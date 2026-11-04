@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:larnes_mobile/trainers/reading/word_cubes/definition.dart';
+import 'package:larnes_mobile/trainers/reading/word_cubes/word_cubes_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_pair_connect/definition.dart';
 import 'package:larnes_mobile/trainers/reading/letter_pair_connect/letter_pair_connect_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/syllable_pair_connect/definition.dart';
@@ -124,6 +126,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       LetterGridMatchTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterPairConnect: ({required params, onComplete}) =>
       LetterPairConnectTrainer(params: params, onComplete: onComplete),
+  TrainerKey.wordCubes: ({required params, onComplete}) =>
+      WordCubesTrainer(params: params, onComplete: onComplete),
   TrainerKey.syllablePairConnect: ({required params, onComplete}) =>
       SyllablePairConnectTrainer(params: params, onComplete: onComplete),
   TrainerKey.letterCaseMatch: ({required params, onComplete}) =>
@@ -386,6 +390,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.reading,
     isInteractive: true,
     validate: validateLetterPairConnectParams,
+  ),
+  TrainerKey.wordCubes: TrainerDefinition(
+    key: TrainerKey.wordCubes,
+    title: 'Собери слово из кубиков',
+    direction: TrainerDirection.reading,
+    isInteractive: true,
+    validate: validateWordCubesParams,
   ),
   TrainerKey.syllablePairConnect: TrainerDefinition(
     key: TrainerKey.syllablePairConnect,

@@ -1,0 +1,48 @@
+part of 'model.dart';
+
+// Mirrors the approved Web warehouse catalog, including special consonants.
+const warehouseCubes = <WarehouseCube>[
+  WarehouseCube('vowels-hard', 'vowel', false, ['А', 'О', 'У', 'Ы', 'Э']),
+  WarehouseCube('vowels-soft', 'vowel', true, ['Я', 'Ё', 'Ю', 'И', 'Е']),
+  WarehouseCube('Й-soft', 'voiced', true, ['Й', 'ЙА', 'ЙЯ', 'ЙО', 'ЙЮ', 'ЙИ', 'ЙЕ']),
+  WarehouseCube('Л-hard', 'voiced', false, ['Л', 'ЛА', 'ЛО', 'ЛУ', 'ЛЫ', 'ЛЭ']),
+  WarehouseCube('Л-soft', 'voiced', true, ['ЛЬ', 'ЛЯ', 'ЛЁ', 'ЛЮ', 'ЛИ', 'ЛЕ']),
+  WarehouseCube('М-hard', 'voiced', false, ['М', 'МА', 'МО', 'МУ', 'МЫ', 'МЭ']),
+  WarehouseCube('М-soft', 'voiced', true, ['МЬ', 'МЯ', 'МЁ', 'МЮ', 'МИ', 'МЕ']),
+  WarehouseCube('Н-hard', 'voiced', false, ['Н', 'НА', 'НО', 'НУ', 'НЫ', 'НЭ', 'НЪ']),
+  WarehouseCube('Н-soft', 'voiced', true, ['НЬ', 'НЯ', 'НЁ', 'НЮ', 'НИ', 'НЕ']),
+  WarehouseCube('Р-hard', 'voiced', false, ['Р', 'РА', 'РО', 'РУ', 'РЫ', 'РЭ', 'РЪ']),
+  WarehouseCube('Р-soft', 'voiced', true, ['РЬ', 'РЯ', 'РЁ', 'РЮ', 'РИ', 'РЕ']),
+  WarehouseCube('В-hard', 'voiced', false, ['В', 'ВА', 'ВО', 'ВУ', 'ВЫ', 'ВЭ', 'ВЪ']),
+  WarehouseCube('В-soft', 'voiced', true, ['ВЬ', 'ВЯ', 'ВЁ', 'ВЮ', 'ВИ', 'ВЕ']),
+  WarehouseCube('З-hard', 'voiced', false, ['З', 'ЗА', 'ЗО', 'ЗУ', 'ЗЫ', 'ЗЭ', 'ЗЪ']),
+  WarehouseCube('З-soft', 'voiced', true, ['ЗЬ', 'ЗЯ', 'ЗЁ', 'ЗЮ', 'ЗИ', 'ЗЕ']),
+  WarehouseCube('Б-hard', 'voiced', false, ['Б', 'БА', 'БО', 'БУ', 'БЫ', 'БЭ', 'БЪ']),
+  WarehouseCube('Б-soft', 'voiced', true, ['БЬ', 'БЯ', 'БЁ', 'БЮ', 'БИ', 'БЕ']),
+  WarehouseCube('Д-hard', 'voiced', false, ['Д', 'ДА', 'ДО', 'ДУ', 'ДЫ', 'ДЭ', 'ДЪ']),
+  WarehouseCube('Д-soft', 'voiced', true, ['ДЬ', 'ДЯ', 'ДЁ', 'ДЮ', 'ДИ', 'ДЕ']),
+  WarehouseCube('Г-hard', 'voiced', false, ['Г', 'ГА', 'ГО', 'ГУ', 'ГЫ', 'ГЭ']),
+  WarehouseCube('Г-soft', 'voiced', true, ['ГЬ', 'ГЯ', 'ГЁ', 'ГЮ', 'ГИ', 'ГЕ']),
+  WarehouseCube('Ф-hard', 'unvoiced', false, ['Ф', 'ФА', 'ФО', 'ФУ', 'ФЫ', 'ФЭ']),
+  WarehouseCube('Ф-soft', 'unvoiced', true, ['ФЬ', 'ФЯ', 'ФЁ', 'ФЮ', 'ФИ', 'ФЕ']),
+  WarehouseCube('С-hard', 'unvoiced', false, ['С', 'СА', 'СО', 'СУ', 'СЫ', 'СЭ']),
+  WarehouseCube('С-soft', 'unvoiced', true, ['СЬ', 'СЯ', 'СЁ', 'СЮ', 'СИ', 'СЕ']),
+  WarehouseCube('П-hard', 'unvoiced', false, ['П', 'ПА', 'ПО', 'ПУ', 'ПЫ', 'ПЭ']),
+  WarehouseCube('П-soft', 'unvoiced', true, ['ПЬ', 'ПЯ', 'ПЁ', 'ПЮ', 'ПИ', 'ПЕ']),
+  WarehouseCube('Т-hard', 'unvoiced', false, ['Т', 'ТА', 'ТО', 'ТУ', 'ТЫ', 'ТЭ', 'ТЪ']),
+  WarehouseCube('Т-soft', 'unvoiced', true, ['ТЬ', 'ТЯ', 'ТЁ', 'ТЮ', 'ТИ', 'ТЕ']),
+  WarehouseCube('К-hard', 'unvoiced', false, ['К', 'КА', 'КО', 'КУ', 'КЫ', 'КЭ']),
+  WarehouseCube('К-soft', 'unvoiced', true, ['КЬ', 'КЯ', 'КЁ', 'КЮ', 'КИ', 'КЕ']),
+  WarehouseCube('Х-hard', 'unvoiced', false, ['Х', 'ХА', 'ХО', 'ХУ', 'ХЫ', 'ХЭ']),
+  WarehouseCube('Х-soft', 'unvoiced', true, ['ХЬ', 'ХЯ', 'ХЁ', 'ХЮ', 'ХИ', 'ХЕ']),
+  WarehouseCube('Ж-hard', 'voiced', false, ['Ж', 'ЖА', 'ЖО', 'ЖУ', 'ЖИ', 'ЖЕ', 'ЖЁ', 'ЖЪ']),
+  WarehouseCube('Ш-hard', 'unvoiced', false, ['Ш', 'ША', 'ШО', 'ШУ', 'ШИ', 'ШЕ', 'ШЁ', 'ШЪ']),
+  WarehouseCube('Ц-hard', 'unvoiced', false, ['Ц', 'ЦА', 'ЦО', 'ЦУ', 'ЦЫ', 'ЦЕ', 'ЦИ', 'ЦЪ']),
+  WarehouseCube('Ч-soft', 'unvoiced', true, ['Ч', 'ЧА', 'ЧЁ', 'ЧО', 'ЧУ', 'ЧИ', 'ЧЕ', 'ЧЬ']),
+  WarehouseCube('Щ-soft', 'unvoiced', true, ['Щ', 'ЩА', 'ЩЁ', 'ЩО', 'ЩУ', 'ЩИ', 'ЩЕ', 'ЩЬ']),
+];
+
+const cubeWords = <CubeWord>[
+  CubeWord('ris', 'РИС', [CubeWordPart('Р-soft', 'РИ'), CubeWordPart('С-hard', 'С')]),
+  CubeWord('aloe', 'АЛОЭ', [CubeWordPart('vowels-hard', 'А'), CubeWordPart('Л-hard', 'ЛО'), CubeWordPart('vowels-hard', 'Э')]),
+];

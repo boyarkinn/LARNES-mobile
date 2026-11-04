@@ -91,4 +91,15 @@ void main() {
     expect(board!.personalRuns, isEmpty);
     expect(board.exercises.single['instanceId'], 'legacy-card');
   });
+
+  test('participants keep human-readable places beside their educational ID', () {
+    final board = LessonChildBoard.fromJson({
+      'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',
+      'participants': [
+        {'id': 'pupil', 'name': 'Безымянный', 'seatLabels': ['1', 'ПК 2']},
+      ],
+    });
+    expect(board!.participants.single['id'], 'pupil');
+    expect(board.participants.single['seatLabels'], ['1', 'ПК 2']);
+  });
 }

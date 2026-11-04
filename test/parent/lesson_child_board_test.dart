@@ -58,6 +58,31 @@ void main() {
     });
   });
 
+  test(
+    'preserves a pupil location for one frame in the active trainer card',
+    () {
+      final board = LessonChildBoard.fromJson({
+        'status': 'ok',
+        'lessonSessionId': 'lesson',
+        'focusRoomId': 'main',
+        'presence': [
+          {
+            'id': 'child:pupil:tablet',
+            'childId': 'pupil',
+            'viewport': null,
+            'location': {'kind': 'trainer', 'runId': 'run', 'cardId': 'card'},
+          },
+        ],
+      });
+      expect(board!.presence.single['location'], {
+        'kind': 'trainer',
+        'runId': 'run',
+        'cardId': 'card',
+      });
+      expect(board.presence.single['viewport'], isNull);
+    },
+  );
+
   test('a snapshot without personal runs still decodes its legacy exercise', () {
     final board = LessonChildBoard.fromJson({
       'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main',

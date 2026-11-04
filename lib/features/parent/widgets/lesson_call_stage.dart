@@ -125,7 +125,7 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _hearBlocked = false;
   bool _starting = false;
   bool _awaitingPage = false;
-  bool _claiming = false;
+  String? _claimingScope;
   bool _renewing = false;
   int _callGen = 0;
   int _pageGen = 0;
@@ -148,6 +148,8 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _holding = false;
   Timer? _soundTimer;
   bool _following = false;
+  bool _followAgain = false;
+  int _mediaRouteRevision = 0;
   Timer? _boardTimer;
   bool _boardBusy = false;
   int _boardGen = 1;
@@ -536,18 +538,29 @@ class _LessonCallStageState extends State<LessonCallStage>
   }
 
   Future<void> _followRoom() async {
-    if (!_mediaWanted ||
-        _following ||
-        _ended ||
-        _link == _LessonCallLink.closed)
+    if (!mounted || !_mediaWanted || _ended || _link == _LessonCallLink.closed) {
       return;
+    }
+    if (_following) {
+      _followAgain = true;
+      return;
+    }
     _following = true;
+    final routeRevision = _mediaRouteRevision;
+    final callGeneration = _callGen;
     try {
       final outcome = await _fetchPass();
-      if (!mounted || _ended) return;
+      if (!mounted ||
+          _ended ||
+          !_mediaWanted ||
+          callGeneration != _callGen ||
+          routeRevision != _mediaRouteRevision) {
+        return;
+      }
       if (outcome.moving) {
         setState(() {
           _holding = true;
+          _loading = false;
           _movingDomain = outcome.domain.isEmpty
               ? _movingDomain
               : outcome.domain;
@@ -561,7 +574,9 @@ class _LessonCallStageState extends State<LessonCallStage>
       setState(() {
         _holding = false;
         _pass = pass;
+        _loading = false;
       });
+      _watchSound();
       if (previous == pass.room && _inRoom) return;
       await _web?.evaluateJavascript(
         source: 'switchRoom(${jsonEncode(pass.toStageJson())})',
@@ -570,6 +585,10 @@ class _LessonCallStageState extends State<LessonCallStage>
       // A failed refresh does not put the child back into the shared call.
     } finally {
       _following = false;
+      if (_followAgain) {
+        _followAgain = false;
+        unawaited(_followRoom());
+      }
     }
   }
 
@@ -621,11 +640,29 @@ class _LessonCallStageState extends State<LessonCallStage>
         return;
       final key =
           '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
+      final previous = _board;
+      final mediaRouteChanged =
+          previous != null &&
+          (previous.focusRoomId != board.focusRoomId ||
+              previous.roomEpoch != board.roomEpoch);
       if (key != _boardKey) {
         _boardKey = key;
         _boardGen += 1;
       }
       _board = board;
+      if (mediaRouteChanged) {
+        _mediaRouteRevision += 1;
+        if (_mediaWanted) {
+          // Fence old-room audio before asking for the next scoped call pass.
+          _callGen += 1;
+          _endpointId = null;
+          _holding = true;
+          _inRoom = false;
+          await _web?.evaluateJavascript(source: 'holdRoom()');
+          if (!mounted || _ended) return;
+          unawaited(_followRoom());
+        }
+      }
       await _web?.evaluateJavascript(
         source: 'noteLessonClock(${board.serverNow})',
       );
@@ -900,15 +937,16 @@ class _LessonCallStageState extends State<LessonCallStage>
     final endpointId = _endpointId;
     final web = _web;
     final callGen = _callGen;
+    final claimScope = '$callGen:$endpointId';
     if (endpointId == null ||
         endpointId.isEmpty ||
         web == null ||
-        _claiming ||
+        _claimingScope == claimScope ||
         !mounted) {
       return;
     }
 
-    _claiming = true;
+    _claimingScope = claimScope;
     final locale = Localizations.localeOf(context).languageCode;
     final claim = widget.claimRoster;
     try {
@@ -939,7 +977,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       }
       await web.evaluateJavascript(
         source:
-            'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)})',
+            'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)}, ${jsonEncode(teachers.mediaControllers)}, ${jsonEncode(teachers.observers)})',
       );
       if (!mounted ||
           _web != web ||
@@ -974,7 +1012,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       );
       _stopRoster(error.code);
     } finally {
-      _claiming = false;
+      if (_claimingScope == claimScope) _claimingScope = null;
     }
   }
 

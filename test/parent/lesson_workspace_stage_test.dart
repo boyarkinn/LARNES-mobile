@@ -11,6 +11,8 @@ import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_device_media.dart';
 import 'package:larnes_mobile/core/api/kiosk_api.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_call_stage.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
@@ -111,10 +113,12 @@ class _MediaHarness {
   Map<String, dynamic>? boardAck;
   String? boardLink;
   String focusRoomId = 'main';
+  int roomEpoch = 0;
   final handle = LessonCallStageHandle();
   Future<bool> Function()? leaveLesson;
   int leaves = 0;
   Future<LessonCallPassOutcome> Function()? pass;
+  Future<LessonCallTeachers> Function(String endpointId)? claim;
   bool home = false;
   Future<void> pump(WidgetTester tester) async {
     rootBundle.evict('assets/call/lesson_call_stage.html');
@@ -190,6 +194,9 @@ class _MediaHarness {
                   ),
                 );
               },
+              claimRoster: ({required endpointId, required locale, assignment}) async {
+                return claim == null ? const LessonCallTeachers(ids: [], primary: '') : claim!(endpointId);
+              },
               fetchBoard: ({String? link}) async {
                 boards++;
                 boardLink = link;
@@ -197,7 +204,7 @@ class _MediaHarness {
                   'status': 'ok',
                   'lessonSessionId': 'lesson-1',
                   'focusRoomId': focusRoomId,
-                  'roomEpoch': 0,
+                  'roomEpoch': roomEpoch,
                   'scene': [],
                   'exercises': [],
                 });
@@ -241,6 +248,122 @@ class _MediaHarness {
 }
 
 void main() {
+  setUpAll(() {
+    SharedPreferences.setMockInitialValues({});
+    PackageInfo.setMockInitialValues(appName: 'Test', packageName: 'test.larnes',
+      version: '0.0.0', buildNumber: '0', buildSignature: 'test');
+  });
+  testWidgets(
+    'accepted room changes fence old media and follow immediately without the ten second poll',
+    (tester) async {
+      final f = _MediaHarness()..home = true;
+      await f.pump(tester);
+      await f.emit(tester, 'joined');
+      final before = f.passes;
+      f.pass = () async => const LessonCallPassOutcome.pass(
+        LessonCallPass(
+          displayName: 'Test',
+          domain: 'meet.example.com',
+          jwt: 'synthetic',
+          room: 'breakout-two',
+          xmppDomain: 'meet.example.com',
+          workspaceFormat: 'board',
+        ),
+      );
+      f.focusRoomId = 'room-2';
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      expect(f.passes, greaterThan(before));
+      final scripts = f.platform.controller.scripts;
+      final hold = scripts.lastIndexOf('holdRoom()');
+      final switched = scripts.lastIndexWhere(
+        (s) => s.startsWith('switchRoom(') && s.contains('breakout-two'),
+      );
+      expect(hold, greaterThanOrEqualTo(0));
+      expect(switched, greaterThan(hold));
+      expect(f.platform.controller.loads, 1);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'a newer board route supersedes an in-flight room pass and queues one immediate follow',
+    (tester) async {
+      final f = _MediaHarness()..home = true;
+      await f.pump(tester);
+      await f.emit(tester, 'joined');
+      final old = Completer<LessonCallPassOutcome>();
+      f.pass = () => old.future;
+      f.focusRoomId = 'room-2';
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      f.focusRoomId = 'room-3';
+      f.roomEpoch = 1;
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      f.pass = () async => const LessonCallPassOutcome.pass(
+        LessonCallPass(
+          displayName: 'Test',
+          domain: 'meet.example.com',
+          jwt: 'synthetic',
+          room: 'breakout-three',
+          xmppDomain: 'meet.example.com',
+          workspaceFormat: 'board',
+        ),
+      );
+      old.complete(
+        const LessonCallPassOutcome.pass(
+          LessonCallPass(
+            displayName: 'Test',
+            domain: 'meet.example.com',
+            jwt: 'synthetic',
+            room: 'breakout-two-stale',
+            xmppDomain: 'meet.example.com',
+            workspaceFormat: 'board',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final scripts = f.platform.controller.scripts;
+      expect(
+        scripts.any(
+          (s) =>
+              s.startsWith('switchRoom(') && s.contains('breakout-two-stale'),
+        ),
+        false,
+      );
+      expect(
+        scripts.any(
+          (s) => s.startsWith('switchRoom(') && s.contains('breakout-three'),
+        ),
+        true,
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+
+  testWidgets('an old pending roster claim cannot block the new endpoint or replace its media authority', (tester) async {
+    final old = Completer<LessonCallTeachers>(), claimed = <String>[];
+    final f = _MediaHarness()..home = true;
+    f.claim = (endpoint) async {
+      claimed.add(endpoint);
+      if (endpoint == 'old-endpoint') return old.future;
+      return const LessonCallTeachers(ids: ['teacher'], primary: 'teacher',
+        scopeId: 'lesson-1', observers: ['observer-new'], mediaControllers: ['teacher', 'observer-new']);
+    };
+    await f.pump(tester);
+    await f.emit(tester, 'endpoint', 'old-endpoint');
+    await f.emit(tester, 'endpoint', 'new-endpoint');
+    expect(claimed, ['old-endpoint', 'new-endpoint']);
+    expect(f.platform.controller.scripts.any((s) => s.startsWith('setTeachers(') && s.contains('observer-new')), true);
+    old.complete(const LessonCallTeachers(ids: ['teacher'], primary: 'teacher',
+      observers: ['observer-old'], mediaControllers: ['teacher', 'observer-old']));
+    await tester.pumpAndSettle();
+    expect(f.platform.controller.scripts.any((s) => s.startsWith('setTeachers(') && s.contains('observer-old')), false);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('scene writes preserve their token and full durable receipt without a call; stale room writes are rejected', (tester) async {
     final token = {'clientId': '29292929-2929-4292-8292-292929292929', 'sequence': 3, 'generation': 0};
     final receipt = {...token, 'durable': true};

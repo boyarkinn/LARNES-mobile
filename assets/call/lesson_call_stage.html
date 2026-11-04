@@ -191,6 +191,7 @@
       var joining = false;
       var leaving = false;
       var callJoined = false;
+      var roomSwitchGeneration = 0;
       var linkPhase = "idle";
       var linkAuto = true;
       var linkAutoAt = 0;
@@ -231,6 +232,9 @@
       var people = {};
       var teacherIds = [];
       var teacherPrimary = "";
+      var mediaControllerIds = [];
+      var observerIds = [];
+      var mediaControllerRosterAt = 0;
       var ownName = "";
       var shownMode = "grid";
       var boardParts = [];
@@ -271,10 +275,11 @@
           return;
         }
         if (typeof track.attach === "function") {
-          track.attach(element);
+          try { return Promise.resolve(track.attach(element)); } catch (error) { return Promise.reject(error); }
         } else if (track.stream) {
           element.srcObject = track.stream;
         }
+        return Promise.resolve();
       }
 
       function playMedia(element, onBlocked) {
@@ -294,7 +299,7 @@
         audio.setAttribute("playsinline", "");
         document.body.appendChild(audio);
         remoteAudios.push(audio);
-        attach(track, audio);
+        attach(track, audio).catch(function () { post("hear-blocked"); });
         playMedia(audio, function () {
           post("hear-blocked");
         });
@@ -342,6 +347,14 @@
         return person.desktop || person.camera;
       }
 
+      function observerParticipant(participant) {
+        try {
+          var identity = participant && participant.getIdentity && participant.getIdentity();
+          var id = identity && identity.user && identity.user.id;
+          return typeof id === "string" && id.indexOf("observer:") === 0;
+        } catch (_) { return false; }
+      }
+
       function sameCallName(left, right) {
         var normalize = function (value) {
           return String(value || "")
@@ -362,6 +375,7 @@
         var local = null;
         var remotes = [];
         for (var id in people) {
+          if (people[id].observer || observerIds.indexOf(id) >= 0) continue;
           if (people[id].local) {
             local = people[id];
           } else if (!sameCallName(people[id].name, ownName)) {
@@ -434,7 +448,8 @@
         } catch (error) {}
         try {
           if (typeof track.dispose === "function") {
-            track.dispose();
+            var disposed = track.dispose();
+            if (disposed && disposed.catch) disposed.catch(function () {});
           }
         } catch (error) {}
       }
@@ -447,11 +462,7 @@
         var video = node.video;
         node.video = null;
         node.track = null;
-        try {
-          if (track && typeof track.detach === "function") {
-            track.detach(video);
-          }
-        } catch (error) {}
+        unbindVideoTrack(video, track);
         if (video.parentNode) {
           video.parentNode.removeChild(video);
         }
@@ -511,25 +522,129 @@
         node.tile.insertBefore(video, node.tile.firstChild);
         node.video = video;
         node.track = videoTrack;
-        attach(videoTrack, video);
-        playMedia(video);
+        bindVideoTrack(videoTrack, video);
       }
 
       var boardVideoTracks = new WeakMap();
       var boardTrackSerial = 0;
+      // One owner per DOM element, shared by native tiles and the board SDK.
       var boardVideoBindings = new Map();
-      function bindBoardVideo(endpoint, element) {
+      var videoHealthTimer = null;
+      var videoReceiveTimer = null;
+      var lastVideoConstraints = "";
+      function unbindVideoTrack(element, expectedTrack) {
+        var entry = boardVideoBindings.get(element);
+        if (!entry || expectedTrack && entry.track !== expectedTrack) return;
+        boardVideoBindings.delete(element);
+        entry.version += 1;
+        try { if (entry.track.detach) entry.track.detach(element); } catch (_) {}
+        if (boardVideoBindings.size === 0 && videoHealthTimer) {
+          clearTimeout(videoHealthTimer); videoHealthTimer = null;
+        }
+      }
+      function attachVideoEntry(element, entry) {
+        var version = ++entry.version;
+        attach(entry.track, element).then(function () {
+          if (boardVideoBindings.get(element) !== entry || version !== entry.version || entry.attempt !== attempt) return;
+          playMedia(element);
+        }, function () {
+          // The health timer retries this exact binding, never the conference.
+          if (boardVideoBindings.get(element) === entry && version === entry.version) entry.failed = true;
+        });
+      }
+      function bindVideoTrack(track, element) {
+        if (!track || !element) return;
+        var previous = boardVideoBindings.get(element);
+        if (previous && previous.track === track && previous.attempt === attempt) return;
+        unbindVideoTrack(element);
+        var entry = { track: track, attempt: attempt, version: 0, time: -1, frames: -1,
+          progressAt: Date.now(), recoveredAt: 0, recoveries: 0, failed: false };
+        boardVideoBindings.set(element, entry);
+        attachVideoEntry(element, entry);
+        armVideoHealth();
+        scheduleVideoReceive();
+      }
+      function clearVideoBindings() {
+        boardVideoBindings.forEach(function (entry, element) { unbindVideoTrack(element, entry.track); });
+        if (videoHealthTimer) clearTimeout(videoHealthTimer);
+        if (videoReceiveTimer) clearTimeout(videoReceiveTimer);
+        videoHealthTimer = null; videoReceiveTimer = null; lastVideoConstraints = "";
+      }
+      function videoFrames(element) {
+        try {
+          var quality = element.getVideoPlaybackQuality && element.getVideoPlaybackQuality();
+          return quality && typeof quality.totalVideoFrames === "number" ? quality.totalVideoFrames : -1;
+        } catch (_) { return -1; }
+      }
+      function checkVideoHealth() {
+        var now = Date.now();
+        boardVideoBindings.forEach(function (entry, element) {
+          if (!element.isConnected || entry.attempt !== attempt) { unbindVideoTrack(element, entry.track); return; }
+          var rect = element.getBoundingClientRect();
+          if (document.hidden || !lessonAppVisible || rect.width <= 0 || rect.height <= 0 || entry.track.isMuted && entry.track.isMuted()) {
+            entry.progressAt = now; return;
+          }
+          var frames = videoFrames(element), time = element.currentTime || 0;
+          if (frames > entry.frames && frames > 0 || time > entry.time && time > 0) {
+            entry.frames = frames; entry.time = time; entry.progressAt = now; entry.recoveries = 0; entry.failed = false; return;
+          }
+          if (entry.track.isLocal && entry.track.isLocal()) return;
+          if (entry.recoveries >= 2 || now - entry.recoveredAt < 10000 || !entry.failed && now - entry.progressAt < 12000) return;
+          entry.recoveries += 1; entry.recoveredAt = now; entry.failed = false;
+          try { if (entry.track.detach) entry.track.detach(element); } catch (_) {}
+          attachVideoEntry(element, entry);
+        });
+        applyVideoReceive();
+      }
+      function armVideoHealth() {
+        if (videoHealthTimer || boardVideoBindings.size === 0) return;
+        videoHealthTimer = setTimeout(function () { videoHealthTimer = null; checkVideoHealth(); armVideoHealth(); }, 2000);
+      }
+      function scheduleVideoReceive() {
+        if (videoReceiveTimer) return;
+        videoReceiveTimer = setTimeout(function () { videoReceiveTimer = null; applyVideoReceive(); }, 0);
+      }
+      function applyVideoReceive() {
+        if (!room || !callJoined || !room.setReceiverConstraints) return;
+        var constraints = {}, selected = [];
+        Object.keys(people).forEach(function (id) {
+          var person = people[id], track = shownTrack(person);
+          if (person.local || !track || !track.getSourceName) return;
+          var source = track.getSourceName();
+          if (source) constraints[source] = { maxHeight: 0 };
+        });
+        boardVideoBindings.forEach(function (entry, element) {
+          var track = entry.track;
+          if (!element.isConnected || entry.attempt !== attempt || track.isLocal && track.isLocal() || !track.getSourceName) return;
+          var source = track.getSourceName(), rect = element.getBoundingClientRect();
+          if (!source || rect.width <= 0 || rect.height <= 0 || document.hidden || !lessonAppVisible) return;
+          var height = rect.height <= 180 ? 180 : rect.height <= 360 ? 360 : 720;
+          constraints[source] = { maxHeight: Math.max(constraints[source] ? constraints[source].maxHeight : 0, height) };
+          if (height === 720 && selected.indexOf(source) < 0) selected.push(source);
+        });
+        // Keep the first low layer available while an incoming track gets a card.
+        var settings = { lastN: -1, defaultConstraints: { maxHeight: 180 }, constraints: constraints, selectedSources: selected };
+        var key = JSON.stringify(settings);
+        if (key === lastVideoConstraints) return;
+        try { room.setReceiverConstraints(settings); lastVideoConstraints = key; } catch (_) {}
+      }
+      function bindBoardVideo(endpoint, element, releaseElement) {
+        if (!element && releaseElement) {
+          var releasing = boardVideoBindings.get(releaseElement);
+          if (releasing && releasing.endpoint === endpoint) unbindVideoTrack(releaseElement, releasing.track);
+          scheduleVideoReceive();
+          return;
+        }
         var person = endpoint === localEndpoint ? people.local : people[endpoint];
         var track = person && shownTrack(person);
-        boardVideoBindings.forEach(function (oldTrack, video) {
-          if (!video.isConnected || video === element && oldTrack !== track) {
-            try { oldTrack.detach(video); } catch (_) {}
-            boardVideoBindings.delete(video);
-          }
+        boardVideoBindings.forEach(function (entry, video) {
+          if (!video.isConnected) unbindVideoTrack(video, entry.track);
         });
-        if (element && track && boardVideoBindings.get(element) !== track) {
-          boardVideoBindings.set(element, track); attach(track, element); playMedia(element);
-        }
+        if (!element) return;
+        if (track) {
+          bindVideoTrack(track, element);
+          boardVideoBindings.get(element).endpoint = endpoint;
+        } else unbindVideoTrack(element);
       }
       function syncBoardPeople() {
         if (!boardInstalled || !window.LarnesBoard.setParticipantMedia) return;
@@ -579,6 +694,7 @@
         }
         syncBoardPeople();
         syncBoard();
+        scheduleVideoReceive();
       }
 
       function rememberVideo(track) {
@@ -588,6 +704,7 @@
           return;
         }
         var person = ensurePerson(id, local);
+        if (!local && room && room.getParticipantById) person.observer = observerParticipant(room.getParticipantById(id));
         if (track.getVideoType && track.getVideoType() === "desktop") {
           person.desktop = track;
           person.sharing = true;
@@ -669,12 +786,14 @@
         if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > Date.now() + mediaSkewMs) {
           return "drop";
         }
-        if (teacherIds.length === 0) {
+        if (mediaControllerIds.length === 0) {
           return "wait";
         }
         if (teacherIds.indexOf(sender) >= 0) {
           return "apply";
         }
+        if (observerIds.indexOf(sender) >= 0 && mediaControllerIds.indexOf(sender) >= 0
+          && mediaControllerRosterAt > 0 && Date.now() - mediaControllerRosterAt <= 5000) return "apply";
         return "drop";
       }
 
@@ -941,16 +1060,26 @@
         }
       }
 
-      function setTeachers(ids, primary) {
+      function setTeachers(ids, primary, controllers, observers) {
+        mediaControllerRosterAt = Date.now();
+        function endpointIds(input) {
+          return (input instanceof Array ? input : []).filter(function (id, index, all) {
+            return typeof id === "string" && id && all.indexOf(id) === index;
+          });
+        }
+        var nextObservers = endpointIds(observers);
         var next = [];
         var list = ids || [];
         for (var i = 0; i < list.length; i++) {
-          if (typeof list[i] === "string" && list[i]) {
+          if (typeof list[i] === "string" && list[i] && nextObservers.indexOf(list[i]) < 0) {
             next.push(list[i]);
           }
         }
+        var nextControllers = endpointIds(next.concat(controllers instanceof Array ? controllers : []));
         var primaryId = typeof primary === "string" ? primary : "";
-        var same = primaryId === teacherPrimary && next.length === teacherIds.length;
+        var same = primaryId === teacherPrimary && next.length === teacherIds.length
+          && JSON.stringify(nextControllers) === JSON.stringify(mediaControllerIds)
+          && JSON.stringify(nextObservers) === JSON.stringify(observerIds);
         for (var j = 0; same && j < next.length; j++) {
           if (next[j] !== teacherIds[j]) {
             same = false;
@@ -961,6 +1090,8 @@
         }
         teacherIds = next;
         teacherPrimary = primaryId;
+        mediaControllerIds = nextControllers;
+        observerIds = nextObservers;
         flushHold();
         emitWorkspace();
         render();
@@ -1016,6 +1147,7 @@
       }
 
       function join(pass) {
+        roomSwitchGeneration += 1;
         if (joining || room || !pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
           post("failed");
           return;
@@ -1090,7 +1222,7 @@
           }
           ensurePerson("local", true);
           room.on(meet.events.conference.TRACK_ADDED, function (track) {
-            if (thisAttempt !== attempt || !track) {
+            if (thisAttempt !== attempt || !track || track.disposed) {
               return;
             }
             if (track.getType() === "video") {
@@ -1179,6 +1311,8 @@
               return;
             }
             var person = ensurePerson(id, false);
+            // Identity is only a presentation hint. Commands still require roster authority.
+            person.observer = observerParticipant(participant);
             var name = participant && participant.getDisplayName ? participant.getDisplayName() : "";
             if (name) {
               person.name = name;
@@ -1279,13 +1413,10 @@
             hideSound();
             if (carryJoin) {
               carryJoin = false;
-              if (localVideo && room.addTrack) {
-                try { room.addTrack(localVideo); } catch (error) {}
-              }
-              if (localAudio && room.addTrack) {
-                try { room.addTrack(localAudio); } catch (error) {}
-              }
+              republishLocal("video", localVideo);
+              republishLocal("audio", localAudio);
             }
+            scheduleVideoReceive();
             applyLink(linkJoined());
             localEndpoint = room.myUserId() || "";
             syncBoardChannel();
@@ -1409,11 +1540,16 @@
         pending[kind] = created;
         var heldRoom = room;
         var heldAttempt = attempt;
-        return heldRoom.addTrack(created).then(
-          function () {
+        return publishLocalTrack(created, heldRoom, heldAttempt, function () { return gen === captureGen[kind]; }).then(
+          function (published) {
             finishCapture(kind, gen);
             if (pending[kind] === created) {
               pending[kind] = null;
+            }
+            if (!published) {
+              releaseTrack(created);
+              if (gen === captureGen[kind] && !leaving && heldAttempt === attempt) post(failKind(kind), "failed");
+              return;
             }
             if (gen !== captureGen[kind] || leaving || heldAttempt !== attempt) {
               try {
@@ -1454,6 +1590,65 @@
             }
           },
         );
+      }
+
+      var publicationTasks = new Map();
+      function clearPublicationTasks() {
+        publicationTasks.forEach(function (task) { task.cancel(); });
+        publicationTasks.clear();
+      }
+      function publishLocalTrack(track, target, generation, allowed) {
+        if (!track || !target || !target.addTrack || room !== target || generation !== attempt || leaving || allowed && !allowed()) return Promise.resolve(false);
+        var previous = publicationTasks.get(track);
+        if (previous && previous.room === target && previous.attempt === generation) return previous.promise;
+        if (previous) previous.cancel();
+        var resolveTask;
+        var task = { room: target, attempt: generation, tries: 0, timer: null, deadline: null, finished: false,
+          promise: new Promise(function (resolve) { resolveTask = resolve; }) };
+        function current() { return !task.finished && publicationTasks.get(track) === task && room === target && generation === attempt && !leaving && (!allowed || allowed()); }
+        function finish(ok) {
+          if (task.finished) return;
+          task.finished = true;
+          if (task.timer) clearTimeout(task.timer);
+          if (task.deadline) clearTimeout(task.deadline);
+          if (publicationTasks.get(track) === task) publicationTasks.delete(track);
+          resolveTask(ok);
+        }
+        task.cancel = function () { finish(false); };
+        publicationTasks.set(track, task);
+        function send() {
+          if (!current()) { finish(false); return; }
+          task.tries += 1;
+          var sent;
+          try { sent = target.addTrack(track); } catch (error) { sent = Promise.reject(error); }
+          // No overlapping addTrack calls when negotiation itself hangs.
+          task.deadline = setTimeout(function () { finish(false); }, 6000);
+          Promise.resolve(sent).then(function () {
+            if (task.deadline) clearTimeout(task.deadline);
+            finish(current());
+          }, function () {
+            if (task.deadline) clearTimeout(task.deadline);
+            if (!current() || task.tries >= 3) { finish(false); return; }
+            task.timer = setTimeout(send, task.tries === 1 ? 300 : 1000);
+          });
+        }
+        send();
+        return task.promise;
+      }
+      function republishLocal(kind, track, allowed) {
+        if (!track) return Promise.resolve(false);
+        var target = room, generation = attempt;
+        return publishLocalTrack(track, target, generation, allowed).then(function (published) {
+          if (published) return true;
+          if (leaving || room !== target || generation !== attempt || localTrack(kind) !== track || allowed && !allowed()) return false;
+          // A local preview is not a successfully published camera.
+          var muted;
+          try { muted = track.mute ? track.mute() : undefined; } catch (_) {}
+          Promise.resolve(muted).then(function () {}, function () {});
+          applyMute(kind, true);
+          post(failKind(kind), "failed");
+          return false;
+        });
       }
 
       function localTrack(kind) {
@@ -1632,8 +1827,9 @@
         var video = localDesktop;
         var camera = localVideo;
         var heldRoom = room;
+        var heldAttempt = attempt;
         var muted = camera && camera.isMuted ? camera.isMuted() : videoMuted;
-        shareGeneration += 1;
+        var generation = ++shareGeneration;
         shareState = "idle";
         shareStartedAt = 0;
         localDesktop = null;
@@ -1649,21 +1845,22 @@
         chain.then(
           function () {
             if (heldRoom && camera && heldRoom.addTrack && room === heldRoom) {
-              return heldRoom.addTrack(camera);
+              return republishLocal("video", camera, function () { return generation === shareGeneration; });
             }
           },
           function () {},
         ).then(
-          function () {
-            finishStoppedShare(video, muted);
+          function (published) {
+            finishStoppedShare(video, published === false ? true : muted, heldRoom, heldAttempt, generation);
           },
           function () {
-            finishStoppedShare(video, muted);
+            finishStoppedShare(video, muted, heldRoom, heldAttempt, generation);
           },
         );
       }
 
-      function finishStoppedShare(video, muted) {
+      function finishStoppedShare(video, muted, heldRoom, heldAttempt, generation) {
+        if (room !== heldRoom || attempt !== heldAttempt || shareGeneration !== generation) { releaseTrack(video); return; }
         if (people.local && people.local.desktop === video) {
           people.local.desktop = null;
         }
@@ -1686,6 +1883,7 @@
         shareState = "starting";
         var generation = ++shareGeneration;
         var heldRoom = room;
+        var heldAttempt = attempt;
         meet.createLocalTracks({ devices: ["desktop"] }).then(
           function (tracks) {
             var video = null;
@@ -1713,18 +1911,19 @@
             var camera = localVideo;
             var cameraRemoved = false;
             var addDesktop = function () {
-              return heldRoom.addTrack(video).then(
-                function () {
+              return publishLocalTrack(video, heldRoom, heldAttempt, function () { return generation === shareGeneration; }).then(
+                function (published) {
+                  if (!published) {
+                    if (cameraRemoved && camera && room === heldRoom && generation === shareGeneration && !leaving) republishLocal("video", camera);
+                    releaseTrack(video);
+                    if (generation === shareGeneration) { shareState = "idle"; post("share-failed", "failed"); }
+                    return;
+                  }
                   if (generation !== shareGeneration || leaving || room !== heldRoom) {
                     localDesktop = null;
                     try {
                       heldRoom.removeTrack(video);
                     } catch (error) {}
-                    if (cameraRemoved && camera) {
-                      try {
-                        heldRoom.addTrack(camera);
-                      } catch (error) {}
-                    }
                     releaseTrack(video);
                     if (generation === shareGeneration) {
                       shareState = "idle";
@@ -1745,11 +1944,7 @@
                   publishShare(true, camera && camera.isMuted ? camera.isMuted() : videoMuted);
                 },
                 function () {
-                  if (cameraRemoved && camera) {
-                    try {
-                      heldRoom.addTrack(camera);
-                    } catch (error) {}
-                  }
+                  if (cameraRemoved && camera && room === heldRoom && generation === shareGeneration && !leaving) republishLocal("video", camera);
                   releaseTrack(video);
                   if (generation === shareGeneration) {
                     shareState = "idle";
@@ -1984,7 +2179,10 @@
       }
 
       function dropSession() {
+        roomSwitchGeneration += 1;
         attempt += 1;
+        clearPublicationTasks();
+        clearVideoBindings();
         captureGen.video += 1;
         captureGen.audio += 1;
         opening.video = false;
@@ -2014,6 +2212,7 @@
         people = {};
         boardRoster = null;
         boardRosterAt = 0;
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; mediaControllerRosterAt = 0;
         clearBoardInbox();
         if (boardInstalled) window.LarnesBoard.bind(null);
         mediaHold = { audio: null, video: null };
@@ -2206,6 +2405,8 @@
 
       function leaveConferenceOnly() {
         attempt += 1;
+        clearPublicationTasks();
+        clearVideoBindings();
         var paused = leaving;
         leaving = true;
         var currentRoom = room;
@@ -2215,6 +2416,8 @@
         joining = false;
         callJoined = false;
         releaseDesktop();
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; mediaControllerRosterAt = 0;
+        boardRoster = null; boardRosterAt = 0; localEndpoint = "";
         people = {};
         for (var id in tileNodes) {
           detachVideo(tileNodes[id]);
@@ -2227,6 +2430,8 @@
           if (audio.parentNode) audio.parentNode.removeChild(audio);
         }
         remoteAudios = [];
+        syncBoardChannel();
+        render();
         var left = Promise.resolve();
         if (currentRoom && currentRoom.leave) {
           try {
@@ -2239,13 +2444,14 @@
       }
 
       function holdRoom() {
+        var generation = ++roomSwitchGeneration;
         holding = true;
         showSound();
         if (!room && !connection) {
           post("holding");
           return;
         }
-        leaveConferenceOnly().then(function () { post("holding"); });
+        leaveConferenceOnly().then(function () { if (generation === roomSwitchGeneration) post("holding"); });
       }
 
       function switchRoom(pass) {
@@ -2255,13 +2461,14 @@
           passHold = pass;
           return;
         }
+        var generation = ++roomSwitchGeneration;
         holding = false;
         hideSound();
         carryJoin = true;
         var nextWish = { audio: wishMuted.audio, video: wishMuted.video };
         var gone = room || connection ? leaveConferenceOnly() : Promise.resolve();
         gone.then(function () {
-          if (leaving) return;
+          if (leaving || generation !== roomSwitchGeneration) return;
           wishMuted.audio = nextWish.audio;
           wishMuted.video = nextWish.video;
           passHold = pass;

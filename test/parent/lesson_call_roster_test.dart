@@ -17,6 +17,31 @@ void main() {
       'participantEndpointIds': ['teacher', 'child'],
     });
   });
+  test(
+    'video observers get separate media authority and never become board teachers',
+    () {
+      final roster = LessonCallTeachers.fromJson({
+        'scopeId': 'lesson-id',
+        'teacherEndpointId': 'teacher',
+        'teacherEndpointIds': ['teacher'],
+        'participantEndpointIds': ['teacher', 'child'],
+        'observerEndpointIds': ['observer', null, 123, ''],
+        'mediaControllerEndpointIds': ['teacher', 'observer'],
+      });
+      expect(roster.ids, ['teacher']);
+      expect(roster.observers, ['observer']);
+      expect(roster.mediaControllers, ['teacher', 'observer']);
+      expect(roster.toBoardJson()['teacherEndpointIds'], ['teacher']);
+      expect(roster.toBoardJson()['participantEndpointIds'], [
+        'teacher',
+        'child',
+      ]);
+      expect(
+        roster.toBoardJson().containsKey('mediaControllerEndpointIds'),
+        false,
+      );
+    },
+  );
   test('legacy response keeps media teachers but cannot authorize new shared board', () {
     final roster = LessonCallTeachers.fromJson({
       'teacherEndpointId': 'teacher',

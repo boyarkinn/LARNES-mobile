@@ -92,12 +92,16 @@ class LessonCallTeachers {
     required this.primary,
     this.scopeId = '',
     this.participants = const [],
+    this.observers = const [],
+    this.mediaControllers = const [],
   });
 
   final List<String> ids;
   final String primary;
   final String scopeId;
   final List<String> participants;
+  final List<String> observers;
+  final List<String> mediaControllers;
 
   factory LessonCallTeachers.fromJson(Map<String, dynamic> json) {
     List<String> idsOf(dynamic value) => [
@@ -112,6 +116,8 @@ class LessonCallTeachers {
           : '',
       scopeId: json['scopeId'] is String ? json['scopeId'] as String : '',
       participants: idsOf(json['participantEndpointIds']),
+      observers: idsOf(json['observerEndpointIds']),
+      mediaControllers: idsOf(json['mediaControllerEndpointIds']),
     );
   }
 
@@ -120,5 +126,6 @@ class LessonCallTeachers {
     'teacherEndpointIds': ids,
     'teacherEndpointId': primary.isEmpty ? null : primary,
     'participantEndpointIds': participants,
+    if (observers.isNotEmpty) 'observerEndpointIds': observers,
   };
 }

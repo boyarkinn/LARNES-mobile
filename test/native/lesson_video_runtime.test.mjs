@@ -67,6 +67,40 @@ test('actual native board binding owns each connected element once and ignores s
   assert.equal(f.timers.size, 0);
 });
 
+test('actual native mute listener retains an initially muted camera and supplies it after unmute and remount', async () => {
+  const f = stage(), c = f.context, camera = track('child-v0'), first = video(), second = video();
+  let muted = true;
+  Object.assign(camera, { getParticipantId: () => 'child', getType: () => 'video', getVideoType: () => 'camera', isMuted: () => muted });
+  const handlers = new Map(), snapshots = [];
+  c.room = { on: (event, handler) => handlers.set(event, handler) };
+  c.meet = { events: { conference: { TRACK_MUTE_CHANGED: 'mute' } } };
+  c.thisAttempt = c.attempt;
+  c.boardInstalled = true;
+  c.window.LarnesBoard = { setParticipantMedia: value => snapshots.push(value) };
+  // The DOM/render boundary is synthetic; registration, camera bookkeeping and SDK bridge are real HTML functions.
+  c.render = () => c.syncBoardPeople();
+  const registration = script.slice(script.indexOf('          room.on(meet.events.conference.TRACK_MUTE_CHANGED,'), script.indexOf('          room.on(meet.events.conference.USER_JOINED,'));
+  vm.runInContext(registration, c);
+  c.rememberVideo(camera);
+  assert.equal(c.people.child.camera, camera);
+  assert.equal(snapshots.at(-1).endpoints[0].videoMuted, true);
+  muted = false; handlers.get('mute')(camera);
+  assert.equal(snapshots.at(-1).endpoints[0].videoMuted, false);
+  c.bindBoardVideo('child', first);
+  assert.equal(first.srcObject, camera.stream);
+  muted = true; handlers.get('mute')(camera);
+  c.bindBoardVideo('child', null, first);
+  assert.equal(first.srcObject, null);
+  assert.equal(c.people.child.camera, camera);
+  muted = false; handlers.get('mute')(camera);
+  c.bindBoardVideo('child', second);
+  assert.equal(second.srcObject, camera.stream);
+  assert.equal(camera.attaches, 2);
+  c.clearVideoBindings();
+  await f.advance(0);
+  assert.equal(f.timers.size, 0);
+});
+
 test('releasing one of two views preserves the other and a late attach failure cannot affect a new owner', async () => {
   const f = stage(), c = f.context, a = track('a-v0'), b = track('b-v0'), first = video(), second = video();
   let fail;

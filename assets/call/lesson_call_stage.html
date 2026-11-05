@@ -102,19 +102,6 @@
       .board.on {
         display: block;
       }
-      #room-label {
-        display: none;
-        position: absolute;
-        z-index: 6;
-        inset-inline-start: 12px;
-        top: 8px;
-        margin: 0;
-        font-size: 13px;
-        font-weight: 600;
-      }
-      #room-label.on { display: block; }
-      #room-conversation { display: none; position: absolute; z-index: 7; inset-inline-end: 12px; top: 8px; margin: 0; max-width: 70%; padding: 5px 8px; border-radius: 8px; background: #e7f5ee; color: #227c60; font: 500 12px/1.3 system-ui, sans-serif; pointer-events: none; }
-      #room-conversation.on { display: block; }
       #sound-note {
         display: none;
         position: absolute;
@@ -171,10 +158,8 @@
   </head>
   <body>
     <div id="grid" class="grid"></div>
-    <div id="board" class="board"></div>
-    <p id="room-label"></p>
-    <p id="room-conversation" role="status"></p>
-    <p id="sound-note"></p>
+    <div id="board" class="board" role="region" aria-label="Общая"></div>
+    <p id="sound-note" role="status"></p>
     <div id="room-work"></div>
     <script>
       var connection = null;
@@ -1164,10 +1149,7 @@
       function applyBoardWorkspace(pass) {
         boardWorkspace = true;
         if (boardInstalled) applyBoardImages();
-        var label = document.getElementById("room-label");
-        if (!label) return;
-        label.className = boardWorkspace ? "on" : "";
-        label.textContent = boardWorkspace ? (roomNames[nameLocale] || roomNames.ru) : "";
+        labelChildBoard();
       }
 
       function join(pass) {
@@ -2468,37 +2450,26 @@
         } : null);
       }
 
-      var conversationTimer = 0;
-      function showRoomConversation(payload) {
-        window.clearTimeout(conversationTimer);
-        var note = document.getElementById("room-conversation");
-        if (!note) return;
-        note.className = "";
-        var value = payload && payload.focus !== "main" && payload.conversation;
-        if (!value || (value.mode !== "talking" && value.mode !== "listening") || typeof value.remainingMs !== "number" || value.remainingMs <= 0) return;
-        var text = {
-          ru: { listening: "Педагог слушает вашу комнату", talking: "Педагог разговаривает с вашей комнатой" },
-          en: { listening: "The teacher is listening to your room", talking: "The teacher is talking to your room" },
-          ar: { listening: "المعلم يستمع إلى غرفتكم", talking: "المعلم يتحدث مع غرفتكم" }
-        };
-        note.textContent = (text[nameLocale] || text.ru)[value.mode];
-        note.className = "on";
-        conversationTimer = window.setTimeout(function () { note.className = ""; }, Math.min(10000, value.remainingMs));
+      function labelChildBoard() {
+        var board = document.getElementById("board");
+        if (!board) return;
+        var title = childRoomFocus !== "main" && childRoomPayload && childRoomPayload.title;
+        var name = typeof title === "string" && title.trim() ? title : roomNames[nameLocale] || roomNames.ru;
+        board.setAttribute("aria-label", name);
       }
       function setChildRoom(payload) {
         if (window.LarnesBoard && window.LarnesBoard.setLessonContext) window.LarnesBoard.setLessonContext(payload);
         if (window.LarnesBoard && window.LarnesBoard.setParticipants) window.LarnesBoard.setParticipants(payload && payload.participants, payload && payload.childId);
-        showRoomConversation(payload);
         childRoomPayload = payload && typeof payload === "object" ? payload : null;
         if (childRoomPayload && typeof childRoomPayload.serverNow === "number") noteLessonClock(childRoomPayload.serverNow);
         var focus = childRoomPayload && typeof childRoomPayload.focus === "string" ? childRoomPayload.focus : "main";
         var leftSide = childRoomFocus !== "main" && focus === "main";
         childRoomFocus = focus;
+        labelChildBoard();
         childRoomGen = childRoomPayload && typeof childRoomPayload.gen === "number" ? childRoomPayload.gen : 0;
         childRoomEpoch = childRoomPayload && typeof childRoomPayload.epoch === "number" ? childRoomPayload.epoch : -1;
         var documentKey = focus + ":" + childRoomEpoch + ":" + (childRoomPayload && childRoomPayload.sceneGeneration || 0);
         var switched = documentKey !== childRoomDocument;
-        var label = document.getElementById("room-label");
         if (focus === "main") {
           childRoomRevision = -1;
           var mainRevision = childRoomPayload && typeof childRoomPayload.revision === "number" ? childRoomPayload.revision : 0;
@@ -2513,16 +2484,8 @@
             window.LarnesBoard.showMain();
             childRoomDocument = documentKey;
           }
-          if (boardWorkspace && label) {
-            label.textContent = roomNames[nameLocale] || roomNames.ru;
-            label.className = "on";
-          }
           showChildPresence();
           return;
-        }
-        if (label) {
-          label.textContent = typeof childRoomPayload.title === "string" ? childRoomPayload.title : "";
-          label.className = "on";
         }
         childRoomServerKey = "";
         var revision = typeof childRoomPayload.revision === "number" ? childRoomPayload.revision : 0;

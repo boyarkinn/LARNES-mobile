@@ -701,7 +701,6 @@ class _LessonCallStageState extends State<LessonCallStage>
         'sceneGeneration': board.sceneGeneration,
         'serverNow': board.serverNow,
         'sound': board.sound,
-        'conversation': board.conversation,
         'title': board.title,
       };
       await _web?.evaluateJavascript(

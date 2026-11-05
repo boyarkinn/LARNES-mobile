@@ -7,13 +7,13 @@ void main() {
     expect(LessonChildBoard.fromJson(base)!.sceneGeneration, 0);
     expect(LessonChildBoard.fromJson({...base, 'sceneGeneration': 7})!.sceneGeneration, 7);
   });
-  test('room conversation is optional, bounded and validates its mode', () {
-    final base = <String, dynamic>{'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'room'};
-    expect(LessonChildBoard.fromJson(base)!.conversation, isNull);
-    expect(LessonChildBoard.fromJson({...base, 'conversation': {'mode': 'talking', 'remainingMs': 20000}})!.conversation,
-        {'mode': 'talking', 'remainingMs': 10000});
-    expect(LessonChildBoard.fromJson({...base, 'conversation': {'mode': 'recording', 'remainingMs': 1000}})!.conversation, isNull);
-    expect(LessonChildBoard.fromJson({...base, 'conversation': {'mode': 'listening', 'remainingMs': -1}})!.conversation, isNull);
+  test('the room title remains available for the accessible board name', () {
+    final base = {'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'room'};
+    expect(LessonChildBoard.fromJson(base)!.title, isEmpty);
+    expect(
+      LessonChildBoard.fromJson({...base, 'title': 'Комната 2'})!.title,
+      'Комната 2',
+    );
   });
 
   test('personal runs retain separate children, activation and frozen state', () {

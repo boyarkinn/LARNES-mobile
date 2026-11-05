@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_device_media.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_device_media_controller.dart';
 import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
+import 'package:larnes_mobile/features/parent/widgets/lesson_board_video_transport.dart';
 import 'package:larnes_mobile/features/messenger/messenger_panel.dart';
 import 'package:larnes_mobile/features/messenger/messenger_api.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
@@ -116,6 +118,7 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _loading = true;
   bool _joined = false;
   bool _inRoom = false;
+  bool _hasJoinedMedia = false;
   bool _boardWidgets = false;
   String _boardAudioReady = '';
   bool _cameraOn = false;
@@ -161,6 +164,8 @@ class _LessonCallStageState extends State<LessonCallStage>
   String get _messengerBridgeIdentity =>
       '${widget.messenger?.sessionKey ?? ''}:$_messengerBridgeEpoch:$_pageGen';
   LessonChildBoard? _board;
+  LessonBoardVideoTransport? _boardVideo;
+  String _boardVideoIdentity = '';
   late final String _boardLink;
   LessonDeviceMediaController? _desk;
   bool _pageReady = false;
@@ -448,7 +453,8 @@ class _LessonCallStageState extends State<LessonCallStage>
         _link = _LessonCallLink.reconnecting;
       });
       callGen = _callGen;
-      await _stopSession();
+      // A managed desk reapplies the latest approved devices after reconnecting.
+      await _stopSession(keepLocalTracks: _boardWorkspace && _desk == null);
       if (!_renewStill(callGen)) {
         return;
       }
@@ -538,7 +544,10 @@ class _LessonCallStageState extends State<LessonCallStage>
   }
 
   Future<void> _followRoom() async {
-    if (!mounted || !_mediaWanted || _ended || _link == _LessonCallLink.closed) {
+    if (!mounted ||
+        !_mediaWanted ||
+        _ended ||
+        _link == _LessonCallLink.closed) {
       return;
     }
     if (_following) {
@@ -650,7 +659,10 @@ class _LessonCallStageState extends State<LessonCallStage>
         _boardGen += 1;
       }
       _board = board;
+      if (previous?.lessonSessionId != board.lessonSessionId)
+        _closeBoardVideo();
       if (mediaRouteChanged) {
+        _closeBoardVideo();
         _mediaRouteRevision += 1;
         if (_mediaWanted) {
           // Fence old-room audio before asking for the next scoped call pass.
@@ -667,9 +679,33 @@ class _LessonCallStageState extends State<LessonCallStage>
         source: 'noteLessonClock(${board.serverNow})',
       );
       if (!mounted || _ended) return;
+      final roomPayload = {
+        ..._clientVersion,
+        'childId': widget.childId,
+        'drawMode': board.drawMode,
+        'exercises': board.exercises,
+        'personalRuns': board.personalRuns,
+        'videos': board.videos,
+        'link': _boardLink,
+        'epoch': board.roomEpoch,
+        'focus': board.focusRoomId,
+        'lessonSessionId': board.lessonSessionId,
+        'presence': board.presence,
+        'participants': board.participants,
+        if (board.participantIds != null) 'participantIds': board.participantIds,
+        'rulerScale': board.rulerScale,
+        'navigation': board.navigation,
+        'gen': _boardGen,
+        'revision': board.sceneRevision,
+        'scene': board.scene,
+        'sceneGeneration': board.sceneGeneration,
+        'serverNow': board.serverNow,
+        'sound': board.sound,
+        'conversation': board.conversation,
+        'title': board.title,
+      };
       await _web?.evaluateJavascript(
-        source:
-            'setChildRoom(${jsonEncode({..._clientVersion, 'childId': widget.childId, 'drawMode': board.drawMode, 'exercises': board.exercises, 'personalRuns': board.personalRuns, 'link': _boardLink, 'epoch': board.roomEpoch, 'focus': board.focusRoomId, 'lessonSessionId': board.lessonSessionId, 'presence': board.presence, 'participants': board.participants, 'rulerScale': board.rulerScale, 'navigation': board.navigation, 'gen': _boardGen, 'revision': board.sceneRevision, 'scene': board.scene, 'sceneGeneration': board.sceneGeneration, 'serverNow': board.serverNow, 'sound': board.sound, 'conversation': board.conversation, 'title': board.title})})',
+        source: 'setChildRoom(${jsonEncode(roomPayload)})',
       );
       await _syncLessonChrome();
     } catch (_) {
@@ -723,6 +759,7 @@ class _LessonCallStageState extends State<LessonCallStage>
     _starting = true;
     _awaitingPage = true;
     _pageGen += 1;
+    _closeBoardVideo();
     web.loadData(
       data: html,
       mimeType: 'text/html',
@@ -857,6 +894,93 @@ class _LessonCallStageState extends State<LessonCallStage>
         widget.messenger?.sessionKey != scope.sessionKey)
       return {'code': 'forbidden'};
     return result;
+  }
+
+  void _closeBoardVideo() {
+    final previous = _boardVideo;
+    _boardVideo = null;
+    _boardVideoIdentity = '';
+    if (previous != null) unawaited(previous.close());
+  }
+
+  /// The bridge accepts only the current lesson/room; neither a page-supplied URL
+  /// nor a cookie/token is returned to JavaScript.
+  Future<Map<String, dynamic>> _lessonVideo(List<dynamic> args) async {
+    // The current mobile release targets Android. WKWebView does not reliably
+    // allow loopback media from HTTPS; keep its global policy intact.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return {'code': 'unavailable'};
+    }
+    final scope = widget.messenger, board = _board;
+    if (!mounted ||
+        _ended ||
+        scope == null ||
+        board == null ||
+        args.isEmpty ||
+        args.first is! Map) {
+      return {'code': 'forbidden'};
+    }
+    final input = args.first as Map;
+    if (input['gen'] != _boardGen ||
+        input['roomId'] != board.focusRoomId ||
+        input['roomEpoch'] != board.roomEpoch ||
+        input['lessonSessionId'] != board.lessonSessionId ||
+        scope.lessonSessionId != board.lessonSessionId) {
+      return {'code': 'forbidden'};
+    }
+    final page = _pageGen;
+    final identity =
+        '${scope.sessionKey}:$page:${board.focusRoomId}:${board.roomEpoch}';
+    bool current() =>
+        mounted &&
+        !_ended &&
+        _pageGen == page &&
+        widget.messenger?.sessionKey == scope.sessionKey &&
+        _board?.lessonSessionId == board.lessonSessionId &&
+        _board?.focusRoomId == board.focusRoomId &&
+        _board?.roomEpoch == board.roomEpoch;
+    if (_boardVideoIdentity != identity) {
+      _closeBoardVideo();
+      _boardVideoIdentity = identity;
+      try {
+        _boardVideo = LessonBoardVideoTransport(
+          apiBase: Uri.parse(AppConfig.apiBaseUrl),
+          lessonSessionId: board.lessonSessionId,
+          childId: widget.childId,
+          roomId: board.focusRoomId,
+          authorization: scope.authorization,
+          isCurrent: current,
+        );
+      } catch (_) {
+        return {'code': 'unavailable'};
+      }
+    }
+    final transport = _boardVideo;
+    if (transport == null || !current()) return {'code': 'forbidden'};
+    try {
+      if (input['operation'] == 'source' && input['assetId'] is String) {
+        final source = await transport.source(input['assetId'] as String);
+        return current() ? {'url': source} : {'code': 'forbidden'};
+      }
+      if (input['operation'] == 'playback' &&
+          {'GET', 'POST'}.contains(input['method'])) {
+        final body = input['body'];
+        if (body != null && body is! Map) return {'code': 'invalid'};
+        return await transport.playback(
+          input['method'] as String,
+          body is Map ? Map<String, dynamic>.from(body) : null,
+        );
+      }
+      return {'code': 'invalid'};
+    } on StateError catch (error) {
+      return {
+        'code': current() && error.message != 'video_forbidden'
+            ? 'unavailable'
+            : 'forbidden',
+      };
+    } catch (_) {
+      return {'code': current() ? 'unavailable' : 'forbidden'};
+    }
   }
 
   Future<void> _syncLessonChrome() async {
@@ -1028,10 +1152,11 @@ class _LessonCallStageState extends State<LessonCallStage>
     _micLive = false;
   }
 
-  Future<void> _stopSession() async {
+  Future<void> _stopSession({bool keepLocalTracks = false}) async {
     try {
+      final stopScript = _boardWorkspace ? 'pauseMedia()' : 'dropSession()';
       await _web?.evaluateJavascript(
-        source: _boardWorkspace ? 'pauseMedia()' : 'dropSession()',
+        source: keepLocalTracks ? 'holdRoom(false)' : stopScript,
       );
     } catch (_) {}
   }
@@ -1163,6 +1288,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       return;
     }
     _ended = true;
+    _closeBoardVideo();
     _retireCall();
     _boardGen++;
     _pageGen++;
@@ -1341,7 +1467,8 @@ class _LessonCallStageState extends State<LessonCallStage>
         case 'joined':
           _inRoom = true;
           _link = _LessonCallLink.none;
-          openDevices = widget.captureOnJoin;
+          openDevices = widget.captureOnJoin && !_hasJoinedMedia;
+          _hasJoinedMedia = true;
           if (_desk != null) {
             unawaited(_applyDeskDevices());
           }
@@ -1458,6 +1585,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       widget.handle?.attach(endCall);
     }
     if (oldWidget.messenger?.sessionKey != widget.messenger?.sessionKey) {
+      _closeBoardVideo();
       _messengerBridgeEpoch++;
       if (oldWidget.messenger != null)
         _workspaceMessengerApi.cancelScope(oldWidget.messenger!);
@@ -1475,6 +1603,7 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   @override
   void dispose() {
+    _closeBoardVideo();
     NativeMessageSound.enabled.removeListener(_onMessenger);
     if (widget.messenger != null)
       _workspaceMessengerApi.cancelScope(widget.messenger!);
@@ -1543,6 +1672,10 @@ class _LessonCallStageState extends State<LessonCallStage>
         controller.addJavaScriptHandler(
           handlerName: 'boardImageData',
           callback: (args) => _lessonImage(args, false),
+        );
+        controller.addJavaScriptHandler(
+          handlerName: 'boardVideo',
+          callback: _lessonVideo,
         );
         _tryStart();
       },

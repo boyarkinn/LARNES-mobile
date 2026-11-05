@@ -37,19 +37,22 @@ test('native bootstrap receives no media, cancels late leave, and has a finite d
   assert.equal(calls.includes('target'), false);
 });
 
-test('actual native start joins and leaves main before the confirmed breakout on the same authenticated connection', async () => {
-  const f = stage(), c = f.context, connections = [], conferences = [], calls = [];
+function jitsi(c) {
+  const connections = [], conferences = [], calls = [];
   const conferenceEvents = Object.fromEntries(['TRACK_ADDED', 'TRACK_REMOVED', 'TRACK_MUTE_CHANGED', 'USER_JOINED', 'USER_LEFT',
     'DISPLAY_NAME_CHANGED', 'CONFERENCE_JOINED', 'CONFERENCE_FAILED'].map(key => [key, key]));
   class Connection {
     constructor(_app, token, options) { this.token = token; this.options = options; this.handlers = new Map(); connections.push(this); }
     addEventListener(event, fn) { this.handlers.set(event, fn); }
     connect() { this.handlers.get('established')(); }
+    disconnect() { calls.push(['disconnect']); }
     initJitsiConference(name, options) {
       const handlers = new Map(), conn = this;
       const conf = { name, options, handlers, setDisplayName() {}, addCommandListener() {},
+        myUserId: () => 'self-endpoint', getParticipantById: () => null,
         on: (event, fn) => handlers.set(event, fn), off: event => handlers.delete(event),
         setReceiverConstraints: value => calls.push(['receive', name, JSON.parse(JSON.stringify(value))]),
+        addTrack: value => { calls.push(['publish', name, value.source]); return Promise.resolve(); },
         join() { assert.ok(!options.customDomain || conn.wasInMain); calls.push(['join', name]); },
         leave() { conn.wasInMain = true; calls.push(['leave', name]); return Promise.resolve(); } };
       conferences.push(conf); return conf;
@@ -58,11 +61,19 @@ test('actual native start joins and leaves main before the confirmed breakout on
   c.window.JitsiMeetJS = { init() {}, JitsiConnection: Connection, events: {
     connection: { CONNECTION_FAILED: 'failed', CONNECTION_ESTABLISHED: 'established' }, conference: conferenceEvents } };
   c.render = () => {};
-  c.start({ displayName: 'Pupil', domain: 'meet.example.test', xmppDomain: 'meet.jitsi', jwt: 'synthetic-main-scoped-token',
-    room: 'provider', roomJid: 'provider@breakout.meet.jitsi', mainRoom: 'lesson' });
+  return { connections, conferences, calls };
+}
+
+const mainPass = { displayName: 'Pupil', domain: 'meet.example.test', xmppDomain: 'meet.jitsi',
+  jwt: 'synthetic-main-scoped-token', room: 'lesson' };
+const breakoutPass = { ...mainPass, room: 'provider', roomJid: 'provider@breakout.meet.jitsi', mainRoom: 'lesson' };
+
+test('actual native start joins and leaves main before the confirmed breakout on the same authenticated connection', async () => {
+  const f = stage(), c = f.context, { connections, conferences, calls } = jitsi(c);
+  c.start(breakoutPass);
   assert.equal(conferences.length, 1);
   assert.equal(conferences[0].name, 'lesson');
-  assert.equal(f.events.some(e => ['endpoint', 'joined'].includes(e[1])), false);
+  assert.equal(f.events.some(e => ['endpoint', 'joined'].includes(e[1].kind)), false);
   conferences[0].handlers.get('CONFERENCE_JOINED')(); await flush();
   assert.equal(connections.length, 1);
   assert.equal(connections[0].options.serviceUrl, 'wss://meet.example.test/xmpp-websocket?room=lesson');
@@ -70,6 +81,121 @@ test('actual native start joins and leaves main before the confirmed breakout on
   assert.equal(conferences[1].name, 'provider');
   assert.equal(conferences[1].options.customDomain, 'breakout.meet.jitsi');
   assert.deepEqual(calls.filter(value => ['join', 'leave'].includes(value[0])), [['join', 'lesson'], ['leave', 'lesson'], ['join', 'provider']]);
+});
+
+test('native room changes wait for the pending exit and discard superseded renew and hold continuations', async () => {
+  const f = stage(), c = f.context, calls = [];
+  let release;
+  c.room = { leave: () => new Promise(resolve => { release = resolve; }) };
+  c.connection = { disconnect: () => calls.push('disconnect') };
+  c.join = pass => calls.push(pass.room);
+  const hold = c.holdRoom();
+  const staleRenew = c.acceptPass(mainPass);
+  const newRoom = c.switchRoom(breakoutPass);
+  await flush();
+  assert.deepEqual(calls, []);
+  release();
+  await Promise.all([hold, staleRenew, newRoom]);
+  assert.deepEqual(calls, ['disconnect', 'provider']);
+  assert.equal(f.events.some(([, event]) => event.kind === 'holding'), false);
+
+  c.room = { leave: () => new Promise(resolve => { release = resolve; }) };
+  const lateRenew = c.acceptPass(breakoutPass);
+  const newHold = c.holdRoom();
+  release();
+  await Promise.all([lateRenew, newHold]);
+  assert.deepEqual(calls, ['disconnect', 'provider']);
+  assert.equal(f.events.filter(([, event]) => event.kind === 'holding').length, 1);
+});
+
+test('native room exit times out a hung leave and disconnects the retired connection only once', async () => {
+  const f = stage(), c = f.context, calls = [];
+  let release;
+  c.room = { leave: () => new Promise(resolve => { release = resolve; }) };
+  c.connection = { disconnect: () => calls.push('disconnect') };
+  c.join = pass => calls.push(pass.room);
+  const changing = c.switchRoom(breakoutPass);
+  await f.advance(9999);
+  assert.deepEqual(calls, []);
+  await f.advance(1);
+  await changing;
+  release();
+  await flush();
+  assert.deepEqual(calls, ['disconnect', 'provider']);
+});
+
+test('native learner republishes the same camera and microphone after room entry, renewal and return', async () => {
+  const f = stage(), c = f.context, { conferences, calls } = jitsi(c);
+  const camera = track('camera', true), mic = track('mic', true);
+  c.join(mainPass);
+  conferences[0].handlers.get('CONFERENCE_JOINED')();
+  c.storeLocalTrack('video', camera);
+  c.storeLocalTrack('audio', mic);
+  c.wishMuted = { video: false, audio: false };
+
+  for (const [pass, renew] of [[breakoutPass, false], [breakoutPass, true], [mainPass, false]]) {
+    const index = conferences.length;
+    const hold = c.holdRoom(!renew);
+    await (renew ? c.acceptPass(pass) : c.switchRoom(pass));
+    await hold;
+    if (pass.mainRoom) {
+      conferences[index].handlers.get('CONFERENCE_JOINED')();
+      await flush();
+    }
+    conferences.at(-1).handlers.get('CONFERENCE_JOINED')();
+    await flush();
+  }
+  assert.equal(c.localVideo, camera);
+  assert.equal(c.localAudio, mic);
+  assert.deepEqual(calls.filter(value => value[0] === 'publish'), [
+    ['publish', 'provider', 'camera'], ['publish', 'provider', 'mic'],
+    ['publish', 'provider', 'camera'], ['publish', 'provider', 'mic'],
+    ['publish', 'lesson', 'camera'], ['publish', 'lesson', 'mic'],
+  ]);
+  assert.equal(f.events.filter(([, event]) => event.kind === 'camera-on').length, 3);
+  assert.equal(f.events.filter(([, event]) => event.kind === 'mic-on').length, 3);
+});
+
+test('native participant identity retains an equal-name peer and detaches audio on track removal and departure', async () => {
+  const f = stage(), c = f.context, { conferences } = jitsi(c), audioNodes = [];
+  c.document.body = {
+    appendChild(node) { node.parentNode = this; audioNodes.push(node); },
+    removeChild(node) { audioNodes.splice(audioNodes.indexOf(node), 1); node.parentNode = null; },
+  };
+  c.document.createElement = () => ({ setAttribute() {}, play: () => Promise.resolve() });
+  c.join(mainPass);
+  const handlers = conferences[0].handlers;
+  handlers.get('CONFERENCE_JOINED')();
+  const peer = 'peer-endpoint';
+  handlers.get('USER_JOINED')(peer, { getDisplayName: () => mainPass.displayName });
+  assert.deepEqual(Array.from(c.orderedPeople(), person => person.id), ['local', peer]);
+
+  const makeAudio = source => Object.assign(track(source), { getType: () => 'audio', getParticipantId: () => peer });
+  const first = makeAudio('first'), replacement = makeAudio('replacement');
+  handlers.get('TRACK_ADDED')(first);
+  handlers.get('TRACK_ADDED')(first);
+  await flush();
+  assert.equal(audioNodes.length, 1);
+  handlers.get('TRACK_ADDED')(replacement);
+  handlers.get('TRACK_REMOVED')(first);
+  await flush();
+  assert.equal(first.detaches, 1);
+  assert.equal(audioNodes.length, 1);
+  assert.equal(audioNodes[0].srcObject, replacement.stream);
+  assert.equal(c.people[peer].audioMuted, false);
+
+  let finishAttach;
+  const delayed = makeAudio('late');
+  delayed.attach = node => new Promise(resolve => { finishAttach = () => { node.srcObject = delayed.stream; resolve(); }; });
+  handlers.get('TRACK_ADDED')(delayed);
+  const delayedNode = audioNodes.at(-1);
+  handlers.get('USER_LEFT')(peer);
+  finishAttach();
+  await flush();
+  assert.equal(audioNodes.length, 0);
+  assert.equal(replacement.detaches, 1);
+  assert.equal(delayedNode.srcObject, null);
+  assert.equal(c.remoteAudios.size, 0);
 });
 function stage() {
   let now = 100000, next = 0;
@@ -270,9 +396,10 @@ test('a hung publication times out without starting parallel addTrack attempts',
 test('observer endpoints stay hidden and can control only targeted media under a fresh roster lease', async () => {
   const f = stage(), c = f.context;
   vm.runInContext(`setTeachers(['teacher'], 'teacher', ['teacher','observer'], ['observer']);
-    people = { child: {id:'child',name:'Child'}, observer:{id:'observer',name:'Teacher observer'}, teacher:{id:'teacher',name:'Teacher'} };
+    people = { local: {id:'local',local:true,name:'Child'}, child:{id:'child',name:'Child'},
+      observer:{id:'observer',name:'Teacher observer'}, teacher:{id:'teacher',name:'Teacher'} };
     localEndpoint='child';`, c);
-  assert.deepEqual([...c.orderedPeople()].map(p => p.id), ['teacher', 'child']);
+  assert.deepEqual([...c.orderedPeople()].map(p => p.id), ['local', 'teacher']);
   const command = { target: 'child', device: 'video', muted: true, sentAt: 100001 };
   assert.equal(c.decideCommand(command, 'observer'), 'apply');
   assert.equal(c.decideCommand({ ...command, target: 'someone-else' }, 'observer'), 'drop');
@@ -316,7 +443,7 @@ test('a late leave completion cannot join an older requested room after a newer 
   c.switchRoom(pass('two'));
   c.switchRoom(pass('three'));
   await flush();
-  assert.deepEqual(joined, ['three']);
+  assert.deepEqual(joined, []);
   left(); await flush();
   assert.deepEqual(joined, ['three']);
   let leftAgain;

@@ -102,4 +102,24 @@ void main() {
     expect(board!.participants.single['id'], 'pupil');
     expect(board.participants.single['seatLabels'], ['1', 'ПК 2']);
   });
+
+  test('scoped participant IDs distinguish missing membership from an empty room', () {
+    final snapshot = {
+      'status': 'ok',
+      'lessonSessionId': 'lesson',
+      'focusRoomId': 'room',
+    };
+    expect(LessonChildBoard.fromJson(snapshot)!.participantIds, isNull);
+    expect(
+      LessonChildBoard.fromJson({...snapshot, 'participantIds': []})!.participantIds,
+      isEmpty,
+    );
+    expect(
+      LessonChildBoard.fromJson({
+        ...snapshot,
+        'participantIds': ['teacher', 'child', false],
+      })!.participantIds,
+      ['teacher', 'child'],
+    );
+  });
 }

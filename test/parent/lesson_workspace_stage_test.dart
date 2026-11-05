@@ -114,12 +114,14 @@ class _MediaHarness {
   String? boardLink;
   String focusRoomId = 'main';
   int roomEpoch = 0;
+  List<String>? participantIds;
   final handle = LessonCallStageHandle();
   Future<bool> Function()? leaveLesson;
   int leaves = 0;
   Future<LessonCallPassOutcome> Function()? pass;
   Future<LessonCallTeachers> Function(String endpointId)? claim;
   bool home = false;
+  bool captureOnJoin = false;
   Future<void> pump(WidgetTester tester) async {
     rootBundle.evict('assets/call/lesson_call_stage.html');
     rootBundle.evict('assets/call/larnes-board.js');
@@ -155,7 +157,7 @@ class _MediaHarness {
               trainerOpen: false,
               workspaceFormat: 'board',
               mediaEnabled: home,
-              captureOnJoin: false,
+              captureOnJoin: captureOnJoin,
               fetchMedia: home
                   ? null
                   : () async => LessonDeviceMedia.fromJson(wire),
@@ -205,6 +207,7 @@ class _MediaHarness {
                   'lessonSessionId': 'lesson-1',
                   'focusRoomId': focusRoomId,
                   'roomEpoch': roomEpoch,
+                  if (participantIds != null) 'participantIds': participantIds,
                   'scene': [],
                   'exercises': [],
                 });
@@ -271,6 +274,7 @@ void main() {
         ),
       );
       f.focusRoomId = 'room-2';
+      f.participantIds = ['teacher', 'child'];
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pumpAndSettle();
       expect(f.passes, greaterThan(before));
@@ -281,10 +285,48 @@ void main() {
       );
       expect(hold, greaterThanOrEqualTo(0));
       expect(switched, greaterThan(hold));
+      expect(
+        scripts.lastWhere((script) => script.startsWith('setChildRoom(')),
+        contains('"participantIds":["teacher","child"]'),
+      );
       expect(f.platform.controller.loads, 1);
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets('renewing the board call holds the room and does not reopen muted devices', (tester) async {
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') {
+        return {for (final value in call.arguments as List) value as int: 1};
+      }
+      return 1;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+
+    final f = _MediaHarness()
+      ..home = true
+      ..captureOnJoin = true;
+    await f.pump(tester);
+    await f.emit(tester, 'joined');
+    await f.emit(tester, 'camera-off');
+    await f.emit(tester, 'mic-off');
+    final scripts = f.platform.controller.scripts;
+    int starts() => scripts.where((script) {
+      return script.startsWith('setDevice(') && script.endsWith(', false)');
+    }).length;
+    expect(starts(), 2);
+
+    await f.emit(tester, 'renew');
+    final hold = scripts.lastIndexOf('holdRoom(false)');
+    final renew = scripts.lastIndexWhere((script) => script.startsWith('acceptPass('));
+    expect(hold, greaterThanOrEqualTo(0));
+    expect(renew, greaterThan(hold));
+    expect(scripts, isNot(contains('pauseMedia()')));
+    await f.emit(tester, 'joined');
+    expect(starts(), 2);
+    await tester.pumpWidget(const SizedBox());
+  });
 
   testWidgets(
     'a newer board route supersedes an in-flight room pass and queues one immediate follow',

@@ -210,7 +210,8 @@
         en: "Moving into the room sound. The shared call stays off until it connects.",
         ar: "جارٍ الانتقال إلى صوت الغرفة. المكالمة المشتركة تبقى متوقفة حتى يتصل.",
       };
-      var remoteAudios = [];
+      var remoteAudios = new Map();
+      var conferenceExit = null;
       var opening = { video: false, audio: false };
       var wishMuted = { video: true, audio: true };
       var deviceAllowed = { video: true, audio: true };
@@ -236,7 +237,6 @@
       var mediaControllerIds = [];
       var observerIds = [];
       var mediaControllerRosterAt = 0;
-      var ownName = "";
       var shownMode = "grid";
       var boardParts = [];
       var boardSourceChars = 0;
@@ -294,15 +294,48 @@
         });
       }
 
-      function attachRemoteAudio(track) {
+      function attachRemoteAudio(track, participantId) {
+        if (remoteAudios.has(track)) return;
         var audio = document.createElement("audio");
+        var entry = { audio: audio, participantId: participantId };
         audio.autoplay = true;
         audio.setAttribute("playsinline", "");
         document.body.appendChild(audio);
-        remoteAudios.push(audio);
-        attach(track, audio).catch(function () { post("hear-blocked"); });
-        playMedia(audio, function () {
-          post("hear-blocked");
+        remoteAudios.set(track, entry);
+        function blocked() {
+          if (remoteAudios.get(track) === entry) post("hear-blocked");
+        }
+        attach(track, audio).then(function () {
+          if (remoteAudios.get(track) !== entry) releaseRemoteAudioNode(track, audio);
+          else playMedia(audio, blocked);
+        }, blocked);
+      }
+
+      function releaseRemoteAudioNode(track, audio) {
+        try { if (track.detach) track.detach(audio); } catch (_) {}
+        try { audio.srcObject = null; } catch (_) {}
+        if (audio.parentNode) audio.parentNode.removeChild(audio);
+      }
+
+      function removeRemoteAudio(track) {
+        var entry = remoteAudios.get(track);
+        if (!entry) return;
+        remoteAudios.delete(track);
+        releaseRemoteAudioNode(track, entry.audio);
+      }
+
+      function clearRemoteAudio(participantId) {
+        remoteAudios.forEach(function (entry, track) {
+          if (participantId === undefined || entry.participantId === participantId) removeRemoteAudio(track);
+        });
+      }
+
+      function updateRemoteAudioMute(participantId) {
+        var person = people[participantId];
+        if (!person) return;
+        person.audioMuted = true;
+        remoteAudios.forEach(function (entry, track) {
+          if (entry.participantId === participantId && !track.isMuted()) person.audioMuted = false;
         });
       }
 
@@ -356,18 +389,6 @@
         } catch (_) { return false; }
       }
 
-      function sameCallName(left, right) {
-        var normalize = function (value) {
-          return String(value || "")
-            .replace(/\s+/g, " ")
-            .trim()
-            .toLocaleLowerCase();
-        };
-        var normalizedLeft = normalize(left);
-        var normalizedRight = normalize(right);
-        return normalizedLeft.length > 0 && normalizedLeft === normalizedRight;
-      }
-
       function knownTeacher(id) {
         return teacherIds.indexOf(id) >= 0;
       }
@@ -379,7 +400,7 @@
           if (people[id].observer || observerIds.indexOf(id) >= 0) continue;
           if (people[id].local) {
             local = people[id];
-          } else if (!sameCallName(people[id].name, ownName)) {
+          } else if (id !== localEndpoint) {
             remotes.push(people[id]);
           }
         }
@@ -1108,6 +1129,8 @@
           : null;
         window.LarnesBoard.onImageData = boardWorkspace && bridge && bridge.callHandler
           ? function (input) { return bridge.callHandler("boardImageData", scoped(input)); } : null;
+        window.LarnesBoard.onVideo = boardWorkspace && bridge && bridge.callHandler
+          ? function (input) { return bridge.callHandler("boardVideo", scoped(input)); } : null;
       }
 
       function setLabels(labels) {
@@ -1148,7 +1171,12 @@
       }
 
       function join(pass) {
-        roomSwitchGeneration += 1;
+        var generation = ++roomSwitchGeneration;
+        if (conferenceExit) {
+          return conferenceExit.then(function () {
+            if (!leaving && generation === roomSwitchGeneration) join(pass);
+          });
+        }
         if (joining || room || !pass || !callAddress(pass) || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
           post("failed");
           return;
@@ -1298,7 +1326,6 @@
           var options = { p2p: { enabled: false } };
           if (address.customDomain) options.customDomain = address.customDomain;
           room = connected.initJitsiConference(address.room, options);
-          ownName = pass.displayName || "";
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
           }
@@ -1312,17 +1339,29 @@
               return;
             }
             if (track.getType() === "audio" && !track.isLocal()) {
-              attachRemoteAudio(track);
               var audioId = track.getParticipantId && track.getParticipantId();
-              if (audioId) ensurePerson(audioId, false).audioMuted = track.isMuted();
+              if (!audioId || audioId === room.myUserId()) return;
+              var person = ensurePerson(audioId, false);
+              var participant = room.getParticipantById && room.getParticipantById(audioId);
+              if (participant) person.observer = observerParticipant(participant);
+              if (person.observer || observerIds.indexOf(audioId) >= 0) return;
+              attachRemoteAudio(track, audioId);
+              updateRemoteAudioMute(audioId);
               render();
             }
           });
           room.on(meet.events.conference.TRACK_REMOVED, function (track) {
-            if (thisAttempt !== attempt || !track || track.getType() !== "video") {
+            if (thisAttempt !== attempt || !track) {
               return;
             }
             var id = track.isLocal() ? "local" : track.getParticipantId && track.getParticipantId();
+            if (track.getType() === "audio" && !track.isLocal()) {
+              removeRemoteAudio(track);
+              updateRemoteAudioMute(id);
+              render();
+              return;
+            }
+            if (track.getType() !== "video") return;
             var person = id ? people[id] : null;
             if (!person) {
               return;
@@ -1380,11 +1419,11 @@
               render();
             }
             if (track.getType() === "audio") {
-              if (person) person.audioMuted = track.isMuted();
               if (track.isLocal()) {
                 audioMuted = track.isMuted();
+                if (person) person.audioMuted = audioMuted;
                 post(audioMuted ? "mic-off" : "mic-on");
-              }
+              } else updateRemoteAudioMute(id);
               render();
             }
           });
@@ -1395,6 +1434,7 @@
             var person = ensurePerson(id, false);
             // Identity is only a presentation hint. Commands still require roster authority.
             person.observer = observerParticipant(participant);
+            if (person.observer) clearRemoteAudio(id);
             var name = participant && participant.getDisplayName ? participant.getDisplayName() : "";
             if (name) {
               person.name = name;
@@ -1406,6 +1446,7 @@
             if (thisAttempt !== attempt) {
               return;
             }
+            if (typeof id === "string") clearRemoteAudio(id);
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               delete shareSlots[id];
@@ -1495,8 +1536,8 @@
             hideSound();
             if (carryJoin) {
               carryJoin = false;
-              republishLocal("video", localVideo);
-              republishLocal("audio", localAudio);
+              restoreLocalTrack("video", localVideo, thisAttempt);
+              restoreLocalTrack("audio", localAudio, thisAttempt);
             }
             scheduleVideoReceive();
             applyLink(linkJoined());
@@ -1740,6 +1781,14 @@
           applyMute(kind, true);
           post(failKind(kind), "failed");
           return false;
+        });
+      }
+
+      function restoreLocalTrack(kind, track, generation) {
+        republishLocal(kind, track).then(function (published) {
+          if (!published || !sameTrack(kind, track, generation)) return;
+          storeLocalTrack(kind, track);
+          applyMute(kind, track.isMuted());
         });
       }
 
@@ -2090,15 +2139,19 @@
       }
 
       function resumeHear() {
-        var pending = remoteAudios.map(function (audio) {
-          return audio.play();
+        var generation = attempt;
+        var pending = Array.from(remoteAudios.entries()).map(function (pair) {
+          var track = pair[0], entry = pair[1];
+          return entry.audio.play().catch(function (error) {
+            if (remoteAudios.get(track) === entry) throw error;
+          });
         });
         Promise.all(pending)
           .then(function () {
-            post("hear-on");
+            if (generation === attempt) post("hear-on");
           })
           .catch(function () {
-            post("hear-blocked");
+            if (generation === attempt) post("hear-blocked");
           });
       }
 
@@ -2282,6 +2335,7 @@
         opening.audio = false;
         wishMuted.video = true;
         wishMuted.audio = true;
+        carryJoin = false;
         videoMuted = true;
         audioMuted = true;
         var paused = leaving;
@@ -2318,36 +2372,11 @@
           }
           delete tileNodes[id];
         }
-        for (var i = 0; i < remoteAudios.length; i++) {
-          var audio = remoteAudios[i];
-          try {
-            audio.srcObject = null;
-          } catch (error) {}
-          if (audio.parentNode) {
-            audio.parentNode.removeChild(audio);
-          }
-        }
-        remoteAudios = [];
-        var left = Promise.resolve();
-        if (currentRoom && currentRoom.leave) {
-          try {
-            var result = currentRoom.leave();
-            if (result && typeof result.then === "function") {
-              left = result;
-            }
-          } catch (error) {}
-        }
+        clearRemoteAudio();
         leaving = paused;
         post("camera-off");
         post("mic-off");
-        return left.then(
-          function () {
-            disconnectCall(currentConnection);
-          },
-          function () {
-            disconnectCall(currentConnection);
-          },
-        );
+        return finishConferenceExit(currentRoom, currentConnection);
       }
 
       // Stop tracks and transport, keeping the server document and exercises mounted.
@@ -2371,20 +2400,36 @@
         }
       }
 
+      // A held room still owns its published tracks until leave finishes. The
+      // latest route waits for that exit even after room/connection are cleared.
+      function finishConferenceExit(currentRoom, currentConnection) {
+        if (!currentRoom && !currentConnection) return conferenceExit || Promise.resolve();
+        var resolveExit;
+        var exit = new Promise(function (resolve) { resolveExit = resolve; });
+        conferenceExit = exit;
+        var done = false;
+        var deadline = setTimeout(finish, 10000);
+        function finish() {
+          if (done) return;
+          done = true;
+          clearTimeout(deadline);
+          disconnectCall(currentConnection);
+          if (conferenceExit === exit) conferenceExit = null;
+          resolveExit();
+        }
+        try {
+          Promise.resolve(currentRoom && currentRoom.leave ? currentRoom.leave() : undefined).then(finish, finish);
+        } catch (_) { finish(); }
+        return exit;
+      }
+
       function acceptPass(pass) {
         renewing = false;
-        if (!pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
+        if (!pass || !callAddress(pass) || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
           post("failed");
           return;
         }
-        passHold = pass;
-        applyBoardWorkspace(pass);
-        dropSession().then(function () {
-          if (leaving) {
-            return;
-          }
-          join(pass);
-        });
+        return switchRoom(pass, true);
       }
 
       function showSound() {
@@ -2518,54 +2563,40 @@
           if (tileNodes[id].tile.parentNode) tileNodes[id].tile.parentNode.removeChild(tileNodes[id].tile);
           delete tileNodes[id];
         }
-        for (var i = 0; i < remoteAudios.length; i++) {
-          var audio = remoteAudios[i];
-          try { audio.srcObject = null; } catch (error) {}
-          if (audio.parentNode) audio.parentNode.removeChild(audio);
-        }
-        remoteAudios = [];
+        clearRemoteAudio();
         syncBoardChannel();
         render();
-        var left = Promise.resolve();
-        if (currentRoom && currentRoom.leave) {
-          try {
-            var result = currentRoom.leave();
-            if (result && typeof result.then === "function") left = result;
-          } catch (error) {}
-        }
         leaving = paused;
-        return left.then(function () { disconnectCall(currentConnection); }, function () { disconnectCall(currentConnection); });
+        return finishConferenceExit(currentRoom, currentConnection);
       }
 
-      function holdRoom() {
+      function holdRoom(showTransition) {
         var generation = ++roomSwitchGeneration;
         holding = true;
-        showSound();
-        if (!room && !connection) {
+        if (showTransition !== false) showSound();
+        var gone = room || connection ? leaveConferenceOnly() : conferenceExit;
+        if (!gone) {
           post("holding");
           return;
         }
-        leaveConferenceOnly().then(function () { if (generation === roomSwitchGeneration) post("holding"); });
+        return gone.then(function () { if (generation === roomSwitchGeneration) post("holding"); });
       }
 
-      function switchRoom(pass) {
+      function switchRoom(pass, force) {
         if (!pass || !callAddress(pass) || !hostName(pass.domain) || !hostName(pass.xmppDomain)) return;
-        if (passHold && callAddressKey(passHold) === callAddressKey(pass) && !room && switchFailures >= 3) return;
-        if (passHold && callAddressKey(passHold) === callAddressKey(pass) && room) {
+        var sameAddress = passHold && callAddressKey(passHold) === callAddressKey(pass);
+        if (!force && sameAddress && !room && switchFailures >= 3) return;
+        if (!force && sameAddress && room) {
           passHold = pass;
           return;
         }
         var generation = ++roomSwitchGeneration;
         holding = false;
         hideSound();
-        carryJoin = true;
-        var nextWish = { audio: wishMuted.audio, video: wishMuted.video };
-        var gone = room || connection ? leaveConferenceOnly() : Promise.resolve();
-        gone.then(function () {
+        var gone = room || connection ? leaveConferenceOnly() : conferenceExit || Promise.resolve();
+        return gone.then(function () {
           if (leaving || generation !== roomSwitchGeneration) return;
-          wishMuted.audio = nextWish.audio;
-          wishMuted.video = nextWish.video;
-          passHold = pass;
+          carryJoin = true;
           join(pass);
         });
       }

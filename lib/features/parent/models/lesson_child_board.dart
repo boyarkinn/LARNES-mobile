@@ -13,7 +13,9 @@ class LessonChildBoard {
     this.navigation = const [],
     this.sceneGeneration = 0,
     this.participants = const [],
+    this.participantIds,
     this.personalRuns = const [],
+    this.videos,
     this.rulerScale,
     required this.sound,
     required this.title,
@@ -32,7 +34,9 @@ class LessonChildBoard {
   final List<dynamic> navigation;
   final int sceneGeneration;
   final List<dynamic> participants;
+  final List<String>? participantIds;
   final List<dynamic> personalRuns;
+  final Map<String, dynamic>? videos;
   final num? rulerScale;
   final String sound;
   final String title;
@@ -62,6 +66,7 @@ class LessonChildBoard {
     final revision = json['sceneRevision'];
     final epoch = json['roomEpoch'];
     final conversation = json['conversation'];
+    final participantIds = json['participantIds'];
     return LessonChildBoard(
       conversation:
           conversation is Map &&
@@ -95,9 +100,15 @@ class LessonChildBoard {
       personalRuns: json['personalRuns'] is List
           ? json['personalRuns'] as List
           : const [],
+      videos: json['videos'] is Map
+          ? Map<String, dynamic>.from(json['videos'] as Map)
+          : null,
       participants: json['participants'] is List
           ? json['participants'] as List
           : const [],
+      participantIds: participantIds is List
+          ? participantIds.whereType<String>().toList(growable: false)
+          : null,
       rulerScale: json['rulerScale'] is num ? json['rulerScale'] as num : null,
       sound: json['sound'] is String ? json['sound'] as String : 'main',
       title: json['title'] is String ? json['title'] as String : '',

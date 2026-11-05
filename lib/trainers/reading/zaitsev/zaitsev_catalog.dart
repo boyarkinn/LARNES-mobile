@@ -287,17 +287,17 @@ const zaitsevLetterDrawings = <String, ZaitsevLetterDrawing>{
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 119 147 L 119 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 119 147 A 70 55 0 0 1 175 90', durationMs: 1200),
-      ZaitsevLetterStroke(path: r'M 217 70 L 252 70', durationMs: 800),
+      ZaitsevLetterStroke(path: r'M 135 60 L 135 320', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 135 190 L 205 190 A 65 65 0 0 1 205 320 L 135 320', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 80 60 L 135 60', durationMs: 800),
     ],
   ),
   'Ь': ZaitsevLetterDrawing(
     viewBox: '0 0 350 350',
     strokeWidth: 22,
     strokes: [
-      ZaitsevLetterStroke(path: r'M 133 147 L 133 320', durationMs: 1000),
-      ZaitsevLetterStroke(path: r'M 133 147 A 60 50 0 0 1 182 95', durationMs: 1200),
+      ZaitsevLetterStroke(path: r'M 100 60 L 100 320', durationMs: 1000),
+      ZaitsevLetterStroke(path: r'M 100 190 L 180 190 A 65 65 0 0 1 180 320 L 100 320', durationMs: 1200),
     ],
   ),
 };

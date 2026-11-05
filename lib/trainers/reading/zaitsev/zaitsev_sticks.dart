@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/math/digit_trace/digit_paths.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/path_geometry.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_catalog.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_types.dart';
+import 'package:larnes_mobile/trainers/reading/letter_build/lowercase_catalog.dart';
 
 /// Web: `platform/src/trainers/reading/letter-build/zaitsev-sticks.ts`
 
@@ -49,7 +50,7 @@ void _ensureBuildCache() {
     return;
   }
 
-  for (final entry in zaitsevLetterDrawings.entries) {
+  for (final entry in {...zaitsevLetterDrawings, ...lowercaseBuildDrawings}.entries) {
     if (entry.value.strokes.isEmpty) {
       continue;
     }
@@ -148,10 +149,11 @@ List<StickPieceDef> _buildPiecesFromDrawing(
   return _assignPaletteOffsets(raw, letter, drawing);
 }
 
-List<String> listSupportedBuildLetters() {
+List<String> listSupportedBuildLetters([String letterCase = 'upper']) {
   _ensureBuildCache();
 
-  final letters = _buildPiecesCache.keys.toList()
+  final letters = _buildPiecesCache.keys.where((letter) =>
+      letterCase == 'lower' ? letter == letter.toLowerCase() : letter == letter.toUpperCase()).toList()
     ..sort((a, b) => a.compareTo(b));
   return letters;
 }
@@ -167,7 +169,7 @@ List<StickPieceDef> getLetterBuildPieces(String letter) {
 }
 
 ZaitsevLetterDrawing? getBuildDrawing(String letter) {
-  final drawing = getZaitsevLetterDrawing(letter);
+  final drawing = lowercaseBuildDrawings[letter] ?? getZaitsevLetterDrawing(letter);
 
   if (drawing == null || drawing.strokes.isEmpty) {
     return null;

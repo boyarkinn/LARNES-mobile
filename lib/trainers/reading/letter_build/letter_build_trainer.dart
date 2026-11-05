@@ -25,16 +25,30 @@ class _LetterBuildTrainerState extends State<LetterBuildTrainer> {
   var _completeCalled = false;
   Timer? _completeTimer;
 
-  late final String _guideLetter;
-  late final String _displayLetter;
+  late String _displayLetter;
 
   @override
   void initState() {
     super.initState();
-    _guideLetter =
+    _loadLetterParams();
+  }
+
+  void _loadLetterParams() {
+    final guideLetter =
         normalizeDrawShowLetter(widget.params['letter'] as String? ?? 'А');
     final letterCase = widget.params['letterCase'] as String? ?? 'upper';
-    _displayLetter = applyLetterCase(_guideLetter, letterCase);
+    _displayLetter = applyLetterCase(guideLetter, letterCase);
+  }
+
+  @override
+  void didUpdateWidget(LetterBuildTrainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.params['letter'] != widget.params['letter'] ||
+        oldWidget.params['letterCase'] != widget.params['letterCase']) {
+      _completeTimer?.cancel();
+      _completeCalled = false;
+      _loadLetterParams();
+    }
   }
 
   void _handleGuideComplete() {
@@ -64,7 +78,7 @@ class _LetterBuildTrainerState extends State<LetterBuildTrainer> {
     return TrainerScene(
       child: BuildScene(
         displayLetter: _displayLetter,
-        guideLetter: _guideLetter,
+        guideLetter: _displayLetter,
         onGuideComplete: _handleGuideComplete,
       ),
     );

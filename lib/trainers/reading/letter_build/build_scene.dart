@@ -11,6 +11,10 @@ import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/build_pad_size.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/build_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_build/letter_build_model.dart';
+import 'package:larnes_mobile/trainers/reading/letter_draw_show/draw_show_model.dart'
+    show getStrokeColor;
+import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scene.dart'
+    show letterDisplayColorFromHex;
 import 'package:larnes_mobile/trainers/reading/zaitsev/path_geometry.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_sticks.dart';
 import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_types.dart';
@@ -208,18 +212,6 @@ class _BuildSceneState extends State<BuildScene> {
     _tryCompleteGuide(_placements);
   }
 
-  Color _strokeColorForPiece(String pieceId, PiecePlacement placement) {
-    if (placement.snapped) {
-      return buildStickSnappedColor;
-    }
-
-    if (_dragState?.pieceId == pieceId) {
-      return buildStickDragColor;
-    }
-
-    return buildStickColor;
-  }
-
   @override
   void dispose() {
     _interactionTimer?.cancel();
@@ -316,9 +308,8 @@ class _BuildSceneState extends State<BuildScene> {
                                       layout: layout,
                                       padSize: size,
                                       offset: _placements[index].offset,
-                                      stroke: _strokeColorForPiece(
-                                        _pieces[index].id,
-                                        _placements[index],
+                                      stroke: letterDisplayColorFromHex(
+                                        getStrokeColor(index),
                                       ),
                                       revealDelayMs: getStickRevealDelayMs(
                                         index,

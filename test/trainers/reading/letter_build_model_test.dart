@@ -6,6 +6,21 @@ import 'package:larnes_mobile/trainers/reading/zaitsev/zaitsev_sticks.dart';
 
 void main() {
   group('letter-build zaitsev catalog', () {
+    test('provides all 33 real lowercase forms separately from capitals', () {
+      final lower = listSupportedBuildLetters('lower');
+      expect(lower.length, 33);
+      expect(lower.toSet(), listSupportedBuildLetters().map((letter) => letter.toLowerCase()).toSet());
+      for (final letter in lower) {
+        final pieces = getLetterBuildPieces(letter);
+        expect(pieces, isNotEmpty);
+        expect(pieces.every((piece) => piece.id.startsWith('$letter-')), isTrue);
+        expect(getBuildDrawing(letter), isNotNull);
+        expect(pieces.map((piece) => piece.path).toList(), isNot(getLetterBuildPieces(letter.toUpperCase()).map((piece) => piece.path).toList()));
+      }
+      expect(getLetterBuildPieces('е').length, 2);
+      expect(getLetterBuildPieces('ё').length, 4);
+      expect(getLetterBuildPieces('Е').length, 4);
+    });
     test('keeps Tse and De bases flush with their vertical corner strokes', () {
       for (final letter in ['Ц', 'Д']) {
         final pieces = getLetterBuildPieces(letter);
@@ -43,7 +58,7 @@ void main() {
     });
 
     test('keeps every initial piece inside the field and beside the outline', () {
-      for (final letter in listSupportedBuildLetters()) {
+      for (final letter in [...listSupportedBuildLetters(), ...listSupportedBuildLetters('lower')]) {
         final pieces = getLetterBuildPieces(letter);
         final layout = getBuildLayout(letter)!;
         final outlineMin = pieces.map((piece) => piece.bounds.minX).reduce((a, b) => a < b ? a : b);

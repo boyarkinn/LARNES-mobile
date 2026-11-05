@@ -36,7 +36,7 @@ void main() {
       expect(find.byType(TrainerShell), findsNothing);
       expect(find.byType(BuildScene), findsOneWidget);
       final scene = tester.widget<BuildScene>(find.byType(BuildScene));
-      expect(scene.guideLetter, 'Ё');
+      expect(scene.guideLetter, 'ё');
       expect(scene.displayLetter, 'ё');
       expect(find.textContaining('Сначала собери'), findsNothing);
       expect(find.textContaining('Положи все палочки'), findsNothing);

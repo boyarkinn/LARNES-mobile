@@ -51,6 +51,19 @@ void main() {
     expect(roster.scopeId, '');
     expect(roster.participants, isEmpty);
   });
+  test('room audio classification is carried separately from authority', () {
+    final roster = LessonCallTeachers.fromJson({
+      'teacherEndpointIds': ['teacher'],
+      'observerEndpointIds': ['observer'],
+      'roomAudioEndpointIds': ['relay', null, 123, ''],
+      'mediaControllerEndpointIds': ['teacher', 'observer'],
+    });
+    expect(roster.roomAudio, ['relay']);
+    expect(roster.toBoardJson()['roomAudioEndpointIds'], ['relay']);
+    expect(roster.ids, ['teacher']);
+    expect(roster.observers, ['observer']);
+    expect(roster.mediaControllers, ['teacher', 'observer']);
+  });
   test('unknown name/role and malformed IDs do not supply board membership', () {
     final roster = LessonCallTeachers.fromJson({
       'role': 'teacher',

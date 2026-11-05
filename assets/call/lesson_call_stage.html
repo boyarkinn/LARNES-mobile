@@ -221,6 +221,7 @@
       var teacherPrimary = "";
       var mediaControllerIds = [];
       var observerIds = [];
+      var roomAudioIds = [];
       var mediaControllerRosterAt = 0;
       var shownMode = "grid";
       var boardParts = [];
@@ -366,12 +367,19 @@
         return person.desktop || person.camera;
       }
 
-      function observerParticipant(participant) {
+      function callIdentity(participant) {
         try {
           var identity = participant && participant.getIdentity && participant.getIdentity();
           var id = identity && identity.user && identity.user.id;
-          return typeof id === "string" && id.indexOf("observer:") === 0;
-        } catch (_) { return false; }
+          return typeof id === "string" ? id : "";
+        } catch (_) { return ""; }
+      }
+
+      function applyCallRole(person, participant) {
+        if (!participant) return;
+        var identity = callIdentity(participant);
+        person.observer = identity.indexOf("observer:") === 0;
+        person.roomAudio = identity.indexOf("room-audio:") === 0;
       }
 
       function knownTeacher(id) {
@@ -382,7 +390,7 @@
         var local = null;
         var remotes = [];
         for (var id in people) {
-          if (people[id].observer || observerIds.indexOf(id) >= 0) continue;
+          if (people[id].observer || people[id].roomAudio || observerIds.indexOf(id) >= 0 || roomAudioIds.indexOf(id) >= 0) continue;
           if (people[id].local) {
             local = people[id];
           } else if (id !== localEndpoint) {
@@ -711,7 +719,8 @@
           return;
         }
         var person = ensurePerson(id, local);
-        if (!local && room && room.getParticipantById) person.observer = observerParticipant(room.getParticipantById(id));
+        if (!local && room && room.getParticipantById) applyCallRole(person, room.getParticipantById(id));
+        if (person.roomAudio) return;
         if (track.getVideoType && track.getVideoType() === "desktop") {
           person.desktop = track;
           person.sharing = true;
@@ -1067,7 +1076,7 @@
         }
       }
 
-      function setTeachers(ids, primary, controllers, observers) {
+      function setTeachers(ids, primary, controllers, observers, roomAudio) {
         mediaControllerRosterAt = Date.now();
         function endpointIds(input) {
           return (input instanceof Array ? input : []).filter(function (id, index, all) {
@@ -1075,6 +1084,7 @@
           });
         }
         var nextObservers = endpointIds(observers);
+        var nextRoomAudio = endpointIds(roomAudio);
         var next = [];
         var list = ids || [];
         for (var i = 0; i < list.length; i++) {
@@ -1086,7 +1096,8 @@
         var primaryId = typeof primary === "string" ? primary : "";
         var same = primaryId === teacherPrimary && next.length === teacherIds.length
           && JSON.stringify(nextControllers) === JSON.stringify(mediaControllerIds)
-          && JSON.stringify(nextObservers) === JSON.stringify(observerIds);
+          && JSON.stringify(nextObservers) === JSON.stringify(observerIds)
+          && JSON.stringify(nextRoomAudio) === JSON.stringify(roomAudioIds);
         for (var j = 0; same && j < next.length; j++) {
           if (next[j] !== teacherIds[j]) {
             same = false;
@@ -1099,6 +1110,7 @@
         teacherPrimary = primaryId;
         mediaControllerIds = nextControllers;
         observerIds = nextObservers;
+        roomAudioIds = nextRoomAudio;
         flushHold();
         emitWorkspace();
         render();
@@ -1279,7 +1291,22 @@
           return;
         }
         if (!libraryReady) {
-          meet.init();
+          // JWT already authenticates this connection. Ignore stale Jicofo
+          // sessions left in storage by another connection or lesson.
+          meet.init({ externalStorage: {
+            getItem: function (key) {
+              if (key === "sessionId") return null;
+              try { return window.localStorage.getItem(key); } catch (_) { return null; }
+            },
+            setItem: function (key, value) {
+              if (key === "sessionId") return;
+              try { window.localStorage.setItem(key, value); } catch (_) {}
+            },
+            removeItem: function (key) {
+              if (key === "sessionId") return;
+              try { window.localStorage.removeItem(key); } catch (_) {}
+            }
+          } });
           libraryReady = true;
         }
         connection = new meet.JitsiConnection(null, pass.jwt, {
@@ -1325,7 +1352,7 @@
               if (!audioId || audioId === room.myUserId()) return;
               var person = ensurePerson(audioId, false);
               var participant = room.getParticipantById && room.getParticipantById(audioId);
-              if (participant) person.observer = observerParticipant(participant);
+              applyCallRole(person, participant);
               if (person.observer || observerIds.indexOf(audioId) >= 0) return;
               attachRemoteAudio(track, audioId);
               updateRemoteAudioMute(audioId);
@@ -1415,7 +1442,7 @@
             }
             var person = ensurePerson(id, false);
             // Identity is only a presentation hint. Commands still require roster authority.
-            person.observer = observerParticipant(participant);
+            applyCallRole(person, participant);
             if (person.observer) clearRemoteAudio(id);
             var name = participant && participant.getDisplayName ? participant.getDisplayName() : "";
             if (name) {
@@ -2341,7 +2368,7 @@
         people = {};
         boardRoster = null;
         boardRosterAt = 0;
-        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; mediaControllerRosterAt = 0;
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0;
         clearBoardInbox();
         if (boardInstalled) window.LarnesBoard.bind(null);
         mediaHold = { audio: null, video: null };
@@ -2518,7 +2545,7 @@
         joining = false;
         callJoined = false;
         releaseDesktop();
-        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; mediaControllerRosterAt = 0;
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0;
         boardRoster = null; boardRosterAt = 0; localEndpoint = "";
         people = {};
         for (var id in tileNodes) {

@@ -1100,7 +1100,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       }
       await web.evaluateJavascript(
         source:
-            'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)}, ${jsonEncode(teachers.mediaControllers)}, ${jsonEncode(teachers.observers)})',
+            'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)}, ${jsonEncode(teachers.mediaControllers)}, ${jsonEncode(teachers.observers)}, ${jsonEncode(teachers.roomAudio)})',
       );
       if (!mounted ||
           _web != web ||

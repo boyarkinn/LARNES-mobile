@@ -570,14 +570,14 @@ class _LessonCallStageState extends State<LessonCallStage>
       }
       final pass = outcome.pass;
       if (pass == null || pass.workspaceFormat != 'board') return;
-      final previous = _pass?.room;
+      final previous = _pass?.addressKey;
       setState(() {
         _holding = false;
         _pass = pass;
         _loading = false;
       });
       _watchSound();
-      if (previous == pass.room && _inRoom) return;
+      if (previous == pass.addressKey && _inRoom) return;
       await _web?.evaluateJavascript(
         source: 'switchRoom(${jsonEncode(pass.toStageJson())})',
       );

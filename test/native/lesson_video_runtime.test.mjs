@@ -6,6 +6,71 @@ import { test } from 'node:test';
 const html = readFileSync(new URL('../../assets/call/lesson_call_stage.html', import.meta.url), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve(); };
+
+test('native call address preserves the provider domain and refuses foreign or incomplete breakout addresses', () => {
+  const c = stage().context;
+  const pass = { room: 'provider', roomJid: 'provider@breakout.meet.jitsi', mainRoom: 'lesson', xmppDomain: 'meet.jitsi' };
+  assert.deepEqual(JSON.parse(JSON.stringify(c.callAddress(pass))), { room: 'provider', mainRoom: 'lesson', customDomain: 'breakout.meet.jitsi' });
+  assert.deepEqual(JSON.parse(JSON.stringify(c.callAddress({ room: 'lesson', xmppDomain: 'meet.jitsi' }))), { room: 'lesson', mainRoom: 'lesson' });
+  for (const invalid of [{ roomJid: 'provider@evil.test' }, { roomJid: 'other@breakout.meet.jitsi' },
+    { mainRoom: 'provider' }, { mainRoom: '*' }, { mainRoom: undefined }, { roomJid: undefined }]) {
+    assert.equal(c.callAddress({ ...pass, ...invalid }), null);
+  }
+  assert.notEqual(c.callAddressKey(pass), c.callAddressKey({ room: pass.room }));
+});
+
+test('native bootstrap receives no media, cancels late leave, and has a finite deadline', async () => {
+  const f = stage(), c = f.context, handlers = new Map(), calls = [];
+  let resolveLeave;
+  const main = { on: (event, fn) => handlers.set(event, fn), off: event => handlers.delete(event),
+    setReceiverConstraints: value => calls.push(JSON.parse(JSON.stringify(value))),
+    join: () => calls.push('join-main'), leave: () => { calls.push('leave-main'); return new Promise(resolve => { resolveLeave = resolve; }); } };
+  const cancel = c.bootstrapBreakout({ create: () => main, joinedEvent: 'joined', failedEvent: 'failed', current: () => true,
+    ready: () => calls.push('target'), failed: () => calls.push('failed') });
+  assert.deepEqual(calls, [{ lastN: 0, defaultConstraints: { maxHeight: 0 } }, 'join-main']);
+  handlers.get('joined')(); cancel(); resolveLeave(); await flush();
+  assert.equal(calls.includes('target'), false);
+  c.bootstrapBreakout({ create: () => main, joinedEvent: 'joined', failedEvent: 'failed', current: () => true,
+    ready: () => calls.push('target'), failed: () => calls.push('failed') });
+  await f.advance(10001);
+  assert.equal(calls.filter(value => value === 'failed').length, 1);
+  assert.equal(calls.includes('target'), false);
+});
+
+test('actual native start joins and leaves main before the confirmed breakout on the same authenticated connection', async () => {
+  const f = stage(), c = f.context, connections = [], conferences = [], calls = [];
+  const conferenceEvents = Object.fromEntries(['TRACK_ADDED', 'TRACK_REMOVED', 'TRACK_MUTE_CHANGED', 'USER_JOINED', 'USER_LEFT',
+    'DISPLAY_NAME_CHANGED', 'CONFERENCE_JOINED', 'CONFERENCE_FAILED'].map(key => [key, key]));
+  class Connection {
+    constructor(_app, token, options) { this.token = token; this.options = options; this.handlers = new Map(); connections.push(this); }
+    addEventListener(event, fn) { this.handlers.set(event, fn); }
+    connect() { this.handlers.get('established')(); }
+    initJitsiConference(name, options) {
+      const handlers = new Map(), conn = this;
+      const conf = { name, options, handlers, setDisplayName() {}, addCommandListener() {},
+        on: (event, fn) => handlers.set(event, fn), off: event => handlers.delete(event),
+        setReceiverConstraints: value => calls.push(['receive', name, JSON.parse(JSON.stringify(value))]),
+        join() { assert.ok(!options.customDomain || conn.wasInMain); calls.push(['join', name]); },
+        leave() { conn.wasInMain = true; calls.push(['leave', name]); return Promise.resolve(); } };
+      conferences.push(conf); return conf;
+    }
+  }
+  c.window.JitsiMeetJS = { init() {}, JitsiConnection: Connection, events: {
+    connection: { CONNECTION_FAILED: 'failed', CONNECTION_ESTABLISHED: 'established' }, conference: conferenceEvents } };
+  c.render = () => {};
+  c.start({ displayName: 'Pupil', domain: 'meet.example.test', xmppDomain: 'meet.jitsi', jwt: 'synthetic-main-scoped-token',
+    room: 'provider', roomJid: 'provider@breakout.meet.jitsi', mainRoom: 'lesson' });
+  assert.equal(conferences.length, 1);
+  assert.equal(conferences[0].name, 'lesson');
+  assert.equal(f.events.some(e => ['endpoint', 'joined'].includes(e[1])), false);
+  conferences[0].handlers.get('CONFERENCE_JOINED')(); await flush();
+  assert.equal(connections.length, 1);
+  assert.equal(connections[0].options.serviceUrl, 'wss://meet.example.test/xmpp-websocket?room=lesson');
+  assert.equal(conferences.length, 2);
+  assert.equal(conferences[1].name, 'provider');
+  assert.equal(conferences[1].options.customDomain, 'breakout.meet.jitsi');
+  assert.deepEqual(calls.filter(value => ['join', 'leave'].includes(value[0])), [['join', 'lesson'], ['leave', 'lesson'], ['join', 'provider']]);
+});
 function stage() {
   let now = 100000, next = 0;
   const timers = new Map(), events = [];

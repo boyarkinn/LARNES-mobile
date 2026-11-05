@@ -178,6 +178,7 @@
     <div id="room-work"></div>
     <script>
       var connection = null;
+      var cancelRoomBootstrap = null;
       var room = null;
       var localVideo = null;
       var localAudio = null;
@@ -1148,7 +1149,7 @@
 
       function join(pass) {
         roomSwitchGeneration += 1;
-        if (joining || room || !pass || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
+        if (joining || room || !pass || !callAddress(pass) || !hostName(pass.domain) || !hostName(pass.xmppDomain)) {
           post("failed");
           return;
         }
@@ -1185,10 +1186,85 @@
         render();
       }
 
+      function callAddress(pass) {
+        if (!pass || typeof pass.room !== "string" || typeof pass.xmppDomain !== "string") return null;
+        var name = pass.room.trim().toLowerCase(), domain = pass.xmppDomain.trim().toLowerCase();
+        var local = /^[a-z0-9][a-z0-9._-]{0,64}$/;
+        if (!local.test(name) || !/^[a-z0-9][a-z0-9.-]{0,80}$/.test(domain)) return null;
+        if (pass.roomJid === undefined && pass.mainRoom === undefined) return { room: name, mainRoom: name };
+        if (typeof pass.roomJid !== "string" || typeof pass.mainRoom !== "string") return null;
+        var main = pass.mainRoom.trim().toLowerCase(), customDomain = "breakout." + domain;
+        if (!local.test(main) || main === name || pass.roomJid.trim().toLowerCase() !== name + "@" + customDomain) return null;
+        return { room: name, mainRoom: main, customDomain: customDomain };
+      }
+
+      function callAddressKey(pass) {
+        return pass.room + "|" + (pass.roomJid || "") + "|" + (pass.mainRoom || "");
+      }
+
+      function cancelBootstrap() {
+        var cancel = cancelRoomBootstrap;
+        cancelRoomBootstrap = null;
+        if (cancel) cancel();
+      }
+
+      // A fresh XMPP session must enter main before Prosody admits its breakout.
+      // No local tracks, remote playback, board binding or endpoint claims occur here.
+      function bootstrapBreakout(options) {
+        var finished = false, leavingMain = false, joinedMain = false, main = null;
+        function unbind() {
+          if (!main) return;
+          var remove = main.off || main.removeEventListener;
+          if (remove) {
+            remove.call(main, options.joinedEvent, joined);
+            remove.call(main, options.failedEvent, fail);
+          }
+        }
+        function leaveMain() {
+          if (!main || leavingMain) return Promise.resolve();
+          leavingMain = true;
+          try { return Promise.resolve(main.leave()); }
+          catch (error) { return Promise.reject(new Error("breakout_bootstrap_leave_failed")); }
+        }
+        function end(failed) {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          unbind();
+          leaveMain().catch(function () {});
+          if (failed && options.current()) options.failed();
+        }
+        function fail() { end(true); }
+        function joined() {
+          if (joinedMain) return;
+          joinedMain = true;
+          if (finished || !options.current()) { end(false); return; }
+          unbind();
+          leaveMain().then(function () {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            if (options.current()) {
+              try { options.ready(); } catch (error) { options.failed(); }
+            }
+          }, fail);
+        }
+        var timer = setTimeout(fail, 10000);
+        try {
+          main = options.create();
+          main.setReceiverConstraints({ lastN: 0, defaultConstraints: { maxHeight: 0 } });
+          main.on(options.joinedEvent, joined);
+          main.on(options.failedEvent, fail);
+          if (options.current()) main.join(); else end(false);
+        } catch (error) { fail(); }
+        return function () { end(false); };
+      }
+
       function start(pass) {
         var meet = window.JitsiMeetJS;
+        var address = callAddress(pass);
         var thisAttempt = ++attempt;
-        if (!meet) {
+        if (!meet || !address) {
           post("failed");
           return;
         }
@@ -1202,7 +1278,7 @@
             muc: "muc." + pass.xmppDomain,
             focus: "focus." + pass.xmppDomain,
           },
-          serviceUrl: "wss://" + pass.domain + "/xmpp-websocket",
+          serviceUrl: "wss://" + pass.domain + "/xmpp-websocket?room=" + encodeURIComponent(address.mainRoom),
           clientNode: "http://jitsi.org/jitsimeet",
         });
         connection.addEventListener(meet.events.connection.CONNECTION_FAILED, function () {
@@ -1215,7 +1291,13 @@
           if (thisAttempt !== attempt || leaving) {
             return;
           }
-          room = connection.initJitsiConference(pass.room, { p2p: { enabled: false } });
+          var connected = connection;
+          var current = function () { return thisAttempt === attempt && !leaving && connection === connected; };
+          var startTarget = function () {
+          if (!current()) return;
+          var options = { p2p: { enabled: false } };
+          if (address.customDomain) options.customDomain = address.customDomain;
+          room = connected.initJitsiConference(address.room, options);
           ownName = pass.displayName || "";
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
@@ -1425,6 +1507,16 @@
             render();
           });
           room.join();
+          };
+          if (!address.customDomain) startTarget();
+          else cancelRoomBootstrap = bootstrapBreakout({
+            create: function () { return connected.initJitsiConference(address.mainRoom, { p2p: { enabled: false } }); },
+            joinedEvent: meet.events.conference.CONFERENCE_JOINED,
+            failedEvent: meet.events.conference.CONFERENCE_FAILED,
+            current: current,
+            ready: startTarget,
+            failed: noteRoomFailure,
+          });
         });
         connection.connect();
       }
@@ -2179,6 +2271,7 @@
       }
 
       function dropSession() {
+        cancelBootstrap();
         roomSwitchGeneration += 1;
         attempt += 1;
         clearPublicationTasks();
@@ -2404,6 +2497,7 @@
       }
 
       function leaveConferenceOnly() {
+        cancelBootstrap();
         attempt += 1;
         clearPublicationTasks();
         clearVideoBindings();
@@ -2455,9 +2549,9 @@
       }
 
       function switchRoom(pass) {
-        if (!pass || !pass.room || !hostName(pass.domain) || !hostName(pass.xmppDomain)) return;
-        if (passHold && passHold.room === pass.room && !room && switchFailures >= 3) return;
-        if (passHold && passHold.room === pass.room && room) {
+        if (!pass || !callAddress(pass) || !hostName(pass.domain) || !hostName(pass.xmppDomain)) return;
+        if (passHold && callAddressKey(passHold) === callAddressKey(pass) && !room && switchFailures >= 3) return;
+        if (passHold && callAddressKey(passHold) === callAddressKey(pass) && room) {
           passHold = pass;
           return;
         }

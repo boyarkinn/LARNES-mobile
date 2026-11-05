@@ -26,6 +26,8 @@ class LessonCallPass {
     required this.jwt,
     required this.room,
     required this.xmppDomain,
+    this.roomJid,
+    this.mainRoom,
     this.teacherName = '',
     this.workspaceFormat = 'board',
   });
@@ -35,10 +37,14 @@ class LessonCallPass {
   final String jwt;
   final String room;
   final String xmppDomain;
+  final String? roomJid;
+  final String? mainRoom;
+  String get addressKey => '$room|${roomJid ?? ''}|${mainRoom ?? ''}';
   final String teacherName;
   final String workspaceFormat;
 
   static final _host = RegExp(r'^[A-Za-z0-9.-]+$');
+  static final _room = RegExp(r'^[a-z0-9][a-z0-9._-]{0,64}$');
 
   static LessonCallPass? fromJson(Map<String, dynamic> json) {
     if (json['status'] != 'success') {
@@ -51,6 +57,8 @@ class LessonCallPass {
     final room = json['room'];
     final xmppDomain = json['xmppDomain'];
     final teacherName = json['teacherName'];
+    final roomJid = json['roomJid'];
+    final mainRoom = json['mainRoom'];
     if (displayName is! String ||
         domain is! String ||
         jwt is! String ||
@@ -63,6 +71,16 @@ class LessonCallPass {
         !_host.hasMatch(xmppDomain)) {
       return null;
     }
+    if (!_room.hasMatch(room)) return null;
+    if (roomJid != null || mainRoom != null) {
+      if (roomJid is! String ||
+          mainRoom is! String ||
+          !_room.hasMatch(mainRoom) ||
+          mainRoom == room ||
+          roomJid != '$room@breakout.${xmppDomain.toLowerCase()}') {
+        return null;
+      }
+    }
 
     return LessonCallPass(
       displayName: displayName,
@@ -70,6 +88,8 @@ class LessonCallPass {
       jwt: jwt,
       room: room,
       xmppDomain: xmppDomain,
+      roomJid: roomJid as String?,
+      mainRoom: mainRoom as String?,
       teacherName: teacherName is String ? teacherName : '',
       workspaceFormat: 'board',
     );
@@ -81,6 +101,8 @@ class LessonCallPass {
     'jwt': jwt,
     'room': room,
     'xmppDomain': xmppDomain,
+    'roomJid': ?roomJid,
+    'mainRoom': ?mainRoom,
     'teacherName': teacherName,
     'workspaceFormat': workspaceFormat,
   };

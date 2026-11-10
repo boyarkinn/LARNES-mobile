@@ -3,10 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 
 void main() {
   group('TrainerPlayer example-visualization', () {
-    testWidgets('loads trainer through player with validated params', (tester) async {
+    testWidgets('loads trainer through player with validated params', (
+      tester,
+    ) async {
       final l10n = lookupAppLocalizations(const Locale('ru'));
 
       await tester.pumpWidget(
@@ -20,11 +23,7 @@ void main() {
               height: 640,
               child: TrainerPlayer(
                 trainerKey: 'example-visualization',
-                params: {
-                  'example': '+2 -1',
-                  'stepPauseSec': 2,
-                  'totalRods': 2,
-                },
+                params: {'example': '+2 -1', 'stepPauseSec': 2, 'totalRods': 2},
                 l10n: l10n,
               ),
             ),
@@ -34,7 +33,7 @@ void main() {
       await tester.pump();
 
       expect(find.byType(ExampleVisualizationTrainer), findsOneWidget);
-      expect(find.text('+2'), findsOneWidget);
+      expect(find.byType(TrainerInstructionScene), findsOneWidget);
       expect(find.textContaining('не зарегистрирован'), findsNothing);
     });
 
@@ -49,11 +48,7 @@ void main() {
           home: Scaffold(
             body: TrainerPlayer(
               trainerKey: 'example-visualization',
-              params: {
-                'example': '+10 -1',
-                'stepPauseSec': 2,
-                'totalRods': 1,
-              },
+              params: {'example': '+10 -1', 'stepPauseSec': 2, 'totalRods': 1},
               l10n: l10n,
             ),
           ),

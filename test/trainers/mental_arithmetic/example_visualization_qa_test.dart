@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/autoplay_timeline.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_movement_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_playback_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 class _RegressionCase {
@@ -48,32 +48,46 @@ const _regressionCases = [
 void main() {
   group('example-visualization QA regression', () {
     for (final params in _regressionCases) {
-      test('planner values for ${params.example} (${params.totalRods} rods)', () {
-        final plan = planExampleSteps(params.example, params.totalRods);
-        final actions = parseExampleActions(params.example);
+      test(
+        'shared plan values for ${params.example} (${params.totalRods} rods)',
+        () {
+          final plan = planAbacusMovements(params.example, params.totalRods);
+          final events = buildAbacusPlaybackPlan(plan);
+          final actions = parseExampleActions(params.example);
 
-        expect(plan.values, params.values);
-        expect(plan.actions.length, actions.length);
-        expect(plan.rodStates.length, actions.length + 1);
-      });
+          expect([
+            0,
+            ...events
+                .where(
+                  (event) =>
+                      event.type == AbacusPlaybackEventType.actionComplete,
+                )
+                .map((event) => event.value),
+          ], params.values);
+          expect(plan.actions.length, actions.length);
+          expect(plan.gestures.last.value, params.values.last);
+        },
+      );
 
-      test('autoplay timeline for ${params.example}', () {
-        final actionCount = parseExampleActions(params.example).length;
-        final timeline = buildAutoplayTimeline(actionCount);
-
-        expect(timeline.length, actionCount * 2 + 1);
-        expect(timeline.last.type, AutoplayEventType.done);
-
-        for (var actionIndex = 0; actionIndex < actionCount; actionIndex++) {
-          final pauseIndex = actionIndex * 2;
-          final animIndex = pauseIndex + 1;
-
-          expect(timeline[pauseIndex].type, AutoplayEventType.pause);
-          expect(timeline[pauseIndex].actionIndex, actionIndex);
-          expect(timeline[animIndex].type, AutoplayEventType.anim);
-          expect(timeline[animIndex].actionIndex, actionIndex);
-          expect(timeline[animIndex].rodStateIndex, actionIndex + 1);
-        }
+      test('shared gesture events for ${params.example}', () {
+        final events = buildAbacusPlaybackPlan(
+          planAbacusMovements(params.example, params.totalRods),
+        );
+        expect(
+          events
+              .where(
+                (event) => event.type == AbacusPlaybackEventType.actionStart,
+              )
+              .length,
+          2,
+        );
+        expect(
+          events
+              .where((event) => event.type == AbacusPlaybackEventType.gesture)
+              .length,
+          greaterThanOrEqualTo(2),
+        );
+        expect(events.last.type, AbacusPlaybackEventType.complete);
       });
 
       test('validates params for ${params.example}', () {

@@ -11,7 +11,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/f
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_movement_plan.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
@@ -212,11 +212,13 @@ ValidateTrainerParamsResult validateExampleVisualizationParams(
   final normalizedExample = formatExample(actions);
 
   final stateError = validateExampleForRods(normalizedExample, totalRods);
-  final planError = validateExamplePlan(normalizedExample, totalRods);
-  final message = stateError ?? planError;
-
-  if (message != null) {
-    return _fail(message);
+  if (stateError != null) {
+    return _fail(stateError);
+  }
+  try {
+    planAbacusMovements(normalizedExample, totalRods);
+  } catch (_) {
+    return _fail('Неверный пример.');
   }
 
   return ValidateTrainerParamsResult.success({

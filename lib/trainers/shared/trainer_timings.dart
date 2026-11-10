@@ -33,3 +33,5 @@ abstract final class TrainerTimings {
   /// `letter-build` — после сборки буквы по гайду.
   static const guideCompleteDelayMs = 600;
 }
+
+int trainerStepPauseMs(double stepPauseSec) => (stepPauseSec * 1000).round();

@@ -5,11 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/play_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/autoplay_timeline.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_audio.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/moving_bead_highlights.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_gesture_view.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_movement_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_playback_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_playback_timing.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
 import 'package:larnes_mobile/trainers/shared/numeric_answer.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
@@ -18,6 +20,7 @@ import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instructi
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_playback_controller.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
 enum ExampleVisualizationPhase {
@@ -52,7 +55,8 @@ class ExampleVisualizationTrainer extends StatefulWidget {
       _ExampleVisualizationTrainerState();
 }
 
-class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTrainer>
+class _ExampleVisualizationTrainerState
+    extends State<ExampleVisualizationTrainer>
     with SingleTickerProviderStateMixin {
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
@@ -75,15 +79,15 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
   var _fireworksKey = 0;
   var _answerSessionKey = 0;
 
-  late ExampleStepPlan _plan;
+  late AbacusPlaybackPlan _plan;
   late List<ChainStep> _chainSteps;
-  late List<AutoplayTimelineEvent> _timeline;
+  late List<AbacusPlaybackEvent> _playbackEvents;
   late int _expectedAnswer;
   late List<RodState> _rods;
   String? _actionLabel;
   List<RodMovingBeadHighlight>? _movingBeadHighlights;
-  var _timelineIndex = 0;
   var _completeCalled = false;
+  TrainerPlaybackController<AbacusPlaybackEvent>? _playbackController;
 
   Object _runToken = Object();
   final _instructionTypewriter = TrainerInstructionTypewriter();
@@ -94,7 +98,6 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
 
   Timer? _countdownTimer;
   Timer? _flashTimer;
-  Timer? _autoplayTimer;
   Timer? _completeTimer;
   Timer? _wrongTimer;
 
@@ -105,13 +108,16 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       vsync: this,
       duration: const Duration(milliseconds: 450),
     );
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 8, end: -5), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -5, end: 5), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 5, end: 0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut));
+    _shakeAnimation =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 8, end: -5), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -5, end: 5), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 5, end: 0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+        );
     _startSession();
   }
 
@@ -128,7 +134,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
-    _autoplayTimer?.cancel();
+    _playbackController?.cancel();
     _completeTimer?.cancel();
     _wrongTimer?.cancel();
     _shakeController.dispose();
@@ -145,7 +151,8 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     _instructionTypewriter.cancel();
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
-    _autoplayTimer?.cancel();
+    _playbackController?.cancel();
+    _playbackController = null;
     _completeTimer?.cancel();
     _wrongTimer?.cancel();
     unawaited(cancelStepAudio());
@@ -155,10 +162,10 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     final example = widget.params['example'] as String? ?? '+2 -1';
     final totalRods = widget.params['totalRods'] as int? ?? 2;
 
-    _plan = planExampleSteps(example, totalRods);
+    _plan = planAbacusMovements(example, totalRods);
     _chainSteps = exampleActionsToChainSteps(_plan.actions);
-    _timeline = buildAutoplayTimeline(_plan.actions.length);
-    _expectedAnswer = _plan.values.last;
+    _playbackEvents = buildAbacusPlaybackPlan(_plan);
+    _expectedAnswer = _playbackEvents.last.value;
 
     setState(() {
       _phase = ExampleVisualizationPhase.instruction;
@@ -166,10 +173,9 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       _instructionLength = 0;
       _solveInstructionLength = 0;
       _flashLabel = null;
-      _rods = cloneExampleRods(_plan.rodStates.first);
+      _rods = numberToAbacus(0, totalRods);
       _actionLabel = null;
       _movingBeadHighlights = null;
-      _timelineIndex = 0;
       _completeCalled = false;
       _answerDraft = '';
       _hasFailedAttempt = false;
@@ -231,7 +237,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
 
       if (index >= _countdownLabels.length) {
         setState(() => _phase = ExampleVisualizationPhase.play);
-        _restartAutoplay(runToken);
+        _startShowPlayback(runToken);
         return;
       }
 
@@ -246,28 +252,103 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     tick();
   }
 
-  void _restartAutoplay(Object runToken) {
-    _autoplayTimer?.cancel();
-
+  void _startShowPlayback(Object runToken) {
+    _playbackController?.cancel();
     final stepPauseSec =
         (widget.params['stepPauseSec'] as num?)?.toDouble() ?? 2;
+    final totalRods = widget.params['totalRods'] as int? ?? 2;
+    final playAudio = shouldPlayFlashAudio(stepPauseSec);
+    final playbackRate = flashAudioPlaybackRate(stepPauseSec);
 
-    _rods = cloneExampleRods(_plan.rodStates.first);
-    _actionLabel = null;
-    _movingBeadHighlights = null;
-    _timelineIndex = 0;
+    setState(() {
+      _rods = numberToAbacus(0, totalRods);
+      _actionLabel = null;
+      _movingBeadHighlights = null;
+    });
 
-    _scheduleNext(runToken, stepPauseSec);
+    late final TrainerPlaybackController<AbacusPlaybackEvent> controller;
+    controller = TrainerPlaybackController<AbacusPlaybackEvent>(
+      events: _playbackEvents,
+      delayBeforeMs: (event, index) => abacusPlaybackDelayBefore(
+        _playbackEvents,
+        index,
+        AbacusPlaybackMode.visualization,
+        stepPauseSec,
+      ),
+      onEvent: (event, index) {
+        if (!mounted || !identical(runToken, _runToken)) return;
+        switch (event.type) {
+          case AbacusPlaybackEventType.actionStart:
+            final next = _playbackEvents[index + 1];
+            setState(() {
+              _actionLabel = formatExampleAction(event.action!);
+              _movingBeadHighlights =
+                  next.type == AbacusPlaybackEventType.gesture
+                  ? abacusGestureView(
+                      _plan,
+                      totalRods,
+                      next.gestureIndex! + 1,
+                    ).highlights
+                  : null;
+            });
+            if (playAudio) {
+              controller.pause();
+              unawaited(
+                playStepAudio(
+                  _chainSteps[event.actionIndex!],
+                  playbackRate: playbackRate,
+                  stepPauseSec: stepPauseSec,
+                  onStarted: () {
+                    if (mounted &&
+                        identical(runToken, _runToken) &&
+                        identical(controller, _playbackController)) {
+                      controller.play();
+                    }
+                  },
+                ),
+              );
+            }
+          case AbacusPlaybackEventType.gesture:
+            final frame = abacusGestureView(
+              _plan,
+              totalRods,
+              event.gestureIndex! + 1,
+            );
+            setState(() {
+              _rods = frame.rods;
+              _movingBeadHighlights = frame.highlights;
+            });
+          case AbacusPlaybackEventType.actionComplete:
+            setState(() => _movingBeadHighlights = null);
+          case AbacusPlaybackEventType.complete:
+            break;
+        }
+      },
+      onComplete: () {
+        if (!mounted || !identical(runToken, _runToken)) return;
+        unawaited(cancelStepAudio());
+        setState(() {
+          _actionLabel = null;
+          _movingBeadHighlights = null;
+        });
+        _afterShowComplete(runToken);
+      },
+    );
+    _playbackController = controller;
+    controller.play();
   }
 
   void _afterShowComplete(Object runToken) {
     _completeTimer?.cancel();
-    _completeTimer = Timer(const Duration(milliseconds: TrainerTimings.completeDelayMs), () {
-      if (!mounted || !identical(runToken, _runToken)) {
-        return;
-      }
-      unawaited(_runSolveInstruction(runToken));
-    });
+    _completeTimer = Timer(
+      const Duration(milliseconds: TrainerTimings.completeDelayMs),
+      () {
+        if (!mounted || !identical(runToken, _runToken)) {
+          return;
+        }
+        unawaited(_runSolveInstruction(runToken));
+      },
+    );
   }
 
   Future<void> _runSolveInstruction(Object runToken) async {
@@ -309,7 +390,8 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
 
     _instructionTypewriter.cancel();
     setState(() {
-      _solveInstructionLength = kExampleVisualizationSolveInstructionText.length;
+      _solveInstructionLength =
+          kExampleVisualizationSolveInstructionText.length;
       _phase = ExampleVisualizationPhase.solveCountdown;
       _flashLabel = null;
     });
@@ -348,7 +430,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
   void _runSolveFlash(Object runToken) {
     final stepPauseSec =
         (widget.params['stepPauseSec'] as num?)?.toDouble() ?? 2;
-    final pause = Duration(milliseconds: pauseMs(stepPauseSec));
+    final pause = Duration(milliseconds: trainerStepPauseMs(stepPauseSec));
     const blank = Duration(milliseconds: _interFlashBlankMs);
     final playAudio = shouldPlayFlashAudio(stepPauseSec);
     final playbackRate = flashAudioPlaybackRate(stepPauseSec);
@@ -497,81 +579,16 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       _fireworksKey += 1;
     });
     _completeTimer?.cancel();
-    _completeTimer = Timer(const Duration(milliseconds: TrainerTimings.completeDelayMs), () {
-      if (!mounted || _completeCalled) {
-        return;
-      }
-      _completeCalled = true;
-      widget.onComplete?.call();
-    });
-  }
-
-  void _scheduleNext(Object runToken, double stepPauseSec) {
-    if (!mounted || !identical(runToken, _runToken)) {
-      return;
-    }
-
-    if (_timelineIndex >= _timeline.length) {
-      return;
-    }
-
-    final event = _timeline[_timelineIndex];
-    _timelineIndex += 1;
-    final playAudio = shouldPlayFlashAudio(stepPauseSec);
-    final playbackRate = flashAudioPlaybackRate(stepPauseSec);
-
-    switch (event.type) {
-      case AutoplayEventType.pause:
-        final step = _chainSteps[event.actionIndex!];
-        setState(() {
-          _movingBeadHighlights = resolveMovingBeadHighlights(
-            _plan.rodStates[event.actionIndex!],
-            _plan.rodStates[event.actionIndex! + 1],
-          );
-          _actionLabel = formatExampleAction(_plan.actions[event.actionIndex!]);
-        });
-
-        void startPauseTimer() {
-          _autoplayTimer = Timer(Duration(milliseconds: pauseMs(stepPauseSec)), () {
-            _scheduleNext(runToken, stepPauseSec);
-          });
+    _completeTimer = Timer(
+      const Duration(milliseconds: TrainerTimings.completeDelayMs),
+      () {
+        if (!mounted || _completeCalled) {
+          return;
         }
-
-        if (playAudio) {
-          unawaited(
-            playStepAudio(
-              step,
-              playbackRate: playbackRate,
-              stepPauseSec: stepPauseSec,
-              onStarted: startPauseTimer,
-            ),
-          );
-        } else {
-          startPauseTimer();
-        }
-      case AutoplayEventType.anim:
-        _autoplayTimer = Timer(Duration.zero, () {
-          if (!mounted || !identical(runToken, _runToken)) {
-            return;
-          }
-
-          setState(() {
-            _movingBeadHighlights = null;
-            _rods = cloneExampleRods(_plan.rodStates[event.rodStateIndex!]);
-          });
-
-          _autoplayTimer = Timer(const Duration(milliseconds: beadAnimMs), () {
-            _scheduleNext(runToken, stepPauseSec);
-          });
-        });
-      case AutoplayEventType.done:
-        unawaited(cancelStepAudio());
-        setState(() {
-          _actionLabel = null;
-          _movingBeadHighlights = null;
-        });
-        _afterShowComplete(runToken);
-    }
+        _completeCalled = true;
+        widget.onComplete?.call();
+      },
+    );
   }
 
   Color _fieldBorderColor({bool focused = false}) {
@@ -594,190 +611,190 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
     return TrainerScene(
       child: switch (_phase) {
         ExampleVisualizationPhase.instruction => TrainerInstructionScene(
-            length: _instructionLength,
-            speechKey: 'instruction:example-visualization',
-            text: kExampleVisualizationInstructionText,
-          ),
+          length: _instructionLength,
+          speechKey: 'instruction:example-visualization',
+          text: kExampleVisualizationInstructionText,
+        ),
         ExampleVisualizationPhase.solveInstruction => TrainerInstructionScene(
-            length: _solveInstructionLength,
-            speechKey: 'instruction:example-visualization:solve',
-            text: kExampleVisualizationSolveInstructionText,
-          ),
+          length: _solveInstructionLength,
+          speechKey: 'instruction:example-visualization:solve',
+          text: kExampleVisualizationSolveInstructionText,
+        ),
         ExampleVisualizationPhase.countdown => Center(
-            child: Text(
-              _countdownLabel,
-              style: const TextStyle(
-                fontSize: 96,
-                fontWeight: FontWeight.w700,
-                color: _countdownColor,
-                height: 1,
-              ),
+          child: Text(
+            _countdownLabel,
+            style: const TextStyle(
+              fontSize: 96,
+              fontWeight: FontWeight.w700,
+              color: _countdownColor,
+              height: 1,
             ),
           ),
+        ),
         ExampleVisualizationPhase.solveCountdown ||
-        ExampleVisualizationPhase.solveFlash =>
-          Center(
-            child: AnimatedOpacity(
-              opacity: _flashLabel == null ? 0 : 1,
-              duration: const Duration(milliseconds: 150),
-              child: Text(
-                _flashLabel ?? ' ',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
-                  height: 1,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: _phase == ExampleVisualizationPhase.solveCountdown
-                      ? _countdownColor
-                      : _flashColor,
-                ),
+        ExampleVisualizationPhase.solveFlash => Center(
+          child: AnimatedOpacity(
+            opacity: _flashLabel == null ? 0 : 1,
+            duration: const Duration(milliseconds: 150),
+            child: Text(
+              _flashLabel ?? ' ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: MediaQuery.sizeOf(context).shortestSide * 0.26,
+                height: 1,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: _phase == ExampleVisualizationPhase.solveCountdown
+                    ? _countdownColor
+                    : _flashColor,
               ),
             ),
           ),
+        ),
         ExampleVisualizationPhase.solveAnswer => Center(
-            child: AnimatedBuilder(
-              animation: _shakeAnimation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(_shakeAnimation.value, 0),
-                  child: child,
-                );
-              },
-              child: ConstrainedBox(
-                key: ValueKey(_answerSessionKey),
-                constraints: const BoxConstraints(maxWidth: 360),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnswerFireworksBurst(
-                      burstKey: _fireworksKey,
-                      child: TextField(
-                        controller: _inputController,
-                        focusNode: _inputFocus,
-                        enabled: !_isSubmitting,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
-                        ],
-                        textInputAction: TextInputAction.done,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: MediaQuery.sizeOf(context).shortestSide * 0.16,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                          color: _isWrong ? _wrongColor : _flashColor,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: _isCorrect
-                              ? const Color(0xFFDCE8FF)
-                              : const Color(0xFFFFFCF8),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide(
-                              color: _fieldBorderColor(),
-                              width: 1.5,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide(
-                              color: _fieldBorderColor(focused: true),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _isWrong = false;
-                            _answerDraft = value;
-                          });
-                        },
-                        onSubmitted: (_) => _submitAnswer(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: _isSubmitting || _answerDraft.trim().isEmpty
-                            ? null
-                            : _submitAnswer,
-                        child: const Text('Проверить'),
-                      ),
-                    ),
-                    if (_hasFailedAttempt) ...[
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: _isSubmitting ? null : _replaySolve,
-                          child: const Text('Повторить'),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ExampleVisualizationPhase.play => LayoutBuilder(
-            builder: (context, constraints) {
-              final maxHeight = constraints.maxHeight * 0.72;
-              final maxWidth = constraints.maxWidth * 0.96;
-
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      height: 44,
-                      child: Center(
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity: _actionLabel == null ? 0 : 1,
-                          child: Text(
-                            _actionLabel ?? ' ',
-                            style: const TextStyle(
-                              fontFamily: 'serif',
-                              fontSize: 28,
-                              height: 1,
-                              letterSpacing: -0.5,
-                              color: Color(0xFF262626),
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxHeight: maxHeight,
-                        maxWidth: maxWidth,
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: AbacusWidget(
-                          rods: _rods,
-                          totalRods: totalRods,
-                          movingBeadHighlights: _movingBeadHighlights,
-                          raisingBeadColor: abacusRaisingBeadColor,
-                          loweringBeadColor: abacusLoweringBeadColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          child: AnimatedBuilder(
+            animation: _shakeAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(_shakeAnimation.value, 0),
+                child: child,
               );
             },
+            child: ConstrainedBox(
+              key: ValueKey(_answerSessionKey),
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnswerFireworksBurst(
+                    burstKey: _fireworksKey,
+                    child: TextField(
+                      controller: _inputController,
+                      focusNode: _inputFocus,
+                      enabled: !_isSubmitting,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^-?\d*')),
+                      ],
+                      textInputAction: TextInputAction.done,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize:
+                            MediaQuery.sizeOf(context).shortestSide * 0.16,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                        color: _isWrong ? _wrongColor : _flashColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: _isCorrect
+                            ? const Color(0xFFDCE8FF)
+                            : const Color(0xFFFFFCF8),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: _fieldBorderColor(),
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18),
+                          borderSide: BorderSide(
+                            color: _fieldBorderColor(focused: true),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setState(() {
+                          _isWrong = false;
+                          _answerDraft = value;
+                        });
+                      },
+                      onSubmitted: (_) => _submitAnswer(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _isSubmitting || _answerDraft.trim().isEmpty
+                          ? null
+                          : _submitAnswer,
+                      child: const Text('Проверить'),
+                    ),
+                  ),
+                  if (_hasFailedAttempt) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _isSubmitting ? null : _replaySolve,
+                        child: const Text('Повторить'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
+        ),
+        ExampleVisualizationPhase.play => LayoutBuilder(
+          builder: (context, constraints) {
+            final maxHeight = constraints.maxHeight * 0.72;
+            final maxWidth = constraints.maxWidth * 0.96;
+
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 44,
+                    child: Center(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 200),
+                        opacity: _actionLabel == null ? 0 : 1,
+                        child: Text(
+                          _actionLabel ?? ' ',
+                          style: const TextStyle(
+                            fontFamily: 'serif',
+                            fontSize: 28,
+                            height: 1,
+                            letterSpacing: -0.5,
+                            color: Color(0xFF262626),
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: maxHeight,
+                      maxWidth: maxWidth,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: AbacusWidget(
+                        rods: _rods,
+                        totalRods: totalRods,
+                        movingBeadHighlights: _movingBeadHighlights,
+                        raisingBeadColor: abacusRaisingBeadColor,
+                        loweringBeadColor: abacusLoweringBeadColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       },
     );
   }

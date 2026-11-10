@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/audio/spoken_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
@@ -11,6 +12,7 @@ import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instructi
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 import 'model.dart';
+import 'cube_projection.dart';
 
 const wordCubesInstruction = 'Нажимай на кубики и собери слово';
 const wordCubesInstructionKey = 'instruction:word-cubes';
@@ -120,24 +122,29 @@ class _CubeButton extends StatefulWidget {
 }
 
 class _CubeButtonState extends State<_CubeButton> with SingleTickerProviderStateMixin {
-  late final _press = AnimationController(vsync: this, duration: const Duration(milliseconds: 180));
-  late final _pressScale = TweenSequence<double>([
-    TweenSequenceItem<double>(tween: Tween<double>(begin: 1.0, end: 0.94).chain(CurveTween(curve: Curves.easeOut)), weight: 45),
-    TweenSequenceItem<double>(tween: Tween<double>(begin: 0.94, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 55),
-  ]).animate(_press);
+  late final _roll = AnimationController(vsync: this, duration: const Duration(milliseconds: wordCubeTurnMs));
+  late final _progress = CurvedAnimation(parent: _roll, curve: Curves.easeInOut);
+  var _completedTurns = 0;
+  var _rolling = false;
 
   void _activate() {
-    if (!widget.enabled) return;
-    if (!MediaQuery.disableAnimationsOf(context)) _press.forward(from: 0);
-    widget.onTap();
+    if (!widget.enabled || _rolling) return;
+    if (MediaQuery.disableAnimationsOf(context)) { widget.onTap(); return; }
+    setState(() => _rolling = true);
+    unawaited(_roll.forward(from: 0).then((_) {
+      if (!mounted) return;
+      setState(() { _completedTurns++; _rolling = false; _roll.reset(); });
+      widget.onTap();
+    }));
   }
 
   @override
-  void dispose() { _press.dispose(); super.dispose(); }
+  void dispose() { _progress.dispose(); _roll.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
     final reduced = MediaQuery.disableAnimationsOf(context);
+    final enabled = widget.enabled && !_rolling;
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: reduced ? 1.0 : 0.0, end: 1.0),
       duration: Duration(milliseconds: reduced ? 0 : 550 + widget.index * 100),
@@ -147,40 +154,19 @@ class _CubeButtonState extends State<_CubeButton> with SingleTickerProviderState
         child: Transform.scale(scale: 0.6 + 0.4 * value, child: child),
       ),
       child: Semantics(
-        button: true,
-        enabled: widget.enabled,
+        button: true, enabled: enabled,
         label: 'Кубик ${widget.index + 1}, склад ${widget.text}. Нажми, чтобы изменить склад',
-        onTap: widget.enabled ? _activate : null,
+        onTap: enabled ? _activate : null,
         child: FocusableActionDetector(
-          enabled: widget.enabled,
-          actions: {
-            ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) {
-              _activate();
-              return null;
-            }),
-          },
+          enabled: enabled,
+          actions: {ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) { _activate(); return null; })},
           child: GestureDetector(
-            excludeFromSemantics: true,
-            onTap: widget.enabled ? _activate : null,
-            child: SizedBox(
-              width: widget.size,
-              height: widget.size,
-              child: ScaleTransition(
-                scale: reduced ? const AlwaysStoppedAnimation(1.0) : _pressScale,
-                child: CustomPaint(
-                  painter: _CubePainter(widget.cube, widget.solved),
-                  child: Padding(
-                    padding: EdgeInsets.only(left: widget.size * 0.07, right: widget.size * 0.20, top: widget.size * 0.20, bottom: widget.size * 0.07),
-                    child: Center(
-                      child: Text(widget.text, style: TextStyle(
-                        fontSize: widget.size * (widget.text.length == 1 ? 0.446 : 0.366),
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF152B30),
-                      )),
-                    ),
-                  ),
-                ),
-              ),
+            excludeFromSemantics: true, onTap: enabled ? _activate : null,
+            child: SizedBox(width: widget.size, height: widget.size,
+              child: AnimatedBuilder(animation: _progress, builder: (context, _) => CustomPaint(
+                painter: _CubePainter(widget.cube, widget.text, widget.solved,
+                  _completedTurns + _progress.value, _completedTurns, _rolling),
+              )),
             ),
           ),
         ),
@@ -190,57 +176,49 @@ class _CubeButtonState extends State<_CubeButton> with SingleTickerProviderState
 }
 
 class _CubePainter extends CustomPainter {
-  const _CubePainter(this.cube, this.solved);
+  const _CubePainter(this.cube, this.text, this.solved, this.rotation, this.completedTurns, this.turning);
   final WarehouseCube cube;
-  final bool solved;
+  final String text;
+  final bool solved, turning;
+  final double rotation;
+  final int completedTurns;
   @override
   void paint(Canvas canvas, Size size) {
     final List<int> colors = cube.kind == 'vowel' ? [0xFFE36B70, 0xFFF29297, 0xFFB84A53]
       : cube.small ? cube.kind == 'voiced' ? [0xFF59A878, 0xFF89C89A, 0xFF397C55] : [0xFFA4CE91, 0xFFC4E2B5, 0xFF7DA86B]
       : cube.kind == 'voiced' ? [0xFF407EBE, 0xFF78A6D8, 0xFF285A92] : [0xFF83B8EC, 0xFFB0D3F4, 0xFF5D92C9];
-    canvas.save();
-    canvas.scale(size.width / 112, size.height / 112);
-    final outline = Path()
-      ..moveTo(31, 6)..lineTo(96, 6)..quadraticBezierTo(106, 6, 106, 16)
-      ..lineTo(106, 82)..quadraticBezierTo(106, 88, 102, 92)..lineTo(94, 100)
-      ..quadraticBezierTo(90, 104, 84, 104)..lineTo(20, 104)
-      ..quadraticBezierTo(8, 104, 8, 92)..lineTo(8, 34)
-      ..quadraticBezierTo(8, 26, 14, 20)..lineTo(22, 10)
-      ..quadraticBezierTo(25, 6, 31, 6)..close();
-    const frontBounds = Rect.fromLTRB(8, 22, 90, 104);
-    final front = RRect.fromRectAndRadius(frontBounds, const Radius.circular(12));
-    final frontPaint = Paint()..shader = LinearGradient(
-      begin: Alignment.topLeft, end: const Alignment(-0.3, 1),
-      colors: [Color(colors[1]), Color(colors[0])],
-    ).createShader(frontBounds);
-    canvas.drawOval(const Rect.fromLTRB(17, 103, 97, 109), Paint()
-      ..color = const Color(0x24244A43)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
-    canvas.save();
-    canvas.clipPath(outline);
-    canvas.drawPath(outline, frontPaint);
-    final top = Path()..moveTo(8, 22)..lineTo(24, 6)..lineTo(106, 6)..lineTo(90, 26)..lineTo(8, 26)..close();
-    canvas.drawPath(top, Paint()..shader = LinearGradient(
-      begin: Alignment.topLeft, end: Alignment.bottomCenter,
-      colors: [Color(colors[1]), Color(colors[0])],
-    ).createShader(const Rect.fromLTRB(8, 6, 106, 26)));
-    final side = Path()..moveTo(88, 26)..lineTo(106, 6)..lineTo(106, 88)..lineTo(88, 106)..close();
-    canvas.drawPath(side, Paint()..shader = LinearGradient(
-      begin: Alignment.topLeft, end: Alignment.bottomRight,
-      colors: [Color(colors[0]), Color(colors[2])],
-    ).createShader(const Rect.fromLTRB(88, 6, 106, 106)));
-    canvas.drawRRect(front, frontPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(const Rect.fromLTRB(8.6, 22.6, 89.4, 103.4), const Radius.circular(11.4)), Paint()
-      ..color = const Color(0x5CFFFFFF)
-      ..style = PaintingStyle.stroke..strokeWidth = 1.2);
-    canvas.drawPath(Path()..moveTo(21, 28)..lineTo(75, 28)..quadraticBezierTo(83, 28, 83, 36), Paint()
-      ..color = const Color(0x47FFFFFF)..style = PaintingStyle.stroke..strokeWidth = 1.5..strokeCap = StrokeCap.round);
+    final projected = projectWordCube(rotation);
+    canvas.save(); canvas.scale(size.width / 112, size.height / 112);
+    canvas.drawOval(const Rect.fromLTRB(19, 103, 93, 109), Paint()
+      ..color = const Color(0x24244A43)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2));
+    canvas.save(); canvas.clipPath(projected.outline);
+    for (final surface in projected.surfaces) {
+      final top = surface.id == 4;
+      final first = top ? Color(colors[1]) : Color.lerp(Color(colors[2]), Color(colors[1]), surface.light)!;
+      final last = top ? Color(colors[0]) : Color.lerp(Color(colors[2]), Color(colors[0]), surface.light)!;
+      final path = cubePolygonPath(surface.points);
+      canvas.drawPath(path, Paint()..shader = LinearGradient(
+        begin: Alignment.topLeft, end: const Alignment(-0.3, 1), colors: [first, last],
+      ).createShader(path.getBounds()));
+      canvas.drawPath(path, Paint()..color = const Color(0x42FFFFFF)..style = PaintingStyle.stroke..strokeWidth = 1.2..strokeJoin = StrokeJoin.round);
+      final label = cubeSideText(cube.faces, text, surface.id, completedTurns, turning);
+      if (label.isEmpty) continue;
+      final m = surface.textMatrix;
+      canvas.save();
+      canvas.transform(Float64List.fromList([m[0],m[1],0,0,m[2],m[3],0,0,0,0,1,0,m[4],m[5],0,1]));
+      final painter = TextPainter(text: TextSpan(text: label, style: TextStyle(
+        fontSize: label.length == 1 ? 60 : 48, fontWeight: FontWeight.w700, color: const Color(0xFF152B30),
+      )), textDirection: TextDirection.ltr)..layout();
+      painter.paint(canvas, Offset(50 - painter.width / 2, 55 - painter.height / 2));
+      painter.dispose(); canvas.restore();
+    }
     canvas.restore();
-    canvas.drawPath(outline, Paint()
+    canvas.drawPath(projected.outline, Paint()
       ..color = Color(solved ? 0xFF16803D : 0x1F24413D)
       ..style = PaintingStyle.stroke..strokeWidth = (solved ? 2.5 : 1)..strokeJoin = StrokeJoin.round);
     canvas.restore();
   }
   @override
-  bool shouldRepaint(covariant _CubePainter oldDelegate) => oldDelegate.cube != cube || oldDelegate.solved != solved;
+  bool shouldRepaint(covariant _CubePainter oldDelegate) => oldDelegate.cube != cube || oldDelegate.text != text ||
+      oldDelegate.solved != solved || oldDelegate.rotation != rotation || oldDelegate.completedTurns != completedTurns || oldDelegate.turning != turning;
 }

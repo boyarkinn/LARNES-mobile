@@ -19,6 +19,7 @@ import 'package:larnes_mobile/trainers/math/shop_pay/shop_pay_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_composition/number_composition_trainer.dart';
 import 'package:larnes_mobile/trainers/math/number_row_show/number_row_show_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_trainer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_warmup/abacus_warmup_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_digit_abacus_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_show_trainer.dart';
@@ -78,6 +79,8 @@ typedef TrainerWidgetBuilder = Widget Function({
 });
 
 final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
+  TrainerKey.abacusWarmup: ({required params, onComplete}) =>
+      AbacusWarmupTrainer(params: params, onComplete: onComplete),
   TrainerKey.numberRowShow: ({required params, onComplete}) =>
       NumberRowShowTrainer(params: params, onComplete: onComplete),
   TrainerKey.appleCountShow: ({required params, onComplete}) =>
@@ -209,6 +212,13 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
 };
 
 final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
+  TrainerKey.abacusWarmup: TrainerDefinition(
+    key: TrainerKey.abacusWarmup,
+    title: 'Разминка на абакусе',
+    direction: TrainerDirection.mental,
+    isInteractive: true,
+    validate: validateAbacusWarmupParams,
+  ),
   TrainerKey.numberRowShow: TrainerDefinition(
     key: TrainerKey.numberRowShow,
     title: 'Числовой ряд',

@@ -4,6 +4,26 @@ import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 void main() {
   group('validateTrainerParams', () {
+    test('accepts all warm-up recipes and speeds and rejects unknown values', () {
+      for (final warmupType in [
+        'simple-9', 'simple-tens', 'simple-2digit', 'brothers', 'friends',
+      ]) {
+        for (final speed in ['slow', 'medium', 'fast']) {
+          final result = validateTrainerParams('abacus-warmup', {
+            'warmupType': warmupType,
+            'speed': speed,
+          });
+          expect(result.ok, isTrue);
+          expect(result.params, {'warmupType': warmupType, 'speed': speed});
+        }
+      }
+      expect(validateTrainerParams('abacus-warmup', {
+        'warmupType': 'other', 'speed': 'medium',
+      }).ok, isFalse);
+      expect(validateTrainerParams('abacus-warmup', {
+        'warmupType': 'friends', 'speed': 'other',
+      }).ok, isFalse);
+    });
     test('accepts number-row-show params', () {
       final result = validateTrainerParams('number-row-show', {'digit': 5});
       expect(result.ok, isTrue);

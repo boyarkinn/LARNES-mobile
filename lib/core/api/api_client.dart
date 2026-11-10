@@ -16,6 +16,7 @@ import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/places_api.dart';
+import 'package:larnes_mobile/core/api/time_zone_search_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/auth/token_storage.dart';
@@ -78,6 +79,7 @@ class ApiClient {
   FamilyJoinDedupApi? _familyJoinDedupApi;
   NetworkApi? _networkApi;
   PlacesApi? _placesApi;
+  TimeZoneSearchApi? _timeZoneSearchApi;
   RegisterSchoolOffersApi? _registerSchoolOffersApi;
 
   Dio get dio => _dio;
@@ -122,6 +124,9 @@ class ApiClient {
   NetworkApi get networkApi => _networkApi ??= NetworkApi(this);
 
   PlacesApi get placesApi => _placesApi ??= PlacesApi(this);
+
+  TimeZoneSearchApi get timeZoneSearchApi =>
+      _timeZoneSearchApi ??= TimeZoneSearchApi(this);
 
   RegisterSchoolOffersApi get registerSchoolOffersApi =>
       _registerSchoolOffersApi ??= RegisterSchoolOffersApi(this);

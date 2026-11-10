@@ -10,7 +10,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/dots_digit_abacus/dots_
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_topic_values.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/example_logic.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';

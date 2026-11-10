@@ -5167,6 +5167,42 @@ abstract class AppLocalizations {
   /// **'Search city or time zone'**
   String get timeZoneSearch;
 
+  /// No description provided for @timeZoneCities.
+  ///
+  /// In en, this message translates to:
+  /// **'Cities'**
+  String get timeZoneCities;
+
+  /// No description provided for @timeZoneIanaZones.
+  ///
+  /// In en, this message translates to:
+  /// **'Time zones'**
+  String get timeZoneIanaZones;
+
+  /// No description provided for @timeZoneNoCities.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching cities found. You can also select a time zone below.'**
+  String get timeZoneNoCities;
+
+  /// No description provided for @timeZoneNoZones.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching time zones found.'**
+  String get timeZoneNoZones;
+
+  /// No description provided for @timeZoneCitySearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'City search is unavailable. Try again or select a time zone below.'**
+  String get timeZoneCitySearchError;
+
+  /// No description provided for @timeZoneCityResolveError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm this city\'s time zone. Choose another city or a time zone below.'**
+  String get timeZoneCityResolveError;
+
   /// No description provided for @timeZoneSourceCity.
   ///
   /// In en, this message translates to:

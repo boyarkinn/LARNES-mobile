@@ -2771,6 +2771,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeZoneSearch => 'Search city or time zone';
 
   @override
+  String get timeZoneCities => 'Cities';
+
+  @override
+  String get timeZoneIanaZones => 'Time zones';
+
+  @override
+  String get timeZoneNoCities =>
+      'No matching cities found. You can also select a time zone below.';
+
+  @override
+  String get timeZoneNoZones => 'No matching time zones found.';
+
+  @override
+  String get timeZoneCitySearchError =>
+      'City search is unavailable. Try again or select a time zone below.';
+
+  @override
+  String get timeZoneCityResolveError =>
+      'Could not confirm this city\'s time zone. Choose another city or a time zone below.';
+
+  @override
   String timeZoneSourceCity(String city) {
     return 'From city: $city';
   }

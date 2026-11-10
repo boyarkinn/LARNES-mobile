@@ -2792,6 +2792,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timeZoneSearch => 'Поиск города или часового пояса';
 
   @override
+  String get timeZoneCities => 'Города';
+
+  @override
+  String get timeZoneIanaZones => 'Часовые пояса';
+
+  @override
+  String get timeZoneNoCities =>
+      'Города не найдены. Можно выбрать часовой пояс ниже.';
+
+  @override
+  String get timeZoneNoZones => 'Часовые пояса не найдены.';
+
+  @override
+  String get timeZoneCitySearchError =>
+      'Поиск городов недоступен. Повторите поиск или выберите часовой пояс ниже.';
+
+  @override
+  String get timeZoneCityResolveError =>
+      'Не удалось определить пояс города. Выберите другой город или часовой пояс ниже.';
+
+  @override
   String timeZoneSourceCity(String city) {
     return 'По городу: $city';
   }

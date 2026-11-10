@@ -1,6 +1,6 @@
 /// Web: `platform/src/trainers/mental-arithmetic/example-visualization/step-planner.ts`
 
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 class ExampleStepPlan {

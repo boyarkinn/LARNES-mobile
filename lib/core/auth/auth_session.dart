@@ -18,6 +18,7 @@ import 'package:larnes_mobile/core/api/parent_account_api.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/api/password_reset_api.dart';
 import 'package:larnes_mobile/core/api/places_api.dart';
+import 'package:larnes_mobile/core/api/time_zone_search_api.dart';
 import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
@@ -83,6 +84,8 @@ class AuthSession extends ChangeNotifier {
   NetworkApi get networkApi => _client.networkApi;
 
   PlacesApi get placesApi => _client.placesApi;
+
+  TimeZoneSearchApi get timeZoneSearchApi => _client.timeZoneSearchApi;
 
   RegisterSchoolOffersApi get registerSchoolOffersApi =>
       _client.registerSchoolOffersApi;

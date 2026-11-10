@@ -6,12 +6,12 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/play_step_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/autoplay_timeline.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_parser.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/example_visualization_audio.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/moving_bead_highlights.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/moving_bead_highlights.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/example_visualization/step_planner.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/check_answer.dart';
+import 'package:larnes_mobile/trainers/shared/numeric_answer.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
@@ -468,7 +468,7 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
       return;
     }
 
-    if (!isCorrectAnswer(_answerDraft, _expectedAnswer)) {
+    if (!isCorrectNumericAnswer(_answerDraft, _expectedAnswer)) {
       setState(() {
         _isWrong = true;
         _isCorrect = false;
@@ -768,8 +768,8 @@ class _ExampleVisualizationTrainerState extends State<ExampleVisualizationTraine
                           rods: _rods,
                           totalRods: totalRods,
                           movingBeadHighlights: _movingBeadHighlights,
-                          raisingBeadColor: exampleVisualizationRaisingBeadColor,
-                          loweringBeadColor: exampleVisualizationLoweringBeadColor,
+                          raisingBeadColor: abacusRaisingBeadColor,
+                          loweringBeadColor: abacusLoweringBeadColor,
                         ),
                       ),
                     ),

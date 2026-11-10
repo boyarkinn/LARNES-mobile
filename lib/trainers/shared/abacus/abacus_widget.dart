@@ -104,7 +104,7 @@ class _AbacusWidgetState extends State<AbacusWidget>
       );
     }
 
-    if (_controller == null) {
+    if (_controller == null || (MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
       return FittedBox(child: painted(_toLayouts));
     }
 

@@ -1,6 +1,8 @@
 /// Web: `platform/src/trainers/mental-arithmetic/example-visualization/autoplay-timeline.ts`
 
-const int beadAnimMs = 500;
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_playback_timing.dart';
+
+const int beadAnimMs = abacusBeadAnimationMs;
 
 enum AutoplayEventType { pause, anim, done }
 

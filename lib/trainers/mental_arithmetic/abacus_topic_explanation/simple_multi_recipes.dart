@@ -1,5 +1,6 @@
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_example.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_fingers.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 const _rods = 6;
@@ -24,18 +25,6 @@ String simpleMultiCue(String lessonId, String slug) {
     return 'explanation:abacus-topic:action:$slug';
   }
   return 'explanation:abacus-topic:$lessonId:$slug';
-}
-
-List<AbacusFinger> _fingersFor(RodState from, RodState to) {
-  if (from.heavenUp != to.heavenUp && from.earthCount != to.earthCount) {
-    return const [AbacusFinger.thumb, AbacusFinger.indexFinger];
-  }
-  if (from.heavenUp != to.heavenUp) return const [AbacusFinger.indexFinger];
-  return [
-    to.earthCount > from.earthCount
-        ? AbacusFinger.thumb
-        : AbacusFinger.indexFinger,
-  ];
 }
 
 class SimpleMultiRecipe {
@@ -137,7 +126,7 @@ class _LessonBuilder {
         rodIndex: rodIndex,
         to: to,
         hand: hand,
-        fingers: _fingersFor(from, to),
+        fingers: fingersForPhysicalRodTransition(from, to),
       );
       if (hand == AbacusHand.left) {
         left.add(move);

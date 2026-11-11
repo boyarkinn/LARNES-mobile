@@ -1,5 +1,6 @@
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_example.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_fingers.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 const _rodCount = 6;
@@ -42,21 +43,6 @@ String _lessonCue(String lessonId, String slug) =>
 String _actionCue(int amount) =>
     'explanation:abacus-topic:action:${amount > 0 ? 'plus' : 'minus'}-${amount.abs()}';
 
-List<AbacusFinger> _fingers(int from, int to) {
-  final before = digitToBeads(from);
-  final after = digitToBeads(to);
-  if (before.heavenUp != after.heavenUp &&
-      before.earthCount != after.earthCount) {
-    return const [AbacusFinger.thumb, AbacusFinger.indexFinger];
-  }
-  if (before.heavenUp != after.heavenUp) {
-    return const [AbacusFinger.indexFinger];
-  }
-  return to > from
-      ? const [AbacusFinger.thumb]
-      : const [AbacusFinger.indexFinger];
-}
-
 GroupGestureStep _show(int from, int to, int amount, bool returnAfter) {
   if (to < 0 || to > 9 || to - from != amount) {
     throw StateError('Недопустимое действие в уроке ПРОСТО.');
@@ -67,7 +53,10 @@ GroupGestureStep _show(int from, int to, int amount, bool returnAfter) {
         rodIndex: _unitRod,
         to: digitToBeads(to),
         hand: AbacusHand.right,
-        fingers: _fingers(from, to),
+        fingers: fingersForPhysicalRodTransition(
+          digitToBeads(from),
+          digitToBeads(to),
+        ),
       ),
     ],
     audioKey: _actionCue(amount),

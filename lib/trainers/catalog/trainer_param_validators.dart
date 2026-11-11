@@ -30,6 +30,7 @@ ValidateTrainerParamsResult validateAbacusTopicExplanationParams(
     'simple-tens', 'simple-11-19',
     'simple-44', 'simple-55', 'simple-66', 'simple-77', 'simple-88', 'simple-99',
     'simple-hundreds', 'simple-000',
+    'brother-4', 'brother-3', 'brother-2', 'brother-1',
   };
   if (lessonId is! String || !allowedLessons.contains(lessonId) ||
       speed is! String ||

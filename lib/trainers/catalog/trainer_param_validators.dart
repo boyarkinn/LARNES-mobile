@@ -24,7 +24,14 @@ ValidateTrainerParamsResult validateAbacusTopicExplanationParams(
 ) {
   final lessonId = raw['lessonId'] ?? 'simple-1';
   final speed = raw['speed'] ?? 'medium';
-  if (lessonId != 'simple-1' ||
+  const allowedLessons = {
+    'simple-1', 'simple-2', 'simple-3', 'simple-4', 'simple-5',
+    'simple-6', 'simple-7', 'simple-8', 'simple-9',
+    'simple-tens', 'simple-11-19',
+    'simple-44', 'simple-55', 'simple-66', 'simple-77', 'simple-88', 'simple-99',
+    'simple-hundreds', 'simple-000',
+  };
+  if (lessonId is! String || !allowedLessons.contains(lessonId) ||
       speed is! String ||
       !const {'slow', 'medium', 'fast'}.contains(speed)) {
     return _fail('Некорректные параметры объяснения темы.');

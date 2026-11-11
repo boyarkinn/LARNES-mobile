@@ -74,6 +74,20 @@ class GroupGestureStep extends PhysicalGestureStep {
   final PhysicalGestureAudioMode audioMode;
 }
 
+/// A sequence of bead frames spoken under one cue and committed as one step.
+class SeriesGestureStep extends PhysicalGestureStep {
+  const SeriesGestureStep({
+    required this.frames,
+    this.audioMode = PhysicalGestureAudioMode.before,
+    super.pauseAfterMs,
+    super.audioKey,
+    super.returnAfter,
+  });
+
+  final List<List<PhysicalBeadMove>> frames;
+  final PhysicalGestureAudioMode audioMode;
+}
+
 class RodPassGestureStep extends PhysicalGestureStep {
   const RodPassGestureStep({
     required this.rodIndices,
@@ -277,6 +291,22 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
           throw StateError('Для параллельной речи нужен ключ аудио.');
         }
         append(step.moves, step.pauseAfterMs, audioKey, step.returnAfter);
+      case SeriesGestureStep():
+        if (step.audioMode == PhysicalGestureAudioMode.parallel &&
+            audioKey == null) {
+          throw StateError('Для параллельной речи нужен ключ аудио.');
+        }
+        if (step.frames.isEmpty) {
+          throw StateError('Серия жестов не может быть пустой.');
+        }
+        for (var index = 0; index < step.frames.length; index++) {
+          append(
+            step.frames[index],
+            step.pauseAfterMs,
+            index == 0 ? audioKey : null,
+            index == step.frames.length - 1 && step.returnAfter,
+          );
+        }
       case RodPassGestureStep():
         if (step.audioMode == PhysicalGestureAudioMode.parallel &&
             audioKey == null) {

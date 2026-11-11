@@ -223,9 +223,29 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
     return option.label!;
   }
 
+  const lessonPrefix = 'topicLessonSimple';
+  final labelKey = option.labelKey ?? '';
+  if (labelKey.startsWith(lessonPrefix)) {
+    final suffix = labelKey.substring(lessonPrefix.length);
+    if (suffix == 'Tens') {
+      return _passageLabel(l10n, ru: 'Просто десятки', en: 'Simple tens', ar: 'العشرات البسيطة');
+    }
+    if (suffix == '1119') {
+      return _passageLabel(l10n, ru: 'Просто 11–19', en: 'Simple 11–19', ar: 'الأعداد من ١١ إلى ١٩');
+    }
+    if (suffix == 'Hundreds') {
+      return _passageLabel(l10n, ru: 'Просто сотни', en: 'Simple hundreds', ar: 'المئات البسيطة');
+    }
+    if (RegExp(r'^(?:[1-9]|44|55|66|77|88|99|000)$').hasMatch(suffix)) {
+      const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+      final arabicNumber = suffix.replaceAllMapped(
+        RegExp(r'[0-9]'), (match) => digits[int.parse(match.group(0)!)],
+      );
+      return _passageLabel(l10n, ru: 'Просто $suffix', en: 'Simple $suffix', ar: 'البسيط $arabicNumber');
+    }
+  }
+
   switch (option.labelKey) {
-    case 'topicLessonSimple1':
-      return _passageLabel(l10n, ru: 'Просто 1', en: 'Simple 1', ar: 'البسيط ١');
     case 'warmupSimple9':
       return _passageLabel(l10n, ru: 'Просто 9', en: 'Simple 9', ar: 'العدد ٩ البسيط');
     case 'warmupSimpleTens':

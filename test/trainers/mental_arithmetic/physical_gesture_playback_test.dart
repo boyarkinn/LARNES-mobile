@@ -146,6 +146,107 @@ PhysicalGesturePlan _topicParityPlan() {
 }
 
 void main() {
+  test('parallel series is one cue and one rewindable semantic step', () {
+    fakeAsync((clock) {
+      final seen = <String>[];
+      final cues = <Completer<void>>[];
+      final cancelled = <int>[];
+      final plan = PhysicalGesturePlan(
+        initialRods: emptyRods(2),
+        beadTransitionMs: 100,
+        steps: [
+          SeriesGestureStep(
+            frames: [
+              [
+                PhysicalBeadMove(
+                  rodIndex: 0,
+                  to: digitToBeads(1),
+                  hand: AbacusHand.left,
+                  fingers: const [AbacusFinger.thumb],
+                ),
+              ],
+              [
+                PhysicalBeadMove(
+                  rodIndex: 1,
+                  to: digitToBeads(2),
+                  hand: AbacusHand.right,
+                  fingers: const [AbacusFinger.thumb],
+                ),
+              ],
+              [
+                PhysicalBeadMove(
+                  rodIndex: 0,
+                  to: digitToBeads(2),
+                  hand: AbacusHand.left,
+                  fingers: const [AbacusFinger.thumb],
+                ),
+              ],
+            ],
+            audioKey: 'one-operation',
+            audioMode: PhysicalGestureAudioMode.parallel,
+            pauseAfterMs: 0,
+            returnAfter: true,
+          ),
+        ],
+      );
+      final frames = compilePhysicalGesturePlan(plan);
+      expect(frames.map((frame) => abacusToNumber(frame.rods)), [10, 12, 22]);
+      expect(frames.map((frame) => frame.audioKey), [
+        'one-operation',
+        null,
+        null,
+      ]);
+      expect(frames.map((frame) => frame.returnAfter), [false, false, true]);
+      expect(
+        () => compilePhysicalGesturePlan(
+          PhysicalGesturePlan(
+            initialRods: emptyRods(1),
+            steps: [const SeriesGestureStep(frames: [])],
+          ),
+        ),
+        throwsStateError,
+      );
+      final player = PhysicalGesturePlayer(
+        plan: plan,
+        speed: PhysicalGestureSpeed.medium,
+        returnMs: 50,
+        onCue: (key, signal) {
+          expect(key, 'one-operation');
+          final index = cues.length;
+          seen.add('cue:${index + 1}');
+          signal.onCancel(() => cancelled.add(index));
+          cues.add(Completer<void>());
+          return cues.last.future;
+        },
+        onFrame: (_, index) => seen.add('frame:$index'),
+        onReturn: (_, index) => seen.add('return:$index'),
+        onReset: (_, position) => seen.add('reset:$position'),
+        nowMs: () => clock.elapsed.inMilliseconds,
+      );
+      player.play();
+      expect(seen, ['cue:1', 'frame:0']);
+      clock.elapse(const Duration(milliseconds: 400));
+      expect(seen, ['cue:1', 'frame:0', 'frame:1', 'frame:2', 'return:2']);
+      expect(player.position, 3);
+      expect(player.checkpointFramePosition, 0);
+      player.pause();
+      expect(cancelled, [0]);
+      expect(seen.last, 'reset:0');
+      expect(player.position, 0);
+      player.play();
+      expect(seen.sublist(seen.length - 2), ['cue:2', 'frame:0']);
+      cues[0].complete();
+      clock.flushMicrotasks();
+      expect(player.checkpointFramePosition, 0);
+      cues[1].complete();
+      clock.flushMicrotasks();
+      clock.elapse(const Duration(milliseconds: 400));
+      expect(player.checkpointFramePosition, 3);
+      expect(player.checkpointStepIndex, 1);
+      player.cancel();
+    });
+  });
+
   test('parallel setup moves beads with parked hands and rewinds on pause', () {
     fakeAsync((clock) {
       final cues = <Completer<void>>[];

@@ -3,7 +3,20 @@ import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 void main() {
   group('validateTrainerParams', () {
-    test('topic explanation accepts only the pilot lesson and known speeds', () {
+    test('topic explanation accepts all simple lessons and known speeds', () {
+      const lessons = [
+        'simple-1', 'simple-2', 'simple-3', 'simple-4', 'simple-5',
+        'simple-6', 'simple-7', 'simple-8', 'simple-9',
+        'simple-tens', 'simple-11-19',
+        'simple-44', 'simple-55', 'simple-66', 'simple-77', 'simple-88', 'simple-99',
+        'simple-hundreds', 'simple-000',
+      ];
+      for (final lessonId in lessons) {
+        expect(validateTrainerParams('abacus-topic-explanation', {
+          'lessonId': lessonId,
+          'speed': 'medium',
+        }).ok, isTrue, reason: lessonId);
+      }
       for (final speed in ['slow', 'medium', 'fast']) {
         final result = validateTrainerParams('abacus-topic-explanation', {
           'lessonId': 'simple-1',
@@ -12,7 +25,7 @@ void main() {
         expect(result.params, {'lessonId': 'simple-1', 'speed': speed});
       }
       expect(validateTrainerParams('abacus-topic-explanation', {
-        'lessonId': 'simple-2',
+        'lessonId': 'simple-missing',
       }).ok, isFalse);
       expect(validateTrainerParams('abacus-topic-explanation', {
         'speed': 'unknown',

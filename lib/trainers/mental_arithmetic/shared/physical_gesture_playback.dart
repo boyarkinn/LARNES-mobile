@@ -166,6 +166,7 @@ class PhysicalGesturePlayer {
       final parallel = switch (step) {
         SetupGestureStep(:final audioMode) ||
         GroupGestureStep(:final audioMode) ||
+        SeriesGestureStep(:final audioMode) ||
         RodPassGestureStep(
           :final audioMode,
         ) => audioMode == PhysicalGestureAudioMode.parallel,
@@ -179,6 +180,7 @@ class PhysicalGesturePlayer {
         NarrationGestureStep() => 0,
         SetupGestureStep() => 1,
         GroupGestureStep() => 1,
+        SeriesGestureStep(:final frames) => frames.length,
         RodPassGestureStep(:final rodIndices) => rodIndices.length,
       };
       for (var i = 0; i < frameCount; i++) {

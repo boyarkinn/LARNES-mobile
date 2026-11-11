@@ -2,6 +2,7 @@
   "simple-9": {
     "frameCount": 234,
     "sha256": "e57c298fe7cdde298df48a14e3444d04e0877d94be97755de64fb08cd04ac6cd",
+    "cueSha256": "10aefca2650ccb8443ced1ab50d8ae38bbd36c760a861dd39f607ac006f582c9",
     "checkpoints": {
       "1": "0000000000001",
       "13": "1111111111111",
@@ -12,6 +13,7 @@
   "simple-tens": {
     "frameCount": 234,
     "sha256": "3905fdf72df76aa441601a3e0eba5cedfd9125a8662b7c82980aa477d2566d97",
+    "cueSha256": "ce18266fe27adcb099575fa4b93235330744396db420d7a08ad06396d743d1b0",
     "checkpoints": {
       "1": "1000000000000",
       "13": "1111111111111",
@@ -22,6 +24,7 @@
   "simple-2digit": {
     "frameCount": 108,
     "sha256": "e504e91ec3b865f4f8d703df2e1a426531aa6ffb1981b01ab5f413033e094251",
+    "cueSha256": "7871c6481e35bef89cebefb6c236ebca1410a67e87e33f60a46dea93d1738d0e",
     "checkpoints": {
       "1": "1000000000001",
       "6": "1111110111111",
@@ -32,6 +35,7 @@
   "brothers": {
     "frameCount": 269,
     "sha256": "eff640a00035eefd63a5ff46774297af9ad25ec1d1b1df32779faa0857f37488",
+    "cueSha256": "585ed802daf2258393438c9e995079e43569aecce328a3c1ad50ce20d3aec33d",
     "checkpoints": {
       "1": "0000000000005",
       "13": "5555555555555",
@@ -44,6 +48,7 @@
   "friends": {
     "frameCount": 111,
     "sha256": "3e23702ef366d8a9f9f1c74e24a03047670a402fab306a1240a607f1712519ed",
+    "cueSha256": "a4aa62c3c5a4d4eff9e825e484fa2b202cdc8793bf846081a3dccf51d1e91ff8",
     "checkpoints": {
       "1": "0100000000010",
       "3": "0101010101010",

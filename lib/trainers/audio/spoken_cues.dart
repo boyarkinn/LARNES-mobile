@@ -28,7 +28,10 @@ const _cueKeys = {
   'feedback:fly-track:tap',
 };
 
-bool isSpokenCueAudioKey(String semanticKey) => _cueKeys.contains(semanticKey);
+bool isSpokenCueAudioKey(String semanticKey) =>
+    _cueKeys.contains(semanticKey) ||
+    semanticKey.startsWith('explanation:abacus-gesture:') ||
+    semanticKey.startsWith('explanation:abacus-warmup:intro:');
 
 String? spokenCueAsset(String semanticKey) =>
     speechAudioFile(semanticKey)?.path;

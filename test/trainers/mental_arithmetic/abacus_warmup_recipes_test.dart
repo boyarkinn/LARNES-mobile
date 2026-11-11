@@ -58,6 +58,11 @@ void main() {
           );
         }
         expect(_frameDigest(frames), expected['sha256']);
+        final cues = [
+          plan.openingAudioKey,
+          ...frames.map((frame) => frame.audioKey),
+        ].whereType<String>().join('\n');
+        expect(sha256.convert(utf8.encode(cues)).toString(), expected['cueSha256']);
         expect(identical(warmupRecipe(type), plan), isTrue);
       },
     );

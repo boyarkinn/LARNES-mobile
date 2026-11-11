@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_gesture_cues.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 const warmupRodCount = 13;
@@ -31,6 +32,7 @@ RodPassGestureStep _pass(
   AbacusHand hand,
   List<AbacusFinger> fingers, [
   int endPauseMs = 0,
+  String? audioKey,
 ]) => RodPassGestureStep(
   rodIndices: indices,
   to: digitToBeads(digit),
@@ -38,6 +40,7 @@ RodPassGestureStep _pass(
   fingers: fingers,
   pauseAfterMs: 0,
   pauseAfterPassMs: endPauseMs,
+  audioKey: audioKey,
 );
 
 PhysicalBeadMove _move(
@@ -57,8 +60,26 @@ List<PhysicalGestureStep> _simplePasses(AbacusHand hand) {
   final returnPath = hand == AbacusHand.right ? _leftToRight : _rightToLeft;
   final steps = <PhysicalGestureStep>[];
   for (var digit = 1; digit <= 9; digit++) {
-    steps.add(_pass(outward, digit, hand, _fingersForSetting(digit)));
-    steps.add(_pass(returnPath, 0, hand, _fingersForClearing(digit), 350));
+    steps.add(
+      _pass(
+        outward,
+        digit,
+        hand,
+        _fingersForSetting(digit),
+        0,
+        simpleSetCue(hand.name, digit),
+      ),
+    );
+    steps.add(
+      _pass(
+        returnPath,
+        0,
+        hand,
+        _fingersForClearing(digit),
+        350,
+        simpleClearCue(hand.name, digit),
+      ),
+    );
   }
   return steps;
 }
@@ -75,6 +96,7 @@ List<PhysicalGestureStep> _twoHandPasses() {
             _move(right, digit, AbacusHand.right, _fingersForSetting(digit)),
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 600 : 100,
+          audioKey: index == 0 ? simpleSetCue('both', digit) : null,
         ),
       );
     }
@@ -87,6 +109,7 @@ List<PhysicalGestureStep> _twoHandPasses() {
             _move(right, 0, AbacusHand.right, _fingersForClearing(digit)),
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 600 : 100,
+          audioKey: index == 0 ? simpleClearCue('both', digit) : null,
         ),
       );
     }
@@ -97,16 +120,39 @@ List<PhysicalGestureStep> _twoHandPasses() {
 List<PhysicalGestureStep> _brothersPasses() {
   const crab = [AbacusFinger.thumb, AbacusFinger.indexFinger];
   final steps = <PhysicalGestureStep>[
-    _pass(_rightToLeft, 5, AbacusHand.right, const [
-      AbacusFinger.indexFinger,
-    ], 400),
+    _pass(
+      _rightToLeft,
+      5,
+      AbacusHand.right,
+      const [AbacusFinger.indexFinger],
+      400,
+      heavenCue('right', 'down'),
+    ),
   ];
   for (final hand in [AbacusHand.right, AbacusHand.left]) {
     final outward = hand == AbacusHand.right ? _rightToLeft : _leftToRight;
     final returnPath = hand == AbacusHand.right ? _leftToRight : _rightToLeft;
     for (var digit = 1; digit <= 4; digit++) {
-      steps.add(_pass(outward, digit, hand, crab, 250));
-      steps.add(_pass(returnPath, 5, hand, crab, 350));
+      steps.add(
+        _pass(
+          outward,
+          digit,
+          hand,
+          crab,
+          250,
+          crabCue(hand.name, digit, 'close', context: 'brothers'),
+        ),
+      );
+      steps.add(
+        _pass(
+          returnPath,
+          5,
+          hand,
+          crab,
+          350,
+          crabCue(hand.name, digit, 'open', context: 'brothers'),
+        ),
+      );
     }
   }
   for (var digit = 1; digit <= 4; digit++) {
@@ -119,6 +165,9 @@ List<PhysicalGestureStep> _brothersPasses() {
             _move(right, digit, AbacusHand.right, crab),
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 350 : 0,
+          audioKey: index == 0
+              ? crabCue('both', digit, 'close', context: 'brothers')
+              : null,
         ),
       );
     }
@@ -131,6 +180,9 @@ List<PhysicalGestureStep> _brothersPasses() {
             _move(right, 5, AbacusHand.right, crab),
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 350 : 0,
+          audioKey: index == 0
+              ? crabCue('both', digit, 'open', context: 'brothers')
+              : null,
         ),
       );
     }
@@ -151,11 +203,13 @@ List<PhysicalGestureStep> _friendsPasses() {
           _move(right, 1, AbacusHand.right, const [AbacusFinger.thumb]),
         ],
         pauseAfterMs: index == 2 ? 600 : 200,
+        audioKey: index == 0 ? friendsSeedCue : null,
       ),
     );
   }
   for (var digit = 1; digit <= 9; digit++) {
-    for (final (source, target) in _friendPairs) {
+    for (var index = 0; index < _friendPairs.length; index++) {
+      final (source, target) = _friendPairs[index];
       steps.add(
         GroupGestureStep(
           moves: [
@@ -163,6 +217,7 @@ List<PhysicalGestureStep> _friendsPasses() {
             _move(target, digit, AbacusHand.right, _fingersForSetting(digit)),
           ],
           pauseAfterMs: 900,
+          audioKey: index == 0 ? friendsCue(digit) : null,
         ),
       );
     }
@@ -192,23 +247,28 @@ PhysicalGesturePlan warmupRecipe(String type) =>
           initialRods: initialRods,
           steps: _simplePasses(AbacusHand.right),
           beadTransitionMs: 400,
+          openingAudioKey: warmupIntroCue(type),
         ),
         'simple-tens' => PhysicalGesturePlan(
           initialRods: initialRods,
           steps: _simplePasses(AbacusHand.left),
           beadTransitionMs: 400,
+          openingAudioKey: warmupIntroCue(type),
         ),
         'simple-2digit' => PhysicalGesturePlan(
           initialRods: initialRods,
           steps: _twoHandPasses(),
+          openingAudioKey: warmupIntroCue(type),
         ),
         'brothers' => PhysicalGesturePlan(
           initialRods: initialRods,
           steps: _brothersPasses(),
+          openingAudioKey: warmupIntroCue(type),
         ),
         'friends' => PhysicalGesturePlan(
           initialRods: initialRods,
           steps: _friendsPasses(),
+          openingAudioKey: warmupIntroCue(type),
         ),
         _ => throw ArgumentError.value(type, 'type', 'Неизвестная разминка.'),
       };

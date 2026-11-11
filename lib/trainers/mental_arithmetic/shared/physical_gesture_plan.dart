@@ -58,11 +58,13 @@ class PhysicalGesturePlan {
     required this.initialRods,
     required this.steps,
     this.beadTransitionMs,
+    this.openingAudioKey,
   });
 
   final List<RodState> initialRods;
   final List<PhysicalGestureStep> steps;
   final int? beadTransitionMs;
+  final String? openingAudioKey;
 }
 
 class PhysicalGestureFrame {
@@ -108,6 +110,9 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
     throw RangeError(
       'Длительность движения косточки должна быть положительной.',
     );
+  }
+  if (plan.openingAudioKey != null && plan.openingAudioKey!.trim().isEmpty) {
+    throw StateError('Ключ вступительной фразы не может быть пустым.');
   }
   if (plan.initialRods.isEmpty ||
       plan.initialRods.any((rod) => !_validRod(rod))) {

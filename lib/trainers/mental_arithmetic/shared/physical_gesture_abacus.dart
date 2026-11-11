@@ -13,12 +13,14 @@ class PhysicalGestureAbacus extends StatefulWidget {
     required this.speed,
     this.autoPlay = true,
     this.onComplete,
+    this.onCue,
   });
 
   final PhysicalGesturePlan plan;
   final PhysicalGestureSpeed speed;
   final bool autoPlay;
   final VoidCallback? onComplete;
+  final Future<void> Function(String key, GestureCueSignal signal)? onCue;
 
   @override
   State<PhysicalGestureAbacus> createState() => _PhysicalGestureAbacusState();
@@ -73,6 +75,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       onFrame: (frame, _) {
         if (mounted) setState(() => _rods = frame.rods);
       },
+      onCue: widget.onCue,
       onComplete: () {
         if (!mounted || _completed) return;
         _completed = true;

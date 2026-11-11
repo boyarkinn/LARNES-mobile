@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_playback.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_playback_controller.dart';
 
 final _reference =
     jsonDecode(
@@ -69,6 +71,77 @@ PhysicalGesturePlan _referencePlan() {
 }
 
 void main() {
+  test(
+    'speech completes before movement and closing cancels the active cue',
+    () {
+      fakeAsync((clock) {
+        final seen = <String>[];
+        final pending = <String, Completer<void>>{};
+        final cancelled = <String>[];
+        final plan = PhysicalGesturePlan(
+          initialRods: emptyRods(2),
+          openingAudioKey: 'intro',
+          steps: [
+            GroupGestureStep(
+              moves: [
+                PhysicalBeadMove(
+                  rodIndex: 0,
+                  to: digitToBeads(1),
+                  hand: AbacusHand.right,
+                  fingers: const [AbacusFinger.thumb],
+                ),
+              ],
+              audioKey: 'first',
+            ),
+            GroupGestureStep(
+              moves: [
+                PhysicalBeadMove(
+                  rodIndex: 1,
+                  to: digitToBeads(1),
+                  hand: AbacusHand.left,
+                  fingers: const [AbacusFinger.thumb],
+                ),
+              ],
+              audioKey: 'second',
+            ),
+          ],
+        );
+        final player = PhysicalGesturePlayer(
+          plan: plan,
+          speed: PhysicalGestureSpeed.medium,
+          nowMs: () => clock.elapsed.inMilliseconds,
+          onFrame: (_, index) => seen.add('frame:$index'),
+          onCue: (key, signal) {
+            seen.add('cue:$key');
+            signal.onCancel(() => cancelled.add(key));
+            final done = Completer<void>();
+            pending[key] = done;
+            return done.future;
+          },
+        );
+        player.play();
+        clock.flushMicrotasks();
+        expect(seen, ['cue:intro']);
+        pending['intro']!.complete();
+        clock.flushMicrotasks();
+        expect(seen, ['cue:intro', 'cue:first']);
+        pending['first']!.complete();
+        clock.flushMicrotasks();
+        expect(seen, ['cue:intro', 'cue:first', 'frame:0']);
+        clock.elapse(const Duration(milliseconds: 700));
+        clock.flushMicrotasks();
+        expect(seen.last, 'cue:second');
+        player.cancel();
+        expect(cancelled, ['second']);
+        pending['second']!.complete();
+        clock.flushMicrotasks();
+        clock.elapse(const Duration(seconds: 2));
+        expect(player.position, 1);
+        expect(player.status, TrainerPlaybackStatus.cancelled);
+      });
+    },
+  );
+
   test('same 13-rod reference frames, simultaneous hands and rod pass', () {
     final frames = compilePhysicalGesturePlan(_referencePlan());
     expect(

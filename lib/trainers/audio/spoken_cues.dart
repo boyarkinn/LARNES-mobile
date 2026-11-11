@@ -31,7 +31,8 @@ const _cueKeys = {
 bool isSpokenCueAudioKey(String semanticKey) =>
     _cueKeys.contains(semanticKey) ||
     semanticKey.startsWith('explanation:abacus-gesture:') ||
-    semanticKey.startsWith('explanation:abacus-warmup:intro:');
+    semanticKey.startsWith('explanation:abacus-warmup:intro:') ||
+    semanticKey.startsWith('explanation:abacus-topic:');
 
 String? spokenCueAsset(String semanticKey) =>
     speechAudioFile(semanticKey)?.path;

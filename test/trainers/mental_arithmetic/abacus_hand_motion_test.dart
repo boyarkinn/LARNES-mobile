@@ -1,9 +1,35 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_motion.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 void main() {
+  test('parked hands occupy distinct positions below the abacus', () {
+    final box = abacusViewBox(13);
+    final left = handRestOrigin(AbacusHand.left, box.width, box.height);
+    final right = handRestOrigin(AbacusHand.right, box.width, box.height);
+    expect(
+      left.dx + handArtboardSize.width * handParkScale / 2,
+      closeTo(box.width * 0.24, 0.001),
+    );
+    expect(
+      right.dx + handArtboardSize.width * handParkScale / 2,
+      closeTo(box.width * 0.76, 0.001),
+    );
+    expect(left.dy, closeTo(box.height - 27, 0.001));
+    expect(right.dy, left.dy);
+    final leftImage = handIdleImageRect(AbacusHand.left, box.width, box.height);
+    final rightImage = handIdleImageRect(
+      AbacusHand.right,
+      box.width,
+      box.height,
+    );
+    expect(leftImage.center.dx, closeTo(box.width * 0.24, 0.001));
+    expect(rightImage.center.dx, closeTo(box.width * 0.76, 0.001));
+    expect(leftImage.top, greaterThan(box.height - 27));
+  });
+
   test('thumb movement selects the fist and follows a lower bead', () {
     const before = RodState(heavenUp: false, earthCount: 0);
     const after = RodState(heavenUp: false, earthCount: 1);
@@ -52,5 +78,4 @@ void main() {
     expect(left.thumb, isNull);
     expect(left.index!.start.dx, lessThan(right.index!.start.dx));
   });
-
 }

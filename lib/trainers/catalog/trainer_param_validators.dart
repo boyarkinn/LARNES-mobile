@@ -19,6 +19,22 @@ ValidateTrainerParamsResult _fail(String message) {
   return ValidateTrainerParamsResult.failure(message);
 }
 
+ValidateTrainerParamsResult validateAbacusTopicExplanationParams(
+  Map<String, dynamic> raw,
+) {
+  final lessonId = raw['lessonId'] ?? 'simple-1';
+  final speed = raw['speed'] ?? 'medium';
+  if (lessonId != 'simple-1' ||
+      speed is! String ||
+      !const {'slow', 'medium', 'fast'}.contains(speed)) {
+    return _fail('Некорректные параметры объяснения темы.');
+  }
+  return ValidateTrainerParamsResult.success({
+    'lessonId': lessonId,
+    'speed': speed,
+  });
+}
+
 ValidateTrainerParamsResult validateAbacusWarmupParams(Map<String, dynamic> raw) {
   final warmupType = raw['warmupType'] ?? 'simple-9';
   final speed = raw['speed'] ?? 'medium';

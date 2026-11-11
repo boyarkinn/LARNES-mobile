@@ -62,7 +62,10 @@ void main() {
           plan.openingAudioKey,
           ...frames.map((frame) => frame.audioKey),
         ].whereType<String>().join('\n');
-        expect(sha256.convert(utf8.encode(cues)).toString(), expected['cueSha256']);
+        expect(
+          sha256.convert(utf8.encode(cues)).toString(),
+          expected['cueSha256'],
+        );
         expect(identical(warmupRecipe(type), plan), isTrue);
       },
     );
@@ -117,6 +120,20 @@ void main() {
       0,
       9,
     ]);
+  });
+
+  test('hands return after each spoken series, not between friend pairs', () {
+    final simple = compilePhysicalGesturePlan(warmupRecipe('simple-9'));
+    expect(simple.where((frame) => frame.returnAfter), hasLength(18));
+    expect(simple[12].returnAfter, isTrue);
+    expect(simple[25].returnAfter, isTrue);
+    expect(simple[11].returnAfter, isFalse);
+
+    final friends = compilePhysicalGesturePlan(warmupRecipe('friends'));
+    expect(friends[2].returnAfter, isTrue);
+    expect(friends[8].returnAfter, isFalse);
+    expect(friends[14].returnAfter, isTrue);
+    expect(friends.where((frame) => frame.returnAfter), hasLength(10));
   });
 
   test('keeps the video rhythm and scales every recipe movement', () {

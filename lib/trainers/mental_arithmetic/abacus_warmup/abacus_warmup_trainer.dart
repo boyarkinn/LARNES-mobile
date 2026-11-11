@@ -19,29 +19,24 @@ class AbacusWarmupTrainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final type = params['warmupType'] as String? ?? 'simple-9';
     return TrainerScene(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Center(
-          child: PhysicalGestureAbacus(
-            key: ValueKey(type),
-            plan: warmupRecipe(type),
-            speed: switch (params['speed']) {
-              'slow' => PhysicalGestureSpeed.slow,
-              'fast' => PhysicalGestureSpeed.fast,
-              _ => PhysicalGestureSpeed.medium,
-            },
-            showHands: true,
-            onComplete: onComplete,
-            onCue: (key, signal) async {
-              final clip = speechAudioFile(key);
-              if (clip == null || signal.cancelled) return;
-              final player = getSharedClipPlayer();
-              signal.onCancel(() => unawaited(player.cancel()));
-              if (signal.cancelled) return;
-              await player.play([clip.path], playbackRate: 1);
-            },
-          ),
-        ),
+      child: PhysicalGestureAbacus(
+        key: ValueKey(type),
+        plan: warmupRecipe(type),
+        speed: switch (params['speed']) {
+          'slow' => PhysicalGestureSpeed.slow,
+          'fast' => PhysicalGestureSpeed.fast,
+          _ => PhysicalGestureSpeed.medium,
+        },
+        showHands: true,
+        onComplete: onComplete,
+        onCue: (key, signal) async {
+          final clip = speechAudioFile(key);
+          if (clip == null || signal.cancelled) return;
+          final player = getSharedClipPlayer();
+          signal.onCancel(() => unawaited(player.cancel()));
+          if (signal.cancelled) return;
+          await player.play([clip.path], playbackRate: 1);
+        },
       ),
     );
   }

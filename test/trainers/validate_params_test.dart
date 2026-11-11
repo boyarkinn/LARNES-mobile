@@ -1,9 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/catalog/trainer_param_validators.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 void main() {
   group('validateTrainerParams', () {
+    test('topic explanation accepts only the pilot lesson and known speeds', () {
+      for (final speed in ['slow', 'medium', 'fast']) {
+        final result = validateTrainerParams('abacus-topic-explanation', {
+          'lessonId': 'simple-1',
+          'speed': speed,
+        });
+        expect(result.params, {'lessonId': 'simple-1', 'speed': speed});
+      }
+      expect(validateTrainerParams('abacus-topic-explanation', {
+        'lessonId': 'simple-2',
+      }).ok, isFalse);
+      expect(validateTrainerParams('abacus-topic-explanation', {
+        'speed': 'unknown',
+      }).ok, isFalse);
+    });
+
     test('accepts all warm-up recipes and speeds and rejects unknown values', () {
       for (final warmupType in [
         'simple-9', 'simple-tens', 'simple-2digit', 'brothers', 'friends',

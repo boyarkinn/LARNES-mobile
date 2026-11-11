@@ -81,6 +81,8 @@ flutter:
 
   assets:
     - assets/animations/abacus-hand.riv
+    - assets/animations/hand-idle-left.png
+    - assets/animations/hand-idle-right.png
     - assets/sounds/
     - assets/brand/
     - assets/call/

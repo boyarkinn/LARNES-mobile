@@ -7,6 +7,44 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 /// Same bead-edge contacts and Rive artboard anchors as the Web hand layer.
 const handArtboardSize = Size(280, 300);
+const handRestBandHeight = 92.0;
+const handParkScale = 0.6;
+const handRestCenterOffsetY = 63.0;
+const handIdleImageSize = Size(1086, 1448);
+const handIdleImageArtboardScale = 0.18;
+
+/// Bottom-row positions are in the same logical coordinates as the abacus.
+Offset handRestOrigin(
+  AbacusHand hand,
+  double abacusWidth,
+  double abacusHeight, [
+  double restShiftY = 0,
+]) {
+  final centerX = abacusWidth * (hand == AbacusHand.left ? 0.24 : 0.76);
+  final centerY = abacusHeight + handRestCenterOffsetY + restShiftY;
+  return Offset(
+    centerX - handArtboardSize.width * handParkScale / 2,
+    centerY - handArtboardSize.height * handParkScale / 2,
+  );
+}
+
+/// The PNG fallback uses the same centered image placement as the Rive artboard.
+Rect handIdleImageRect(
+  AbacusHand hand,
+  double width,
+  double height, [
+  double restShiftY = 0,
+]) {
+  final origin = handRestOrigin(hand, width, height, restShiftY);
+  final imageWidth = handIdleImageSize.width * handIdleImageArtboardScale;
+  final imageHeight = handIdleImageSize.height * handIdleImageArtboardScale;
+  return Rect.fromLTWH(
+    origin.dx + (handArtboardSize.width - imageWidth) * handParkScale / 2,
+    origin.dy + (handArtboardSize.height - imageHeight) * handParkScale / 2,
+    imageWidth * handParkScale,
+    imageHeight * handParkScale,
+  );
+}
 
 enum AbacusHandPose {
   openMiddle,

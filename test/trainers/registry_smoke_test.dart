@@ -6,8 +6,9 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('trainer registry', () {
     test('registers the Web trainer keys with native implementations', () {
-      expect(TrainerKey.values.length, 65);
-      expect(trainerDefinitions.length, 65);
+      expect(TrainerKey.values.length, 66);
+      expect(trainerDefinitions.length, 66);
+      expect(isTrainerKey('abacus-topic-explanation'), isTrue);
       expect(isTrainerKey('abacus-warmup'), isTrue);
       expect(isTrainerKey('letter-pair-connect'), isTrue);
       expect(isTrainerKey('syllable-pair-connect'), isTrue);
@@ -63,7 +64,7 @@ void main() {
     });
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 65);
+      expect(trainerBuilders.length, 66);
 
       for (final key in TrainerKey.values) {
         expect(
@@ -107,6 +108,10 @@ void main() {
       expect(getTrainerDefinition('number-row-show')?.isInteractive, isTrue);
       expect(getTrainerDefinition('flash-cards')?.isInteractive, isTrue);
       expect(getTrainerDefinition('abacus-warmup')?.isInteractive, isTrue);
+      expect(
+        getTrainerDefinition('abacus-topic-explanation')?.isInteractive,
+        isTrue,
+      );
       expect(getTrainerDefinition('example-visualization')?.isInteractive, isTrue);
       expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
       expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);

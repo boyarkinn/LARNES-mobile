@@ -41,6 +41,7 @@ RodPassGestureStep _pass(
   pauseAfterMs: 0,
   pauseAfterPassMs: endPauseMs,
   audioKey: audioKey,
+  returnAfter: true,
 );
 
 PhysicalBeadMove _move(
@@ -97,6 +98,7 @@ List<PhysicalGestureStep> _twoHandPasses() {
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 600 : 100,
           audioKey: index == 0 ? simpleSetCue('both', digit) : null,
+          returnAfter: index == _mirrored.length - 1,
         ),
       );
     }
@@ -110,6 +112,7 @@ List<PhysicalGestureStep> _twoHandPasses() {
           ],
           pauseAfterMs: index == _mirrored.length - 1 ? 600 : 100,
           audioKey: index == 0 ? simpleClearCue('both', digit) : null,
+          returnAfter: index == _mirrored.length - 1,
         ),
       );
     }
@@ -168,6 +171,7 @@ List<PhysicalGestureStep> _brothersPasses() {
           audioKey: index == 0
               ? crabCue('both', digit, 'close', context: 'brothers')
               : null,
+          returnAfter: index == _mirrored.length - 1,
         ),
       );
     }
@@ -183,6 +187,7 @@ List<PhysicalGestureStep> _brothersPasses() {
           audioKey: index == 0
               ? crabCue('both', digit, 'open', context: 'brothers')
               : null,
+          returnAfter: index == _mirrored.length - 1,
         ),
       );
     }
@@ -204,6 +209,7 @@ List<PhysicalGestureStep> _friendsPasses() {
         ],
         pauseAfterMs: index == 2 ? 600 : 200,
         audioKey: index == 0 ? friendsSeedCue : null,
+        returnAfter: index == seeds.length - 1,
       ),
     );
   }
@@ -221,7 +227,8 @@ List<PhysicalGestureStep> _friendsPasses() {
         ),
       );
     }
-    for (final (source, target) in _friendPairs.reversed) {
+    for (var index = 0; index < _friendPairs.length; index++) {
+      final (source, target) = _friendPairs[_friendPairs.length - 1 - index];
       steps.add(
         GroupGestureStep(
           moves: [
@@ -229,6 +236,7 @@ List<PhysicalGestureStep> _friendsPasses() {
             _move(target, 0, AbacusHand.right, _fingersForClearing(digit)),
           ],
           pauseAfterMs: 900,
+          returnAfter: index == _friendPairs.length - 1,
         ),
       );
     }

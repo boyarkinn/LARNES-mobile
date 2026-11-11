@@ -5,7 +5,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_moti
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:rive/rive.dart' as rive;
 
-enum HandMotionPhase { prepare, move }
+enum HandMotionPhase { idle, prepare, move, returning }
 
 /// Transparent Rive overlay driven by the same physical gesture frames as the beads.
 class AbacusHandLayer extends StatefulWidget {
@@ -16,6 +16,11 @@ class AbacusHandLayer extends StatefulWidget {
     required this.sequence,
     required this.moveMs,
     required this.prepareMs,
+    required this.returnMs,
+    required this.abacusWidth,
+    required this.abacusHeight,
+    this.restShiftY = 0,
+    this.onLoadComplete,
   });
 
   final List<AbacusHandMotion> motions;
@@ -23,6 +28,11 @@ class AbacusHandLayer extends StatefulWidget {
   final int sequence;
   final int moveMs;
   final int prepareMs;
+  final int returnMs;
+  final double abacusWidth;
+  final double abacusHeight;
+  final double restShiftY;
+  final ValueChanged<bool>? onLoadComplete;
 
   @override
   State<AbacusHandLayer> createState() => _AbacusHandLayerState();
@@ -47,9 +57,17 @@ class _AbacusHandLayerState extends State<AbacusHandLayer> {
         file?.dispose();
         return;
       }
+      if (file == null) {
+        widget.onLoadComplete?.call(false);
+        return;
+      }
       setState(() => _file = file);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onLoadComplete?.call(true);
+      });
     } catch (error) {
       debugPrint('Abacus hand Rive load failed: $error');
+      if (mounted) widget.onLoadComplete?.call(false);
     }
   }
 
@@ -66,7 +84,25 @@ class _AbacusHandLayerState extends State<AbacusHandLayer> {
   @override
   Widget build(BuildContext context) {
     final file = _file;
-    if (file == null) return const SizedBox.shrink();
+    if (file == null) {
+      return IgnorePointer(
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            for (final hand in AbacusHand.values)
+              _IdleHandImage(
+                hand: hand,
+                rect: handIdleImageRect(
+                  hand,
+                  widget.abacusWidth,
+                  widget.abacusHeight,
+                  widget.restShiftY,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     return IgnorePointer(
       child: Stack(
         clipBehavior: Clip.none,
@@ -83,11 +119,39 @@ class _AbacusHandLayerState extends State<AbacusHandLayer> {
               sequence: widget.sequence,
               moveMs: widget.moveMs,
               prepareMs: widget.prepareMs,
+              returnMs: widget.returnMs,
+              idleOrigin: handRestOrigin(
+                hand,
+                widget.abacusWidth,
+                widget.abacusHeight,
+                widget.restShiftY,
+              ),
             ),
         ],
       ),
     );
   }
+}
+
+class _IdleHandImage extends StatelessWidget {
+  const _IdleHandImage({required this.hand, required this.rect});
+
+  final AbacusHand hand;
+  final Rect rect;
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+    child: Image.asset(
+      hand == AbacusHand.left
+          ? 'assets/animations/hand-idle-left.png'
+          : 'assets/animations/hand-idle-right.png',
+      fit: BoxFit.fill,
+    ),
+  );
 }
 
 class _RiveHand extends StatefulWidget {
@@ -100,6 +164,8 @@ class _RiveHand extends StatefulWidget {
     required this.sequence,
     required this.moveMs,
     required this.prepareMs,
+    required this.returnMs,
+    required this.idleOrigin,
   });
 
   final rive.File file;
@@ -109,6 +175,8 @@ class _RiveHand extends StatefulWidget {
   final int sequence;
   final int moveMs;
   final int prepareMs;
+  final int returnMs;
+  final Offset idleOrigin;
 
   @override
   State<_RiveHand> createState() => _RiveHandState();
@@ -124,7 +192,8 @@ class _RiveHandState extends State<_RiveHand>
   HandRig? _previousRig;
   AbacusHandPose? _pose;
   AbacusHandPose? _previousPose;
-  double _opacity = 0;
+  double _scale = handParkScale;
+  double _previousScale = handParkScale;
 
   @override
   void initState() {
@@ -152,6 +221,9 @@ class _RiveHandState extends State<_RiveHand>
       'quarterOpacity',
       'midOpacity',
       'threeQuarterOpacity',
+      'idleLeftOpacity',
+      'idleRightOpacity',
+      'idleTransitionOpacity',
     ]) {
       final property = _viewModel.number(name);
       if (property != null) _numbers[name] = property;
@@ -165,28 +237,46 @@ class _RiveHandState extends State<_RiveHand>
     super.didUpdateWidget(oldWidget);
     if (widget.sequence != oldWidget.sequence ||
         widget.motion != oldWidget.motion ||
-        widget.phase != oldWidget.phase) {
+        widget.phase != oldWidget.phase ||
+        widget.idleOrigin != oldWidget.idleOrigin) {
       _start();
     }
   }
 
+  String get _idleOpacityName =>
+      widget.hand == AbacusHand.left ? 'idleLeftOpacity' : 'idleRightOpacity';
+
+  HandRig _idleRig() => HandRig(
+    origin: widget.idleOrigin,
+    indexX: 0,
+    indexY: 0,
+    thumbX: 0,
+    thumbY: 0,
+  );
+
   void _start() {
     final motion = widget.motion;
-    if (motion == null) {
+    if (widget.phase == HandMotionPhase.idle || motion == null) {
       _timeline.stop();
-      if (_opacity != 0) setState(() => _opacity = 0);
+      _rig = _idleRig();
+      _previousRig = null;
+      _previousPose = null;
+      _pose = null;
+      _scale = handParkScale;
+      _previousScale = handParkScale;
+      _writeControls(_rig!, {_idleOpacityName: 1});
       return;
     }
-    _previousRig = _rig;
+    _previousRig = _rig ?? _idleRig();
+    _previousScale = _scale;
     _previousPose = _pose;
-    _pose = motion.pose;
-    _timeline.duration = Duration(
-      milliseconds:
-          (widget.phase == HandMotionPhase.prepare
-                  ? widget.prepareMs
-                  : widget.moveMs)
-              .clamp(1, 10000),
-    );
+    _pose = widget.phase == HandMotionPhase.returning ? null : motion.pose;
+    final durationMs = switch (widget.phase) {
+      HandMotionPhase.prepare => widget.prepareMs,
+      HandMotionPhase.returning => widget.returnMs,
+      _ => widget.moveMs,
+    };
+    _timeline.duration = Duration(milliseconds: durationMs.clamp(1, 10000));
     _timeline.forward(from: 0);
     _tick();
   }
@@ -200,9 +290,30 @@ class _RiveHandState extends State<_RiveHand>
     AbacusHandPose.crabWorking => 'crabWorkingOpacity',
   };
 
+  Map<String, double> _travelWeights(String from, String to, double progress) {
+    if (progress >= 1) return {to: 1};
+    if (progress <= 0) return {from: 1};
+    if (progress < 0.5) {
+      return {from: 1 - progress * 2, 'idleTransitionOpacity': progress * 2};
+    }
+    return {'idleTransitionOpacity': (1 - progress) * 2, to: progress * 2 - 1};
+  }
+
   Map<String, double> _poseWeights(double progress) {
+    if (widget.phase == HandMotionPhase.idle || widget.motion == null) {
+      return {_idleOpacityName: 1};
+    }
+    if (widget.phase == HandMotionPhase.returning) {
+      final previous = _previousPose;
+      return previous == null
+          ? {_idleOpacityName: 1}
+          : _travelWeights(_opacityName(previous), _idleOpacityName, progress);
+    }
     final pose = _pose!;
     final previous = _previousPose;
+    if (widget.phase == HandMotionPhase.prepare && previous == null) {
+      return _travelWeights(_idleOpacityName, _opacityName(pose), progress);
+    }
     if (previous == null || previous == pose || progress >= 1) {
       return {_opacityName(pose): 1};
     }
@@ -236,45 +347,22 @@ class _RiveHandState extends State<_RiveHand>
     return {stages[first]: 1 - fraction, stages[first + 1]: fraction};
   }
 
-  void _tick() {
-    final motion = widget.motion;
-    if (!mounted || motion == null) return;
-    final elapsed = _timeline.value;
-    final eased = widget.phase == HandMotionPhase.prepare
-        ? Curves.easeOut.transform(elapsed)
-        : Curves.easeOutBack.transform(elapsed);
-    final target = handRigAt(
-      motion,
-      widget.phase == HandMotionPhase.prepare ? 0 : eased,
-    );
-    final previous = _previousRig;
-    final approach = widget.phase == HandMotionPhase.prepare
-        ? 1 - eased
-        : (1 - Curves.easeOut.transform((elapsed / 0.18).clamp(0.0, 1.0)));
-    final rig = previous == null
-        ? target
-        : HandRig(
-            origin: Offset.lerp(target.origin, previous.origin, approach)!,
-            indexX:
-                target.indexX + (previous.indexX - target.indexX) * approach,
-            indexY:
-                target.indexY + (previous.indexY - target.indexY) * approach,
-            thumbX:
-                target.thumbX + (previous.thumbX - target.thumbX) * approach,
-            thumbY:
-                target.thumbY + (previous.thumbY - target.thumbY) * approach,
-          );
+  HandRig _lerpRig(HandRig from, HandRig to, double progress) => HandRig(
+    origin: Offset.lerp(from.origin, to.origin, progress)!,
+    indexX: from.indexX + (to.indexX - from.indexX) * progress,
+    indexY: from.indexY + (to.indexY - from.indexY) * progress,
+    thumbX: from.thumbX + (to.thumbX - from.thumbX) * progress,
+    thumbY: from.thumbY + (to.thumbY - from.thumbY) * progress,
+  );
+
+  void _writeControls(HandRig rig, Map<String, double> weights) {
     final values = <String, double>{
       for (final name in _numbers.keys) name: 0,
       'indexX': rig.indexX,
       'indexY': rig.indexY,
       'thumbX': rig.thumbX,
       'thumbY': rig.thumbY,
-      ..._poseWeights(
-        widget.phase == HandMotionPhase.prepare
-            ? eased
-            : (elapsed / 0.18).clamp(0.0, 1.0),
-      ),
+      ...weights,
     };
     for (final entry in values.entries) {
       final number = _numbers[entry.key];
@@ -282,11 +370,45 @@ class _RiveHandState extends State<_RiveHand>
         number.value = entry.value;
       }
     }
+  }
+
+  void _tick() {
+    final motion = widget.motion;
+    if (!mounted || motion == null || widget.phase == HandMotionPhase.idle) {
+      return;
+    }
+    final elapsed = _timeline.value;
+    final previous = _previousRig ?? _idleRig();
+    late final HandRig target;
+    late final double positionProgress;
+    late final double poseProgress;
+    switch (widget.phase) {
+      case HandMotionPhase.prepare:
+        target = handRigAt(motion, 0);
+        positionProgress = Curves.easeOut.transform(elapsed);
+        poseProgress = positionProgress;
+      case HandMotionPhase.move:
+        target = handRigAt(motion, Curves.easeOutBack.transform(elapsed));
+        positionProgress = Curves.easeOut.transform(
+          (elapsed / 0.18).clamp(0.0, 1.0),
+        );
+        poseProgress = (elapsed / 0.18).clamp(0.0, 1.0);
+      case HandMotionPhase.returning:
+        target = _idleRig();
+        positionProgress = Curves.easeInOut.transform(elapsed);
+        poseProgress = positionProgress;
+      case HandMotionPhase.idle:
+        return;
+    }
+    final rig = _lerpRig(previous, target, positionProgress);
+    _writeControls(rig, _poseWeights(poseProgress));
+    final targetScale = widget.phase == HandMotionPhase.returning
+        ? handParkScale
+        : 1.0;
     setState(() {
       _rig = rig;
-      _opacity = widget.phase == HandMotionPhase.prepare && previous == null
-          ? eased
-          : 1;
+      _scale =
+          _previousScale + (targetScale - _previousScale) * positionProgress;
     });
   }
 
@@ -303,18 +425,15 @@ class _RiveHandState extends State<_RiveHand>
 
   @override
   Widget build(BuildContext context) {
-    final origin = _rig?.origin ?? Offset.zero;
+    final origin = _rig?.origin ?? widget.idleOrigin;
     return Positioned(
       left: origin.dx,
       top: origin.dy,
-      width: handArtboardSize.width,
-      height: handArtboardSize.height,
-      child: Opacity(
-        opacity: widget.motion == null ? 0 : _opacity,
-        child: Transform.flip(
-          flipX: widget.hand == AbacusHand.left,
-          child: rive.RiveWidget(controller: _rive, fit: rive.Fit.contain),
-        ),
+      width: handArtboardSize.width * _scale,
+      height: handArtboardSize.height * _scale,
+      child: Transform.flip(
+        flipX: widget.hand == AbacusHand.left,
+        child: rive.RiveWidget(controller: _rive, fit: rive.Fit.contain),
       ),
     );
   }

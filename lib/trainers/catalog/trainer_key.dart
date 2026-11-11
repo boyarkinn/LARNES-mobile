@@ -1,5 +1,6 @@
 /// Все зарегистрированные trainerKey (паритет с web registry).
 enum TrainerKey {
+  abacusTopicExplanation('abacus-topic-explanation'),
   abacusWarmup('abacus-warmup'),
   flashCards('flash-cards'),
   appleCountShow('apple-count-show'),

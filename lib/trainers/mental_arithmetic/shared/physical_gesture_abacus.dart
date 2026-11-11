@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
@@ -7,6 +10,9 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_laye
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
+
+const _handApproachMs = 300;
+const _riveSplashWait = Duration(seconds: 3);
 
 /// Shared scene binding: owns playback and overlays optional physical hands.
 class PhysicalGestureAbacus extends StatefulWidget {
@@ -37,8 +43,11 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   bool? _reducedMotion;
   bool _completed = false;
   List<AbacusHandMotion> _handMotions = const [];
-  HandMotionPhase _handPhase = HandMotionPhase.prepare;
+  HandMotionPhase _handPhase = HandMotionPhase.idle;
   int _handSequence = -1;
+  bool _handAssetsReady = false;
+  bool _autoplayStarted = false;
+  Timer? _riveSplashTimer;
 
   @override
   void initState() {
@@ -59,9 +68,15 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   void didUpdateWidget(PhysicalGestureAbacus oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.plan != widget.plan) _completed = false;
+    if (oldWidget.showHands != widget.showHands) {
+      _riveSplashTimer?.cancel();
+      _riveSplashTimer = null;
+      if (widget.showHands) _handAssetsReady = false;
+    }
     if (oldWidget.plan != widget.plan ||
         oldWidget.speed != widget.speed ||
-        oldWidget.autoPlay != widget.autoPlay) {
+        oldWidget.autoPlay != widget.autoPlay ||
+        oldWidget.showHands != widget.showHands) {
       _configure(
         reducedMotion: _reducedMotion ?? false,
         preservePosition: oldWidget.plan == widget.plan,
@@ -73,15 +88,20 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     required bool reducedMotion,
     required bool preservePosition,
   }) {
-    final oldPosition = preservePosition ? _player?.position ?? 0 : 0;
+    final oldCheckpoint = preservePosition
+        ? _player?.checkpointStepIndex
+        : null;
     _player?.cancel();
     _reducedMotion = reducedMotion;
     _handMotions = const [];
+    _handPhase = HandMotionPhase.idle;
     _handSequence = -1;
+    _autoplayStarted = false;
     final player = PhysicalGesturePlayer(
       plan: widget.plan,
       speed: widget.speed,
       reducedMotion: reducedMotion,
+      prepareMs: _handApproachMs,
       onFrame: (frame, _) {
         if (!mounted) return;
         setState(() {
@@ -103,6 +123,24 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
               });
             }
           : null,
+      onReturn: widget.showHands && !reducedMotion
+          ? (_, _) {
+              if (!mounted) return;
+              setState(() {
+                _handPhase = HandMotionPhase.returning;
+                _handSequence++;
+              });
+            }
+          : null,
+      onReset: (rods, _) {
+        if (!mounted) return;
+        setState(() {
+          _rods = rods;
+          _handMotions = const [];
+          _handPhase = HandMotionPhase.idle;
+          _handSequence++;
+        });
+      },
       onCue: widget.onCue,
       onComplete: () {
         if (!mounted || _completed) return;
@@ -110,21 +148,52 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
         widget.onComplete?.call();
       },
     );
-    final position = oldPosition.clamp(0, player.frames.length);
-    player.seek(position);
-    _rods = position == 0
-        ? List.of(widget.plan.initialRods)
-        : player.frames[position - 1].rods;
+    if (oldCheckpoint != null) {
+      player.seekToStep(oldCheckpoint.clamp(-1, widget.plan.steps.length));
+    }
+    _rods = player.checkpointRods;
     _player = player;
-    if (widget.autoPlay && player.frames.isNotEmpty && !_completed) {
+    if (widget.autoPlay && player.hasEvents && !_completed) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
-        if (mounted && identical(_player, player)) player.play();
+        _startIfReady(player);
       });
     }
   }
 
+  void _startIfReady(PhysicalGesturePlayer player) {
+    if (!mounted ||
+        !identical(_player, player) ||
+        _autoplayStarted ||
+        !widget.autoPlay ||
+        !player.hasEvents ||
+        _completed ||
+        (widget.showHands && !_handAssetsReady)) {
+      return;
+    }
+    _autoplayStarted = true;
+    player.play();
+  }
+
+  void _onHandLoadComplete(bool loaded) {
+    _riveSplashTimer?.cancel();
+    _riveSplashTimer = null;
+    if (!loaded) {
+      _handAssetsReady = true;
+      final player = _player;
+      if (player != null) _startIfReady(player);
+      return;
+    }
+    _riveSplashTimer = Timer(_riveSplashWait, () {
+      if (!mounted || !widget.showHands) return;
+      _handAssetsReady = true;
+      final player = _player;
+      if (player != null) _startIfReady(player);
+    });
+  }
+
   @override
   void dispose() {
+    _riveSplashTimer?.cancel();
     _player?.cancel();
     super.dispose();
   }
@@ -141,28 +210,68 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       totalRods: widget.plan.initialRods.length,
       beadAnimationDuration: Duration(milliseconds: timing.transitionMs),
     );
-    if (!widget.showHands || (_reducedMotion ?? false)) return abacus;
+    if (!widget.showHands) return abacus;
     final viewBox = abacusViewBox(widget.plan.initialRods.length);
-    return FittedBox(
-      child: SizedBox(
-        width: viewBox.width,
-        height: viewBox.height,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(child: abacus),
-            Positioned.fill(
-              child: AbacusHandLayer(
-                motions: _handMotions,
-                phase: _handPhase,
-                sequence: _handSequence,
-                moveMs: timing.transitionMs,
-                prepareMs: timing.pauseMs(120),
+    final stageHeight = viewBox.height + handRestBandHeight;
+    return LayoutBuilder(
+      builder: (context, viewport) {
+        final scale = math.min(
+          viewport.maxWidth / viewBox.width,
+          viewport.maxHeight / stageHeight,
+        );
+        final stageTop = (viewport.maxHeight - stageHeight * scale) / 2;
+        final idleImageBottom = handIdleImageRect(
+          AbacusHand.left,
+          viewBox.width,
+          viewBox.height,
+        ).bottom;
+        final restShiftY = scale > 0
+            ? math.max(
+                0.0,
+                (viewport.maxHeight - stageTop) / scale - idleImageBottom,
+              )
+            : 0.0;
+        return ClipRect(
+          child: SizedBox.expand(
+            child: FittedBox(
+              fit: BoxFit.contain,
+              clipBehavior: Clip.none,
+              child: SizedBox(
+                width: viewBox.width,
+                height: stageHeight,
+                child: Stack(
+                  // Keep the abacus fitted. Only the trainer viewport crops
+                  // hands as they travel or extend past the rest band.
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      top: 0,
+                      width: viewBox.width,
+                      height: viewBox.height,
+                      child: abacus,
+                    ),
+                    Positioned.fill(
+                      child: AbacusHandLayer(
+                        motions: _handMotions,
+                        phase: _handPhase,
+                        sequence: _handSequence,
+                        moveMs: timing.transitionMs,
+                        prepareMs: timing.pauseMs(_handApproachMs),
+                        returnMs: timing.pauseMs(320),
+                        abacusWidth: viewBox.width,
+                        abacusHeight: viewBox.height,
+                        restShiftY: restShiftY,
+                        onLoadComplete: _onHandLoadComplete,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

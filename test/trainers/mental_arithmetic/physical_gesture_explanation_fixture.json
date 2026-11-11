@@ -1,0 +1,9 @@
+{
+  "initialDigits": "0000000000000",
+  "steps": [
+    { "kind": "narration", "audioKey": "intro", "pauseAfterMs": 0 },
+    { "kind": "pass", "rodIndices": [11, 12], "toDigit": 1, "hand": "right", "fingers": ["thumb"], "audioKey": "parallel", "audioMode": "parallel", "pauseAfterMs": 0 },
+    { "kind": "group", "moves": [{ "rodIndex": 12, "toDigit": 2, "hand": "right", "fingers": ["thumb"] }], "audioKey": "before", "pauseAfterMs": 0 }
+  ],
+  "expectedValues": [10, 11, 12]
+}

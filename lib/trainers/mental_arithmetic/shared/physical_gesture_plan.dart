@@ -4,6 +4,8 @@ enum AbacusHand { left, right }
 
 enum AbacusFinger { thumb, indexFinger, middle, ring, little }
 
+enum PhysicalGestureAudioMode { before, parallel }
+
 class PhysicalBeadMove {
   const PhysicalBeadMove({
     required this.rodIndex,
@@ -19,20 +21,36 @@ class PhysicalBeadMove {
 }
 
 sealed class PhysicalGestureStep {
-  const PhysicalGestureStep({this.pauseAfterMs = 200, this.audioKey});
+  const PhysicalGestureStep({
+    this.pauseAfterMs = 200,
+    this.audioKey,
+    this.returnAfter = false,
+  });
 
   final int pauseAfterMs;
   final String? audioKey;
+
+  /// Return the active hand(s) to their resting positions after this step.
+  final bool returnAfter;
+}
+
+/// Speech-only semantic step. It does not change the abacus.
+class NarrationGestureStep extends PhysicalGestureStep {
+  const NarrationGestureStep({required String audioKey, super.pauseAfterMs = 0})
+    : super(audioKey: audioKey);
 }
 
 class GroupGestureStep extends PhysicalGestureStep {
   const GroupGestureStep({
     required this.moves,
+    this.audioMode = PhysicalGestureAudioMode.before,
     super.pauseAfterMs,
     super.audioKey,
+    super.returnAfter,
   });
 
   final List<PhysicalBeadMove> moves;
+  final PhysicalGestureAudioMode audioMode;
 }
 
 class RodPassGestureStep extends PhysicalGestureStep {
@@ -41,15 +59,18 @@ class RodPassGestureStep extends PhysicalGestureStep {
     required this.to,
     required this.hand,
     required this.fingers,
+    this.audioMode = PhysicalGestureAudioMode.before,
     super.pauseAfterMs,
     this.pauseAfterPassMs,
     super.audioKey,
+    super.returnAfter,
   });
 
   final List<int> rodIndices;
   final RodState to;
   final AbacusHand hand;
   final List<AbacusFinger> fingers;
+  final PhysicalGestureAudioMode audioMode;
   final int? pauseAfterPassMs;
 }
 
@@ -73,12 +94,29 @@ class PhysicalGestureFrame {
     required this.moves,
     required this.pauseAfterMs,
     this.audioKey,
+    this.returnAfter = false,
   });
 
   final List<RodState> rods;
   final List<PhysicalBeadMove> moves;
   final int pauseAfterMs;
   final String? audioKey;
+  final bool returnAfter;
+}
+
+/// Catalog keys in first-use order; playback itself still follows the steps.
+List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
+  final keys = <String>[];
+  final seen = <String>{};
+  void add(String? key) {
+    if (key != null && key.trim().isNotEmpty && seen.add(key)) keys.add(key);
+  }
+
+  add(plan.openingAudioKey);
+  for (final step in plan.steps) {
+    add(step.audioKey);
+  }
+  return List.unmodifiable(keys);
 }
 
 bool _validRod(RodState rod) => rod.earthCount >= 0 && rod.earthCount <= 4;
@@ -125,6 +163,7 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
     List<PhysicalBeadMove> moves,
     int pauseAfterMs,
     String? audioKey,
+    bool returnAfter,
   ) {
     if (moves.isEmpty) throw StateError('Группа жестов не может быть пустой.');
     final used = <int>{};
@@ -151,6 +190,7 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
         ),
         pauseAfterMs: pauseAfterMs,
         audioKey: audioKey,
+        returnAfter: returnAfter,
       ),
     );
   }
@@ -164,9 +204,21 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
       throw StateError('Ключ речевого сопровождения не может быть пустым.');
     }
     switch (step) {
+      case NarrationGestureStep():
+        if (audioKey == null) {
+          throw StateError('Для речевого шага нужен ключ аудио.');
+        }
       case GroupGestureStep():
-        append(step.moves, step.pauseAfterMs, audioKey);
+        if (step.audioMode == PhysicalGestureAudioMode.parallel &&
+            audioKey == null) {
+          throw StateError('Для параллельной речи нужен ключ аудио.');
+        }
+        append(step.moves, step.pauseAfterMs, audioKey, step.returnAfter);
       case RodPassGestureStep():
+        if (step.audioMode == PhysicalGestureAudioMode.parallel &&
+            audioKey == null) {
+          throw StateError('Для параллельной речи нужен ключ аудио.');
+        }
         if (step.rodIndices.isEmpty) {
           throw StateError('Проход по стержням не может быть пустым.');
         }
@@ -186,6 +238,7 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
             ],
             index == step.rodIndices.length - 1 ? endPause : step.pauseAfterMs,
             index == 0 ? audioKey : null,
+            index == step.rodIndices.length - 1 && step.returnAfter,
           );
         }
     }

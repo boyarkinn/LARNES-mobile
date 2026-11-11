@@ -3,6 +3,8 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 
 String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
   switch (labelKey) {
+    case 'topicLessonLabel':
+      return _passageLabel(l10n, ru: 'Урок', en: 'Lesson', ar: 'الدرس');
     case 'warmupTypeLabel':
       return _passageLabel(l10n, ru: 'Вид разминки', en: 'Warm-up type', ar: 'نوع الإحماء');
     case 'syllableTypeLabel':
@@ -222,6 +224,8 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
   }
 
   switch (option.labelKey) {
+    case 'topicLessonSimple1':
+      return _passageLabel(l10n, ru: 'Просто 1', en: 'Simple 1', ar: 'البسيط ١');
     case 'warmupSimple9':
       return _passageLabel(l10n, ru: 'Просто 9', en: 'Simple 9', ar: 'العدد ٩ البسيط');
     case 'warmupSimpleTens':

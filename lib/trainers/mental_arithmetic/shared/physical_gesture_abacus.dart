@@ -28,6 +28,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   late List<RodState> _rods;
   PhysicalGesturePlayer? _player;
   bool? _reducedMotion;
+  bool _completed = false;
 
   @override
   void initState() {
@@ -47,6 +48,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   @override
   void didUpdateWidget(PhysicalGestureAbacus oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.plan != widget.plan) _completed = false;
     if (oldWidget.plan != widget.plan ||
         oldWidget.speed != widget.speed ||
         oldWidget.autoPlay != widget.autoPlay) {
@@ -72,7 +74,9 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
         if (mounted) setState(() => _rods = frame.rods);
       },
       onComplete: () {
-        if (mounted) widget.onComplete?.call();
+        if (!mounted || _completed) return;
+        _completed = true;
+        widget.onComplete?.call();
       },
     );
     final position = oldPosition.clamp(0, player.frames.length);
@@ -81,7 +85,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
         ? List.of(widget.plan.initialRods)
         : player.frames[position - 1].rods;
     _player = player;
-    if (widget.autoPlay && player.frames.isNotEmpty) {
+    if (widget.autoPlay && player.frames.isNotEmpty && !_completed) {
       SchedulerBinding.instance.addPostFrameCallback((_) {
         if (mounted && identical(_player, player)) player.play();
       });
@@ -99,6 +103,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     final timing = physicalGestureTiming(
       widget.speed,
       reducedMotion: _reducedMotion ?? false,
+      baseTransitionMs: widget.plan.beadTransitionMs ?? 500,
     );
     return AbacusWidget(
       rods: _rods,

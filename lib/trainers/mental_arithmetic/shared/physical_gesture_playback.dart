@@ -12,18 +12,22 @@ class PhysicalGestureTiming {
   int pauseMs(int baseMs) => (baseMs / rate).round();
 }
 
-/// Medium preserves the existing 500 ms bead transition.
+/// Medium uses the plan's base transition; omitted plans keep the old 500 ms.
 PhysicalGestureTiming physicalGestureTiming(
   PhysicalGestureSpeed speed, {
   bool reducedMotion = false,
+  int baseTransitionMs = 500,
 }) {
+  if (baseTransitionMs <= 0) {
+    throw RangeError('Неверная длительность движения косточки.');
+  }
   final rate = switch (speed) {
     PhysicalGestureSpeed.slow => 0.75,
     PhysicalGestureSpeed.medium => 1.0,
     PhysicalGestureSpeed.fast => 1.5,
   };
   return PhysicalGestureTiming(
-    transitionMs: reducedMotion ? 0 : (500 / rate).round(),
+    transitionMs: reducedMotion ? 0 : (baseTransitionMs / rate).round(),
     rate: rate,
   );
 }
@@ -39,7 +43,11 @@ class PhysicalGesturePlayer {
     int Function()? nowMs,
     TrainerTimerFactory? timerFactory,
   }) : frames = compilePhysicalGesturePlan(plan) {
-    final timing = physicalGestureTiming(speed, reducedMotion: reducedMotion);
+    final timing = physicalGestureTiming(
+      speed,
+      reducedMotion: reducedMotion,
+      baseTransitionMs: plan.beadTransitionMs ?? 500,
+    );
     final events = <PhysicalGestureFrame?>[...frames];
     if (events.isNotEmpty) {
       events.add(null); // Completion follows the final bead animation.

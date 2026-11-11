@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
@@ -6,6 +8,45 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_painter.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 
 void main() {
+  test('red marker bead keeps its color after moving up', () async {
+    Future<ui.Color> markerColor(int earthCount) async {
+      final rods = [
+        RodState(heavenUp: false, earthCount: earthCount),
+        ...emptyRods(2),
+      ];
+      final layout = layoutsForRods(rods);
+      final viewBox = abacusViewBox(3);
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      AbacusPainter(
+        rodLayouts: layout,
+        rods: rods,
+        totalRods: 3,
+      ).paint(canvas, ui.Size(viewBox.width, viewBox.height));
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(
+        viewBox.width.ceil(),
+        viewBox.height.ceil(),
+      );
+      picture.dispose();
+      final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final x = rodCenterX(0).round();
+      final y = layout[0].earthYs[0].round();
+      final offset = (y * image.width + x) * 4;
+      final color = ui.Color.fromARGB(
+        data!.getUint8(offset + 3),
+        data.getUint8(offset),
+        data.getUint8(offset + 1),
+        data.getUint8(offset + 2),
+      );
+      image.dispose();
+      return color;
+    }
+
+    expect(await markerColor(0), AbacusColors.beadMarkerFill);
+    expect(await markerColor(1), AbacusColors.beadMarkerFill);
+  });
+
   testWidgets(
     'custom bead duration animates positions then reaches the target',
     (tester) async {

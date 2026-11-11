@@ -119,7 +119,7 @@ class AbacusPainter extends CustomPainter {
           direction: earthBeadMoveDirection(movingHighlight, beadIndex),
           active: isActive,
         ),
-        marked: !isActive && isMarkedEarthBead(rodIndex, beadIndex, totalRods),
+        marked: isMarkedEarthBead(rodIndex, beadIndex, totalRods),
       );
     }
   }

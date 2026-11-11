@@ -42,6 +42,7 @@ class RodPassGestureStep extends PhysicalGestureStep {
     required this.hand,
     required this.fingers,
     super.pauseAfterMs,
+    this.pauseAfterPassMs,
     super.audioKey,
   });
 
@@ -49,13 +50,19 @@ class RodPassGestureStep extends PhysicalGestureStep {
   final RodState to;
   final AbacusHand hand;
   final List<AbacusFinger> fingers;
+  final int? pauseAfterPassMs;
 }
 
 class PhysicalGesturePlan {
-  const PhysicalGesturePlan({required this.initialRods, required this.steps});
+  const PhysicalGesturePlan({
+    required this.initialRods,
+    required this.steps,
+    this.beadTransitionMs,
+  });
 
   final List<RodState> initialRods;
   final List<PhysicalGestureStep> steps;
+  final int? beadTransitionMs;
 }
 
 class PhysicalGestureFrame {
@@ -97,6 +104,11 @@ void _validateMove(PhysicalBeadMove move, List<RodState> rods, Set<int> used) {
 List<PhysicalGestureFrame> compilePhysicalGesturePlan(
   PhysicalGesturePlan plan,
 ) {
+  if (plan.beadTransitionMs != null && plan.beadTransitionMs! <= 0) {
+    throw RangeError(
+      'Длительность движения косточки должна быть положительной.',
+    );
+  }
   if (plan.initialRods.isEmpty ||
       plan.initialRods.any((rod) => !_validRod(rod))) {
     throw RangeError('Начальное положение абакуса недопустимо.');
@@ -153,6 +165,10 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
         if (step.rodIndices.isEmpty) {
           throw StateError('Проход по стержням не может быть пустым.');
         }
+        final endPause = step.pauseAfterPassMs ?? step.pauseAfterMs;
+        if (endPause < 0) {
+          throw RangeError('Пауза после прохода должна быть неотрицательной.');
+        }
         for (var index = 0; index < step.rodIndices.length; index++) {
           append(
             [
@@ -163,7 +179,7 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
                 fingers: step.fingers,
               ),
             ],
-            step.pauseAfterMs,
+            index == step.rodIndices.length - 1 ? endPause : step.pauseAfterMs,
             index == 0 ? audioKey : null,
           );
         }

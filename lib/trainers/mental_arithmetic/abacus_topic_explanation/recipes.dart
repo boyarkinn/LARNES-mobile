@@ -2,7 +2,9 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
-const simpleOneRodIndex = 12;
+// The single-digit «Просто 1–9» lessons use a compact six-rod abacus.
+const simpleOneRodCount = 6;
+const simpleOneRodIndex = simpleOneRodCount - 1;
 const _audioPrefix = 'explanation:abacus-topic:simple-1:';
 
 String simpleOneCue(String slug) => '$_audioPrefix$slug';
@@ -30,13 +32,33 @@ GroupGestureStep _change(
   returnAfter: returnAfter,
 );
 
+SetupGestureStep _setup(int digit, {String? cue, int pauseAfterMs = 0}) =>
+    SetupGestureStep(
+      changes: [
+        BeadOnlyMove(rodIndex: simpleOneRodIndex, to: digitToBeads(digit)),
+      ],
+      audioKey: cue == null ? null : simpleOneCue(cue),
+      audioMode: cue == null
+          ? PhysicalGestureAudioMode.before
+          : PhysicalGestureAudioMode.parallel,
+      pauseAfterMs: pauseAfterMs,
+    );
+
 /// The video starts at zero, demonstrates the technique at bases 0–3, then
-/// solves +1 +1 +1 +1 −1 −1 −1 −1. Silent setup steps establish each base.
+/// solves +1 +1 +1 +1 −1 −1 −1 −1. Setup changes the beads during
+/// the longer narration, with both hands at rest.
 PhysicalGesturePlan _buildSimpleOne() {
   final steps = <PhysicalGestureStep>[
     NarrationGestureStep(audioKey: simpleOneCue('intro')),
-    _change(1, AbacusFinger.thumb, cue: 'add-one'),
-    _change(0, AbacusFinger.indexFinger, cue: 'remove-one', returnAfter: true),
+    NarrationGestureStep(audioKey: simpleOneCue('add-one')),
+    _change(1, AbacusFinger.thumb, cue: 'example-plus-one', returnAfter: true),
+    NarrationGestureStep(audioKey: simpleOneCue('remove-one')),
+    _change(
+      0,
+      AbacusFinger.indexFinger,
+      cue: 'example-minus-one',
+      returnAfter: true,
+    ),
   ];
 
   for (final (base, slug) in [
@@ -44,8 +66,15 @@ PhysicalGesturePlan _buildSimpleOne() {
     (2, 'from-two'),
     (3, 'from-three'),
   ]) {
-    steps.add(_change(base, AbacusFinger.thumb));
-    steps.add(_change(base + 1, AbacusFinger.thumb, cue: slug));
+    steps.add(_setup(base, cue: slug));
+    steps.add(
+      _change(
+        base + 1,
+        AbacusFinger.thumb,
+        cue: 'example-plus-one',
+        returnAfter: true,
+      ),
+    );
     steps.add(
       _change(
         base,
@@ -56,7 +85,7 @@ PhysicalGesturePlan _buildSimpleOne() {
     );
   }
 
-  steps.add(_change(0, AbacusFinger.indexFinger, returnAfter: true));
+  steps.add(_setup(0, pauseAfterMs: 450));
   steps.add(NarrationGestureStep(audioKey: simpleOneCue('example-intro')));
   for (var digit = 1; digit <= 4; digit++) {
     steps.add(_change(digit, AbacusFinger.thumb, cue: 'example-plus-one'));
@@ -72,7 +101,7 @@ PhysicalGesturePlan _buildSimpleOne() {
     );
   }
   final plan = PhysicalGesturePlan(
-    initialRods: numberToAbacus(0, 13),
+    initialRods: numberToAbacus(0, simpleOneRodCount),
     steps: List.unmodifiable(steps),
     beadTransitionMs: 400,
   );

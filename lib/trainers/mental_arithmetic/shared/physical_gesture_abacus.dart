@@ -106,8 +106,12 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
         if (!mounted) return;
         setState(() {
           if (widget.showHands && !reducedMotion) {
-            _handMotions = handMotionsForFrame(_rods, frame);
-            _handPhase = HandMotionPhase.move;
+            _handMotions = frame.moves.isEmpty
+                ? const []
+                : handMotionsForFrame(_rods, frame);
+            _handPhase = frame.moves.isEmpty
+                ? HandMotionPhase.idle
+                : HandMotionPhase.move;
             _handSequence++;
           }
           _rods = frame.rods;

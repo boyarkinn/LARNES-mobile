@@ -146,6 +146,91 @@ PhysicalGesturePlan _topicParityPlan() {
 }
 
 void main() {
+  test('parallel setup moves beads with parked hands and rewinds on pause', () {
+    fakeAsync((clock) {
+      final cues = <Completer<void>>[];
+      final seen = <String>[];
+      final cancelled = <int>[];
+      final plan = PhysicalGesturePlan(
+        initialRods: emptyRods(1),
+        beadTransitionMs: 100,
+        steps: [
+          SetupGestureStep(
+            changes: [BeadOnlyMove(rodIndex: 0, to: digitToBeads(1))],
+            audioKey: 'condition',
+            audioMode: PhysicalGestureAudioMode.parallel,
+          ),
+          GroupGestureStep(
+            moves: [
+              PhysicalBeadMove(
+                rodIndex: 0,
+                to: digitToBeads(2),
+                hand: AbacusHand.right,
+                fingers: const [AbacusFinger.thumb],
+              ),
+            ],
+            audioKey: 'plus-one',
+            audioMode: PhysicalGestureAudioMode.parallel,
+            pauseAfterMs: 0,
+            returnAfter: true,
+          ),
+          const NarrationGestureStep(audioKey: 'next'),
+        ],
+      );
+      final frames = compilePhysicalGesturePlan(plan);
+      expect(frames.map((frame) => abacusToNumber(frame.rods)), [1, 2]);
+      expect(frames.first.moves, isEmpty);
+      final player = PhysicalGesturePlayer(
+        plan: plan,
+        speed: PhysicalGestureSpeed.medium,
+        prepareMs: 80,
+        returnMs: 70,
+        onPrepare: (_, index) => seen.add('prepare:$index'),
+        onFrame: (frame, index) =>
+            seen.add('frame:$index:${abacusToNumber(frame.rods)}'),
+        onReturn: (_, index) => seen.add('return:$index'),
+        onReset: (rods, _) => seen.add('reset:${abacusToNumber(rods)}'),
+        onCue: (key, signal) {
+          seen.add('cue:$key');
+          final index = cues.length;
+          signal.onCancel(() => cancelled.add(index));
+          cues.add(Completer<void>());
+          return cues.last.future;
+        },
+        nowMs: () => clock.elapsed.inMilliseconds,
+      );
+      player.play();
+      expect(seen, ['cue:condition', 'frame:0:1']);
+      clock.elapse(const Duration(milliseconds: 100));
+      expect(seen, ['cue:condition', 'frame:0:1']);
+      player.pause();
+      expect(cancelled, [0]);
+      expect(seen.last, 'reset:0');
+      expect(player.position, 0);
+
+      player.play();
+      expect(seen.last, 'frame:0:1');
+      cues[0].complete();
+      clock.flushMicrotasks();
+      expect(seen, isNot(contains('prepare:1')));
+      clock.elapse(const Duration(milliseconds: 100));
+      expect(seen, isNot(contains('prepare:1')));
+      cues[1].complete();
+      clock.flushMicrotasks();
+      expect(seen.last, 'prepare:1');
+      clock.elapse(const Duration(milliseconds: 80));
+      expect(seen.last, 'frame:1:2');
+      expect(seen[seen.length - 2], 'cue:plus-one');
+      cues[2].complete();
+      clock.flushMicrotasks();
+      clock.elapse(const Duration(milliseconds: 100));
+      expect(seen.last, 'return:1');
+      clock.elapse(const Duration(milliseconds: 70));
+      expect(seen.last, 'cue:next');
+      player.cancel();
+    });
+  });
+
   test('narration-only plan completes without abacus frames', () {
     fakeAsync((clock) {
       final speech = Completer<void>();
@@ -543,6 +628,22 @@ void main() {
                   hand: AbacusHand.left,
                   fingers: const [AbacusFinger.thumb],
                 ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(
+      () => compilePhysicalGesturePlan(
+        PhysicalGesturePlan(
+          initialRods: initial,
+          steps: [
+            SetupGestureStep(
+              changes: [
+                BeadOnlyMove(rodIndex: 0, to: digitToBeads(1)),
+                BeadOnlyMove(rodIndex: 0, to: digitToBeads(2)),
               ],
             ),
           ],

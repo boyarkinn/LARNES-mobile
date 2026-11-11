@@ -20,6 +20,14 @@ class PhysicalBeadMove {
   final List<AbacusFinger> fingers;
 }
 
+/// A bead change used to establish a starting value without a hand gesture.
+class BeadOnlyMove {
+  const BeadOnlyMove({required this.rodIndex, required this.to});
+
+  final int rodIndex;
+  final RodState to;
+}
+
 sealed class PhysicalGestureStep {
   const PhysicalGestureStep({
     this.pauseAfterMs = 200,
@@ -38,6 +46,19 @@ sealed class PhysicalGestureStep {
 class NarrationGestureStep extends PhysicalGestureStep {
   const NarrationGestureStep({required String audioKey, super.pauseAfterMs = 0})
     : super(audioKey: audioKey);
+}
+
+/// Establishes the abacus state while both hands remain at rest.
+class SetupGestureStep extends PhysicalGestureStep {
+  const SetupGestureStep({
+    required this.changes,
+    this.audioMode = PhysicalGestureAudioMode.before,
+    super.audioKey,
+    super.pauseAfterMs = 0,
+  });
+
+  final List<BeadOnlyMove> changes;
+  final PhysicalGestureAudioMode audioMode;
 }
 
 class GroupGestureStep extends PhysicalGestureStep {
@@ -121,23 +142,32 @@ List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
 
 bool _validRod(RodState rod) => rod.earthCount >= 0 && rod.earthCount <= 4;
 
-void _validateMove(PhysicalBeadMove move, List<RodState> rods, Set<int> used) {
-  if (move.rodIndex < 0 || move.rodIndex >= rods.length) {
+void _validateTarget(
+  int rodIndex,
+  RodState to,
+  List<RodState> rods,
+  Set<int> used,
+) {
+  if (rodIndex < 0 || rodIndex >= rods.length) {
     throw RangeError('Стержень жеста вне абакуса.');
   }
-  if (used.contains(move.rodIndex)) {
+  if (used.contains(rodIndex)) {
     throw StateError('Один стержень не может двигаться дважды одновременно.');
   }
-  if (!_validRod(move.to)) {
+  if (!_validRod(to)) {
     throw RangeError('Недопустимое положение косточек.');
   }
+  if (rods[rodIndex] == to) {
+    throw StateError('Жест не меняет положение косточек.');
+  }
+  used.add(rodIndex);
+}
+
+void _validateMove(PhysicalBeadMove move, List<RodState> rods, Set<int> used) {
+  _validateTarget(move.rodIndex, move.to, rods, used);
   if (move.fingers.isEmpty) {
     throw StateError('Укажите пальцы для каждого движения.');
   }
-  if (rods[move.rodIndex] == move.to) {
-    throw StateError('Жест не меняет положение косточек.');
-  }
-  used.add(move.rodIndex);
 }
 
 /// Expands a rod pass into sequential frames; moves in one group share a frame.
@@ -195,6 +225,33 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
     );
   }
 
+  void appendSetup(
+    List<BeadOnlyMove> changes,
+    int pauseAfterMs,
+    String? audioKey,
+  ) {
+    if (changes.isEmpty) {
+      throw StateError('Подготовка абакуса не может быть пустой.');
+    }
+    final used = <int>{};
+    for (final change in changes) {
+      _validateTarget(change.rodIndex, change.to, rods, used);
+    }
+    final next = List<RodState>.of(rods);
+    for (final change in changes) {
+      next[change.rodIndex] = change.to;
+    }
+    rods = next;
+    frames.add(
+      PhysicalGestureFrame(
+        rods: List.unmodifiable(next),
+        moves: const [],
+        pauseAfterMs: pauseAfterMs,
+        audioKey: audioKey,
+      ),
+    );
+  }
+
   for (final step in plan.steps) {
     if (step.pauseAfterMs < 0) {
       throw RangeError('Пауза после жеста должна быть неотрицательной.');
@@ -208,6 +265,12 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
         if (audioKey == null) {
           throw StateError('Для речевого шага нужен ключ аудио.');
         }
+      case SetupGestureStep():
+        if (step.audioMode == PhysicalGestureAudioMode.parallel &&
+            audioKey == null) {
+          throw StateError('Для параллельной речи нужен ключ аудио.');
+        }
+        appendSetup(step.changes, step.pauseAfterMs, audioKey);
       case GroupGestureStep():
         if (step.audioMode == PhysicalGestureAudioMode.parallel &&
             audioKey == null) {

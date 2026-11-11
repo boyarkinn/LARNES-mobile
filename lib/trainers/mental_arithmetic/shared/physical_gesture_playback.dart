@@ -164,6 +164,7 @@ class PhysicalGesturePlayer {
       stepStarts.add(events.length);
       stepFrameStarts.add(frameIndex);
       final parallel = switch (step) {
+        SetupGestureStep(:final audioMode) ||
         GroupGestureStep(:final audioMode) ||
         RodPassGestureStep(
           :final audioMode,
@@ -176,12 +177,13 @@ class PhysicalGesturePlayer {
 
       final frameCount = switch (step) {
         NarrationGestureStep() => 0,
+        SetupGestureStep() => 1,
         GroupGestureStep() => 1,
         RodPassGestureStep(:final rodIndices) => rodIndices.length,
       };
       for (var i = 0; i < frameCount; i++) {
         final frame = frames[frameIndex];
-        if (onPrepare != null && !reducedMotion) {
+        if (onPrepare != null && !reducedMotion && frame.moves.isNotEmpty) {
           events.add(
             _PrepareEvent(
               frame,
@@ -194,7 +196,10 @@ class PhysicalGesturePlayer {
           events.add(_ParallelCueEvent(step.audioKey!, stepIndex));
         }
         events.add(_FrameEvent(frame, frameIndex));
-        if (onReturn != null && !reducedMotion && frame.returnAfter) {
+        if (onReturn != null &&
+            !reducedMotion &&
+            frame.moves.isNotEmpty &&
+            frame.returnAfter) {
           events.add(_ReturnEvent(frame, frameIndex));
         }
         frameIndex++;

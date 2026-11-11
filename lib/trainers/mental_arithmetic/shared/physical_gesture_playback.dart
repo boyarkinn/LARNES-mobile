@@ -79,6 +79,12 @@ class _FrameEvent extends _PlaybackEvent {
   final int frameIndex;
 }
 
+class _PrepareEvent extends _PlaybackEvent {
+  const _PrepareEvent(this.frame, this.frameIndex);
+  final PhysicalGestureFrame frame;
+  final int frameIndex;
+}
+
 class _CompleteEvent extends _PlaybackEvent {
   const _CompleteEvent();
 }
@@ -89,6 +95,8 @@ class PhysicalGesturePlayer {
     required PhysicalGesturePlan plan,
     required PhysicalGestureSpeed speed,
     required void Function(PhysicalGestureFrame frame, int index) onFrame,
+    void Function(PhysicalGestureFrame frame, int index)? onPrepare,
+    int prepareMs = 120,
     Future<void> Function(String key, GestureCueSignal signal)? onCue,
     void Function()? onComplete,
     bool reducedMotion = false,
@@ -111,6 +119,9 @@ class PhysicalGesturePlayer {
       if (onCue != null && frame.audioKey != null) {
         events.add(_CueEvent(frame.audioKey!));
       }
+      if (onPrepare != null && !reducedMotion) {
+        events.add(_PrepareEvent(frame, frameIndex));
+      }
       events.add(_FrameEvent(frame, frameIndex));
     }
     frameStarts.add(events.length);
@@ -122,6 +133,7 @@ class PhysicalGesturePlayer {
         if (index == 0) return 0;
         final previous = events[index - 1];
         if (previous is _CueEvent) return 0;
+        if (previous is _PrepareEvent) return timing.pauseMs(prepareMs);
         if (previous is! _FrameEvent) {
           throw StateError('Нарушен порядок жестов.');
         }
@@ -132,6 +144,8 @@ class PhysicalGesturePlayer {
       },
       onEvent: (event, _) {
         switch (event) {
+          case _PrepareEvent():
+            onPrepare?.call(event.frame, event.frameIndex);
           case _FrameEvent():
             _framePosition = event.frameIndex + 1;
             onFrame(event.frame, event.frameIndex);

@@ -30,6 +30,7 @@ class AbacusWarmupTrainer extends StatelessWidget {
               'fast' => PhysicalGestureSpeed.fast,
               _ => PhysicalGestureSpeed.medium,
             },
+            showHands: true,
             onComplete: onComplete,
             onCue: (key, signal) async {
               final clip = speechAudioFile(key);

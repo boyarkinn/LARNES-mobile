@@ -54,6 +54,7 @@ dependencies:
   permission_handler: ^11.4.0
   flutter_timezone: ^5.1.1
   timezone: ^0.11.1
+  rive: 0.14.11
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -79,6 +80,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/animations/abacus-hand.riv
     - assets/sounds/
     - assets/brand/
     - assets/call/

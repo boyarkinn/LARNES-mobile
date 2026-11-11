@@ -230,6 +230,42 @@ void main() {
     );
   });
 
+  test('hand preparation precedes the bead frame without moving beads', () {
+    fakeAsync((clock) {
+      final seen = <String>[];
+      final plan = PhysicalGesturePlan(
+        initialRods: emptyRods(1),
+        steps: [
+          GroupGestureStep(
+            moves: [
+              PhysicalBeadMove(
+                rodIndex: 0,
+                to: digitToBeads(1),
+                hand: AbacusHand.right,
+                fingers: [AbacusFinger.thumb],
+              ),
+            ],
+          ),
+        ],
+      );
+      final player = PhysicalGesturePlayer(
+        plan: plan,
+        speed: PhysicalGestureSpeed.medium,
+        onPrepare: (_, _) => seen.add('prepare'),
+        onFrame: (_, _) => seen.add('move'),
+        nowMs: () => clock.elapsed.inMilliseconds,
+      );
+      player.play();
+      expect(seen, ['prepare']);
+      expect(player.position, 0);
+      clock.elapse(const Duration(milliseconds: 119));
+      expect(seen, ['prepare']);
+      clock.elapse(const Duration(milliseconds: 1));
+      expect(seen, ['prepare', 'move']);
+      expect(player.position, 1);
+    });
+  });
+
   test('waits for each animation, pauses, cancels and completes once', () {
     fakeAsync((clock) {
       final seen = <(int, int)>[];

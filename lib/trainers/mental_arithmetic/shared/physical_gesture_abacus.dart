@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_playback.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_motion.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_layer.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 
-/// Shared scene binding: owns playback lifecycle and paints only the abacus.
+/// Shared scene binding: owns playback and overlays optional physical hands.
 class PhysicalGestureAbacus extends StatefulWidget {
   const PhysicalGestureAbacus({
     super.key,
@@ -14,6 +17,7 @@ class PhysicalGestureAbacus extends StatefulWidget {
     this.autoPlay = true,
     this.onComplete,
     this.onCue,
+    this.showHands = false,
   });
 
   final PhysicalGesturePlan plan;
@@ -21,6 +25,7 @@ class PhysicalGestureAbacus extends StatefulWidget {
   final bool autoPlay;
   final VoidCallback? onComplete;
   final Future<void> Function(String key, GestureCueSignal signal)? onCue;
+  final bool showHands;
 
   @override
   State<PhysicalGestureAbacus> createState() => _PhysicalGestureAbacusState();
@@ -31,6 +36,9 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   PhysicalGesturePlayer? _player;
   bool? _reducedMotion;
   bool _completed = false;
+  List<AbacusHandMotion> _handMotions = const [];
+  HandMotionPhase _handPhase = HandMotionPhase.prepare;
+  int _handSequence = -1;
 
   @override
   void initState() {
@@ -68,13 +76,33 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     final oldPosition = preservePosition ? _player?.position ?? 0 : 0;
     _player?.cancel();
     _reducedMotion = reducedMotion;
+    _handMotions = const [];
+    _handSequence = -1;
     final player = PhysicalGesturePlayer(
       plan: widget.plan,
       speed: widget.speed,
       reducedMotion: reducedMotion,
       onFrame: (frame, _) {
-        if (mounted) setState(() => _rods = frame.rods);
+        if (!mounted) return;
+        setState(() {
+          if (widget.showHands && !reducedMotion) {
+            _handMotions = handMotionsForFrame(_rods, frame);
+            _handPhase = HandMotionPhase.move;
+            _handSequence++;
+          }
+          _rods = frame.rods;
+        });
       },
+      onPrepare: widget.showHands && !reducedMotion
+          ? (frame, _) {
+              if (!mounted) return;
+              setState(() {
+                _handMotions = handMotionsForFrame(_rods, frame);
+                _handPhase = HandMotionPhase.prepare;
+                _handSequence++;
+              });
+            }
+          : null,
       onCue: widget.onCue,
       onComplete: () {
         if (!mounted || _completed) return;
@@ -108,10 +136,33 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       reducedMotion: _reducedMotion ?? false,
       baseTransitionMs: widget.plan.beadTransitionMs ?? 500,
     );
-    return AbacusWidget(
+    final abacus = AbacusWidget(
       rods: _rods,
       totalRods: widget.plan.initialRods.length,
       beadAnimationDuration: Duration(milliseconds: timing.transitionMs),
+    );
+    if (!widget.showHands || (_reducedMotion ?? false)) return abacus;
+    final viewBox = abacusViewBox(widget.plan.initialRods.length);
+    return FittedBox(
+      child: SizedBox(
+        width: viewBox.width,
+        height: viewBox.height,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(child: abacus),
+            Positioned.fill(
+              child: AbacusHandLayer(
+                motions: _handMotions,
+                phase: _handPhase,
+                sequence: _handSequence,
+                moveMs: timing.transitionMs,
+                prepareMs: timing.pauseMs(120),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

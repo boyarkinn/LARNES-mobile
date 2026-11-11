@@ -1,0 +1,45 @@
+{
+  "initialDigits": "0000000000000",
+  "steps": [
+    {
+      "kind": "group",
+      "moves": [
+        { "rodIndex": 0, "toDigit": 4, "hand": "left", "fingers": ["thumb"] },
+        { "rodIndex": 12, "toDigit": 5, "hand": "right", "fingers": ["index"] }
+      ],
+      "pauseAfterMs": 200,
+      "audioKey": "explanation:abacus-warmup:fixture"
+    },
+    {
+      "kind": "pass",
+      "rodIndices": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "toDigit": 1,
+      "hand": "left",
+      "fingers": ["thumb"],
+      "pauseAfterMs": 100
+    },
+    {
+      "kind": "group",
+      "moves": [
+        { "rodIndex": 0, "toDigit": 9, "hand": "left", "fingers": ["thumb", "index"] },
+        { "rodIndex": 12, "toDigit": 0, "hand": "right", "fingers": ["index"] }
+      ],
+      "pauseAfterMs": 0
+    }
+  ],
+  "expectedDigits": [
+    "4000000000005",
+    "4100000000005",
+    "4110000000005",
+    "4111000000005",
+    "4111100000005",
+    "4111110000005",
+    "4111111000005",
+    "4111111100005",
+    "4111111110005",
+    "4111111111005",
+    "4111111111105",
+    "4111111111115",
+    "9111111111110"
+  ]
+}

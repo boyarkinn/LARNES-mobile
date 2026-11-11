@@ -10,6 +10,7 @@ class AbacusWidget extends StatefulWidget {
     required this.rods,
     required this.totalRods,
     this.animate = true,
+    this.beadAnimationDuration = const Duration(milliseconds: 500),
     this.activeBeadColor,
     this.loweringBeadColor,
     this.movingBeadHighlights,
@@ -19,6 +20,7 @@ class AbacusWidget extends StatefulWidget {
   final List<RodState> rods;
   final int totalRods;
   final bool animate;
+  final Duration beadAnimationDuration;
   final Color? activeBeadColor;
   final Color? loweringBeadColor;
   final List<RodMovingBeadHighlight>? movingBeadHighlights;
@@ -30,11 +32,10 @@ class AbacusWidget extends StatefulWidget {
 
 class _AbacusWidgetState extends State<AbacusWidget>
     with SingleTickerProviderStateMixin {
-  static const _duration = Duration(milliseconds: 500);
-
   late List<RodBeadLayout> _fromLayouts;
   late List<RodBeadLayout> _toLayouts;
   AnimationController? _controller;
+  bool _reduceMotion = false;
 
   @override
   void initState() {
@@ -42,22 +43,43 @@ class _AbacusWidgetState extends State<AbacusWidget>
     _toLayouts = layoutsForRods(widget.rods);
     _fromLayouts = _toLayouts;
     if (widget.animate) {
-      _controller = AnimationController(vsync: this, duration: _duration)
-        ..value = 1;
+      _controller = AnimationController(
+        vsync: this,
+        duration: widget.beadAnimationDuration,
+      )..value = 1;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (_reduceMotion) {
+      _controller?.stop();
+      _controller?.value = 1;
     }
   }
 
   @override
   void didUpdateWidget(AbacusWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.rods == widget.rods && oldWidget.totalRods == widget.totalRods) {
+    if (oldWidget.beadAnimationDuration != widget.beadAnimationDuration) {
+      _controller?.duration = widget.beadAnimationDuration;
+    }
+    if (oldWidget.rods == widget.rods &&
+        oldWidget.totalRods == widget.totalRods) {
       return;
     }
 
     _fromLayouts = _displayLayouts;
     _toLayouts = layoutsForRods(widget.rods);
 
-    if (!widget.animate || _controller == null) {
+    if (!widget.animate ||
+        _controller == null ||
+        _reduceMotion ||
+        widget.beadAnimationDuration == Duration.zero) {
+      _controller?.stop();
+      _controller?.value = 1;
       setState(() {});
       return;
     }
@@ -104,7 +126,9 @@ class _AbacusWidgetState extends State<AbacusWidget>
       );
     }
 
-    if (_controller == null || (MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+    if (_controller == null ||
+        _reduceMotion ||
+        widget.beadAnimationDuration == Duration.zero) {
       return FittedBox(child: painted(_toLayouts));
     }
 

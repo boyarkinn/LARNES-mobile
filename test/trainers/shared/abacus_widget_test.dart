@@ -6,6 +6,48 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_painter.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 
 void main() {
+  testWidgets(
+    'custom bead duration animates positions then reaches the target',
+    (tester) async {
+      var rods = emptyRods(1);
+      late StateSetter update;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return AbacusWidget(
+                rods: rods,
+                totalRods: 1,
+                beadAnimationDuration: const Duration(milliseconds: 333),
+              );
+            },
+          ),
+        ),
+      );
+
+      List<RodBeadLayout> displayed() =>
+          (tester
+                      .widget<CustomPaint>(
+                        find.descendant(
+                          of: find.byType(AbacusWidget),
+                          matching: find.byType(CustomPaint),
+                        ),
+                      )
+                      .painter!
+                  as AbacusPainter)
+              .rodLayouts;
+
+      final target = layoutsForRods(numberToAbacus(4, 1)).single;
+      update(() => rods = numberToAbacus(4, 1));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(displayed().single.earthYs, isNot(target.earthYs));
+      await tester.pump(const Duration(milliseconds: 233));
+      expect(displayed().single.earthYs, target.earthYs);
+    },
+  );
+
   testWidgets('reduced motion paints the target bead positions immediately', (
     tester,
   ) async {

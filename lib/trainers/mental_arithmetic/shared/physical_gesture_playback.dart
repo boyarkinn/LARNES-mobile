@@ -4,9 +4,16 @@ import 'package:larnes_mobile/trainers/shared/trainer_playback_controller.dart';
 enum PhysicalGestureSpeed { slow, medium, fast }
 
 class PhysicalGestureTiming {
-  const PhysicalGestureTiming({required this.transitionMs, required this.rate});
+  const PhysicalGestureTiming({
+    required this.transitionMs,
+    required this.frameMs,
+    required this.rate,
+  });
 
   final int transitionMs;
+
+  /// Time each state remains visible, including reduced-motion mode.
+  final int frameMs;
   final double rate;
 
   int pauseMs(int baseMs) => (baseMs / rate).round();
@@ -28,6 +35,7 @@ PhysicalGestureTiming physicalGestureTiming(
   };
   return PhysicalGestureTiming(
     transitionMs: reducedMotion ? 0 : (baseTransitionMs / rate).round(),
+    frameMs: (baseTransitionMs / rate).round(),
     rate: rate,
   );
 }
@@ -58,7 +66,7 @@ class PhysicalGesturePlayer {
         if (index == 0) return 0;
         final previous = events[index - 1];
         if (previous == null) throw StateError('Нарушен порядок жестов.');
-        return timing.transitionMs +
+        return timing.frameMs +
             (events[index] == null ? 0 : timing.pauseMs(previous.pauseAfterMs));
       },
       onEvent: (frame, index) {

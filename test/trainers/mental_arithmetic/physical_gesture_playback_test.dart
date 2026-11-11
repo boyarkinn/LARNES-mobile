@@ -148,6 +148,13 @@ void main() {
       ).transitionMs,
       0,
     );
+    expect(
+      physicalGestureTiming(
+        PhysicalGestureSpeed.medium,
+        reducedMotion: true,
+      ).frameMs,
+      500,
+    );
   });
 
   test('waits for each animation, pauses, cancels and completes once', () {
@@ -207,10 +214,12 @@ void main() {
       );
       player.play();
       expect(times, [0]);
-      clock.elapse(const Duration(milliseconds: 200));
-      expect(times[1], 200);
-      clock.elapse(const Duration(milliseconds: 100));
-      expect(times[2], 300);
+      clock.elapse(const Duration(milliseconds: 699));
+      expect(times, [0]);
+      clock.elapse(const Duration(milliseconds: 1));
+      expect(times[1], 700);
+      clock.elapse(const Duration(milliseconds: 600));
+      expect(times[2], 1300);
     });
   });
 

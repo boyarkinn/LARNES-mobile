@@ -47,6 +47,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
   List<AbacusHandMotion> _handMotions = const [];
   HandMotionPhase _handPhase = HandMotionPhase.idle;
   int _handSequence = -1;
+  double _activeTempoMultiplier = 1;
   bool _handAssetsReady = false;
   bool _autoplayStarted = false;
   Timer? _riveSplashTimer;
@@ -99,6 +100,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     _handMotions = const [];
     _handPhase = HandMotionPhase.idle;
     _handSequence = -1;
+    _activeTempoMultiplier = 1;
     _autoplayStarted = false;
     final player = PhysicalGesturePlayer(
       plan: widget.plan,
@@ -109,6 +111,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       onFrame: (frame, _) {
         if (!mounted) return;
         setState(() {
+          _activeTempoMultiplier = frame.tempoMultiplier;
           if (widget.showHands && !reducedMotion) {
             _handMotions = frame.moves.isEmpty
                 ? const []
@@ -125,6 +128,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
           ? (frame, _) {
               if (!mounted) return;
               setState(() {
+                _activeTempoMultiplier = frame.tempoMultiplier;
                 _handMotions = handMotionsForFrame(_rods, frame);
                 _handPhase = HandMotionPhase.prepare;
                 _handSequence++;
@@ -132,9 +136,10 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
             }
           : null,
       onReturn: widget.showHands && !reducedMotion
-          ? (_, _) {
+          ? (frame, _) {
               if (!mounted) return;
               setState(() {
+                _activeTempoMultiplier = frame.tempoMultiplier;
                 _handPhase = HandMotionPhase.returning;
                 _handSequence++;
               });
@@ -212,7 +217,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       widget.speed,
       reducedMotion: _reducedMotion ?? false,
       baseTransitionMs: widget.plan.beadTransitionMs ?? 500,
-      tempoMultiplier: widget.tempoMultiplier,
+      tempoMultiplier: widget.tempoMultiplier * _activeTempoMultiplier,
     );
     final abacus = AbacusWidget(
       rods: _rods,

@@ -158,6 +158,13 @@ class PhysicalGesturePlayer {
       baseTransitionMs: plan.beadTransitionMs ?? 500,
       tempoMultiplier: tempoMultiplier,
     );
+    PhysicalGestureTiming timingForFrame(PhysicalGestureFrame frame) =>
+        physicalGestureTiming(
+          speed,
+          reducedMotion: reducedMotion,
+          baseTransitionMs: plan.beadTransitionMs ?? 500,
+          tempoMultiplier: tempoMultiplier * frame.tempoMultiplier,
+        );
     final events = <_PlaybackEvent>[];
     final stepStarts = <int>[];
     final stepFrameStarts = <int>[];
@@ -168,18 +175,21 @@ class PhysicalGesturePlayer {
     var frameIndex = 0;
     for (var stepIndex = 0; stepIndex < plan.steps.length; stepIndex++) {
       final step = plan.steps[stepIndex];
+      final allowCue = plan.stepPlayback[stepIndex]?.narrationEnabled != false;
       stepStarts.add(events.length);
       stepFrameStarts.add(frameIndex);
-      final parallel = switch (step) {
-        SetupGestureStep(:final audioMode) ||
-        GroupGestureStep(:final audioMode) ||
-        SeriesGestureStep(:final audioMode) ||
-        RodPassGestureStep(
-          :final audioMode,
-        ) => audioMode == PhysicalGestureAudioMode.parallel,
-        NarrationGestureStep() => false,
-      };
-      if (!parallel && onCue != null && step.audioKey != null) {
+      final parallel =
+          allowCue &&
+          (switch (step) {
+            SetupGestureStep(:final audioMode) ||
+            GroupGestureStep(:final audioMode) ||
+            SeriesGestureStep(:final audioMode) ||
+            RodPassGestureStep(
+              :final audioMode,
+            ) => audioMode == PhysicalGestureAudioMode.parallel,
+            NarrationGestureStep() => false,
+          });
+      if (!parallel && allowCue && onCue != null && step.audioKey != null) {
         events.add(_CueEvent(step.audioKey!, stepIndex));
       }
 
@@ -237,19 +247,27 @@ class PhysicalGesturePlayer {
       events: events,
       delayBeforeMs: (event, index) {
         final previous = index == 0 ? null : events[index - 1];
+        final frameTiming = switch (previous) {
+          _PrepareEvent(:final frame) ||
+          _ReturnEvent(:final frame) ||
+          _FrameEvent(:final frame) => timingForFrame(frame),
+          _ => timing,
+        };
         if (event is _StepBoundaryEvent) {
           if (event.narration) {
-            return timing.narrationPauseMs(event.pauseAfterMs);
+            return frameTiming.narrationPauseMs(event.pauseAfterMs);
           }
           if (previous is _ReturnEvent) {
-            return timing.movementMs(returnMs) >
-                    timing.pauseMs(event.pauseAfterMs)
-                ? timing.movementMs(returnMs)
-                : timing.pauseMs(event.pauseAfterMs);
+            return frameTiming.movementMs(returnMs) >
+                    frameTiming.pauseMs(event.pauseAfterMs)
+                ? frameTiming.movementMs(returnMs)
+                : frameTiming.pauseMs(event.pauseAfterMs);
           }
           if (previous is _FrameEvent) {
-            return timing.frameMs +
-                (event.hasNextStep ? timing.pauseMs(event.pauseAfterMs) : 0);
+            return frameTiming.frameMs +
+                (event.hasNextStep
+                    ? frameTiming.pauseMs(event.pauseAfterMs)
+                    : 0);
           }
           throw StateError('Нарушена граница жеста.');
         }
@@ -260,11 +278,12 @@ class PhysicalGesturePlayer {
           return 0;
         }
         if (previous is _PrepareEvent) {
-          return timing.movementMs(prepareMs);
+          return frameTiming.movementMs(prepareMs);
         }
         if (previous is _FrameEvent) {
-          if (event is _ReturnEvent) return timing.frameMs;
-          return timing.frameMs + timing.pauseMs(previous.frame.pauseAfterMs);
+          if (event is _ReturnEvent) return frameTiming.frameMs;
+          return frameTiming.frameMs +
+              frameTiming.pauseMs(previous.frame.pauseAfterMs);
         }
         throw StateError('Нарушен порядок жестов.');
       },

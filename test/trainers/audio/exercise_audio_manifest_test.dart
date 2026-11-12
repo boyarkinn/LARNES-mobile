@@ -37,11 +37,12 @@ void main() {
       expect(scoped.clips.single.semanticKey, 'instruction:abacus-warmup');
       expect(scoped.missing, isEmpty);
       expect(
-        identical(
-          scopeTrainerAudioForParams(manifest, 'abacus-warmup', {}),
+        scopeTrainerAudioForParams(
           manifest,
-        ),
-        true,
+          'abacus-warmup',
+          {},
+        )!.clips.single.semanticKey,
+        'instruction:abacus-warmup',
       );
       expect(
         identical(
@@ -54,28 +55,69 @@ void main() {
       );
     },
   );
+  test('practice warmup drops obsolete block introductions', () {
+    final manifest = ExerciseAudioManifest.fromJson({
+      'trainerKey': 'abacus-warmup',
+      'clips': [
+        for (final type in ['simple-9', 'friends'])
+          {
+            'bytes': 10,
+            'durationMs': 1000,
+            'locale': 'ru-RU',
+            'semanticKey': 'explanation:abacus-warmup:intro:$type',
+            'url': 'https://audio.larnes.ru/$type.mp3',
+          },
+      ],
+    })!;
+    expect(
+      scopeTrainerAudioForParams(manifest, 'abacus-warmup', {
+        'warmupType': 'friends',
+        'withExplanations': false,
+      })!.clips,
+      isEmpty,
+    );
+  });
   test(
-    'practice warmup retains only the selected legacy opening recording',
+    'mixed topics keep the one universal instruction and drop topic titles',
     () {
       final manifest = ExerciseAudioManifest.fromJson({
         'trainerKey': 'abacus-warmup',
         'clips': [
-          for (final type in ['simple-9', 'friends'])
+          for (final key in [
+            'instruction:abacus-warmup',
+            'explanation:abacus-topic:brother-4:intro',
+            'explanation:abacus-topic:brother-1:intro',
+          ])
             {
               'bytes': 10,
               'durationMs': 1000,
-              'locale': 'ru-RU',
-              'semanticKey': 'explanation:abacus-warmup:intro:$type',
-              'url': 'https://audio.larnes.ru/$type.mp3',
+              'locale': 'en-US',
+              'semanticKey': key,
+              'required': false,
+              'url': 'https://audio.larnes.ru/$key.mp3',
             },
         ],
       })!;
+      final params = {
+        'warmupType': 'brothers',
+        'warmupTopics': ['simple-9:2', 'brothers:4', 'friends:9'],
+        'withExplanations': false,
+      };
+      final scoped = scopeTrainerAudioForParams(
+        manifest,
+        'abacus-warmup',
+        params,
+      )!;
+      expect(scoped.clips.single.semanticKey, 'instruction:abacus-warmup');
+      expect(scoped.clips.single.url, contains('instruction:abacus-warmup'));
+      expect(scoped.clips.single.isRequired, true);
       expect(
-        scopeTrainerAudioForParams(manifest, 'abacus-warmup', {
-          'warmupType': 'friends',
-          'withExplanations': false,
-        })!.clips.single.semanticKey,
-        'explanation:abacus-warmup:intro:friends',
+        scopeTrainerAudioForParams(
+          scoped,
+          'abacus-warmup',
+          params,
+        )!.clips.single.url,
+        scoped.clips.single.url,
       );
     },
   );

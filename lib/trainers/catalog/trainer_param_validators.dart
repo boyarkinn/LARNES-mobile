@@ -13,6 +13,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/exa
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/example_parser.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_movement_plan.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_warmup_topics.dart' as warmup;
 import 'package:larnes_mobile/trainers/shared/trainer_constants.dart';
 
 ValidateTrainerParamsResult _fail(String message) {
@@ -51,6 +52,7 @@ ValidateTrainerParamsResult validateAbacusWarmupParams(Map<String, dynamic> raw)
   final warmupType = raw['warmupType'] ?? 'simple-9';
   final speed = raw['speed'] ?? 'medium';
   final withExplanations = raw['withExplanations'] ?? true;
+  final selected = raw['warmupTopics'];
   const allowedTypes = {
     'simple-9', 'simple-tens', 'simple-2digit', 'brothers', 'friends',
   };
@@ -60,11 +62,40 @@ ValidateTrainerParamsResult validateAbacusWarmupParams(Map<String, dynamic> raw)
       speed is! String || !allowedSpeeds.contains(speed) || withExplanations is! bool) {
     return _fail('Некорректные параметры разминки.');
   }
+  List<dynamic>? normalized;
+  if (selected != null) {
+    if (selected is! List || selected.isEmpty || selected.length > 40) {
+      return _fail('Выберите хотя бы одну тему разминки.');
+    }
+    try {
+      if (selected.every((value) => value is int)) {
+        if (selected.length > 9) return _fail('Некорректные темы разминки.');
+        normalized = warmup.resolveWarmupTopics(warmupType, selected.cast<int>());
+      } else {
+        normalized = warmup.resolveWarmupSelection(warmupType, selected);
+      }
+    } on ArgumentError {
+      return _fail('Неизвестная тема разминки.');
+    }
+  }
 
+  final narrated = raw['warmupNarratedTopics'];
+  List<String>? normalizedNarration;
+  if (narrated != null) {
+    if (narrated is! List || narrated.length > 40 || narrated.any((id) => id is! String)) {
+      return _fail('Некорректная настройка озвучки тем.');
+    }
+    try {
+      normalizedNarration = warmup.resolveWarmupNarratedTopics(
+        warmup.resolveWarmupSelection(warmupType, normalized), narrated.cast<String>());
+    } on ArgumentError { return _fail('Озвучка доступна только для выбранных тем.'); }
+  }
   return ValidateTrainerParamsResult.success({
     'warmupType': warmupType,
     'speed': speed,
     'withExplanations': withExplanations,
+    if (normalized != null) 'warmupTopics': normalized,
+    if (normalizedNarration != null) 'warmupNarratedTopics': normalizedNarration,
   });
 }
 

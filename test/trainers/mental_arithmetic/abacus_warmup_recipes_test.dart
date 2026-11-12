@@ -5,6 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_warmup/recipes.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_gesture_cues.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_playback.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
@@ -41,25 +42,44 @@ String _frameDigest(List<PhysicalGestureFrame> frames) {
 void main() {
   for (final type in _checkpoints.keys) {
     for (final speed in PhysicalGestureSpeed.values) {
-      test('$type/${speed.name}: silent practice retains all frames and finishes once', () {
-        fakeAsync((clock) {
-          final plan = warmupRecipe(type);
-          final frames = <PhysicalGestureFrame>[];
-          var completions = 0;
-          var completedAt = Duration.zero;
-          final player = PhysicalGesturePlayer(plan: plan, speed: speed, tempoMultiplier: 2,
-            prepareMs: 300, onPrepare: (_, _) {}, onReturn: (_, _) {},
-            onFrame: (frame, _) => frames.add(frame), onComplete: () { completions++; completedAt = clock.elapsed; },
-            nowMs: () => clock.elapsed.inMilliseconds);
-          player.play();
-          clock.elapse(const Duration(seconds: 160));
-          expect(completions, 1);
-          expect(_frameDigest(frames), _frameDigest(compilePhysicalGesturePlan(plan)));
-          if (speed == PhysicalGestureSpeed.medium) {
-            expect(completedAt.inMilliseconds, inInclusiveRange(50000, 115000));
-          }
-        });
-      });
+      test(
+        '$type/${speed.name}: silent practice retains all frames and finishes once',
+        () {
+          fakeAsync((clock) {
+            final plan = warmupRecipe(type);
+            final frames = <PhysicalGestureFrame>[];
+            var completions = 0;
+            var completedAt = Duration.zero;
+            final player = PhysicalGesturePlayer(
+              plan: plan,
+              speed: speed,
+              tempoMultiplier: 2,
+              prepareMs: 300,
+              onPrepare: (_, _) {},
+              onReturn: (_, _) {},
+              onFrame: (frame, _) => frames.add(frame),
+              onComplete: () {
+                completions++;
+                completedAt = clock.elapsed;
+              },
+              nowMs: () => clock.elapsed.inMilliseconds,
+            );
+            player.play();
+            clock.elapse(const Duration(seconds: 160));
+            expect(completions, 1);
+            expect(
+              _frameDigest(frames),
+              _frameDigest(compilePhysicalGesturePlan(plan)),
+            );
+            if (speed == PhysicalGestureSpeed.medium) {
+              expect(
+                completedAt.inMilliseconds,
+                inInclusiveRange(50000, 115000),
+              );
+            }
+          });
+        },
+      );
     }
   }
   for (final type in _checkpoints.keys) {
@@ -82,7 +102,7 @@ void main() {
         }
         expect(_frameDigest(frames), expected['sha256']);
         final cues = [
-          plan.openingAudioKey,
+          warmupIntroCue(type),
           ...frames.map((frame) => frame.audioKey),
         ].whereType<String>().join('\n');
         expect(

@@ -1,6 +1,7 @@
 // Контракт опубликованного каталога. Совпадает с web `wire.ts` / `resolve.ts`.
 
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_gesture_cues.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_warmup_plan.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 
 class PublishedAudioClip {
   const PublishedAudioClip({
@@ -145,30 +146,68 @@ ExerciseAudioManifest audioForLaunch({
   return pinned ?? fresh;
 }
 
-/// Practice-only warmups retain the standard instruction and omit action cues.
+/// Scope warmup audio to its selected topics and keep the standard instruction.
 ExerciseAudioManifest? scopeTrainerAudioForParams(
   ExerciseAudioManifest? manifest,
   String trainerKey,
   Map<String, dynamic> params,
 ) {
-  if (manifest == null ||
-      trainerKey != 'abacus-warmup' ||
-      params['withExplanations'] != false) {
+  if (manifest == null || trainerKey != 'abacus-warmup') {
     return manifest;
   }
-  final introductionKey = warmupIntroCue(
-    params['warmupType'] as String? ?? 'simple-9',
-  );
+  final rawTopics = params['warmupTopics'];
+  if ((params['warmupType'] != null && params['warmupType'] is! String) ||
+      (rawTopics != null && rawTopics is! List) ||
+      (params['warmupNarratedTopics'] != null &&
+          (params['warmupNarratedTopics'] is! List ||
+              (params['warmupNarratedTopics'] as List).any(
+                (id) => id is! String,
+              )))) {
+    return manifest;
+  }
+  late PhysicalGesturePlan plan;
+  try {
+    plan = warmupPlanForParams(
+      params['warmupType'] as String? ?? 'simple-9',
+      rawTopics as List?,
+      (params['warmupNarratedTopics'] as List?)?.cast<String>(),
+    );
+  } on ArgumentError {
+    return manifest;
+  }
+  final introductionKey = physicalGestureIntroductionKey(plan);
+  final needed =
+      params['warmupNarratedTopics'] == null &&
+          params['withExplanations'] == false
+      ? {introductionKey}
+      : physicalGestureAudioKeys(plan).toSet();
   bool keep(String key) =>
       key == 'instruction:abacus-warmup' ||
-      key == introductionKey ||
+      needed.contains(key) ||
       key.startsWith('music:background:');
+  final clips = manifest.clips.where((clip) => keep(clip.semanticKey)).map((
+    clip,
+  ) {
+    if (clip.semanticKey.startsWith('music:background:')) return clip;
+    return PublishedAudioClip(
+      bytes: clip.bytes,
+      durationMs: clip.durationMs,
+      locale: clip.locale,
+      semanticKey: clip.semanticKey,
+      sha256: clip.sha256,
+      url: clip.url,
+      versionId: clip.versionId,
+      contentLocale: clip.contentLocale,
+      isRequired: true,
+      text: clip.text,
+    );
+  }).toList();
   return ExerciseAudioManifest(
     catalogRevision: manifest.catalogRevision,
     trainerKey: manifest.trainerKey,
     contentLocale: manifest.contentLocale,
     instructionLocale: manifest.instructionLocale,
-    clips: manifest.clips.where((clip) => keep(clip.semanticKey)).toList(),
+    clips: clips,
     missing: manifest.missing.where((item) => keep(item.semanticKey)).toList(),
   );
 }

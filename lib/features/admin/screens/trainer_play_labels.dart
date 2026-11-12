@@ -9,6 +9,26 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return _passageLabel(l10n, ru: 'Вид разминки', en: 'Warm-up type', ar: 'نوع الإحماء');
     case 'withExplanationsLabel':
       return _passageLabel(l10n, ru: 'Озвучивать пояснения', en: 'Play spoken explanations', ar: 'تشغيل الشرح الصوتي');
+    case 'warmupTopicNarrationLabel':
+      return _passageLabel(l10n, ru: 'Озвучка', en: 'Narration', ar: 'الشرح الصوتي');
+    case 'warmupHandRight':
+      return _passageLabel(l10n, ru: 'правая рука', en: 'right hand', ar: 'اليد اليمنى');
+    case 'warmupHandLeft':
+      return _passageLabel(l10n, ru: 'левая рука', en: 'left hand', ar: 'اليد اليسرى');
+    case 'warmupHandBoth':
+      return _passageLabel(l10n, ru: 'обе руки', en: 'both hands', ar: 'كلتا اليدين');
+    case 'warmupTopicsSearch':
+      return _passageLabel(l10n, ru: 'Поиск тем разминки', en: 'Search warm-up topics', ar: 'ابحث عن مواضيع الإحماء');
+    case 'warmupTopicsSelected':
+      return _passageLabel(l10n, ru: 'Выбрано тем', en: 'Topics selected', ar: 'المواضيع المحددة');
+    case 'warmupTopicsClear':
+      return _passageLabel(l10n, ru: 'Снять выбор', en: 'Clear selection', ar: 'إلغاء التحديد');
+    case 'warmupTopicsLabel':
+      return _passageLabel(l10n, ru: 'Темы разминки', en: 'Warm-up topics', ar: 'مواضيع الإحماء');
+    case 'warmupAllTopicsLabel':
+      return _passageLabel(l10n, ru: 'Все темы', en: 'All topics', ar: 'جميع المواضيع');
+    case 'allOptionsLabel':
+      return _passageLabel(l10n, ru: 'Все', en: 'All', ar: 'الكل');
     case 'syllableTypeLabel':
       return _passageLabel(l10n, ru: 'Тип слогов', en: 'Syllable type', ar: 'نوع المقاطع');
     case 'letterCaseLabel':
@@ -273,11 +293,11 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
 
   switch (option.labelKey) {
     case 'warmupSimple9':
-      return _passageLabel(l10n, ru: 'Просто 9', en: 'Simple 9', ar: 'العدد ٩ البسيط');
+      return _passageLabel(l10n, ru: 'Просто 1–9 (правая рука)', en: 'Simple 1–9 (right hand)', ar: 'البسيط ١–٩ (اليد اليمنى)');
     case 'warmupSimpleTens':
-      return _passageLabel(l10n, ru: 'Просто десятки', en: 'Simple tens', ar: 'العشرات البسيطة');
+      return _passageLabel(l10n, ru: 'Просто десятки (левая рука)', en: 'Simple tens (left hand)', ar: 'العشرات البسيطة (اليد اليسرى)');
     case 'warmupSimple2Digit':
-      return _passageLabel(l10n, ru: 'Просто двузначные', en: 'Simple two-digit numbers', ar: 'الأعداد المكونة من رقمين');
+      return _passageLabel(l10n, ru: 'Просто двузначные (обе руки)', en: 'Simple two-digit numbers (both hands)', ar: 'الأعداد المكونة من رقمين (كلتا اليدين)');
     case 'warmupBrothers':
       return _passageLabel(l10n, ru: 'Братья', en: 'Brothers', ar: 'الإخوة');
     case 'warmupFriends':

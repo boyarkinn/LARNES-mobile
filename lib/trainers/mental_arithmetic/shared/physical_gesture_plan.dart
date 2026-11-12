@@ -109,6 +109,15 @@ class RodPassGestureStep extends PhysicalGestureStep {
   final int? pauseAfterPassMs;
 }
 
+class PhysicalGestureStepPlayback {
+  const PhysicalGestureStepPlayback({
+    this.narrationEnabled = true,
+    this.tempoMultiplier = 1,
+  });
+  final bool narrationEnabled;
+  final double tempoMultiplier;
+}
+
 class PhysicalGesturePlan {
   const PhysicalGesturePlan({
     required this.initialRods,
@@ -116,6 +125,7 @@ class PhysicalGesturePlan {
     this.beadTransitionMs,
     this.openingAudioKey,
     this.audioSequences = const {},
+    this.stepPlayback = const {},
   });
 
   final List<RodState> initialRods;
@@ -125,6 +135,7 @@ class PhysicalGesturePlan {
 
   /// Named cues composed of existing published catalog clips.
   final Map<String, List<String>> audioSequences;
+  final Map<int, PhysicalGestureStepPlayback> stepPlayback;
 }
 
 class PhysicalGestureFrame {
@@ -134,6 +145,7 @@ class PhysicalGestureFrame {
     required this.pauseAfterMs,
     this.audioKey,
     this.returnAfter = false,
+    this.tempoMultiplier = 1,
   });
 
   final List<RodState> rods;
@@ -141,6 +153,7 @@ class PhysicalGestureFrame {
   final int pauseAfterMs;
   final String? audioKey;
   final bool returnAfter;
+  final double tempoMultiplier;
 }
 
 String? physicalGestureIntroductionKey(PhysicalGesturePlan plan) =>
@@ -161,8 +174,8 @@ List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
   }
 
   add(plan.openingAudioKey);
-  for (final step in plan.steps) {
-    add(step.audioKey);
+  for (final (index, step) in plan.steps.indexed) {
+    if (plan.stepPlayback[index]?.narrationEnabled != false) add(step.audioKey);
   }
   return List.unmodifiable(keys);
 }
@@ -225,6 +238,7 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
   }
   var rods = List<RodState>.of(plan.initialRods);
   final frames = <PhysicalGestureFrame>[];
+  var playback = const PhysicalGestureStepPlayback();
 
   void append(
     List<PhysicalBeadMove> moves,
@@ -256,7 +270,8 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
           ),
         ),
         pauseAfterMs: pauseAfterMs,
-        audioKey: audioKey,
+        audioKey: playback.narrationEnabled ? audioKey : null,
+        tempoMultiplier: playback.tempoMultiplier,
         returnAfter: returnAfter,
       ),
     );
@@ -284,12 +299,18 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
         rods: List.unmodifiable(next),
         moves: const [],
         pauseAfterMs: pauseAfterMs,
-        audioKey: audioKey,
+        audioKey: playback.narrationEnabled ? audioKey : null,
+        tempoMultiplier: playback.tempoMultiplier,
       ),
     );
   }
 
-  for (final step in plan.steps) {
+  for (final (stepIndex, step) in plan.steps.indexed) {
+    playback =
+        plan.stepPlayback[stepIndex] ?? const PhysicalGestureStepPlayback();
+    if (!playback.tempoMultiplier.isFinite || playback.tempoMultiplier <= 0) {
+      throw RangeError('Неверный темп шага.');
+    }
     if (step.pauseAfterMs < 0) {
       throw RangeError('Пауза после жеста должна быть неотрицательной.');
     }

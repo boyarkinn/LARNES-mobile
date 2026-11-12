@@ -2,13 +2,15 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 
-enum TrainerPlayFieldType { number, text, select, checkbox }
+enum TrainerPlayFieldType { number, text, select, checkbox, multiSelect }
 
 class TrainerPlayFieldOption {
   const TrainerPlayFieldOption({
     required this.value,
     this.label,
     this.labelKey,
+    this.groupLabelKey,
+    this.variantLabelKey,
   });
 
   factory TrainerPlayFieldOption.fromJson(Map<String, dynamic> json) {
@@ -16,12 +18,16 @@ class TrainerPlayFieldOption {
       value: json['value'] as String,
       label: json['label'] as String?,
       labelKey: json['labelKey'] as String?,
+      groupLabelKey: json['groupLabelKey'] as String?,
+      variantLabelKey: json['variantLabelKey'] as String?,
     );
   }
 
   final String value;
   final String? label;
   final String? labelKey;
+  final String? groupLabelKey;
+  final String? variantLabelKey;
 }
 
 class TrainerPlayFieldShowWhen {
@@ -49,6 +55,10 @@ class TrainerPlayField {
     this.placeholder,
     this.options = const [],
     this.showWhen,
+    this.allLabelKey,
+    this.selectedLabels = false,
+    this.optionToggleKey,
+    this.optionToggleLabelKey,
   });
 
   factory TrainerPlayField.fromJson(Map<String, dynamic> json) {
@@ -58,6 +68,10 @@ class TrainerPlayField {
     return TrainerPlayField(
       key: json['key'] as String,
       labelKey: json['labelKey'] as String,
+      allLabelKey: json['allLabelKey'] as String?,
+      selectedLabels: json['selectedLabels'] == true,
+      optionToggleKey: json['optionToggleKey'] as String?,
+      optionToggleLabelKey: json['optionToggleLabelKey'] as String?,
       type: _parseType(json['type'] as String?),
       min: _parseOptionalNum(json['min']),
       max: _parseOptionalNum(json['max']),
@@ -80,6 +94,10 @@ class TrainerPlayField {
 
   final String key;
   final String labelKey;
+  final String? allLabelKey;
+  final bool selectedLabels;
+  final String? optionToggleKey;
+  final String? optionToggleLabelKey;
   final TrainerPlayFieldType type;
   final num? min;
   final num? max;
@@ -177,6 +195,8 @@ class AdminTrainerPlayLaunch {
 
 TrainerPlayFieldType _parseType(String? raw) {
   switch (raw) {
+    case 'multi-select':
+      return TrainerPlayFieldType.multiSelect;
     case 'checkbox':
       return TrainerPlayFieldType.checkbox;
     case 'select':
@@ -262,12 +282,36 @@ Map<String, dynamic> buildPlayParamsPayload(
     };
   }
 
-  final payload = <String, dynamic>{};
+  final payload = <String, dynamic>{
+    if (config.trainerKey == 'abacus-warmup' &&
+        values['withExplanations'] != null)
+      'withExplanations': values['withExplanations'] == 'true',
+  };
   for (final field in config.fields) {
     if (!field.isVisible(values)) {
       continue;
     }
     final raw = values[field.key];
+    if (field.type == TrainerPlayFieldType.multiSelect) {
+      final selected = raw == 'all'
+          ? field.options.map((option) => option.value)
+          : (raw ?? '').split(',').where((value) => value.isNotEmpty);
+      payload[field.key] = selected
+          .map((value) => num.tryParse(value) ?? value)
+          .toList();
+      final companion = field.optionToggleKey == null
+          ? null
+          : values[field.optionToggleKey];
+      if (field.optionToggleKey != null &&
+          companion != null &&
+          companion != 'inherit') {
+        payload[field.optionToggleKey!] = companion
+            .split(',')
+            .where((id) => id.isNotEmpty)
+            .toList();
+      }
+      continue;
+    }
     if (raw == null || raw.isEmpty) {
       continue;
     }

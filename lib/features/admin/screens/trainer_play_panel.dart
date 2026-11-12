@@ -93,6 +93,12 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
   void _setValue(String key, String value) {
     setState(() {
       _values = {..._values, key: value};
+      for (final field in _config?.fields ?? const <TrainerPlayField>[]) {
+        if (field.type == TrainerPlayFieldType.multiSelect &&
+            field.showWhen?.field == key) {
+          _values[field.key] = 'all';
+        }
+      }
     });
   }
 
@@ -207,6 +213,11 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
             field: field,
             l10n: l10n,
             value: _values[field.key] ?? '',
+            companionValue: _values[field.optionToggleKey] ?? 'inherit',
+            companionDefaultEnabled: _values['withExplanations'] != 'false',
+            onCompanionChanged: field.optionToggleKey == null
+                ? null
+                : (value) => _setValue(field.optionToggleKey!, value),
             onChanged: (value) => _setValue(field.key, value),
           ),
           const SizedBox(height: 12),
@@ -230,12 +241,18 @@ class _FieldEditor extends StatefulWidget {
     required this.l10n,
     required this.value,
     required this.onChanged,
+    this.companionValue = 'inherit',
+    this.companionDefaultEnabled = true,
+    this.onCompanionChanged,
   });
 
   final TrainerPlayField field;
   final AppLocalizations l10n;
   final String value;
   final ValueChanged<String> onChanged;
+  final String companionValue;
+  final bool companionDefaultEnabled;
+  final ValueChanged<String>? onCompanionChanged;
 
   @override
   State<_FieldEditor> createState() => _FieldEditorState();
@@ -267,11 +284,274 @@ class _FieldEditorState extends State<_FieldEditor> {
     super.dispose();
   }
 
+  Future<({List<String> selected, List<String> enabled})?> _pickMultiple(
+    List<String> selected,
+  ) {
+    final pending = selected.toSet();
+    final enabled = widget.companionValue == 'inherit'
+        ? (widget.companionDefaultEnabled ? selected.toSet() : <String>{})
+        : widget.companionValue.split(',').where(pending.contains).toSet();
+    var query = '';
+    final options = widget.field.options;
+    String groupLabel(TrainerPlayFieldOption option) =>
+        option.groupLabelKey == null
+        ? ''
+        : trainerPlayOptionLabel(
+            widget.l10n,
+            TrainerPlayFieldOption(value: '', labelKey: option.groupLabelKey),
+          );
+    return showDialog<({List<String> selected, List<String> enabled})>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, update) {
+          final visible = options
+              .where(
+                (option) =>
+                    '${trainerPlayOptionLabel(widget.l10n, option)} ${groupLabel(option)}'
+                        .toLowerCase()
+                        .contains(query.trim().toLowerCase()),
+              )
+              .toList();
+          final groups = <String, List<TrainerPlayFieldOption>>{};
+          for (final option in visible) {
+            groups.putIfAbsent(groupLabel(option), () => []).add(option);
+          }
+          void toggle(List<TrainerPlayFieldOption> entries, bool checked) =>
+              update(() {
+                for (final option in entries) {
+                  if (checked) {
+                    if (pending.add(option.value)) enabled.add(option.value);
+                  } else {
+                    pending.remove(option.value);
+                    enabled.remove(option.value);
+                  }
+                }
+              });
+          return AlertDialog(
+            title: Text(
+              trainerPlayFieldLabel(widget.l10n, widget.field.labelKey),
+            ),
+            content: SizedBox(
+              width: 520,
+              height: MediaQuery.sizeOf(context).height * 0.6,
+              child: Column(
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: trainerPlayFieldLabel(
+                        widget.l10n,
+                        'warmupTopicsSearch',
+                      ),
+                    ),
+                    onChanged: (value) => update(() => query = value),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => toggle(visible, true),
+                          child: Text(
+                            trainerPlayFieldLabel(
+                              widget.l10n,
+                              widget.field.allLabelKey ?? 'allOptionsLabel',
+                            ),
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => toggle(visible, false),
+                        child: Text(
+                          trainerPlayFieldLabel(
+                            widget.l10n,
+                            'warmupTopicsClear',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        for (final group in groups.entries) ...[
+                          if (group.key.isNotEmpty)
+                            CheckboxListTile(
+                              title: Text(group.key),
+                              controlAffinity: ListTileControlAffinity.leading,
+                              tristate: true,
+                              value:
+                                  group.value.every(
+                                    (option) => pending.contains(option.value),
+                                  )
+                                  ? true
+                                  : group.value.any(
+                                      (option) =>
+                                          pending.contains(option.value),
+                                    )
+                                  ? null
+                                  : false,
+                              onChanged: (_) => toggle(
+                                group.value,
+                                !group.value.every(
+                                  (option) => pending.contains(option.value),
+                                ),
+                              ),
+                            ),
+                          for (final option in group.value)
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: CheckboxListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      trainerPlayOptionLabel(
+                                        widget.l10n,
+                                        option,
+                                      ),
+                                    ),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    value: pending.contains(option.value),
+                                    onChanged: (checked) =>
+                                        toggle([option], checked == true),
+                                  ),
+                                ),
+                                if (widget.field.optionToggleKey != null)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        trainerPlayFieldLabel(
+                                          widget.l10n,
+                                          widget.field.optionToggleLabelKey ??
+                                              '',
+                                        ),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                      Semantics(
+                                        label:
+                                            '${trainerPlayFieldLabel(widget.l10n, widget.field.optionToggleLabelKey ?? '')}: ${trainerPlayOptionLabel(widget.l10n, option)}',
+                                        child: Switch(
+                                          value:
+                                              pending.contains(option.value) &&
+                                              enabled.contains(option.value),
+                                          onChanged:
+                                              !pending.contains(option.value)
+                                              ? null
+                                              : (checked) => update(() {
+                                                  checked
+                                                      ? enabled.add(
+                                                          option.value,
+                                                        )
+                                                      : enabled.remove(
+                                                          option.value,
+                                                        );
+                                                }),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  MaterialLocalizations.of(context).cancelButtonLabel,
+                ),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, (
+                  selected: options
+                      .where((option) => pending.contains(option.value))
+                      .map((option) => option.value)
+                      .toList(),
+                  enabled: options
+                      .where(
+                        (option) =>
+                            pending.contains(option.value) &&
+                            enabled.contains(option.value),
+                      )
+                      .map((option) => option.value)
+                      .toList(),
+                )),
+                child: Text(MaterialLocalizations.of(context).okButtonLabel),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final label = trainerPlayFieldLabel(widget.l10n, widget.field.labelKey);
 
     switch (widget.field.type) {
+      case TrainerPlayFieldType.multiSelect:
+        final available = widget.field.options
+            .map((option) => option.value)
+            .toList();
+        final selected = widget.value == 'all'
+            ? available
+            : widget.value.split(',').where(available.contains).toList();
+        final selectedOptions = widget.field.options
+            .where((option) => selected.contains(option.value))
+            .toList();
+        final summary = selectedOptions
+            .map((option) {
+              final name = trainerPlayOptionLabel(widget.l10n, option);
+              return option.variantLabelKey != null &&
+                      selectedOptions
+                              .where(
+                                (other) =>
+                                    trainerPlayOptionLabel(
+                                      widget.l10n,
+                                      other,
+                                    ) ==
+                                    name,
+                              )
+                              .length >
+                          1
+                  ? '$name (${trainerPlayFieldLabel(widget.l10n, option.variantLabelKey!)})'
+                  : name;
+            })
+            .join(', ');
+        return InkWell(
+          onTap: () async {
+            final result = await _pickMultiple(selected);
+            if (result != null) {
+              widget.onChanged(result.selected.join(','));
+              widget.onCompanionChanged?.call(result.enabled.join(','));
+            }
+          },
+          child: InputDecorator(
+            decoration: AdminTextField.inputDecoration().copyWith(
+              labelText: label,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.field.selectedLabels
+                        ? (summary.isEmpty ? label : summary)
+                        : '${trainerPlayFieldLabel(widget.l10n, 'warmupTopicsSelected')}: ${selected.length}',
+                  ),
+                ),
+                const Icon(Icons.expand_more),
+              ],
+            ),
+          ),
+        );
       case TrainerPlayFieldType.checkbox:
         return CheckboxListTile(
           title: Text(label),

@@ -11,6 +11,8 @@ import 'physical_gesture_abacus.dart';
 import 'physical_gesture_plan.dart';
 import 'physical_gesture_playback.dart';
 
+enum PhysicalGestureIntroductionMode { screen, inline }
+
 /// Both trainers reuse their first published cue as the standard introduction.
 /// The original plan stays intact so its movement/checkpoint indices are stable.
 class PhysicalGestureTrainer extends StatefulWidget {
@@ -23,13 +25,18 @@ class PhysicalGestureTrainer extends StatefulWidget {
     this.onComplete,
     this.narrationEnabled = true,
     this.tempoMultiplier = 1,
+    this.introductionMode = PhysicalGestureIntroductionMode.screen,
+    this.autoPlay = true,
   });
 
   final PhysicalGesturePlan plan;
   final PhysicalGestureSpeed speed;
+
   /// Controls action cues only; the standard launch instruction always plays.
   final bool narrationEnabled;
   final double tempoMultiplier;
+  final PhysicalGestureIntroductionMode introductionMode;
+  final bool autoPlay;
   final String instructionKey;
   final Future<void> Function(String, GestureCueSignal) onCue;
   final VoidCallback? onComplete;
@@ -56,7 +63,8 @@ class _PhysicalGestureTrainerState extends State<PhysicalGestureTrainer> {
   @override
   void didUpdateWidget(PhysicalGestureTrainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (physicalGestureIntroductionKey(widget.plan) != _introductionKey) {
+    if (physicalGestureIntroductionKey(widget.plan) != _introductionKey ||
+        oldWidget.introductionMode != widget.introductionMode) {
       _startIntroduction();
     }
   }
@@ -66,6 +74,12 @@ class _PhysicalGestureTrainerState extends State<PhysicalGestureTrainer> {
     _typewriter.cancel();
     unawaited(_audio.cancel());
     _introductionKey = physicalGestureIntroductionKey(widget.plan);
+    if (widget.introductionMode == PhysicalGestureIntroductionMode.inline) {
+      _introduced = true;
+      _length = 0;
+      _text = '';
+      return;
+    }
     final clip =
         speechAudioFile(widget.instructionKey) ??
         (_introductionKey == null ? null : speechAudioFile(_introductionKey!));
@@ -116,12 +130,16 @@ class _PhysicalGestureTrainerState extends State<PhysicalGestureTrainer> {
           plan: widget.plan,
           speed: widget.speed,
           tempoMultiplier: widget.tempoMultiplier,
-          autoPlay: _introduced,
+          autoPlay: _introduced && widget.autoPlay,
           showHands: true,
           onComplete: widget.onComplete,
           onCue: widget.narrationEnabled
               ? (key, signal) async {
-                  if (key == _introductionKey) return;
+                  if (widget.introductionMode ==
+                          PhysicalGestureIntroductionMode.screen &&
+                      key == _introductionKey) {
+                    return;
+                  }
                   await widget.onCue(key, signal);
                 }
               : null,

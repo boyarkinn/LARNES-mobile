@@ -20,12 +20,17 @@ class ClipPlayer {
 
   bool get isPlaying => _playing;
   int get generation => _generation;
+  bool _lastPlaybackSucceeded = false;
+
+  /// Required worked-example cues must not treat a swallowed playback error as completion.
+  bool get lastPlaybackSucceeded => _lastPlaybackSucceeded;
 
   Future<void> play(
     List<String> assetPaths, {
     double playbackRate = 1,
     void Function()? onStarted,
   }) async {
+    _lastPlaybackSucceeded = false;
     final expectedRun = _generation + 1;
     await cancel();
     if (_generation != expectedRun) return;
@@ -84,6 +89,10 @@ class ClipPlayer {
       }
       notifyStarted();
       await playback;
+      if (runId == _generation &&
+          player.processingState == ProcessingState.completed) {
+        _lastPlaybackSucceeded = true;
+      }
     } catch (_) {
       // Required playback failure blocks the exercise instead of starting its timer.
       if (runId == _generation && !reportRequiredCatalogFailure(queue)) {

@@ -80,6 +80,11 @@ sealed class _PlaybackEvent {
   const _PlaybackEvent();
 }
 
+class _StepStartEvent extends _PlaybackEvent {
+  const _StepStartEvent(this.stepIndex);
+  final int stepIndex;
+}
+
 class _CueEvent extends _PlaybackEvent {
   const _CueEvent(this.key, this.stepIndex);
   final String key;
@@ -151,6 +156,7 @@ class PhysicalGesturePlayer {
     int Function()? nowMs,
     TrainerTimerFactory? timerFactory,
   }) : frames = compilePhysicalGesturePlan(plan),
+       _nowMsOverride = nowMs,
        _initialRods = List.unmodifiable(plan.initialRods) {
     final timing = physicalGestureTiming(
       speed,
@@ -178,6 +184,9 @@ class PhysicalGesturePlayer {
       final allowCue = plan.stepPlayback[stepIndex]?.narrationEnabled != false;
       stepStarts.add(events.length);
       stepFrameStarts.add(frameIndex);
+      if ((plan.stepPlayback[stepIndex]?.minimumDurationMs ?? 0) > 0) {
+        events.add(_StepStartEvent(stepIndex));
+      }
       final parallel =
           allowCue &&
           (switch (step) {
@@ -254,26 +263,42 @@ class PhysicalGesturePlayer {
           _ => timing,
         };
         if (event is _StepBoundaryEvent) {
+          int padded(int naturalMs) {
+            final minimum =
+                plan.stepPlayback[event.stepIndex]?.minimumDurationMs ?? 0;
+            final elapsed =
+                _timedStepIndex == event.stepIndex && _stepStartedAt != null
+                ? _nowMilliseconds() - _stepStartedAt!
+                : 0;
+            final remaining = minimum - elapsed;
+            return remaining > naturalMs ? remaining : naturalMs;
+          }
+
           if (event.narration) {
-            return frameTiming.narrationPauseMs(event.pauseAfterMs);
+            return padded(frameTiming.narrationPauseMs(event.pauseAfterMs));
           }
           if (previous is _ReturnEvent) {
-            return frameTiming.movementMs(returnMs) >
-                    frameTiming.pauseMs(event.pauseAfterMs)
-                ? frameTiming.movementMs(returnMs)
-                : frameTiming.pauseMs(event.pauseAfterMs);
+            return padded(
+              frameTiming.movementMs(returnMs) >
+                      frameTiming.pauseMs(event.pauseAfterMs)
+                  ? frameTiming.movementMs(returnMs)
+                  : frameTiming.pauseMs(event.pauseAfterMs),
+            );
           }
           if (previous is _FrameEvent) {
-            return frameTiming.frameMs +
-                (event.hasNextStep
-                    ? frameTiming.pauseMs(event.pauseAfterMs)
-                    : 0);
+            return padded(
+              frameTiming.frameMs +
+                  (event.hasNextStep
+                      ? frameTiming.pauseMs(event.pauseAfterMs)
+                      : 0),
+            );
           }
           throw StateError('Нарушена граница жеста.');
         }
         if (index == 0 ||
             previous is _CueEvent ||
             previous is _ParallelCueEvent ||
+            previous is _StepStartEvent ||
             previous is _StepBoundaryEvent) {
           return 0;
         }
@@ -289,6 +314,10 @@ class PhysicalGesturePlayer {
       },
       onEvent: (event, _) {
         switch (event) {
+          case _StepStartEvent():
+            _timedStepIndex = event.stepIndex;
+            _stepStartedAt = _nowMilliseconds();
+            _stepPausedAt = null;
           case _CueEvent():
             _controller.pause();
             _blockingCueStepIndex = event.stepIndex;
@@ -325,6 +354,11 @@ class PhysicalGesturePlayer {
 
   final List<PhysicalGestureFrame> frames;
   final List<RodState> _initialRods;
+  final Stopwatch _activeClock = Stopwatch()..start();
+  final int Function()? _nowMsOverride;
+  int? _timedStepIndex;
+  int? _stepStartedAt;
+  int? _stepPausedAt;
   final void Function(List<RodState> rods, int framePosition)? onReset;
   late final List<int> _stepStarts;
   late final List<int> _stepFrameStarts;
@@ -339,6 +373,15 @@ class PhysicalGesturePlayer {
   GestureCueSignal? _cueSignal;
   int _cueGeneration = 0;
   bool _wantsPlay = false;
+
+  int _nowMilliseconds() =>
+      _nowMsOverride?.call() ?? _activeClock.elapsedMilliseconds;
+
+  void _resetStepTiming() {
+    _timedStepIndex = null;
+    _stepStartedAt = null;
+    _stepPausedAt = null;
+  }
 
   bool get hasEvents => _hasEvents;
   int get position => _framePosition;
@@ -383,6 +426,7 @@ class PhysicalGesturePlayer {
   }
 
   void _settleBoundary(_StepBoundaryEvent event) {
+    _resetStepTiming();
     _settledStepIndex = event.stepIndex + 1;
     _settledFramePosition = event.frameEnd;
     _activeParallelStepIndex = null;
@@ -393,6 +437,10 @@ class PhysicalGesturePlayer {
       framePosition == 0 ? _initialRods : frames[framePosition - 1].rods;
 
   void play() {
+    if (_stepPausedAt != null && _stepStartedAt != null) {
+      _stepStartedAt = _stepStartedAt! + (_nowMilliseconds() - _stepPausedAt!);
+      _stepPausedAt = null;
+    }
     _wantsPlay = true;
     if (_cueSignal == null) _controller.play();
   }
@@ -406,10 +454,12 @@ class PhysicalGesturePlayer {
       _rewindToStep(_blockingCueStepIndex ?? _settledStepIndex, notify: true);
     } else {
       _controller.pause();
+      if (_stepStartedAt != null) _stepPausedAt ??= _nowMilliseconds();
     }
   }
 
   void cancel() {
+    _resetStepTiming();
     _wantsPlay = false;
     _stopCue();
     _controller.cancel();
@@ -448,6 +498,7 @@ class PhysicalGesturePlayer {
   }
 
   void _rewindToStep(int stepIndex, {required bool notify}) {
+    _resetStepTiming();
     _stopCue();
     _activeParallelStepIndex = null;
     _blockingCueStepIndex = null;

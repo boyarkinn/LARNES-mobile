@@ -113,9 +113,13 @@ class PhysicalGestureStepPlayback {
   const PhysicalGestureStepPlayback({
     this.narrationEnabled = true,
     this.tempoMultiplier = 1,
+    this.minimumDurationMs,
   });
   final bool narrationEnabled;
   final double tempoMultiplier;
+
+  /// Minimum active time of the entire semantic step, never of one bead frame.
+  final int? minimumDurationMs;
 }
 
 class PhysicalGesturePlan {
@@ -310,6 +314,11 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
         plan.stepPlayback[stepIndex] ?? const PhysicalGestureStepPlayback();
     if (!playback.tempoMultiplier.isFinite || playback.tempoMultiplier <= 0) {
       throw RangeError('Неверный темп шага.');
+    }
+    if (playback.minimumDurationMs != null && playback.minimumDurationMs! < 0) {
+      throw RangeError(
+        'Минимальная длительность шага должна быть неотрицательной.',
+      );
     }
     if (step.pauseAfterMs < 0) {
       throw RangeError('Пауза после жеста должна быть неотрицательной.');

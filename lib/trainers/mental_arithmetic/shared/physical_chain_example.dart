@@ -3,6 +3,65 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.d
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_number_motion.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
+import 'physical_example_cues.dart';
+
+/// Build a standalone worked example from the exact already-selected chain.
+PhysicalGesturePlan physicalChainExamplePlan(
+  Chain chain, {
+  double stepSec = 3,
+  String locale = 'ru-RU',
+}) {
+  if (!stepSec.isFinite || stepSec < 0.1 || stepSec > 30) {
+    throw RangeError('Интервал разбора должен быть от 0,1 до 30 секунд.');
+  }
+  if (chain.steps.isEmpty ||
+      chain.intermediates.length != chain.steps.length + 1 ||
+      chain.intermediates.first != 0) {
+    throw ArgumentError(
+      'Разбор должен начинаться с нуля и содержать готовую цепочку.',
+    );
+  }
+  final plan = withPhysicalChainExample(
+    PhysicalGesturePlan(
+      initialRods: List.generate(6, (_) => digitToBeads(0)),
+      steps: const [],
+      beadTransitionMs: 400,
+    ),
+    chain,
+    introAudioKey: physicalExampleIntroKey,
+    answerAudioKey: physicalExampleAnswerKey,
+    locale: locale,
+  );
+  return PhysicalGesturePlan(
+    initialRods: plan.initialRods,
+    steps: plan.steps,
+    beadTransitionMs: plan.beadTransitionMs,
+    openingAudioKey: plan.openingAudioKey,
+    audioSequences: plan.audioSequences,
+    stepPlayback: {
+      for (var index = 0; index < chain.steps.length; index++)
+        index + 1: PhysicalGestureStepPlayback(
+          minimumDurationMs: (stepSec * 1000).round(),
+        ),
+    },
+  );
+}
+
+/// Scope introduction, operations and final answer without generating an example.
+List<String> physicalChainExampleAudioKeys(
+  Chain chain, [
+  String locale = 'ru-RU',
+]) => {
+  physicalExampleIntroKey,
+  for (final operation in chain.steps)
+    ...stepAudioKeys(
+      amount: operation.amount,
+      sign: operation.sign,
+      locale: locale,
+    ),
+  physicalExampleAnswerKey,
+  ...amountAudioKeys(chain.answer, locale),
+}.toList(growable: false);
 
 PhysicalGesturePlan withPhysicalChainExample(
   PhysicalGesturePlan source,

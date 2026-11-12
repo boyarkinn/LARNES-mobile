@@ -289,7 +289,15 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
           files[clip.semanticKey]!.path,
     ]);
     setObservedCatalogPaths(files.values.map((file) => file.path));
-    setNumberAudioFiles(files);
+    final numberClips = manifest?.clips.where(
+      (clip) => isNumberBankAudioKey(clip.semanticKey),
+    );
+    setNumberAudioFiles(
+      files,
+      locale: numberClips != null && numberClips.isNotEmpty
+          ? numberClips.first.locale
+          : 'ru-RU',
+    );
     setSpeechAudioFiles(
       {
         for (final entry in files.entries)

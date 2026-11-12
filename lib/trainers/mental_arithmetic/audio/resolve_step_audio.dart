@@ -1,6 +1,5 @@
-/// Web: `platform/src/trainers/mental-arithmetic/audio/resolve-step-audio.ts`
-///
-/// Опубликованный файл каталога. Старый ассет приложения не подставляется.
+// Web: `platform/src/trainers/mental-arithmetic/audio/resolve-step-audio.ts`
+// Published catalog clips in the pinned number-bank language.
 
 import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
@@ -14,7 +13,7 @@ class StepAudioResolution {
 
   final String operationAsset;
 
-  /// Клипы числа: 0…1 или 2 (hundreds + numbers).
+  /// Language-specific fragments of the number, in pronunciation order.
   final List<String> amountAssets;
 
   /// Очередь: знак, затем число.
@@ -25,12 +24,12 @@ String getOperationAudioAsset(String sign) {
   return numberAudioFileForKey(operationAudioKey(sign))?.path ?? '';
 }
 
-/// 0…99 → один файл; составные 101…999 — сотня и остаток.
+/// Uses the shared bank and the language of the pinned number clips.
 /// Если хотя бы одного файла нет, число не произносится наполовину.
 List<String> getAmountAudioAssets(int amount) {
   final paths = <String>[];
 
-  for (final key in amountAudioKeys(amount)) {
+  for (final key in amountAudioKeys(amount, numberAudioLocale)) {
     final path = numberAudioFileForKey(key)?.path;
     if (path == null || path.isEmpty) {
       return [];
@@ -54,6 +53,9 @@ StepAudioResolution resolveStepAudio(ChainStep step) {
   return StepAudioResolution(
     operationAsset: operationAsset,
     amountAssets: amountAssets,
-    assets: [operationAsset, ...amountAssets].where((path) => path.isNotEmpty).toList(),
+    assets: [
+      operationAsset,
+      ...amountAssets,
+    ].where((path) => path.isNotEmpty).toList(),
   );
 }

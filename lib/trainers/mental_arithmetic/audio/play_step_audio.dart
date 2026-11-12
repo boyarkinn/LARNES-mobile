@@ -16,7 +16,11 @@ Future<void> playStepAudio(
   final durations = <int>[];
   var catalog = false;
 
-  for (final key in stepAudioKeys(amount: step.amount, sign: step.sign)) {
+  for (final key in stepAudioKeys(
+    amount: step.amount,
+    sign: step.sign,
+    locale: numberAudioLocale,
+  )) {
     final file = numberAudioFileForKey(key);
     final legacy = legacyMentalDurationMs[key];
 

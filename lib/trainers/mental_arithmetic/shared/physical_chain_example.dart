@@ -1,4 +1,4 @@
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/spoken_arithmetic.dart';
+import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_number_motion.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
@@ -43,7 +43,7 @@ PhysicalGesturePlan withPhysicalChainExample(
     final result = physicalNumberMotion(rods, value);
     rods = result.rods;
     final audioKey = '\$physical-example:operation:$index';
-    audioSequences[audioKey] = spokenArithmeticStepKeys(
+    audioSequences[audioKey] = stepAudioKeys(
       amount: operation.amount,
       sign: operation.sign,
       locale: locale,
@@ -73,7 +73,7 @@ PhysicalGesturePlan withPhysicalChainExample(
   const answerKey = r'$physical-example:answer';
   audioSequences[answerKey] = [
     answerAudioKey,
-    ...spokenArithmeticAmountKeys(chain.answer, locale),
+    ...amountAudioKeys(chain.answer, locale),
   ];
   steps.add(const NarrationGestureStep(audioKey: answerKey));
   return PhysicalGesturePlan(

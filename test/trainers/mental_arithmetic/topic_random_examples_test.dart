@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/spoken_arithmetic.dart';
+import 'package:larnes_mobile/trainers/audio/number_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/example_profile.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/recipes.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/run_recipe.dart';
@@ -96,7 +96,7 @@ void main() {
           for (var index = 0; index < operations.length; index++) {
             expect(
               physicalGestureCueKeys(plan, operations[index].audioKey!),
-              spokenArithmeticStepKeys(
+              stepAudioKeys(
                 amount: chain.steps[index].amount,
                 sign: chain.steps[index].sign,
               ),
@@ -105,7 +105,7 @@ void main() {
           }
           expect(physicalGestureCueKeys(plan, r'$physical-example:answer'), [
             'explanation:abacus-topic:answer',
-            ...spokenArithmeticAmountKeys(chain.answer),
+            ...amountAudioKeys(chain.answer),
           ]);
           expect(
             abacusToNumber(compilePhysicalGesturePlan(plan).last.rods),
@@ -118,6 +118,34 @@ void main() {
             ).any((key) => key.startsWith(r'$physical-example:')),
             isFalse,
           );
+          if (seed == 1) {
+            for (final locale in ['en-US', 'ar-XA']) {
+              final localized = topicExplanationRunRecipe(
+                lesson,
+                chain,
+                locale,
+              );
+              for (var index = 0; index < chain.steps.length; index++) {
+                expect(
+                  physicalGestureCueKeys(
+                    localized,
+                    '\$physical-example:operation:$index',
+                  ),
+                  stepAudioKeys(
+                    amount: chain.steps[index].amount,
+                    sign: chain.steps[index].sign,
+                    locale: locale,
+                  ),
+                );
+              }
+              expect(
+                physicalGestureAudioKeys(
+                  localized,
+                ).any((key) => key.startsWith('explanation:arithmetic:')),
+                isFalse,
+              );
+            }
+          }
         }
       }
     },

@@ -31,13 +31,11 @@ class TopicChainFlashTrainer extends StatefulWidget {
 
 enum _Phase { boot, instruction, countdown, flash, answer, error }
 
-class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
-    with SingleTickerProviderStateMixin {
-  static const _wrongFeedbackMs = 450;
+class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
+  static const _actionPlaybackRate = 2.0;
 
   /// Пауза после верного ответа — успеть увидеть feedback.
   static const _successFeedbackMs = 900;
-  static const _wrongColor = Color(0xFFDC2626);
   static const _successColor = Color(0xFF16A34A);
   static const _okSoft = Color(0xB8DCFCE7);
   static const _objectColor = Color(0xFFE45B4E);
@@ -57,7 +55,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   String? _flashLabel;
   var _flashStepIndex = -1;
   String _answerDraft = '';
-  bool _isWrong = false;
   bool _isCorrect = false;
   var _fireworksKey = 0;
   bool _isSubmitting = false;
@@ -67,12 +64,9 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   Timer? _flashTimer;
   Timer? _countdownTimer;
   Timer? _instructionTimer;
-  Timer? _wrongTimer;
   Timer? _completeTimer;
   final _inputController = TextEditingController();
   final _inputFocus = FocusNode();
-  late final AnimationController _shakeController;
-  late final Animation<double> _shakeAnimation;
 
   int get _totalExamples =>
       _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
@@ -115,20 +109,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   @override
   void initState() {
     super.initState();
-    _shakeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: _wrongFeedbackMs),
-    );
-    _shakeAnimation =
-        TweenSequence<double>([
-          TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: 8, end: -5), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: -5, end: 5), weight: 1),
-          TweenSequenceItem(tween: Tween(begin: 5, end: 0), weight: 1),
-        ]).animate(
-          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
-        );
     _startSession();
   }
 
@@ -145,10 +125,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
-    _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
-    _shakeController.dispose();
     _inputController.dispose();
     _inputFocus.dispose();
     super.dispose();
@@ -173,7 +151,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
-    _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
 
@@ -195,16 +172,18 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _errorMessage = null;
       _phase = _Phase.instruction;
       _answerDraft = '';
-      _isWrong = false;
       _isCorrect = false;
       _isSubmitting = false;
     });
 
     if (shouldPlayFlashAudio(stepPauseSec)) {
       final instructionAsset = getInstructionAudioAsset(solveMode);
-      await getSharedClipPlayer().play([
-        instructionAsset,
-      ], playbackRate: instructionAsset.startsWith('audio/') ? kInstructionPlaybackRate : 1);
+      await getSharedClipPlayer().play(
+        [instructionAsset],
+        playbackRate: instructionAsset.startsWith('audio/')
+            ? kInstructionPlaybackRate
+            : 1,
+      );
       if (!mounted || !identical(runToken, _runToken)) {
         return;
       }
@@ -232,7 +211,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
-    _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
     if (resetCompleteFlag) {
@@ -240,7 +218,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     }
     _inputController.clear();
     _answerDraft = '';
-    _isWrong = false;
     _isCorrect = false;
     _isSubmitting = false;
     _flashLabel = null;
@@ -343,7 +320,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     final pause = Duration(milliseconds: (stepPauseSec * 1000).round());
     const blank = Duration(milliseconds: _interFlashBlankMs);
     final playAudio = shouldPlayFlashAudio(stepPauseSec);
-    final playbackRate = flashAudioPlaybackRate(stepPauseSec);
+    const playbackRate = _actionPlaybackRate;
     var index = 0;
 
     void goToAnswer() {
@@ -402,7 +379,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
         unawaited(
           playStepAudio(
             step,
-            playbackRate: playbackRate,
+            fixedPlaybackRate: playbackRate,
             stepPauseSec: stepPauseSec,
             onStarted: startStepTimer,
           ),
@@ -424,7 +401,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
-    _wrongTimer?.cancel();
     _completeTimer?.cancel();
     unawaited(cancelStepAudio());
     _inputController.clear();
@@ -434,7 +410,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
 
     setState(() {
       _answerDraft = '';
-      _isWrong = false;
       _isCorrect = false;
       _isSubmitting = false;
       _flashLabel = null;
@@ -463,72 +438,49 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       return;
     }
 
-    if (!isCorrectAnswer(_answerDraft, chain.answer)) {
-      TrainerTelemetryScope.maybeOf(context)?.interaction(
-        correct: false,
-        errorCode: 'wrong_answer',
-        progressCurrent: _exampleIndex,
-        progressTotal: _totalExamples,
-      );
-      setState(() {
-        _isWrong = true;
-        _isCorrect = false;
-      });
-      _shakeController.forward(from: 0);
-      _wrongTimer?.cancel();
-      _wrongTimer = Timer(const Duration(milliseconds: _wrongFeedbackMs), () {
-        if (!mounted) {
-          return;
-        }
-        setState(() {
-          _isWrong = false;
-          _answerDraft = '';
-          _inputController.clear();
-        });
-        _focusAnswerInput();
-      });
-      return;
-    }
+    final answer = parseAnswerInput(_answerDraft);
+    if (answer == null) return;
+    final correct = answer == chain.answer;
+    _isSubmitting = true;
 
     TrainerTelemetryScope.maybeOf(context)?.interaction(
-      correct: true,
+      correct: correct,
+      errorCode: correct ? null : 'wrong_answer',
       progressCurrent: _exampleIndex + 1,
       progressTotal: _totalExamples,
     );
     setState(() {
-      _isWrong = false;
-      _isCorrect = true;
+      _isCorrect = correct;
       _isSubmitting = true;
-      if (_exampleIndex + 1 >= _totalExamples) {
+      if (correct && _exampleIndex + 1 >= _totalExamples) {
         _fireworksKey += 1;
       }
     });
     _completeTimer?.cancel();
-    _completeTimer = Timer(
-      const Duration(milliseconds: _successFeedbackMs),
-      () {
-        if (!mounted) {
-          return;
-        }
+    final answeredIndex = _exampleIndex;
+    void advance() {
+      _completeTimer = null;
+      if (!mounted || _exampleIndex != answeredIndex) return;
+      if (answeredIndex + 1 < _totalExamples) {
+        _startExample(answeredIndex + 1);
+        return;
+      }
+      if (_completeCalled) return;
+      _completeCalled = true;
+      widget.onComplete?.call();
+    }
 
-        if (_exampleIndex + 1 < _totalExamples) {
-          _startExample(_exampleIndex + 1);
-          return;
-        }
-
-        if (_completeCalled) {
-          return;
-        }
-        _completeCalled = true;
-        widget.onComplete?.call();
-      },
-    );
+    if (correct) {
+      _completeTimer = Timer(
+        const Duration(milliseconds: _successFeedbackMs),
+        advance,
+      );
+    } else {
+      advance();
+    }
   }
 
   Color _fieldBorderColor({bool focused = false}) {
-    if (_isWrong) {
-      return _wrongColor;
-    }
     if (_isCorrect) {
       return _successColor;
     }
@@ -620,177 +572,159 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                   reduceMotion: MediaQuery.disableAnimationsOf(context),
                 ),
               ),
-              _Phase.answer => AnimatedBuilder(
-                animation: _shakeAnimation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(_shakeAnimation.value, 0),
-                    child: child,
-                  );
-                },
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnswerFireworksBurst(
-                        burstKey: _fireworksKey,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    (_isCorrect
-                                            ? _successColor
-                                            : const Color(0xFF7759D6))
-                                        .withValues(alpha: 0.1),
-                                blurRadius: 38,
-                                offset: const Offset(0, 14),
-                              ),
-                            ],
+              _Phase.answer => ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnswerFireworksBurst(
+                      burstKey: _fireworksKey,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  (_isCorrect
+                                          ? _successColor
+                                          : const Color(0xFF7759D6))
+                                      .withValues(alpha: 0.1),
+                              blurRadius: 38,
+                              offset: const Offset(0, 14),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _inputController,
+                          focusNode: _inputFocus,
+                          enabled: !_isSubmitting,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          autofocus: true,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize:
+                                MediaQuery.sizeOf(context).shortestSide * 0.14,
+                            height: 1,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                            color: _isCorrect ? _successColor : _objectDeep,
                           ),
-                          child: TextField(
-                            controller: _inputController,
-                            focusNode: _inputFocus,
-                            enabled: !_isSubmitting,
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            autofocus: true,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize:
-                                  MediaQuery.sizeOf(context).shortestSide *
-                                  0.14,
-                              height: 1,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures(),
-                              ],
-                              color: _isWrong
-                                  ? _wrongColor
-                                  : _isCorrect
-                                  ? _successColor
-                                  : _objectDeep,
+                          cursorColor: _flashColor,
+                          decoration: InputDecoration(
+                            hintText: '?',
+                            hintStyle: TextStyle(
+                              color: _objectColor.withValues(alpha: 0.28),
                             ),
-                            cursorColor: _isWrong ? _wrongColor : _flashColor,
-                            decoration: InputDecoration(
-                              hintText: '?',
-                              hintStyle: TextStyle(
-                                color: _objectColor.withValues(alpha: 0.28),
-                              ),
-                              filled: true,
-                              fillColor: _isCorrect
-                                  ? _okSoft
-                                  : const Color(0x75FFFFFF),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                borderSide: BorderSide(
-                                  width: 2,
-                                  color: _fieldBorderColor(),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                borderSide: BorderSide(
-                                  width: 2,
-                                  color: _fieldBorderColor(),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                borderSide: BorderSide(
-                                  width: 2,
-                                  color: _fieldBorderColor(focused: true),
-                                ),
-                              ),
-                              disabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(24),
-                                borderSide: BorderSide(
-                                  width: 2,
-                                  color: _fieldBorderColor(),
-                                ),
+                            filled: true,
+                            fillColor: _isCorrect
+                                ? _okSoft
+                                : const Color(0x75FFFFFF),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                width: 2,
+                                color: _fieldBorderColor(),
                               ),
                             ),
-                            onChanged: (value) {
-                              setState(() {
-                                _isWrong = false;
-                                _answerDraft = value;
-                              });
-                            },
-                            onSubmitted: (_) => _submit(),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                width: 2,
+                                color: _fieldBorderColor(),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                width: 2,
+                                color: _fieldBorderColor(focused: true),
+                              ),
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(24),
+                              borderSide: BorderSide(
+                                width: 2,
+                                color: _fieldBorderColor(),
+                              ),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _answerDraft = value;
+                            });
+                          },
+                          onSubmitted: (_) => _submit(),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _isSubmitting || _answerDraft.trim().isEmpty
+                            ? null
+                            : _submit,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _objectColor,
+                          disabledBackgroundColor: _objectColor.withValues(
+                            alpha: 0.15,
+                          ),
+                          disabledForegroundColor: _objectDeep.withValues(
+                            alpha: 0.35,
+                          ),
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          shadowColor: _objectDeep.withValues(alpha: 0.24),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: const Text(
+                          'Проверить',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed:
-                              _isSubmitting || _answerDraft.trim().isEmpty
-                              ? null
-                              : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _objectColor,
-                            disabledBackgroundColor: _objectColor.withValues(
-                              alpha: 0.15,
-                            ),
-                            disabledForegroundColor: _objectDeep.withValues(
-                              alpha: 0.35,
-                            ),
-                            foregroundColor: Colors.white,
-                            elevation: 3,
-                            shadowColor: _objectDeep.withValues(alpha: 0.24),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _isSubmitting ? null : _replayExample,
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: const Color(0x59FFFFFF),
+                          foregroundColor: const Color(0xFF5F43BA),
+                          side: const BorderSide(color: Color(0x337759D6)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
                           ),
-                          child: const Text(
-                            'Проверить',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        icon: const Icon(Icons.replay_rounded, size: 21),
+                        label: const Text(
+                          'Повторить цепочку',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: _isSubmitting ? null : _replayExample,
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color(0x59FFFFFF),
-                            foregroundColor: const Color(0xFF5F43BA),
-                            side: const BorderSide(color: Color(0x337759D6)),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                          ),
-                          icon: const Icon(Icons.replay_rounded, size: 21),
-                          label: const Text(
-                            'Повторить цепочку',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             },

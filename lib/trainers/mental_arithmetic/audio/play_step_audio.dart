@@ -9,6 +9,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.d
 Future<void> playStepAudio(
   ChainStep step, {
   double playbackRate = 1,
+  double? fixedPlaybackRate,
   double? stepPauseSec,
   void Function()? onStarted,
 }) {
@@ -32,9 +33,11 @@ Future<void> playStepAudio(
     }
   }
 
-  final rate = catalog
-      ? catalogFlashPlaybackRate(stepPauseSec ?? 1, durations)
-      : playbackRate;
+  final rate =
+      fixedPlaybackRate ??
+      (catalog
+          ? catalogFlashPlaybackRate(stepPauseSec ?? 1, durations)
+          : playbackRate);
   return getSharedClipPlayer().play(
     resolved.assets,
     playbackRate: rate,

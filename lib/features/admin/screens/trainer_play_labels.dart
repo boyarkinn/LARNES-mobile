@@ -227,6 +227,14 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
   final labelKey = option.labelKey ?? '';
   const brotherPrefix = 'topicLessonBrother';
   const friendPrefix = 'topicLessonFriend';
+  const friendBrotherPrefix = 'topicLessonFriendBrother';
+  if (labelKey.startsWith(friendBrotherPrefix)) {
+    final suffix = labelKey.substring(friendBrotherPrefix.length);
+    if (const {'6', '7', '8', '9'}.contains(suffix)) {
+      const arabicDigits = {'6': '٦', '7': '٧', '8': '٨', '9': '٩'};
+      return _passageLabel(l10n, ru: 'Друг + брат $suffix', en: 'Friend + brother $suffix', ar: 'الصديق والأخ ${arabicDigits[suffix]}');
+    }
+  }
   if (labelKey.startsWith(friendPrefix)) {
     final suffix = labelKey.substring(friendPrefix.length);
     if (RegExp(r'^[1-9]$').hasMatch(suffix)) {

@@ -33,6 +33,8 @@ ValidateTrainerParamsResult validateAbacusTopicExplanationParams(
     'brother-4', 'brother-3', 'brother-2', 'brother-1',
     'friend-9', 'friend-8', 'friend-7', 'friend-6', 'friend-5',
     'friend-4', 'friend-3', 'friend-2', 'friend-1',
+    'friend-brother-6', 'friend-brother-7',
+    'friend-brother-8', 'friend-brother-9',
   };
   if (lessonId is! String || !allowedLessons.contains(lessonId) ||
       speed is! String ||

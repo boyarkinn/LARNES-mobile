@@ -13,6 +13,8 @@ void main() {
         'brother-4', 'brother-3', 'brother-2', 'brother-1',
         'friend-9', 'friend-8', 'friend-7', 'friend-6', 'friend-5',
         'friend-4', 'friend-3', 'friend-2', 'friend-1',
+        'friend-brother-6', 'friend-brother-7',
+        'friend-brother-8', 'friend-brother-9',
       ];
       for (final lessonId in lessons) {
         expect(validateTrainerParams('abacus-topic-explanation', {

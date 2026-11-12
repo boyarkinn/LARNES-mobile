@@ -61,6 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
         isAuthenticated: widget.authSession.isAuthenticated,
         accountType: widget.authSession.user?.accountType,
         familySetupComplete: widget.authSession.familySetupComplete,
+        parentTrainerResumePath: widget.authSession.topicChainResumePath,
       ),
     );
   }

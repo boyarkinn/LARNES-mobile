@@ -27,6 +27,8 @@ class PhysicalGestureTrainer extends StatefulWidget {
     this.tempoMultiplier = 1,
     this.introductionMode = PhysicalGestureIntroductionMode.screen,
     this.autoPlay = true,
+    this.initialCheckpointStep,
+    this.onCheckpoint,
   });
 
   final PhysicalGesturePlan plan;
@@ -37,6 +39,9 @@ class PhysicalGestureTrainer extends StatefulWidget {
   final double tempoMultiplier;
   final PhysicalGestureIntroductionMode introductionMode;
   final bool autoPlay;
+  final int? initialCheckpointStep;
+  final void Function(int stepIndex, int framePosition, bool completed)?
+  onCheckpoint;
   final String instructionKey;
   final Future<void> Function(String, GestureCueSignal) onCue;
   final VoidCallback? onComplete;
@@ -133,6 +138,8 @@ class _PhysicalGestureTrainerState extends State<PhysicalGestureTrainer> {
           autoPlay: _introduced && widget.autoPlay,
           showHands: true,
           onComplete: widget.onComplete,
+          initialCheckpointStep: widget.initialCheckpointStep,
+          onCheckpoint: widget.onCheckpoint,
           onCue: widget.narrationEnabled
               ? (key, signal) async {
                   if (widget.introductionMode ==

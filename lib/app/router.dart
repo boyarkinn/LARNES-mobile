@@ -106,6 +106,7 @@ GoRouter createAppRouter({
         accountType: authSession.user?.accountType,
         hasDeviceToken: kioskRouteState.hasDeviceToken,
         familySetupComplete: authSession.familySetupComplete,
+        parentTrainerResumePath: authSession.topicChainResumePath,
       );
     },
     routes: [

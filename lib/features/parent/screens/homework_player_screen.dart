@@ -12,6 +12,9 @@ import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_run_scope.dart';
+import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_resume_store.dart';
 
 class HomeworkPlayerScreen extends StatefulWidget {
   const HomeworkPlayerScreen({
@@ -141,7 +144,23 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
     }
   }
 
-  void _exit() {
+  Future<void> _exit() async {
+    final owner = AuthScope.of(context).user?.id;
+    if (owner != null) {
+      try {
+        await TopicChainResumeStore.clear(
+          owner,
+          context: {
+            'source': 'homework',
+            'childId': widget.childId,
+            'assignmentId': widget.assignmentId,
+          },
+        );
+      } catch (_) {
+        // An optional navigation hint cannot prevent explicit exit.
+      }
+      if (!mounted) return;
+    }
     final completed = _isCompleted || (_snapshot?.isCompleted ?? false);
     context.pop(completed);
   }
@@ -227,41 +246,71 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
       );
     }
 
+    Widget player(
+      Map<String, dynamic> params,
+      Map<String, dynamic>? runtimeSnapshot,
+      ExerciseAudioManifest? audio,
+      VoidCallback? onComplete,
+    ) => TrainerPlayer(
+      key: ValueKey(step.id),
+      audioManifest: audio,
+      onAudioIssue: (issue) {
+        if (!mounted) return;
+        reportNativeTrainerAudioIssue(
+          api: AuthScope.of(context).parentApi,
+          issue: issue,
+          trainerKey: step.trainerKey,
+          childId: incidentChildId,
+          assignmentId: incidentAssignmentId,
+          stepIndex: snapshot.steps.indexOf(step),
+        );
+      },
+      trainerKey: step.trainerKey,
+      params: params,
+      runtimeSnapshot: runtimeSnapshot,
+      l10n: l10n,
+      onComplete: onComplete,
+      stepChrome: TrainerStepChrome(
+        errorMessage: _advanceError,
+        finishLabel: l10n.parentHomeworkPlayFinish,
+        isInteractive: isInteractive,
+        isLast: isLast,
+        isPending: _isAdvancing,
+        nextLabel: l10n.parentHomeworkPlayNext,
+        onAdvance: _isAdvancing ? null : _handleAdvance,
+      ),
+    );
+
     return TrainerPlayShell(
       currentStep: _stepIndex + 1,
       totalSteps: totalSteps,
       menuContinueLabel: l10n.parentHomeworkPlayMenuContinue,
       menuExitLabel: l10n.parentHomeworkPlayExit,
       onExit: _exit,
-      child: TrainerPlayer(
-        key: ValueKey(step.id),
-        audioManifest: step.audioManifest,
-        onAudioIssue: (issue) {
-          if (!mounted) return;
-          reportNativeTrainerAudioIssue(
-            api: AuthScope.of(context).parentApi,
-            issue: issue,
-            trainerKey: step.trainerKey,
-            childId: incidentChildId,
-            assignmentId: incidentAssignmentId,
-            stepIndex: snapshot.steps.indexOf(step),
-          );
-        },
-        trainerKey: step.trainerKey,
-        params: step.params,
-        runtimeSnapshot: step.runtimeSnapshot,
-        l10n: l10n,
-        onComplete: isInteractive ? _handleAdvance : null,
-        stepChrome: TrainerStepChrome(
-          errorMessage: _advanceError,
-          finishLabel: l10n.parentHomeworkPlayFinish,
-          isInteractive: isInteractive,
-          isLast: isLast,
-          isPending: _isAdvancing,
-          nextLabel: l10n.parentHomeworkPlayNext,
-          onAdvance: _isAdvancing ? null : _handleAdvance,
-        ),
-      ),
+      child: step.trainerKey == 'topic-chain-flash'
+          ? TopicChainRunGate(
+              key: ValueKey('chain:${step.id}'),
+              runContext: {
+                'source': 'homework',
+                'childId': widget.childId,
+                'assignmentId': widget.assignmentId,
+                'stepIndex': _stepIndex,
+              },
+              params: step.params,
+              onComplete: _handleAdvance,
+              builder: (params, runtimeSnapshot, audio, complete) => player(
+                params,
+                runtimeSnapshot,
+                audio ?? step.audioManifest,
+                complete,
+              ),
+            )
+          : player(
+              step.params,
+              step.runtimeSnapshot,
+              step.audioManifest,
+              isInteractive ? _handleAdvance : null,
+            ),
     );
   }
 }

@@ -20,6 +20,8 @@ class PhysicalChainExample extends StatefulWidget {
     this.stateKey = 'physical-chain-example',
     this.onComplete,
     this.autoPlay = true,
+    this.initialCheckpointStep,
+    this.onCheckpoint,
   });
   final Chain chain;
   final String? locale;
@@ -27,6 +29,9 @@ class PhysicalChainExample extends StatefulWidget {
   final String stateKey;
   final VoidCallback? onComplete;
   final bool autoPlay;
+  final int? initialCheckpointStep;
+  final void Function(int stepIndex, int framePosition, bool completed)?
+  onCheckpoint;
 
   @override
   State<PhysicalChainExample> createState() => _PhysicalChainExampleState();
@@ -122,6 +127,8 @@ class _PhysicalChainExampleState extends State<PhysicalChainExample> {
       autoPlay: ready && widget.autoPlay,
       onCue: _playCue,
       onComplete: widget.onComplete,
+      initialCheckpointStep: widget.initialCheckpointStep,
+      onCheckpoint: widget.onCheckpoint,
     );
   }
 }

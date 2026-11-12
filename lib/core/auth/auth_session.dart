@@ -23,6 +23,7 @@ import 'package:larnes_mobile/core/api/register_api.dart';
 import 'package:larnes_mobile/core/api/register_school_offers_api.dart';
 import 'package:larnes_mobile/core/routing/home_path_mapper.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_resume_store.dart';
 
 class AuthSession extends ChangeNotifier {
   factory AuthSession({ApiClient? apiClient}) {
@@ -38,11 +39,13 @@ class AuthSession extends ChangeNotifier {
   AuthUser? _user;
   FamilySetupSnapshot? _familySetup;
   bool _isLoading = true;
+  String? _topicChainResumePath;
 
   AuthUser? get user => _user;
   FamilySetupSnapshot? get familySetup => _familySetup;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null;
+  String? get topicChainResumePath => _topicChainResumePath;
 
   /// Для parent: `false` пока gate не пройден (включая незагруженный snapshot).
   bool? get familySetupComplete {
@@ -182,6 +185,7 @@ class AuthSession extends ChangeNotifier {
 
   Future<void> bootstrap() async {
     _isLoading = true;
+    _topicChainResumePath = null;
     _notifySafely();
     try {
       _user = await _authApi.fetchSession();
@@ -195,6 +199,13 @@ class AuthSession extends ChangeNotifier {
         }
       } else {
         _familySetup = null;
+      }
+      if (isParentAccount(_user?.accountType) && familySetupComplete == true) {
+        try {
+          _topicChainResumePath = await TopicChainResumeStore.read(_user!.id);
+        } catch (_) {
+          /* Cache availability cannot change authentication. */
+        }
       }
     } catch (_) {
       _user = null;
@@ -241,6 +252,15 @@ class AuthSession extends ChangeNotifier {
   Future<void> logout() async {
     await MessengerRooms.clear();
     await _authApi.logout();
+    final oldUserId = _user?.id;
+    if (oldUserId != null) {
+      try {
+        await TopicChainResumeStore.clear(oldUserId);
+      } catch (_) {
+        /* optional resume pointer */
+      }
+    }
+    _topicChainResumePath = null;
     _user = null;
     UserTimeZone.manualZone = null;
     UserTimeZone.cityZone = null;

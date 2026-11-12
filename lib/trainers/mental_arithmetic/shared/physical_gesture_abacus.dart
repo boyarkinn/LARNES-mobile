@@ -25,6 +25,8 @@ class PhysicalGestureAbacus extends StatefulWidget {
     this.onCue,
     this.showHands = false,
     this.tempoMultiplier = 1,
+    this.initialCheckpointStep,
+    this.onCheckpoint,
   });
 
   final PhysicalGesturePlan plan;
@@ -34,6 +36,9 @@ class PhysicalGestureAbacus extends StatefulWidget {
   final Future<void> Function(String key, GestureCueSignal signal)? onCue;
   final bool showHands;
   final double tempoMultiplier;
+  final int? initialCheckpointStep;
+  final void Function(int stepIndex, int framePosition, bool completed)?
+  onCheckpoint;
 
   @override
   State<PhysicalGestureAbacus> createState() => _PhysicalGestureAbacusState();
@@ -92,9 +97,9 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     required bool reducedMotion,
     required bool preservePosition,
   }) {
-    final oldCheckpoint = preservePosition
-        ? _player?.checkpointStepIndex
-        : null;
+    final oldCheckpoint =
+        (preservePosition ? _player?.checkpointStepIndex : null) ??
+        widget.initialCheckpointStep;
     _player?.cancel();
     _reducedMotion = reducedMotion;
     _handMotions = const [];
@@ -155,6 +160,8 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
         });
       },
       onCue: widget.onCue,
+      onCheckpoint: (step, position, completed) =>
+          widget.onCheckpoint?.call(step, position, completed),
       onComplete: () {
         if (!mounted || _completed) return;
         _completed = true;

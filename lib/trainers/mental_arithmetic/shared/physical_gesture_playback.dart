@@ -148,6 +148,7 @@ class PhysicalGesturePlayer {
     void Function(PhysicalGestureFrame frame, int index)? onPrepare,
     void Function(PhysicalGestureFrame frame, int index)? onReturn,
     this.onReset,
+    this.onCheckpoint,
     int prepareMs = 120,
     int returnMs = 320,
     Future<void> Function(String key, GestureCueSignal signal)? onCue,
@@ -346,7 +347,10 @@ class PhysicalGesturePlayer {
             break;
         }
       },
-      onComplete: onComplete,
+      onComplete: () {
+        onCheckpoint?.call(plan.steps.length, frames.length, true);
+        onComplete?.call();
+      },
       nowMs: nowMs,
       timerFactory: timerFactory,
     );
@@ -360,6 +364,8 @@ class PhysicalGesturePlayer {
   int? _stepStartedAt;
   int? _stepPausedAt;
   final void Function(List<RodState> rods, int framePosition)? onReset;
+  final void Function(int stepIndex, int framePosition, bool completed)?
+  onCheckpoint;
   late final List<int> _stepStarts;
   late final List<int> _stepFrameStarts;
   late final bool _hasEvents;
@@ -431,6 +437,7 @@ class PhysicalGesturePlayer {
     _settledFramePosition = event.frameEnd;
     _activeParallelStepIndex = null;
     _waitingBoundary = null;
+    onCheckpoint?.call(_settledStepIndex, _settledFramePosition, false);
   }
 
   List<RodState> _rodsAt(int framePosition) =>

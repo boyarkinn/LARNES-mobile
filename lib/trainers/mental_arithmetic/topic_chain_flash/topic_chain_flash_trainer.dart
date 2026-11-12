@@ -15,6 +15,8 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/topic
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_chain_example_widget.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_run_scope.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_run_state.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 /// Web v2: `platform/src/trainers/mental-arithmetic/topic-chain-flash/component.tsx`
@@ -32,7 +34,16 @@ class TopicChainFlashTrainer extends StatefulWidget {
   State<TopicChainFlashTrainer> createState() => _TopicChainFlashTrainerState();
 }
 
-enum _Phase { boot, instruction, countdown, flash, answer, review, error }
+enum _Phase {
+  boot,
+  instruction,
+  countdown,
+  flash,
+  answer,
+  review,
+  complete,
+  error,
+}
 
 class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     with WidgetsBindingObserver {
@@ -67,6 +78,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   bool _suspended = false;
   bool _pendingAdvance = false;
   final Map<int, TopicChainAttemptRecord> _attempts = {};
+  TopicChainRunController? _persistence;
+  bool _bootstrapped = false, _restoring = false;
 
   bool get _reviewErrors => widget.params['reviewErrors'] == true;
   double get _errorReviewStepSec =>
@@ -123,7 +136,127 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startSession();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_bootstrapped) return;
+    _bootstrapped = true;
+    _persistence = TopicChainRunScope.maybeOf(context);
+    final saved = _persistence?.state;
+    if (saved != null && saved.isNotEmpty) {
+      _restore(saved);
+    } else {
+      _startSession();
+    }
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _checkpoint();
+  }
+
+  void _checkpoint() {
+    final persistence = _persistence;
+    if (persistence == null || _restoring) return;
+    persistence.record({
+      ...persistence.state,
+      '${topicChainStatePrefix}phase': _phase.name,
+      '${topicChainStatePrefix}chain': _chain == null
+          ? null
+          : topicChainToJson(_chain!),
+      '${topicChainStatePrefix}exampleIndex': _exampleIndex,
+      '${topicChainStatePrefix}answerDraft': _answerDraft,
+      '${topicChainStatePrefix}isSubmitting': _isSubmitting,
+      '${topicChainStatePrefix}isCorrect': _isCorrect,
+      '${topicChainStatePrefix}flashLabel': _flashLabel,
+      '${topicChainStatePrefix}flashStepIndex': _flashStepIndex,
+      '${topicChainStatePrefix}attempts': {
+        for (final entry in _attempts.entries)
+          '${entry.key}': entry.value.toJson(),
+      },
+    });
+  }
+
+  void _restore(Map<String, dynamic> saved) {
+    _restoring = true;
+    _runToken = Object();
+    _attempts.clear();
+    final rawAttempts = saved['${topicChainStatePrefix}attempts'];
+    if (rawAttempts is Map) {
+      for (final entry in rawAttempts.entries) {
+        _attempts[int.parse('${entry.key}')] = TopicChainAttemptRecord.fromJson(
+          Map<String, dynamic>.from(entry.value as Map),
+        );
+      }
+    }
+    _exampleIndex =
+        (saved['${topicChainStatePrefix}exampleIndex'] as num?)?.toInt() ?? 0;
+    final rawChain = saved['${topicChainStatePrefix}chain'];
+    _chain = rawChain is Map
+        ? topicChainFromJson(Map<String, dynamic>.from(rawChain))
+        : _fixedChain(_exampleIndex);
+    _phase = _Phase.values.firstWhere(
+      (phase) => phase.name == saved['${topicChainStatePrefix}phase'],
+      orElse: () => _Phase.boot,
+    );
+    _answerDraft = '${saved['${topicChainStatePrefix}answerDraft'] ?? ''}';
+    _inputController.text = _answerDraft;
+    _isSubmitting = saved['${topicChainStatePrefix}isSubmitting'] == true;
+    _isCorrect = saved['${topicChainStatePrefix}isCorrect'] == true;
+    _flashStepIndex =
+        (saved['${topicChainStatePrefix}flashStepIndex'] as num?)?.toInt() ??
+        -1;
+    _restoring = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_phase == _Phase.complete) {
+        _completeCalled = true;
+        widget.onComplete?.call();
+      } else if (_phase == _Phase.review) {
+        if (_attempts[_exampleIndex]?.reviewCompleted == true &&
+            _chain != null) {
+          _isSubmitting = false;
+          setState(() => _phase = _Phase.countdown);
+          _runCountdown(_runToken, _chain!);
+        } else if (saved['topic-chain-flash:review:$_exampleIndex:completed'] ==
+            true) {
+          _finishReview(_runToken);
+        }
+      } else if (_phase == _Phase.answer &&
+          _isSubmitting &&
+          _attempts.containsKey(_exampleIndex)) {
+        final attempt = _attempts[_exampleIndex]!;
+        if (_reviewErrors &&
+            attempt.firstAnswer != attempt.chain.answer &&
+            !attempt.reviewCompleted) {
+          _beginReview();
+        } else {
+          _pendingAdvance = true;
+          _advanceExample();
+        }
+      } else if ((_phase == _Phase.flash || _phase == _Phase.countdown) &&
+          _chain != null) {
+        setState(() => _phase = _Phase.countdown);
+        _runCountdown(_runToken, _chain!);
+      } else if (_phase == _Phase.answer) {
+        _focusAnswerInput();
+      } else {
+        _startSession();
+      }
+    });
+  }
+
+  Future<bool> _flushCheckpoint() async {
+    _checkpoint();
+    try {
+      await _persistence?.flush();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -455,7 +588,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     return fallback;
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final chain = _chain;
     if (chain == null ||
         _isSubmitting ||
@@ -488,7 +621,16 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
         progressTotal: _totalExamples,
       );
     }
-    if (!correct && !afterReview && _reviewErrors) {
+    if (!await _flushCheckpoint() || !mounted || _suspended) return;
+    _continueAcceptedAnswer();
+  }
+
+  void _continueAcceptedAnswer() {
+    final record = _attempts[_exampleIndex];
+    if (record == null) return;
+    final correct =
+        (record.retryAnswer ?? record.firstAnswer) == record.chain.answer;
+    if (!correct && !record.reviewCompleted && _reviewErrors) {
       _beginReview();
       return;
     }
@@ -514,7 +656,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     }
   }
 
-  void _advanceExample() {
+  Future<void> _advanceExample() async {
     _completeTimer = null;
     if (!mounted || _suspended || !_pendingAdvance || _completeCalled) return;
     _pendingAdvance = false;
@@ -522,7 +664,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _startExample(_exampleIndex + 1);
     } else {
       _completeCalled = true;
-      widget.onComplete?.call();
+      setState(() => _phase = _Phase.complete);
+      if (await _flushCheckpoint() && mounted) widget.onComplete?.call();
     }
   }
 
@@ -544,7 +687,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     });
   }
 
-  void _finishReview(Object run) {
+  Future<void> _finishReview(Object run) async {
     if (!mounted ||
         _suspended ||
         _phase != _Phase.review ||
@@ -555,9 +698,17 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     if (record == null || record.reviewCompleted) return;
     record.reviewCompleted = true;
     _isSubmitting = false;
+    _inputController.clear();
+    setState(() {
+      _phase = _Phase.countdown;
+      _answerDraft = '';
+      _isCorrect = false;
+      _flashLabel = null;
+      _flashStepIndex = -1;
+    });
+    if (!await _flushCheckpoint() || !mounted || _suspended) return;
     // This path replays the original Chain and never calls generateChain.
-    _phase = _Phase.answer;
-    _replayExample();
+    _runCountdown(_runToken, record.chain);
   }
 
   @override
@@ -579,6 +730,10 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     if (_completeCalled) return;
     if (_pendingAdvance) {
       _advanceExample();
+    } else if (_phase == _Phase.answer &&
+        _isSubmitting &&
+        _attempts.containsKey(_exampleIndex)) {
+      _continueAcceptedAnswer();
     } else if (_phase == _Phase.instruction || _phase == _Phase.boot) {
       unawaited(_runInstruction(_runToken));
     } else if (_phase == _Phase.countdown || _phase == _Phase.flash) {
@@ -644,6 +799,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   @override
   Widget build(BuildContext context) {
     final reviewRun = _runToken;
+    final reviewPrefix = 'topic-chain-flash:review:$_exampleIndex';
     return TrainerScene(
       child: Stack(
         children: [
@@ -663,8 +819,27 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                 stepSec: _errorReviewStepSec,
                 stateKey: 'topic-chain-review-$_exampleIndex',
                 autoPlay: !_suspended,
+                initialCheckpointStep:
+                    (_persistence?.state['$reviewPrefix:committedStep'] as num?)
+                        ?.toInt(),
+                onCheckpoint: (step, position, completed) {
+                  final persistence = _persistence;
+                  if (persistence == null ||
+                      _phase != _Phase.review ||
+                      !identical(reviewRun, _runToken)) {
+                    return;
+                  }
+                  persistence.record({
+                    ...persistence.state,
+                    '$reviewPrefix:committedStep': step,
+                    '$reviewPrefix:position': position,
+                    '$reviewPrefix:openingSettled': true,
+                    '$reviewPrefix:completed': completed,
+                  });
+                },
                 onComplete: () => _finishReview(reviewRun),
               ),
+              _Phase.complete => const SizedBox.shrink(),
               _Phase.error => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(

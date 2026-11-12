@@ -4,7 +4,8 @@ String mapHomePathToMobile(String webPath) {
   if (path == '/parent/family-setup') {
     return '/parent/family-setup';
   }
-  if (path == '/parent/family-join-dedup' || path.startsWith('/parent/family-join-dedup')) {
+  if (path == '/parent/family-join-dedup' ||
+      path.startsWith('/parent/family-join-dedup')) {
     return '/parent/family-join-dedup';
   }
   if (path == '/parent' || path.startsWith('/parent/')) {
@@ -36,18 +37,21 @@ String defaultMobileHomeForAccountType(String? accountType) {
 
 bool isAdminAccount(String? accountType) => accountType == 'admin';
 
-bool isAdminRoute(String path) => path == '/admin' || path.startsWith('/admin/');
+bool isAdminRoute(String path) =>
+    path == '/admin' || path.startsWith('/admin/');
 
 bool isParentAccount(String? accountType) => accountType == 'parent';
 
 bool isNetworkPanelAccount(String? accountType) =>
     accountType == 'network_owner' || accountType == 'staff';
 
-bool isNetworkRoute(String path) => path == '/network' || path.startsWith('/network/');
+bool isNetworkRoute(String path) =>
+    path == '/network' || path.startsWith('/network/');
 
 bool isKioskEnrollRoute(String path) => path == '/kiosk/enroll';
 
-bool isKioskRoute(String path) => path == '/kiosk' || path.startsWith('/kiosk/');
+bool isKioskRoute(String path) =>
+    path == '/kiosk' || path.startsWith('/kiosk/');
 
 const kioskLoginRedirect = '/login?from=%2Fkiosk';
 
@@ -59,7 +63,8 @@ bool isFamilySetupRoute(String path) =>
 
 bool isFamilyJoinDedupRoute(String path) {
   final base = path.split('?').first;
-  return base == '/parent/family-join-dedup' || base.startsWith('/parent/family-join-dedup');
+  return base == '/parent/family-join-dedup' ||
+      base.startsWith('/parent/family-join-dedup');
 }
 
 bool isFamilyInviteRoute(String path) {
@@ -83,7 +88,12 @@ bool isOpenInviteRoute(String path) =>
     isFamilyInviteRoute(path) || isLessonInviteRoute(path);
 
 bool isLiveLessonRoomRoute(String path) {
-  final parts = path.split('?').first.split('/').where((part) => part.isNotEmpty).toList();
+  final parts = path
+      .split('?')
+      .first
+      .split('/')
+      .where((part) => part.isNotEmpty)
+      .toList();
   return parts.length == 3 && parts[0] == 'parent' && parts[2] == 'lesson';
 }
 
@@ -100,7 +110,8 @@ bool isAuthRoute(String path) =>
     path == '/password-reset' ||
     path.startsWith('/password-reset/');
 
-bool isParentRoute(String path) => path == '/parent' || path.startsWith('/parent/');
+bool isParentRoute(String path) =>
+    path == '/parent' || path.startsWith('/parent/');
 
 bool isParentAccountRoute(String path) {
   final base = path.split('?').first;
@@ -133,6 +144,7 @@ String? resolveAppRedirect({
   required String? accountType,
   bool hasDeviceToken = false,
   bool? familySetupComplete,
+  String? parentTrainerResumePath,
 }) {
   if (isKioskEnrollRoute(path)) {
     if (hasDeviceToken) {
@@ -187,6 +199,14 @@ String? resolveAppRedirect({
   }
 
   if (isAuthenticated && (path == '/login' || path == '/splash')) {
+    if (path == '/splash') {
+      if (hasDeviceToken) return '/kiosk';
+      if (isParentAccount(accountType) &&
+          familySetupComplete == true &&
+          isParentTopicChainResumePath(parentTrainerResumePath)) {
+        return parentTrainerResumePath;
+      }
+    }
     return resolveAuthenticatedHome(
       accountType: accountType,
       familySetupComplete: familySetupComplete,
@@ -239,15 +259,31 @@ String resolveSplashDestination({
   required bool isAuthenticated,
   required String? accountType,
   bool? familySetupComplete,
+  String? parentTrainerResumePath,
 }) {
   if (hasDeviceToken) {
     return '/kiosk';
   }
   if (isAuthenticated) {
+    if (isParentAccount(accountType) &&
+        familySetupComplete == true &&
+        isParentTopicChainResumePath(parentTrainerResumePath)) {
+      return parentTrainerResumePath!;
+    }
     return resolveAuthenticatedHome(
       accountType: accountType,
       familySetupComplete: familySetupComplete,
     );
   }
   return '/login';
+}
+
+bool isParentTopicChainResumePath(String? path) {
+  const id =
+      r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+  return path != null &&
+      (RegExp(
+            '^/parent/$id/trainers/play/topic-chain-flash\$',
+          ).hasMatch(path) ||
+          RegExp('^/parent/$id/homework/$id\$').hasMatch(path));
 }

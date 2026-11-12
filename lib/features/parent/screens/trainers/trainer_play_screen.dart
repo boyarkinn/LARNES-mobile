@@ -9,6 +9,10 @@ import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_run_scope.dart';
+import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
+import 'package:larnes_mobile/core/auth/auth_scope.dart';
+import 'package:larnes_mobile/trainers/runtime/topic_chain_resume_store.dart';
 
 /// Self-play тренажёра — web `/parent/:childId/trainers/play/:trainerKey`.
 class TrainerPlayScreen extends StatefulWidget {
@@ -70,9 +74,22 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
     });
   }
 
-  void _returnToParams() {
+  Future<void> _returnToParams() async {
+    final owner = AuthScope.of(context).user?.id;
+    if (owner != null && widget.trainerKey == 'topic-chain-flash') {
+      try {
+        await TopicChainResumeStore.clear(
+          owner,
+          context: {'source': 'direct', 'childId': widget.childId},
+        );
+      } catch (_) {
+        // An optional navigation hint cannot prevent explicit exit.
+      }
+      if (!mounted) return;
+    }
     final returnPath = _session?.returnPath;
-    if (returnPath != null && ParentTrainerPlaySessionStore.isValidReturnPath(returnPath)) {
+    if (returnPath != null &&
+        ParentTrainerPlaySessionStore.isValidReturnPath(returnPath)) {
       context.go(returnPath);
       return;
     }
@@ -100,27 +117,52 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
 
     final isInteractive = isTrainerInteractive(widget.trainerKey);
 
+    Widget player(
+      Map<String, dynamic> params,
+      Map<String, dynamic>? snapshot,
+      ExerciseAudioManifest? audio,
+      VoidCallback? onComplete,
+    ) => TrainerPlayer(
+      key: ValueKey(widget.trainerKey),
+      trainerKey: widget.trainerKey,
+      params: params,
+      runtimeSnapshot: snapshot,
+      audioManifest: audio,
+      l10n: l10n,
+      onComplete: onComplete,
+      stepChrome: TrainerStepChrome(
+        finishLabel: l10n.parentTrainersPlayFinish,
+        isInteractive: isInteractive,
+        isLast: true,
+        nextLabel: l10n.parentTrainersPlayNext,
+        onAdvance: _returnToParams,
+      ),
+    );
+
     return TrainerPlayShell(
       currentStep: 1,
       totalSteps: 1,
       menuContinueLabel: l10n.parentTrainersPlayMenuContinue,
       menuExitLabel: l10n.parentTrainersPlayExit,
       onExit: _returnToParams,
-      child: TrainerPlayer(
-        key: ValueKey('${widget.trainerKey}-${_params.hashCode}'),
-        trainerKey: widget.trainerKey,
-        params: _params!,
-        runtimeSnapshot: _session?.runtimeSnapshot,
-        l10n: l10n,
-        onComplete: isInteractive ? _returnToParams : null,
-        stepChrome: TrainerStepChrome(
-          finishLabel: l10n.parentTrainersPlayFinish,
-          isInteractive: isInteractive,
-          isLast: true,
-          nextLabel: l10n.parentTrainersPlayNext,
-          onAdvance: _returnToParams,
-        ),
-      ),
+      child: widget.trainerKey == 'topic-chain-flash'
+          ? TopicChainRunGate(
+              runContext: {
+                'source': 'direct',
+                'childId': widget.childId,
+                'launchId': _session!.launchId,
+              },
+              params: _params!,
+              onComplete: _returnToParams,
+              builder: (params, snapshot, audio, complete) =>
+                  player(params, snapshot, audio, complete),
+            )
+          : player(
+              _params!,
+              _session?.runtimeSnapshot,
+              null,
+              isInteractive ? _returnToParams : null,
+            ),
     );
   }
 }

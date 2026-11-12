@@ -85,9 +85,10 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Проверить'));
       await tester.pump();
       expect(completed, 1);
-      expect(find.text('Повторить цепочку'), findsOneWidget);
+      // A terminal durable checkpoint cannot expose another replay/attempt.
+      expect(find.text('Повторить цепочку'), findsNothing);
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('Повторить цепочку'), findsOneWidget);
+      expect(find.text('Повторить цепочку'), findsNothing);
       await tester.pump(const Duration(milliseconds: 150));
     });
 

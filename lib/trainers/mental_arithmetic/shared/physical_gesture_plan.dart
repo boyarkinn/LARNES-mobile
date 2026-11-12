@@ -115,12 +115,15 @@ class PhysicalGesturePlan {
     required this.steps,
     this.beadTransitionMs,
     this.openingAudioKey,
+    this.audioSequences = const {},
   });
 
   final List<RodState> initialRods;
   final List<PhysicalGestureStep> steps;
   final int? beadTransitionMs;
   final String? openingAudioKey;
+  /// Named cues composed of existing published catalog clips.
+  final Map<String, List<String>> audioSequences;
 }
 
 class PhysicalGestureFrame {
@@ -144,7 +147,10 @@ List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
   final keys = <String>[];
   final seen = <String>{};
   void add(String? key) {
-    if (key != null && key.trim().isNotEmpty && seen.add(key)) keys.add(key);
+    if (key == null || key.trim().isEmpty) return;
+    for (final clip in physicalGestureCueKeys(plan, key)) {
+      if (seen.add(clip)) keys.add(clip);
+    }
   }
 
   add(plan.openingAudioKey);
@@ -153,6 +159,8 @@ List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
   }
   return List.unmodifiable(keys);
 }
+
+List<String> physicalGestureCueKeys(PhysicalGesturePlan plan, String key) => plan.audioSequences[key] ?? [key];
 
 bool _validRod(RodState rod) => rod.earthCount >= 0 && rod.earthCount <= 4;
 
@@ -188,6 +196,11 @@ void _validateMove(PhysicalBeadMove move, List<RodState> rods, Set<int> used) {
 List<PhysicalGestureFrame> compilePhysicalGesturePlan(
   PhysicalGesturePlan plan,
 ) {
+  for (final entry in plan.audioSequences.entries) {
+    if (entry.key.trim().isEmpty || entry.value.isEmpty || entry.value.any((key) => key.trim().isEmpty)) {
+      throw StateError('Пустая аудиопоследовательность жеста.');
+    }
+  }
   if (plan.beadTransitionMs != null && plan.beadTransitionMs! <= 0) {
     throw RangeError(
       'Длительность движения косточки должна быть положительной.',

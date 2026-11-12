@@ -113,6 +113,8 @@ void main() {
     );
 
     expect(find.byType(PhysicalGestureAbacus), findsOneWidget);
+    final generatedPlan = tester.widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus)).plan;
+    expect(generatedPlan.audioSequences.keys.where((key) => key.startsWith(r'$physical-example:operation:')), hasLength(5));
     expect(
       tester
           .widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus))
@@ -133,6 +135,10 @@ void main() {
     expect(find.byType(TextButton), findsNothing);
     expect(find.byType(ElevatedButton), findsNothing);
     expect(completions, 0);
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: AbacusTopicExplanationTrainer(
+      params: const {'lessonId': 'simple-1', 'speed': 'slow'}, onComplete: () => completions++,
+    ))));
+    expect(identical(tester.widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus)).plan, generatedPlan), isTrue);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });

@@ -190,8 +190,8 @@ class _RiveHandState extends State<_RiveHand>
   final Map<String, rive.ViewModelInstanceNumber> _numbers = {};
   HandRig? _rig;
   HandRig? _previousRig;
-  AbacusHandPose? _pose;
-  AbacusHandPose? _previousPose;
+  late String _visibleOpacityName;
+  late String _previousOpacityName;
   double _scale = handParkScale;
   double _previousScale = handParkScale;
 
@@ -228,6 +228,8 @@ class _RiveHandState extends State<_RiveHand>
       final property = _viewModel.number(name);
       if (property != null) _numbers[name] = property;
     }
+    _visibleOpacityName = _idleOpacityName;
+    _previousOpacityName = _visibleOpacityName;
     _timeline = AnimationController(vsync: this)..addListener(_tick);
     _start();
   }
@@ -260,8 +262,8 @@ class _RiveHandState extends State<_RiveHand>
       _timeline.stop();
       _rig = _idleRig();
       _previousRig = null;
-      _previousPose = null;
-      _pose = null;
+      _visibleOpacityName = _idleOpacityName;
+      _previousOpacityName = _visibleOpacityName;
       _scale = handParkScale;
       _previousScale = handParkScale;
       _writeControls(_rig!, {_idleOpacityName: 1});
@@ -269,8 +271,8 @@ class _RiveHandState extends State<_RiveHand>
     }
     _previousRig = _rig ?? _idleRig();
     _previousScale = _scale;
-    _previousPose = _pose;
-    _pose = widget.phase == HandMotionPhase.returning ? null : motion.pose;
+    // Preserve the pose that was actually drawn if a transition was interrupted.
+    _previousOpacityName = _visibleOpacityName;
     final durationMs = switch (widget.phase) {
       HandMotionPhase.prepare => widget.prepareMs,
       HandMotionPhase.returning => widget.returnMs,
@@ -290,62 +292,18 @@ class _RiveHandState extends State<_RiveHand>
     AbacusHandPose.crabWorking => 'crabWorkingOpacity',
   };
 
-  Map<String, double> _travelWeights(String from, String to, double progress) {
-    if (progress >= 1) return {to: 1};
-    if (progress <= 0) return {from: 1};
-    if (progress < 0.5) {
-      return {from: 1 - progress * 2, 'idleTransitionOpacity': progress * 2};
-    }
-    return {'idleTransitionOpacity': (1 - progress) * 2, to: progress * 2 - 1};
-  }
-
-  Map<String, double> _poseWeights(double progress) {
-    if (widget.phase == HandMotionPhase.idle || widget.motion == null) {
-      return {_idleOpacityName: 1};
-    }
-    if (widget.phase == HandMotionPhase.returning) {
-      final previous = _previousPose;
-      return previous == null
-          ? {_idleOpacityName: 1}
-          : _travelWeights(_opacityName(previous), _idleOpacityName, progress);
-    }
-    final pose = _pose!;
-    final previous = _previousPose;
-    if (widget.phase == HandMotionPhase.prepare && previous == null) {
-      return _travelWeights(_idleOpacityName, _opacityName(pose), progress);
-    }
-    if (previous == null || previous == pose || progress >= 1) {
-      return {_opacityName(pose): 1};
-    }
-    final stages =
-        previous == AbacusHandPose.fist && pose == AbacusHandPose.openMiddle
-        ? [
-            'fistOpacity',
-            'threeQuarterOpacity',
-            'midOpacity',
-            'quarterOpacity',
-            'openMiddleOpacity',
-          ]
-        : previous == AbacusHandPose.openMiddle && pose == AbacusHandPose.fist
-        ? [
-            'openMiddleOpacity',
-            'quarterOpacity',
-            'midOpacity',
-            'threeQuarterOpacity',
-            'fistOpacity',
-          ]
-        : null;
-    if (stages == null) {
-      return {
-        _opacityName(previous): 1 - progress,
-        _opacityName(pose): progress,
-      };
-    }
-    final position = progress * (stages.length - 1);
-    final first = position.floor().clamp(0, stages.length - 2);
-    final fraction = position - first;
-    return {stages[first]: 1 - fraction, stages[first + 1]: fraction};
-  }
+  String _visiblePoseName(double progress) => switch (widget.phase) {
+    // Change shape near the resting position, then move one solid hand to contact.
+    HandMotionPhase.prepare =>
+      progress < 0.18
+          ? _previousOpacityName
+          : _opacityName(widget.motion!.pose),
+    HandMotionPhase.move => _opacityName(widget.motion!.pose),
+    // Keep the working hand intact until it is almost back at its resting place.
+    HandMotionPhase.returning =>
+      progress < 0.9 ? _previousOpacityName : _idleOpacityName,
+    HandMotionPhase.idle => _idleOpacityName,
+  };
 
   HandRig _lerpRig(HandRig from, HandRig to, double progress) => HandRig(
     origin: Offset.lerp(from.origin, to.origin, progress)!,
@@ -381,27 +339,24 @@ class _RiveHandState extends State<_RiveHand>
     final previous = _previousRig ?? _idleRig();
     late final HandRig target;
     late final double positionProgress;
-    late final double poseProgress;
     switch (widget.phase) {
       case HandMotionPhase.prepare:
         target = handRigAt(motion, 0);
-        positionProgress = Curves.easeOut.transform(elapsed);
-        poseProgress = positionProgress;
+        positionProgress = Curves.easeInOut.transform(elapsed);
       case HandMotionPhase.move:
         target = handRigAt(motion, Curves.easeOutBack.transform(elapsed));
         positionProgress = Curves.easeOut.transform(
           (elapsed / 0.18).clamp(0.0, 1.0),
         );
-        poseProgress = (elapsed / 0.18).clamp(0.0, 1.0);
       case HandMotionPhase.returning:
         target = _idleRig();
         positionProgress = Curves.easeInOut.transform(elapsed);
-        poseProgress = positionProgress;
       case HandMotionPhase.idle:
         return;
     }
     final rig = _lerpRig(previous, target, positionProgress);
-    _writeControls(rig, _poseWeights(poseProgress));
+    _visibleOpacityName = _visiblePoseName(elapsed);
+    _writeControls(rig, {_visibleOpacityName: 1});
     final targetScale = widget.phase == HandMotionPhase.returning
         ? handParkScale
         : 1.0;

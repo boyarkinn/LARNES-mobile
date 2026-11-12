@@ -1,11 +1,30 @@
-/// Web: `platform/src/trainers/mental-arithmetic/chain-generator/simple-rules.ts`
-///
-/// Просто N: focus ±N + prior ±1…±(N−1); анти-откат жёсткий кроме Просто 5;
-/// 2/3 знака всегда с младшими; десятки/сотни — исключения без prior.
+// Web: `platform/src/trainers/mental-arithmetic/chain-generator/simple-rules.ts`
+//
+// Просто N: focus ±N + prior ±1…±(N−1); анти-откат жёсткий кроме Просто 5;
+// 2/3 знака всегда с младшими; десятки/сотни — исключения без prior.
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/classify.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/topics.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
+
+/// Introductory two-rod lessons: known operand digits and at least one ±44…±99.
+TopicRule createRepeatedDigitSimpleTopicRule(int digit) {
+  if (digit < 4 || digit > 9) throw RangeError('Ожидается цифра от 4 до 9.');
+  final base = createSimpleTopicRule('simple-2digit')!;
+  final focus = digit * 11;
+  return TopicRule(
+    totalRods: base.totalRods,
+    allows: base.allows,
+    candidateAmounts: base.candidateAmounts.where((amount) => amount ~/ 10 <= digit && amount % 10 <= digit).toList(),
+    balanceAmounts: base.balanceAmounts,
+    focusAmounts: [focus],
+    focusCap: true,
+    isValidChain: (steps, intermediates) {
+      final count = steps.where((step) => step.amount == focus).length;
+      return count >= 1 && count <= steps.length ~/ 2 && (base.isValidChain?.call(steps, intermediates) ?? true);
+    },
+  );
+}
 
 List<int> _rangeInclusive(int from, int to) {
   return [for (var amount = from; amount <= to; amount++) amount];

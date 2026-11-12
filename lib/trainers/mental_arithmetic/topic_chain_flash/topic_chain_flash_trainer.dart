@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,8 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generat
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/check_answer.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/topic_chain_attempt_record.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_chain_example_widget.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
@@ -29,9 +32,10 @@ class TopicChainFlashTrainer extends StatefulWidget {
   State<TopicChainFlashTrainer> createState() => _TopicChainFlashTrainerState();
 }
 
-enum _Phase { boot, instruction, countdown, flash, answer, error }
+enum _Phase { boot, instruction, countdown, flash, answer, review, error }
 
-class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
+class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
+    with WidgetsBindingObserver {
   static const _actionPlaybackRate = 2.0;
 
   /// Пауза после верного ответа — успеть увидеть feedback.
@@ -60,6 +64,15 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
   bool _isSubmitting = false;
   String? _errorMessage;
   bool _completeCalled = false;
+  bool _suspended = false;
+  bool _pendingAdvance = false;
+  final Map<int, TopicChainAttemptRecord> _attempts = {};
+
+  bool get _reviewErrors => widget.params['reviewErrors'] == true;
+  double get _errorReviewStepSec =>
+      double.tryParse('${widget.params['errorReviewStepSec'] ?? 3}') ?? 3;
+  bool get _retryAfterReview =>
+      _attempts[_exampleIndex]?.reviewCompleted == true;
   Object _runToken = Object();
   Timer? _flashTimer;
   Timer? _countdownTimer;
@@ -109,6 +122,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _startSession();
   }
 
@@ -122,6 +136,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _runToken = Object();
     _flashTimer?.cancel();
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
@@ -137,11 +153,17 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
         a['actionCount'] != b['actionCount'] ||
         a['exampleCount'] != b['exampleCount'] ||
         a['solveMode'] != b['solveMode'] ||
-        a['stepPauseSec'] != b['stepPauseSec'];
+        a['stepPauseSec'] != b['stepPauseSec'] ||
+        a['reviewErrors'] != b['reviewErrors'] ||
+        a['errorReviewStepSec'] != b['errorReviewStepSec'] ||
+        jsonEncode(a['__runtimeSnapshot']) !=
+            jsonEncode(b['__runtimeSnapshot']);
   }
 
   void _startSession() {
     _completeCalled = false;
+    _pendingAdvance = false;
+    _attempts.clear();
     final runToken = Object();
     _runToken = runToken;
     unawaited(_runInstruction(runToken));
@@ -160,7 +182,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
         double.tryParse('${widget.params['stepPauseSec'] ?? ''}') ??
         1;
 
-    if (!mounted || !identical(runToken, _runToken)) {
+    if (!mounted || _suspended || !identical(runToken, _runToken)) {
       return;
     }
 
@@ -184,7 +206,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
             ? kInstructionPlaybackRate
             : 1,
       );
-      if (!mounted || !identical(runToken, _runToken)) {
+      if (!mounted || _suspended || !identical(runToken, _runToken)) {
         return;
       }
       _startExample(0, resetCompleteFlag: true);
@@ -201,7 +223,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
       },
     );
     await done.future;
-    if (!mounted || !identical(runToken, _runToken)) {
+    if (!mounted || _suspended || !identical(runToken, _runToken)) {
       return;
     }
     _startExample(0, resetCompleteFlag: true);
@@ -223,6 +245,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
     _flashLabel = null;
     _flashStepIndex = -1;
     _errorMessage = null;
+    _pendingAdvance = false;
     _exampleIndex = nextIndex;
 
     final runToken = Object();
@@ -239,7 +262,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
             ),
           );
 
-      if (!mounted || !identical(runToken, _runToken)) {
+      if (!mounted || _suspended || !identical(runToken, _runToken)) {
         return;
       }
 
@@ -272,13 +295,13 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
   }
 
   void _focusAnswerInput() {
-    if (!mounted) {
+    if (!mounted || _suspended) {
       return;
     }
 
     _inputFocus.requestFocus();
     Future<void>.delayed(const Duration(milliseconds: 120), () {
-      if (mounted && _phase == _Phase.answer && !_isSubmitting) {
+      if (mounted && !_suspended && _phase == _Phase.answer && !_isSubmitting) {
         _inputFocus.requestFocus();
       }
     });
@@ -289,7 +312,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
     var index = 0;
 
     void showNext() {
-      if (!mounted || !identical(runToken, _runToken)) {
+      if (!mounted || _suspended || !identical(runToken, _runToken)) {
         return;
       }
 
@@ -338,7 +361,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
     }
 
     void showNext() {
-      if (!mounted || !identical(runToken, _runToken)) {
+      if (!mounted || _suspended || !identical(runToken, _runToken)) {
         return;
       }
 
@@ -355,12 +378,12 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
       index += 1;
 
       void startStepTimer() {
-        if (!mounted || !identical(runToken, _runToken)) {
+        if (!mounted || _suspended || !identical(runToken, _runToken)) {
           return;
         }
 
         _flashTimer = Timer(pause, () {
-          if (!mounted || !identical(runToken, _runToken)) {
+          if (!mounted || _suspended || !identical(runToken, _runToken)) {
             return;
           }
 
@@ -434,7 +457,11 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
 
   void _submit() {
     final chain = _chain;
-    if (chain == null || _isSubmitting || _phase != _Phase.answer) {
+    if (chain == null ||
+        _isSubmitting ||
+        _suspended ||
+        _completeCalled ||
+        _phase != _Phase.answer) {
       return;
     }
 
@@ -442,13 +469,29 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
     if (answer == null) return;
     final correct = answer == chain.answer;
     _isSubmitting = true;
-
-    TrainerTelemetryScope.maybeOf(context)?.interaction(
-      correct: correct,
-      errorCode: correct ? null : 'wrong_answer',
-      progressCurrent: _exampleIndex + 1,
-      progressTotal: _totalExamples,
-    );
+    final afterReview = _retryAfterReview;
+    if (afterReview) {
+      final record = _attempts[_exampleIndex]!;
+      if (record.retryAnswer != null) return;
+      record.retryAnswer = answer;
+    } else {
+      // A retry never increments primary accuracy or creates a new example.
+      if (_attempts.containsKey(_exampleIndex)) return;
+      _attempts[_exampleIndex] = TopicChainAttemptRecord(
+        chain: chain,
+        firstAnswer: answer,
+      );
+      TrainerTelemetryScope.maybeOf(context)?.interaction(
+        correct: correct,
+        errorCode: correct ? null : 'wrong_answer',
+        progressCurrent: _exampleIndex + 1,
+        progressTotal: _totalExamples,
+      );
+    }
+    if (!correct && !afterReview && _reviewErrors) {
+      _beginReview();
+      return;
+    }
     setState(() {
       _isCorrect = correct;
       _isSubmitting = true;
@@ -457,26 +500,100 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
       }
     });
     _completeTimer?.cancel();
-    final answeredIndex = _exampleIndex;
-    void advance() {
-      _completeTimer = null;
-      if (!mounted || _exampleIndex != answeredIndex) return;
-      if (answeredIndex + 1 < _totalExamples) {
-        _startExample(answeredIndex + 1);
-        return;
-      }
-      if (_completeCalled) return;
+    _pendingAdvance = true;
+    if (correct) {
+      final run = _runToken;
+      _completeTimer = Timer(
+        const Duration(milliseconds: _successFeedbackMs),
+        () {
+          if (identical(run, _runToken)) _advanceExample();
+        },
+      );
+    } else {
+      _advanceExample();
+    }
+  }
+
+  void _advanceExample() {
+    _completeTimer = null;
+    if (!mounted || _suspended || !_pendingAdvance || _completeCalled) return;
+    _pendingAdvance = false;
+    if (_exampleIndex + 1 < _totalExamples) {
+      _startExample(_exampleIndex + 1);
+    } else {
       _completeCalled = true;
       widget.onComplete?.call();
     }
+  }
 
-    if (correct) {
-      _completeTimer = Timer(
-        const Duration(milliseconds: _successFeedbackMs),
-        advance,
-      );
+  void _beginReview() {
+    _flashTimer?.cancel();
+    _countdownTimer?.cancel();
+    _instructionTimer?.cancel();
+    _completeTimer?.cancel();
+    unawaited(cancelStepAudio());
+    _runToken = Object();
+    _inputFocus.unfocus();
+    _inputController.clear();
+    setState(() {
+      _answerDraft = '';
+      _isCorrect = false;
+      _phase = _Phase.review;
+      _flashLabel = null;
+      _flashStepIndex = -1;
+    });
+  }
+
+  void _finishReview(Object run) {
+    if (!mounted ||
+        _suspended ||
+        _phase != _Phase.review ||
+        !identical(run, _runToken)) {
+      return;
+    }
+    final record = _attempts[_exampleIndex];
+    if (record == null || record.reviewCompleted) return;
+    record.reviewCompleted = true;
+    _isSubmitting = false;
+    // This path replays the original Chain and never calls generateChain.
+    _phase = _Phase.answer;
+    _replayExample();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final suspended = state != AppLifecycleState.resumed;
+    if (!mounted || suspended == _suspended) return;
+    _suspended = suspended;
+    if (suspended) {
+      _runToken = Object();
+      _flashTimer?.cancel();
+      _countdownTimer?.cancel();
+      _instructionTimer?.cancel();
+      _completeTimer?.cancel();
+      unawaited(cancelStepAudio());
+      _inputFocus.unfocus();
+      setState(() {});
+      return;
+    }
+    if (_completeCalled) return;
+    if (_pendingAdvance) {
+      _advanceExample();
+    } else if (_phase == _Phase.instruction || _phase == _Phase.boot) {
+      unawaited(_runInstruction(_runToken));
+    } else if (_phase == _Phase.countdown || _phase == _Phase.flash) {
+      final chain = _chain;
+      if (chain != null) {
+        setState(() {
+          _phase = _Phase.countdown;
+          _flashLabel = null;
+          _flashStepIndex = -1;
+        });
+        _runCountdown(_runToken, chain);
+      }
     } else {
-      advance();
+      setState(() {});
+      if (_phase == _Phase.answer) _focusAnswerInput();
     }
   }
 
@@ -526,6 +643,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
 
   @override
   Widget build(BuildContext context) {
+    final reviewRun = _runToken;
     return TrainerScene(
       child: Stack(
         children: [
@@ -540,6 +658,13 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
             ),
           Center(
             child: switch (_phase) {
+              _Phase.review => PhysicalChainExample(
+                chain: _chain!,
+                stepSec: _errorReviewStepSec,
+                stateKey: 'topic-chain-review-$_exampleIndex',
+                autoPlay: !_suspended,
+                onComplete: () => _finishReview(reviewRun),
+              ),
               _Phase.error => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(
@@ -729,7 +854,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer> {
               ),
             },
           ),
-          _progressDots(),
+          if (_phase != _Phase.review) _progressDots(),
         ],
       ),
     );

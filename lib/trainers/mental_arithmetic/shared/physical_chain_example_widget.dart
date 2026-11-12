@@ -19,12 +19,14 @@ class PhysicalChainExample extends StatefulWidget {
     this.stepSec = 3,
     this.stateKey = 'physical-chain-example',
     this.onComplete,
+    this.autoPlay = true,
   });
   final Chain chain;
   final String? locale;
   final double stepSec;
   final String stateKey;
   final VoidCallback? onComplete;
+  final bool autoPlay;
 
   @override
   State<PhysicalChainExample> createState() => _PhysicalChainExampleState();
@@ -117,7 +119,7 @@ class _PhysicalChainExampleState extends State<PhysicalChainExample> {
       speed: PhysicalGestureSpeed.medium,
       instructionKey: _plan.steps.first.audioKey!,
       introductionMode: PhysicalGestureIntroductionMode.inline,
-      autoPlay: ready,
+      autoPlay: ready && widget.autoPlay,
       onCue: _playCue,
       onComplete: widget.onComplete,
     );

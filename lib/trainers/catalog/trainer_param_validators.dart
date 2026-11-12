@@ -451,6 +451,10 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
   final actionCount = coerceInt(raw['actionCount']);
   final exampleCount = coerceInt(raw['exampleCount']) ?? 1;
   final stepPauseSec = coerceDouble(raw['stepPauseSec']);
+  final reviewErrors = raw['reviewErrors'] ?? false;
+  final errorReviewStepSec = raw['errorReviewStepSec'] == null
+      ? 3.0
+      : coerceDouble(raw['errorReviewStepSec']);
 
   if (topicId is! String || !isTopicId(topicId)) {
     return _fail('╨Э╨╡╨║╨╛╤А╤А╨╡╨║╤В╨╜╤Л╨╡ ╨┐╨░╤А╨░╨╝╨╡╤В╤А╤Л.');
@@ -467,6 +471,14 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
     return _fail('╨Э╨╡╨║╨╛╤А╤А╨╡╨║╤В╨╜╤Л╨╡ ╨┐╨░╤А╨░╨╝╨╡╤В╤А╤Л.');
   }
 
+  if (reviewErrors is! bool ||
+      errorReviewStepSec == null ||
+      !errorReviewStepSec.isFinite ||
+      errorReviewStepSec < 0.1 ||
+      errorReviewStepSec > 30) {
+    return _fail('Некорректные параметры разбора ошибки.');
+  }
+
   final solveMode = raw['solveMode'] == 'mental' ? 'mental' : 'abacus';
 
   return ValidateTrainerParamsResult.success({
@@ -474,6 +486,8 @@ ValidateTrainerParamsResult validateTopicChainFlashParams(Map<String, dynamic> r
     'exampleCount': exampleCount,
     'solveMode': solveMode,
     'stepPauseSec': stepPauseSec,
+    'reviewErrors': reviewErrors,
+    'errorReviewStepSec': errorReviewStepSec,
     'topicId': topicId,
   });
 }

@@ -260,6 +260,8 @@ Map<String, dynamic> buildPlayParamsPayload(
       'exampleCount': coerceInt(values['exampleCount']) ?? 1,
       'solveMode': values['solveMode'] == 'mental' ? 'mental' : 'abacus',
       'stepPauseSec': coerceDouble(values['stepPauseSec']) ?? 1,
+      'reviewErrors': values['reviewErrors'] == 'true',
+      'errorReviewStepSec': coerceDouble(values['errorReviewStepSec']) ?? 3,
       'topicId': values['chainTopicId'] ?? values['topicId'] ?? 'simple-1',
     };
   }

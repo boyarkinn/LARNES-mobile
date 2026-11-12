@@ -117,6 +117,10 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return l10n.adminTrainerPlayWordItemCountLabel;
     case 'totalRodsLabel':
       return l10n.adminTrainerPlayTotalRodsLabel;
+    case 'reviewErrorsLabel':
+      return _passageLabel(l10n, ru: 'Разбирать ошибки', en: 'Review mistakes', ar: 'مراجعة الأخطاء');
+    case 'errorReviewStepSecLabel':
+      return _passageLabel(l10n, ru: 'Скорость разбора ошибки, сек/действие', en: 'Mistake review speed, sec/action', ar: 'سرعة مراجعة الخطأ، ثانية/خطوة');
     case 'stepPauseSecLabel':
       return l10n.adminTrainerPlayStepPauseSecLabel;
     case 'exampleStringLabel':

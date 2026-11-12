@@ -11,6 +11,8 @@ void main() {
         'simple-44', 'simple-55', 'simple-66', 'simple-77', 'simple-88', 'simple-99',
         'simple-hundreds', 'simple-000',
         'brother-4', 'brother-3', 'brother-2', 'brother-1',
+        'friend-9', 'friend-8', 'friend-7', 'friend-6', 'friend-5',
+        'friend-4', 'friend-3', 'friend-2', 'friend-1',
       ];
       for (final lessonId in lessons) {
         expect(validateTrainerParams('abacus-topic-explanation', {

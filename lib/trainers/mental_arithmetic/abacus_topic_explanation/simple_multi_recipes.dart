@@ -1,6 +1,6 @@
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_example.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_fingers.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_number_motion.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 
 const _rods = 6;
@@ -84,15 +84,10 @@ class _LessonBuilder {
       if (slug != null) narration(slug);
       return;
     }
-    final target = numberToAbacus(nextValue, _rods);
-    final changes = <BeadOnlyMove>[];
-    for (var rodIndex = 0; rodIndex < _rods; rodIndex++) {
-      if (target[rodIndex] == rods[rodIndex]) continue;
-      changes.add(BeadOnlyMove(rodIndex: rodIndex, to: target[rodIndex]));
-    }
+    final setup = physicalNumberSetup(rods, nextValue);
     steps.add(
       SetupGestureStep(
-        changes: changes,
+        changes: setup.changes,
         audioKey: slug == null ? null : key(slug),
         audioMode: slug == null
             ? PhysicalGestureAudioMode.before
@@ -100,7 +95,7 @@ class _LessonBuilder {
         pauseAfterMs: slug == null ? 450 : 0,
       ),
     );
-    rods = target;
+    rods = setup.rods;
     checkpoint(nextValue);
   }
 
@@ -114,35 +109,10 @@ class _LessonBuilder {
     if (nextValue < 0 || nextValue > 999 || nextValue == value) {
       throw RangeError('Invalid $lessonId transition $value -> $nextValue.');
     }
-    final target = numberToAbacus(nextValue, _rods);
-    final left = <PhysicalBeadMove>[];
-    final right = <PhysicalBeadMove>[];
-    for (var rodIndex = 0; rodIndex < _rods; rodIndex++) {
-      final from = rods[rodIndex];
-      final to = target[rodIndex];
-      if (from == to) continue;
-      final hand = rodIndex == _rods - 1 ? AbacusHand.right : AbacusHand.left;
-      final move = PhysicalBeadMove(
-        rodIndex: rodIndex,
-        to: to,
-        hand: hand,
-        fingers: fingersForPhysicalRodTransition(from, to),
-      );
-      if (hand == AbacusHand.left) {
-        left.add(move);
-      } else {
-        right.add(move);
-      }
-    }
-    final frames = <List<PhysicalBeadMove>>[];
-    while (left.isNotEmpty || right.isNotEmpty) {
-      final moves = <PhysicalBeadMove>[];
-      if (left.isNotEmpty) moves.add(left.removeAt(0));
-      if (right.isNotEmpty) moves.add(right.removeAt(0));
-      frames.add(moves);
-      for (final move in moves) {
-        rods[move.rodIndex] = move.to;
-      }
+    final motion = physicalNumberMotion(rods, nextValue);
+    rods = motion.rods;
+    final frames = motion.frames;
+    for (final value in motion.values) {
       checkpoint(value);
     }
     final audioKey = key(slug);

@@ -4,6 +4,7 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/simple_single_recipes.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/simple_multi_recipes.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/brother_recipes.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/friend_recipes.dart';
 
 // The single-digit «Просто 1–9» lessons use a compact six-rod abacus.
 const simpleOneRodCount = 6;
@@ -146,7 +147,7 @@ final PhysicalGesturePlan _simpleOne = _buildSimpleOne();
 
 PhysicalGesturePlan topicExplanationRecipe(String lessonId) {
   if (lessonId == 'simple-1') return _simpleOne;
-  final plan = simpleSinglePlans[lessonId] ?? simpleMultiPlans[lessonId] ?? brotherPlans[lessonId];
+  final plan = simpleSinglePlans[lessonId] ?? simpleMultiPlans[lessonId] ?? brotherPlans[lessonId] ?? friendPlans[lessonId];
   if (plan != null) return plan;
   throw ArgumentError.value(lessonId, 'lessonId', 'Неизвестный урок.');
 }

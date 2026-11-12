@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/static_example_show/static_example_geometry.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_geometry.dart';
+import 'package:larnes_mobile/trainers/shared/abacus/abacus_material.dart';
 
 /// Web v2: monochrome abacus + move overlays (`static-example-show/geometry.ts`).
 abstract final class StaticAbacusColors {
@@ -26,6 +27,7 @@ class StaticAbacusPainter extends CustomPainter {
   final int totalRods;
   final StaticAbacusViewBoxMetrics viewBox;
   final List<MoveOverlayLayout> overlayLayouts;
+  final _material = AbacusMaterialPainter(monochrome: true);
 
   static const _arrowStroke = 1.75;
   static const _arrowHeadHalf = 3.5;
@@ -37,30 +39,18 @@ class StaticAbacusPainter extends CustomPainter {
     canvas.translate(-viewBox.viewBoxX, 0);
 
     final base = viewBox.base;
-    final barWidth = base.width - AbacusLayout.sideInset * 2;
-    final barX = AbacusLayout.sideInset;
-    final rodLineBottomY = rodBottomY(base.bottomBarY);
 
     for (final layout in overlayLayouts) {
       _paintMoveOverlay(canvas, layout);
     }
 
+    _material.paintRails(canvas, base);
+
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
-      _paintRodLine(canvas, rodIndex, rodLineBottomY);
+      _material.paintRod(canvas, rodIndex, base);
     }
 
-    canvas.drawRect(
-      Rect.fromLTWH(barX, base.topBarY, barWidth, AbacusLayout.barHeight),
-      Paint()..color = StaticAbacusColors.bar,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(barX, base.beamY, barWidth, AbacusLayout.barHeight),
-      Paint()..color = StaticAbacusColors.bar,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(barX, base.bottomBarY, barWidth, AbacusLayout.barHeight),
-      Paint()..color = StaticAbacusColors.bar,
-    );
+    _material.paintBars(canvas, base);
 
     for (var rodIndex = 0; rodIndex < rodLayouts.length; rodIndex++) {
       _paintRodBeads(canvas, rodIndex, rodLayouts[rodIndex]);
@@ -79,10 +69,7 @@ class StaticAbacusPainter extends CustomPainter {
       const Radius.circular(2),
     );
 
-    canvas.drawRRect(
-      rect,
-      Paint()..color = fillColor,
-    );
+    canvas.drawRRect(rect, Paint()..color = fillColor);
     _paintDashedRRect(
       canvas,
       rect,
@@ -140,11 +127,7 @@ class StaticAbacusPainter extends CustomPainter {
     final headBaseY = topY + height - headBaseOffset;
     final tailY = topY + _arrowEdgeInset;
 
-    canvas.drawLine(
-      Offset(centerX, tailY),
-      Offset(centerX, headBaseY),
-      paint,
-    );
+    canvas.drawLine(Offset(centerX, tailY), Offset(centerX, headBaseY), paint);
 
     final headPath = Path()
       ..moveTo(centerX - _arrowHeadHalf, headBaseY)
@@ -155,70 +138,14 @@ class StaticAbacusPainter extends CustomPainter {
     canvas.drawPath(headPath, paint..style = PaintingStyle.fill);
   }
 
-  void _paintRodLine(Canvas canvas, int rodIndex, double bottomY) {
-    final cx = rodCenterX(rodIndex);
-
-    final edgePaint = Paint()
-      ..color = StaticAbacusColors.beadStroke
-      ..strokeWidth = AbacusLayout.rodEdgeStrokeWidth
-      ..strokeCap = StrokeCap.round;
-
-    for (final offset in [-AbacusLayout.rodEdgeOffset, AbacusLayout.rodEdgeOffset]) {
-      canvas.drawLine(
-        Offset(cx + offset, AbacusLayout.rodTopY),
-        Offset(cx + offset, bottomY),
-        edgePaint,
-      );
-    }
-
-    canvas.drawLine(
-      Offset(cx, AbacusLayout.rodTopY),
-      Offset(cx, bottomY),
-      Paint()
-        ..color = StaticAbacusColors.rod
-        ..strokeWidth = AbacusLayout.rodStrokeWidth
-        ..strokeCap = StrokeCap.round,
-    );
-  }
-
   void _paintRodBeads(Canvas canvas, int rodIndex, RodBeadLayout beadLayout) {
     final cx = rodCenterX(rodIndex);
 
-    _paintHexBead(canvas, cx, beadLayout.heavenY);
+    _material.paintBead(canvas, cx, beadLayout.heavenY);
 
     for (final earthY in beadLayout.earthYs) {
-      _paintHexBead(canvas, cx, earthY);
+      _material.paintBead(canvas, cx, earthY);
     }
-  }
-
-  void _paintHexBead(Canvas canvas, double cx, double cy) {
-    final halfHeight = AbacusLayout.beadHeight / 2;
-    final slant = AbacusLayout.beadHalfWidth * AbacusLayout.beadSlantRatio;
-    final left = cx - AbacusLayout.beadHalfWidth;
-    final right = cx + AbacusLayout.beadHalfWidth;
-
-    final path = Path()
-      ..moveTo(left, cy)
-      ..lineTo(left + slant, cy - halfHeight)
-      ..lineTo(right - slant, cy - halfHeight)
-      ..lineTo(right, cy)
-      ..lineTo(right - slant, cy + halfHeight)
-      ..lineTo(left + slant, cy + halfHeight)
-      ..close();
-
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = StaticAbacusColors.beadFill
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = StaticAbacusColors.beadStroke
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = AbacusLayout.beadStrokeWidth,
-    );
   }
 
   @override

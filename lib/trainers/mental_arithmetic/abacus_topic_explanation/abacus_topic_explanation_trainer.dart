@@ -5,7 +5,7 @@ import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/example_profile.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_topic_explanation/run_recipe.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_abacus.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_playback.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/topic_example_generation.dart';
@@ -99,7 +99,8 @@ class _AbacusTopicExplanationTrainerState
   @override
   Widget build(BuildContext context) {
     return TrainerScene(
-      child: PhysicalGestureAbacus(
+      child: PhysicalGestureTrainer(
+        instructionKey: 'instruction:abacus-topic-explanation',
         key: ValueKey(_lessonId),
         plan: _plan,
         speed: switch (widget.params['speed']) {
@@ -107,8 +108,6 @@ class _AbacusTopicExplanationTrainerState
           'fast' => PhysicalGestureSpeed.fast,
           _ => PhysicalGestureSpeed.medium,
         },
-        autoPlay: true,
-        showHands: true,
         onComplete: widget.onComplete,
         onCue: _playCue,
       ),

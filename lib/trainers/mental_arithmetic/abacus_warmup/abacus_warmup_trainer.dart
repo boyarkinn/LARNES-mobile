@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_warmup/recipes.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
-import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_abacus.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_trainer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_playback.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
@@ -19,7 +19,8 @@ class AbacusWarmupTrainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final type = params['warmupType'] as String? ?? 'simple-9';
     return TrainerScene(
-      child: PhysicalGestureAbacus(
+      child: PhysicalGestureTrainer(
+        instructionKey: 'instruction:abacus-warmup',
         key: ValueKey(type),
         plan: warmupRecipe(type),
         speed: switch (params['speed']) {
@@ -27,7 +28,6 @@ class AbacusWarmupTrainer extends StatelessWidget {
           'fast' => PhysicalGestureSpeed.fast,
           _ => PhysicalGestureSpeed.medium,
         },
-        showHands: true,
         onComplete: onComplete,
         onCue: (key, signal) async {
           final clip = speechAudioFile(key);

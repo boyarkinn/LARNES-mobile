@@ -43,8 +43,13 @@ void main() {
       return color;
     }
 
-    expect(await markerColor(0), AbacusColors.beadMarkerFill);
-    expect(await markerColor(1), AbacusColors.beadMarkerFill);
+    final resting = await markerColor(0);
+    final raised = await markerColor(1);
+    expect(raised.r, closeTo(resting.r, .01));
+    expect(raised.g, closeTo(resting.g, .01));
+    expect(raised.b, closeTo(resting.b, .01));
+    expect(resting.r, greaterThan(resting.g * 2));
+    expect(resting.r, greaterThan(resting.b * 2));
   });
 
   testWidgets(

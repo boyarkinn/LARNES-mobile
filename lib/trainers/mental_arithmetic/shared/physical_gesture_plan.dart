@@ -122,6 +122,7 @@ class PhysicalGesturePlan {
   final List<PhysicalGestureStep> steps;
   final int? beadTransitionMs;
   final String? openingAudioKey;
+
   /// Named cues composed of existing published catalog clips.
   final Map<String, List<String>> audioSequences;
 }
@@ -142,6 +143,12 @@ class PhysicalGestureFrame {
   final bool returnAfter;
 }
 
+String? physicalGestureIntroductionKey(PhysicalGesturePlan plan) =>
+    plan.openingAudioKey ??
+    (plan.steps.firstOrNull is NarrationGestureStep
+        ? plan.steps.first.audioKey
+        : null);
+
 /// Catalog keys in first-use order; playback itself still follows the steps.
 List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
   final keys = <String>[];
@@ -160,7 +167,8 @@ List<String> physicalGestureAudioKeys(PhysicalGesturePlan plan) {
   return List.unmodifiable(keys);
 }
 
-List<String> physicalGestureCueKeys(PhysicalGesturePlan plan, String key) => plan.audioSequences[key] ?? [key];
+List<String> physicalGestureCueKeys(PhysicalGesturePlan plan, String key) =>
+    plan.audioSequences[key] ?? [key];
 
 bool _validRod(RodState rod) => rod.earthCount >= 0 && rod.earthCount <= 4;
 
@@ -197,7 +205,9 @@ List<PhysicalGestureFrame> compilePhysicalGesturePlan(
   PhysicalGesturePlan plan,
 ) {
   for (final entry in plan.audioSequences.entries) {
-    if (entry.key.trim().isEmpty || entry.value.isEmpty || entry.value.any((key) => key.trim().isEmpty)) {
+    if (entry.key.trim().isEmpty ||
+        entry.value.isEmpty ||
+        entry.value.any((key) => key.trim().isEmpty)) {
       throw StateError('Пустая аудиопоследовательность жеста.');
     }
   }

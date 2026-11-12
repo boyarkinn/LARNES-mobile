@@ -4,8 +4,26 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/abacus_warmup/abacus_wa
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_hand_layer.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_abacus.dart';
+import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 
 void main() {
+  testWidgets('practice mode omits action cues and keeps its compact tempo in every warmup', (tester) async {
+    for (final type in ['simple-9', 'simple-tens', 'simple-2digit', 'brothers', 'friends']) {
+      await tester.pumpWidget(MaterialApp(home: Scaffold(body: AbacusWarmupTrainer(
+        key: ValueKey(type), params: {'warmupType': type, 'withExplanations': false},
+      ))));
+      expect(find.byType(TrainerInstructionScene), findsNothing);
+      final body = tester.widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus));
+      expect(body.autoPlay, true);
+      expect(body.onCue, isNull);
+      expect(body.tempoMultiplier, 2);
+      expect(tester.widget<AbacusWidget>(find.byType(AbacusWidget)).beadAnimationDuration,
+        Duration(milliseconds: type.startsWith('simple-') && type != 'simple-2digit' ? 200 : 250));
+    }
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
   testWidgets(
     'warmup reserves both hand positions before the first bead moves',
     (tester) async {

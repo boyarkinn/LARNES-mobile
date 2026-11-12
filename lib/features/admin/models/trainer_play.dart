@@ -2,7 +2,7 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 
-enum TrainerPlayFieldType { number, text, select }
+enum TrainerPlayFieldType { number, text, select, checkbox }
 
 class TrainerPlayFieldOption {
   const TrainerPlayFieldOption({
@@ -64,11 +64,17 @@ class TrainerPlayField {
       maxLength: json['maxLength'] as int?,
       placeholder: json['placeholder'] as String?,
       options: optionsJson
-          .map((item) => TrainerPlayFieldOption.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => TrainerPlayFieldOption.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
           .toList(),
       showWhen: showWhenJson == null
           ? null
-          : TrainerPlayFieldShowWhen.fromJson(Map<String, dynamic>.from(showWhenJson)),
+          : TrainerPlayFieldShowWhen.fromJson(
+              Map<String, dynamic>.from(showWhenJson),
+            ),
     );
   }
 
@@ -112,7 +118,11 @@ class TrainerPlayConfig {
       isInteractive: json['isInteractive'] as bool? ?? false,
       defaultParams: Map<String, dynamic>.from(defaultsJson),
       fields: fieldsJson
-          .map((item) => TrainerPlayField.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => TrainerPlayField.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
           .toList(),
     );
   }
@@ -167,6 +177,8 @@ class AdminTrainerPlayLaunch {
 
 TrainerPlayFieldType _parseType(String? raw) {
   switch (raw) {
+    case 'checkbox':
+      return TrainerPlayFieldType.checkbox;
     case 'select':
       return TrainerPlayFieldType.select;
     case 'text':
@@ -242,7 +254,8 @@ Map<String, dynamic> buildPlayParamsPayload(
 
   if (config.trainerKey == 'fly-track') {
     return {
-      'gridSize': coerceInt(values['digit']) ?? coerceInt(values['gridSize']) ?? 4,
+      'gridSize':
+          coerceInt(values['digit']) ?? coerceInt(values['gridSize']) ?? 4,
       'rounds': coerceInt(values['rounds']) ?? 1,
       'stepCount': coerceInt(values['stepCount']) ?? 5,
       'stepPauseSec': coerceDouble(values['stepPauseSec']) ?? 1.5,
@@ -260,6 +273,8 @@ Map<String, dynamic> buildPlayParamsPayload(
     }
     if (field.type == TrainerPlayFieldType.number) {
       payload[field.key] = num.tryParse(raw) ?? raw;
+    } else if (field.type == TrainerPlayFieldType.checkbox) {
+      payload[field.key] = raw == 'true';
     } else {
       payload[field.key] = raw;
     }

@@ -72,7 +72,7 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     setRequiredCatalogPaths(const []);
     setObservedCatalogPaths(const []);
     catalogPlaybackIssues.addListener(_onPlaybackFailure);
-    _pinnedAudio = widget.audioManifest;
+    _pinnedAudio = scopeTrainerAudioForParams(widget.audioManifest, widget.trainerKey, widget.params);
     _pack = catalogNeedsPreparation(_pinnedAudio)
         ? CatalogPack.preparing
         : CatalogPack.missing;

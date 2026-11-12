@@ -24,6 +24,7 @@ class PhysicalGestureAbacus extends StatefulWidget {
     this.onComplete,
     this.onCue,
     this.showHands = false,
+    this.tempoMultiplier = 1,
   });
 
   final PhysicalGesturePlan plan;
@@ -32,6 +33,7 @@ class PhysicalGestureAbacus extends StatefulWidget {
   final VoidCallback? onComplete;
   final Future<void> Function(String key, GestureCueSignal signal)? onCue;
   final bool showHands;
+  final double tempoMultiplier;
 
   @override
   State<PhysicalGestureAbacus> createState() => _PhysicalGestureAbacusState();
@@ -75,6 +77,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     }
     if (oldWidget.plan != widget.plan ||
         oldWidget.speed != widget.speed ||
+        oldWidget.tempoMultiplier != widget.tempoMultiplier ||
         oldWidget.autoPlay != widget.autoPlay ||
         oldWidget.showHands != widget.showHands) {
       _configure(
@@ -100,6 +103,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
     final player = PhysicalGesturePlayer(
       plan: widget.plan,
       speed: widget.speed,
+      tempoMultiplier: widget.tempoMultiplier,
       reducedMotion: reducedMotion,
       prepareMs: _handApproachMs,
       onFrame: (frame, _) {
@@ -208,6 +212,7 @@ class _PhysicalGestureAbacusState extends State<PhysicalGestureAbacus> {
       widget.speed,
       reducedMotion: _reducedMotion ?? false,
       baseTransitionMs: widget.plan.beadTransitionMs ?? 500,
+      tempoMultiplier: widget.tempoMultiplier,
     );
     final abacus = AbacusWidget(
       rods: _rods,

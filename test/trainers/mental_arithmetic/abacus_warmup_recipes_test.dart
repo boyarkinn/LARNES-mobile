@@ -40,6 +40,29 @@ String _frameDigest(List<PhysicalGestureFrame> frames) {
 
 void main() {
   for (final type in _checkpoints.keys) {
+    for (final speed in PhysicalGestureSpeed.values) {
+      test('$type/${speed.name}: silent practice retains all frames and finishes once', () {
+        fakeAsync((clock) {
+          final plan = warmupRecipe(type);
+          final frames = <PhysicalGestureFrame>[];
+          var completions = 0;
+          var completedAt = Duration.zero;
+          final player = PhysicalGesturePlayer(plan: plan, speed: speed, tempoMultiplier: 2,
+            prepareMs: 300, onPrepare: (_, _) {}, onReturn: (_, _) {},
+            onFrame: (frame, _) => frames.add(frame), onComplete: () { completions++; completedAt = clock.elapsed; },
+            nowMs: () => clock.elapsed.inMilliseconds);
+          player.play();
+          clock.elapse(const Duration(seconds: 160));
+          expect(completions, 1);
+          expect(_frameDigest(frames), _frameDigest(compilePhysicalGesturePlan(plan)));
+          if (speed == PhysicalGestureSpeed.medium) {
+            expect(completedAt.inMilliseconds, inInclusiveRange(50000, 115000));
+          }
+        });
+      });
+    }
+  }
+  for (final type in _checkpoints.keys) {
     test(
       '$type matches the reference states and full Web/Flutter sequence',
       () {

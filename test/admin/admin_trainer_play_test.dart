@@ -4,6 +4,15 @@ import 'package:larnes_mobile/trainers/catalog/registry.dart';
 import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 
 void main() {
+  test('checkbox config serializes an unchecked explanation flag as boolean false', () {
+    final config = TrainerPlayConfig.fromJson({
+      'trainerKey': 'abacus-warmup', 'title': 'Warm-up', 'defaultParams': {'withExplanations': true},
+      'fields': [{'key': 'withExplanations', 'labelKey': 'withExplanationsLabel', 'type': 'checkbox'}],
+    });
+    expect(config.fields.single.type, TrainerPlayFieldType.checkbox);
+    expect(config.initialValues()['withExplanations'], 'true');
+    expect(buildPlayParamsPayload(config, {'withExplanations': 'false'}), {'withExplanations': false});
+  });
   group('mobile play gate', () {
     test('all registered trainers have native builders', () {
       expect(trainerBuilders.length, TrainerKey.values.length);

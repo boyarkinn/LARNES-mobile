@@ -1,5 +1,7 @@
 // Контракт опубликованного каталога. Совпадает с web `wire.ts` / `resolve.ts`.
 
+import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_gesture_cues.dart';
+
 class PublishedAudioClip {
   const PublishedAudioClip({
     required this.bytes,
@@ -141,4 +143,32 @@ ExerciseAudioManifest audioForLaunch({
   ExerciseAudioManifest? pinned,
 }) {
   return pinned ?? fresh;
+}
+
+/// Practice-only warmups retain the standard instruction and omit action cues.
+ExerciseAudioManifest? scopeTrainerAudioForParams(
+  ExerciseAudioManifest? manifest,
+  String trainerKey,
+  Map<String, dynamic> params,
+) {
+  if (manifest == null ||
+      trainerKey != 'abacus-warmup' ||
+      params['withExplanations'] != false) {
+    return manifest;
+  }
+  final introductionKey = warmupIntroCue(
+    params['warmupType'] as String? ?? 'simple-9',
+  );
+  bool keep(String key) =>
+      key == 'instruction:abacus-warmup' ||
+      key == introductionKey ||
+      key.startsWith('music:background:');
+  return ExerciseAudioManifest(
+    catalogRevision: manifest.catalogRevision,
+    trainerKey: manifest.trainerKey,
+    contentLocale: manifest.contentLocale,
+    instructionLocale: manifest.instructionLocale,
+    clips: manifest.clips.where((clip) => keep(clip.semanticKey)).toList(),
+    missing: manifest.missing.where((item) => keep(item.semanticKey)).toList(),
+  );
 }

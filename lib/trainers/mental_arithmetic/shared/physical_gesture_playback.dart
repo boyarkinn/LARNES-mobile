@@ -30,15 +30,20 @@ PhysicalGestureTiming physicalGestureTiming(
   PhysicalGestureSpeed speed, {
   bool reducedMotion = false,
   int baseTransitionMs = 500,
+  double tempoMultiplier = 1,
 }) {
   if (baseTransitionMs <= 0) {
     throw RangeError('Неверная длительность движения косточки.');
   }
-  final rate = switch (speed) {
+  if (!tempoMultiplier.isFinite || tempoMultiplier <= 0) {
+    throw RangeError('Неверный темп жестов.');
+  }
+  final speedRate = switch (speed) {
     PhysicalGestureSpeed.slow => 0.75,
     PhysicalGestureSpeed.medium => 1.0,
     PhysicalGestureSpeed.fast => 1.5,
   };
+  final rate = speedRate * tempoMultiplier;
   return PhysicalGestureTiming(
     transitionMs: reducedMotion ? 0 : (baseTransitionMs / rate).round(),
     frameMs: (baseTransitionMs / rate).round(),
@@ -133,6 +138,7 @@ class PhysicalGesturePlayer {
   PhysicalGesturePlayer({
     required PhysicalGesturePlan plan,
     required PhysicalGestureSpeed speed,
+    double tempoMultiplier = 1,
     required void Function(PhysicalGestureFrame frame, int index) onFrame,
     void Function(PhysicalGestureFrame frame, int index)? onPrepare,
     void Function(PhysicalGestureFrame frame, int index)? onReturn,
@@ -150,6 +156,7 @@ class PhysicalGesturePlayer {
       speed,
       reducedMotion: reducedMotion,
       baseTransitionMs: plan.beadTransitionMs ?? 500,
+      tempoMultiplier: tempoMultiplier,
     );
     final events = <_PlaybackEvent>[];
     final stepStarts = <int>[];

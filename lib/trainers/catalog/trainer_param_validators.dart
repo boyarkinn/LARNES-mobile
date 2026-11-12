@@ -50,19 +50,21 @@ ValidateTrainerParamsResult validateAbacusTopicExplanationParams(
 ValidateTrainerParamsResult validateAbacusWarmupParams(Map<String, dynamic> raw) {
   final warmupType = raw['warmupType'] ?? 'simple-9';
   final speed = raw['speed'] ?? 'medium';
+  final withExplanations = raw['withExplanations'] ?? true;
   const allowedTypes = {
     'simple-9', 'simple-tens', 'simple-2digit', 'brothers', 'friends',
   };
   const allowedSpeeds = {'slow', 'medium', 'fast'};
 
   if (warmupType is! String || !allowedTypes.contains(warmupType) ||
-      speed is! String || !allowedSpeeds.contains(speed)) {
+      speed is! String || !allowedSpeeds.contains(speed) || withExplanations is! bool) {
     return _fail('Некорректные параметры разминки.');
   }
 
   return ValidateTrainerParamsResult.success({
     'warmupType': warmupType,
     'speed': speed,
+    'withExplanations': withExplanations,
   });
 }
 

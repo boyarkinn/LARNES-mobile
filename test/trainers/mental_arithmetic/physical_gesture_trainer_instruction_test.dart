@@ -12,9 +12,13 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 
 void main() {
-  for (final opening in [true, false]) {
+  for (final (opening, narrationEnabled) in [
+    (true, true),
+    (true, false),
+    (false, true),
+  ]) {
     testWidgets(
-      'standard instruction holds ${opening ? 'warmup' : 'topic'} until audio ends and ignores the original opening cue',
+      'standard instruction holds ${opening ? 'warmup' : 'topic'}/$narrationEnabled until audio ends',
       (tester) async {
         const instructionKey = 'instruction:abacus-test';
         const sourceKey = 'explanation:abacus-test:intro';
@@ -62,6 +66,8 @@ void main() {
               plan: plan,
               speed: speed,
               instructionKey: instructionKey,
+              narrationEnabled: narrationEnabled,
+              tempoMultiplier: narrationEnabled ? 1 : 2,
               onCue: (key, _) async => calls.add(key),
             ),
           ),
@@ -77,9 +83,13 @@ void main() {
         );
         expect(calls, isEmpty);
         final signal = GestureCueSignal();
-        await tester.widget<PhysicalGestureAbacus>(body).onCue!(
-          sourceKey,
-          signal,
+        await tester
+            .widget<PhysicalGestureAbacus>(body)
+            .onCue
+            ?.call(sourceKey, signal);
+        expect(
+          tester.widget<PhysicalGestureAbacus>(body).onCue == null,
+          !narrationEnabled,
         );
         expect(calls, isEmpty);
         await tester.pumpWidget(scene(PhysicalGestureSpeed.slow));

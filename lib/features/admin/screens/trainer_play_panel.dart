@@ -272,6 +272,14 @@ class _FieldEditorState extends State<_FieldEditor> {
     final label = trainerPlayFieldLabel(widget.l10n, widget.field.labelKey);
 
     switch (widget.field.type) {
+      case TrainerPlayFieldType.checkbox:
+        return CheckboxListTile(
+          title: Text(label),
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          value: widget.value == 'true',
+          onChanged: (value) => widget.onChanged((value ?? false).toString()),
+        );
       case TrainerPlayFieldType.select:
         return DropdownButtonFormField<String>(
           key: ValueKey('${widget.field.key}:${widget.value}'),

@@ -2,6 +2,83 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 
 void main() {
+  test(
+    'practice warmup keeps its instruction and removes missing action narration',
+    () {
+      final manifest = ExerciseAudioManifest.fromJson({
+        'trainerKey': 'abacus-warmup',
+        'catalogRevision': 1,
+        'contentLocale': 'ru-RU',
+        'instructionLocale': 'en-US',
+        'clips': [
+          {
+            'bytes': 10,
+            'durationMs': 900,
+            'locale': 'en-US',
+            'semanticKey': 'instruction:abacus-warmup',
+            'required': true,
+            'url': 'https://audio.larnes.ru/existing.mp3',
+            'versionId': 'existing',
+            'sha256': 'old',
+          },
+        ],
+        'missing': [
+          {
+            'semanticKey': 'explanation:abacus-gesture:old',
+            'locale': 'en-US',
+            'reason': 'unpublished',
+            'required': true,
+          },
+        ],
+      })!;
+      final scoped = scopeTrainerAudioForParams(manifest, 'abacus-warmup', {
+        'withExplanations': false,
+      })!;
+      expect(scoped.clips.single.semanticKey, 'instruction:abacus-warmup');
+      expect(scoped.missing, isEmpty);
+      expect(
+        identical(
+          scopeTrainerAudioForParams(manifest, 'abacus-warmup', {}),
+          manifest,
+        ),
+        true,
+      );
+      expect(
+        identical(
+          scopeTrainerAudioForParams(manifest, 'abacus-topic-explanation', {
+            'withExplanations': false,
+          }),
+          manifest,
+        ),
+        true,
+      );
+    },
+  );
+  test(
+    'practice warmup retains only the selected legacy opening recording',
+    () {
+      final manifest = ExerciseAudioManifest.fromJson({
+        'trainerKey': 'abacus-warmup',
+        'clips': [
+          for (final type in ['simple-9', 'friends'])
+            {
+              'bytes': 10,
+              'durationMs': 1000,
+              'locale': 'ru-RU',
+              'semanticKey': 'explanation:abacus-warmup:intro:$type',
+              'url': 'https://audio.larnes.ru/$type.mp3',
+            },
+        ],
+      })!;
+      expect(
+        scopeTrainerAudioForParams(manifest, 'abacus-warmup', {
+          'warmupType': 'friends',
+          'withExplanations': false,
+        })!.clips.single.semanticKey,
+        'explanation:abacus-warmup:intro:friends',
+      );
+    },
+  );
   test('a running launch keeps the old clip and drops a non-public url', () {
     final pinned = ExerciseAudioManifest.fromJson({
       'catalogRevision': 4,
@@ -52,7 +129,10 @@ void main() {
     expect(pinned, isNotNull);
     expect(fresh, isNotNull);
     expect(pinned!.clips, hasLength(1));
-    expect(audioForLaunch(fresh: fresh!, pinned: pinned).clips.single.versionId, 'old');
+    expect(
+      audioForLaunch(fresh: fresh!, pinned: pinned).clips.single.versionId,
+      'old',
+    );
     expect(audioForLaunch(fresh: fresh).clips.single.versionId, 'new');
     expect(pinned.instructionLocale, 'en-US');
     expect(pinned.contentLocale, 'ru-RU');

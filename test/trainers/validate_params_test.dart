@@ -47,7 +47,7 @@ void main() {
             'speed': speed,
           });
           expect(result.ok, isTrue);
-          expect(result.params, {'warmupType': warmupType, 'speed': speed});
+          expect(result.params, {'warmupType': warmupType, 'speed': speed, 'withExplanations': true});
         }
       }
       expect(validateTrainerParams('abacus-warmup', {
@@ -56,6 +56,8 @@ void main() {
       expect(validateTrainerParams('abacus-warmup', {
         'warmupType': 'friends', 'speed': 'other',
       }).ok, isFalse);
+      expect(validateTrainerParams('abacus-warmup', {'withExplanations': false}).params?['withExplanations'], false);
+      expect(validateTrainerParams('abacus-warmup', {'withExplanations': 'false'}).ok, false);
     });
     test('accepts number-row-show params', () {
       final result = validateTrainerParams('number-row-show', {'digit': 5});

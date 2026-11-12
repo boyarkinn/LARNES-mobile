@@ -18,11 +18,14 @@ class AbacusWarmupTrainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = params['warmupType'] as String? ?? 'simple-9';
+    final withExplanations = params['withExplanations'] != false;
     return TrainerScene(
       child: PhysicalGestureTrainer(
         instructionKey: 'instruction:abacus-warmup',
-        key: ValueKey(type),
+        key: ValueKey('$type:$withExplanations'),
         plan: warmupRecipe(type),
+        narrationEnabled: withExplanations,
+        tempoMultiplier: withExplanations ? 1 : 2,
         speed: switch (params['speed']) {
           'slow' => PhysicalGestureSpeed.slow,
           'fast' => PhysicalGestureSpeed.fast,

@@ -7,6 +7,8 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
       return _passageLabel(l10n, ru: 'Урок', en: 'Lesson', ar: 'الدرس');
     case 'warmupTypeLabel':
       return _passageLabel(l10n, ru: 'Вид разминки', en: 'Warm-up type', ar: 'نوع الإحماء');
+    case 'withExplanationsLabel':
+      return _passageLabel(l10n, ru: 'Озвучивать пояснения', en: 'Play spoken explanations', ar: 'تشغيل الشرح الصوتي');
     case 'syllableTypeLabel':
       return _passageLabel(l10n, ru: 'Тип слогов', en: 'Syllable type', ar: 'نوع المقاطع');
     case 'letterCaseLabel':

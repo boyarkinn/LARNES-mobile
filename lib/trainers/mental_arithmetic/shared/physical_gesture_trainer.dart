@@ -21,10 +21,15 @@ class PhysicalGestureTrainer extends StatefulWidget {
     required this.onCue,
     required this.instructionKey,
     this.onComplete,
+    this.narrationEnabled = true,
+    this.tempoMultiplier = 1,
   });
 
   final PhysicalGesturePlan plan;
   final PhysicalGestureSpeed speed;
+  /// Controls action cues only; the standard launch instruction always plays.
+  final bool narrationEnabled;
+  final double tempoMultiplier;
   final String instructionKey;
   final Future<void> Function(String, GestureCueSignal) onCue;
   final VoidCallback? onComplete;
@@ -110,13 +115,16 @@ class _PhysicalGestureTrainerState extends State<PhysicalGestureTrainer> {
         child: PhysicalGestureAbacus(
           plan: widget.plan,
           speed: widget.speed,
+          tempoMultiplier: widget.tempoMultiplier,
           autoPlay: _introduced,
           showHands: true,
           onComplete: widget.onComplete,
-          onCue: (key, signal) async {
-            if (key == _introductionKey) return;
-            await widget.onCue(key, signal);
-          },
+          onCue: widget.narrationEnabled
+              ? (key, signal) async {
+                  if (key == _introductionKey) return;
+                  await widget.onCue(key, signal);
+                }
+              : null,
         ),
       ),
       if (!_introduced)

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:larnes_mobile/app/theme/parent_theme.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_theme.dart';
+import 'package:larnes_mobile/trainers/runtime/trainer_play_button.dart';
 
-class TrainerPlayerMenuButton extends StatefulWidget {
+class TrainerPlayerMenuButton extends StatelessWidget {
   const TrainerPlayerMenuButton({
     super.key,
     required this.isOpen,
@@ -16,55 +17,20 @@ class TrainerPlayerMenuButton extends StatefulWidget {
   final TrainerPlayTheme theme;
 
   @override
-  State<TrainerPlayerMenuButton> createState() => _TrainerPlayerMenuButtonState();
-}
-
-class _TrainerPlayerMenuButtonState extends State<TrainerPlayerMenuButton> {
-  bool _pressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final theme = widget.theme;
     final horizontalInset = MediaQuery.paddingOf(context).left;
     final left = horizontalInset > 14 ? horizontalInset : 14.0;
 
     return Padding(
       padding: EdgeInsets.only(top: 12, left: left),
-      child: Semantics(
-        button: true,
-        label: 'Меню',
-        expanded: widget.isOpen,
-        child: GestureDetector(
-          onTapDown: (_) => setState(() => _pressed = true),
-          onTapUp: (_) {
-            setState(() => _pressed = false);
-            widget.onPressed();
-          },
-          onTapCancel: () => setState(() => _pressed = false),
-          child: Transform.translate(
-            offset: Offset(0, _pressed ? 1 : 0),
-            child: AnimatedContainer(
-              duration: ParentMotion.tapDuration,
-              curve: ParentMotion.curve,
-              width: 48,
-              height: 48,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: widget.isOpen
-                    ? theme.accentDeep
-                    : (_pressed ? theme.accentPressed : theme.accent),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.isOpen ? const Color(0xFF16367A) : theme.accentDeep,
-                    offset: Offset(0, _pressed || widget.isOpen ? 2 : 3),
-                  ),
-                ],
-              ),
-              child: const Center(child: _MenuIcon()),
-            ),
-          ),
-        ),
+      child: TrainerPlayButton(
+        semanticsLabel: 'Меню',
+        expanded: isOpen,
+        selected: isOpen,
+        theme: theme,
+        width: 48,
+        onPressed: onPressed,
+        child: const _MenuIcon(),
       ),
     );
   }
@@ -185,8 +151,9 @@ class _MenuActionState extends State<_MenuAction> {
   @override
   Widget build(BuildContext context) {
     final color = widget.isPrimary ? widget.theme.accent : widget.theme.danger;
-    final pressedColor =
-        widget.isPrimary ? widget.theme.accentPressed : widget.theme.dangerPressed;
+    final pressedColor = widget.isPrimary
+        ? widget.theme.accentPressed
+        : widget.theme.dangerPressed;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -200,7 +167,9 @@ class _MenuActionState extends State<_MenuAction> {
         duration: ParentMotion.tapDuration,
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        color: _pressed ? pressedColor.withValues(alpha: 0.12) : Colors.transparent,
+        color: _pressed
+            ? pressedColor.withValues(alpha: 0.12)
+            : Colors.transparent,
         child: Text(
           widget.label,
           textAlign: TextAlign.center,

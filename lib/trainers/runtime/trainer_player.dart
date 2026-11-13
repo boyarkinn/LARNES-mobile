@@ -1,3 +1,4 @@
+import 'trainer_result_scope.dart';
 import 'dart:async';
 import 'package:larnes_mobile/trainers/audio/catalog_playback_failure.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
@@ -31,6 +32,7 @@ class TrainerPlayer extends StatefulWidget {
     this.audioManifest,
     this.onComplete,
     this.runtimeSnapshot,
+    this.resultContext,
     this.stepChrome,
     this.onAudioIssue,
   });
@@ -41,6 +43,7 @@ class TrainerPlayer extends StatefulWidget {
   final ExerciseAudioManifest? audioManifest;
   final VoidCallback? onComplete;
   final Map<String, dynamic>? runtimeSnapshot;
+  final Map<String, dynamic>? resultContext;
   final TrainerStepChrome? stepChrome;
   final void Function(Map<String, Object?> issue)? onAudioIssue;
 
@@ -409,7 +412,11 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
             payload: readTrainerRuntimeSnapshot(trainerKey, validatedParams),
             child: KeyedSubtree(
               key: ValueKey(runtimeSnapshot ?? params['__runtimeSnapshot']),
-              child: builder(params: validatedParams, onComplete: onComplete),
+              child: TrainerResultScope(
+                runContext: widget.resultContext,
+                trainerKey: trainerKey,
+                child: builder(params: validatedParams, onComplete: onComplete),
+              ),
             ),
           )
         : UnimplementedTrainer(

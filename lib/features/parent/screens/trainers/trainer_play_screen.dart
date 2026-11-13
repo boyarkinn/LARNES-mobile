@@ -129,6 +129,7 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
       key: ValueKey(widget.trainerKey),
       trainerKey: widget.trainerKey,
       params: params,
+      resultContext: widget.trainerKey == 'reading-word-columns' && _session?.launchId != null ? {'source':'direct','childId':widget.childId,'launchId':_session!.launchId} : null,
       runtimeSnapshot: snapshot,
       audioManifest: audio,
       l10n: l10n,

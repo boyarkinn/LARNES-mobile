@@ -45,7 +45,7 @@ enum TrainerKey {
   readingEcho('reading-echo'),
   readingPhrases('reading-phrases'),
   readingFindSpan('reading-find-span'),
-  readingWordSprint('reading-word-sprint'),
+  readingWordColumns('reading-word-columns'),
   readingCloze('reading-cloze'),
   readingStoryOrder('reading-story-order'),
   readingMainIdea('reading-main-idea'),

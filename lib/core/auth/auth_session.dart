@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/api/trainer_results_api.dart';
 import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'package:larnes_mobile/core/api/trainer_content_bank_api.dart';
 import 'dart:async';
@@ -62,6 +63,7 @@ class AuthSession extends ChangeNotifier {
 
   PasswordResetApi get passwordResetApi => _client.passwordResetApi;
 
+  TrainerResultsApi get trainerResultsApi => _client.trainerResultsApi;
   ParentApi get parentApi => _client.parentApi;
   TrainerContentBankApi get trainerContentBankApi =>
       _client.trainerContentBankApi;

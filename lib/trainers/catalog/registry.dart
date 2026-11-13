@@ -61,7 +61,7 @@ import 'package:larnes_mobile/trainers/reading/reading_reread/reading_reread_tra
 import 'package:larnes_mobile/trainers/reading/reading_echo/reading_echo_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_phrases/reading_phrases_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_find_span/reading_find_span_trainer.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_sprint/reading_word_sprint_trainer.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_columns/reading_word_columns_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_cloze/reading_cloze_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_story_order/reading_story_order_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_main_idea/reading_main_idea_trainer.dart';
@@ -190,8 +190,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       ReadingPhrasesTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingFindSpan: ({required params, onComplete}) =>
       ReadingFindSpanTrainer(params: params, onComplete: onComplete),
-  TrainerKey.readingWordSprint: ({required params, onComplete}) =>
-      ReadingWordSprintTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingWordColumns: ({required params, onComplete}) =>
+      ReadingWordColumnsTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingCloze: ({required params, onComplete}) =>
       ReadingClozeTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingStoryOrder: ({required params, onComplete}) =>
@@ -568,12 +568,12 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     isInteractive: true,
     validate: validateReadingFindSpanParams,
   ),
-  TrainerKey.readingWordSprint: TrainerDefinition(
-    key: TrainerKey.readingWordSprint,
-    title: 'Словесный спринт',
+  TrainerKey.readingWordColumns: TrainerDefinition(
+    key: TrainerKey.readingWordColumns,
+    title: 'Столбики слов',
     direction: TrainerDirection.speedReading,
     isInteractive: true,
-    validate: validateReadingWordSprintParams,
+    validate: validateReadingWordColumnsParams,
   ),
   TrainerKey.readingCloze: TrainerDefinition(
     key: TrainerKey.readingCloze,

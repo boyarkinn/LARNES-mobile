@@ -21,7 +21,7 @@ const readingInstructionPhrases = <String, Map<String, String>>{
   'reading-echo': {'ar': 'ردد بعد النص', 'en': 'Repeat after the text', 'ru': 'Повторяй за текстом'},
   'reading-phrases': {'ar': 'اقرأ حسب المعنى', 'en': 'Read by meaning', 'ru': 'Читай по смыслу'},
   'reading-find-span': {'ar': 'جده في النص', 'en': 'Find it in the text', 'ru': 'Найди в тексте'},
-  'reading-word-sprint': {'ar': 'اقرأ الكلمات', 'en': 'Read the words', 'ru': 'Читай слова'},
+  'reading-word-columns': {'ar': 'خذ نفساً عميقاً واقرأ الكلمات حتى تخرج الهواء كله. بعد قراءة كل كلمة، اضغط على التالي. عندما ينفد الهواء، اضغط على إنهاء.', 'en': 'Take a deep breath and read the words until you have breathed out completely. After reading a word, press Next. When you run out of breath, press Finish.', 'ru': 'Сделай глубокий вдох и читай слова, пока полностью не выдохнешь. Когда прочитаешь слово, нажми «Далее». Когда воздух закончится, нажми «Завершить».'},
   'reading-cloze': {'ar': 'اختر الكلمة', 'en': 'Choose the word', 'ru': 'Выбери слово'},
   'reading-story-order': {'ar': 'رتب القصة', 'en': 'Put the story in order', 'ru': 'Собери историю'},
   'reading-main-idea': {'ar': 'اختر الفكرة', 'en': 'Choose the main idea', 'ru': 'Выбери мысль'},

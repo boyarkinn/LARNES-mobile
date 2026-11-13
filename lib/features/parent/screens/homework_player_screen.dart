@@ -267,6 +267,7 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
       },
       trainerKey: step.trainerKey,
       params: params,
+      resultContext: step.trainerKey == 'reading-word-columns' ? {'source':'homework','childId':widget.childId,'assignmentId':widget.assignmentId,'stepIndex':_stepIndex} : null,
       runtimeSnapshot: runtimeSnapshot,
       l10n: l10n,
       onComplete: onComplete,

@@ -107,6 +107,15 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
   }
 
   Future<void> _load() async {
+    if (widget.trainerKey == 'reading-word-columns') {
+      _selection = {
+        'libraryId': readingContentBankLibraryId,
+        'categoryId': _selection['categoryId'],
+        'materialIds': <String>[],
+        'kind': 'word',
+        'locale': 'ru-RU',
+      };
+    }
     final request = ++_request;
     setState(() {
       _loading = true;
@@ -122,7 +131,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           for (final key in ['categoryId', 'kind', 'locale', 'hasImage'])
             if (_selection[key] != null) key: _selection[key],
         },
-        query: _search.text,
+        query: widget.trainerKey == 'reading-word-columns' ? '' : _search.text,
         page: _page,
         uiLocale: Localizations.localeOf(context).languageCode,
       );
@@ -187,6 +196,87 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         .toSet();
     final materials = _result?['materials'] as List? ?? const [];
     final total = _result?['total'] as num? ?? 0;
+    if (widget.trainerKey == 'reading-word-columns') {
+      final categories = (_result?['categories'] as List? ?? const [])
+          .whereType<Map>()
+          .toList();
+      final selectedCategory = categories
+          .where((c) => c['id'] == _selection['categoryId'])
+          .firstOrNull;
+      final topic =
+          selectedCategory?['parentId'] ?? _selection['categoryId'] ?? '';
+      final roots = categories.where((c) => c['parentId'] == null).toList();
+      final leaves = categories.where((c) => c['parentId'] == topic).toList();
+      Widget field(
+        String label,
+        String value,
+        List<Map> choices,
+        bool required,
+      ) => DropdownButtonFormField<String>(
+        key: ValueKey('$label:$value'),
+        initialValue: choices.any((c) => c['id'] == value) ? value : '',
+        decoration: InputDecoration(labelText: label),
+        isExpanded: true,
+        items: [
+          DropdownMenuItem(
+            value: '',
+            child: Text(_copy('Выберите', 'Choose', 'اختر')),
+          ),
+          for (final c in choices)
+            DropdownMenuItem(
+              value: c['id'].toString(),
+              child: Text(
+                c['title'].toString(),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+        validator: (value) => required && (value == null || value.isEmpty)
+            ? _copy(
+                'Выберите подтему',
+                'Choose a subtopic',
+                'اختر موضوعاً فرعياً',
+              )
+            : null,
+        onChanged: choices.isEmpty
+            ? null
+            : (value) => _change('categoryId', value),
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          field(
+            _copy('Тема', 'Topic', 'الموضوع'),
+            topic.toString(),
+            roots,
+            false,
+          ),
+          const SizedBox(height: 12),
+          field(
+            _copy('Подтема', 'Subtopic', 'الموضوع الفرعي'),
+            selectedCategory?['parentId'] != null
+                ? _selection['categoryId'].toString()
+                : '',
+            leaves,
+            true,
+          ),
+          if (_loading) const LinearProgressIndicator(),
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (!_loading && selectedCategory?['parentId'] != null && total == 0)
+            Text(
+              _copy(
+                'В подтеме нет русских слов.',
+                'No Russian words in this subtopic.',
+                'لا توجد كلمات روسية في هذا الموضوع الفرعي.',
+              ),
+            ),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

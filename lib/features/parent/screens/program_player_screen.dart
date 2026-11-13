@@ -11,6 +11,7 @@ import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/audio/trainer_error_reporter.dart';
+import 'package:uuid/uuid.dart';
 
 class ProgramPlayerScreen extends StatefulWidget {
   const ProgramPlayerScreen({
@@ -34,6 +35,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
   bool _isCompleted = false;
   bool _isAdvancing = false;
   String? _advanceError;
+  final Map<String, String> _resultLaunchIds = {};
 
   @override
   void initState() {
@@ -229,6 +231,16 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       onExit: _exit,
       child: TrainerPlayer(
         key: ValueKey(step.id),
+        resultContext: step.trainerKey == 'reading-word-columns'
+            ? {
+                'source': 'direct',
+                'childId': widget.childId,
+                'launchId': _resultLaunchIds.putIfAbsent(
+                  step.id,
+                  const Uuid().v4,
+                ),
+              }
+            : null,
         audioManifest: step.audioManifest,
         runtimeSnapshot: step.runtimeSnapshot,
         onAudioIssue: (issue) {

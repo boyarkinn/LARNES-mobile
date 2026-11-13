@@ -14,7 +14,7 @@ import 'package:larnes_mobile/trainers/reading/reading_reread/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_echo/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_phrases/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_find_span/model.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_sprint/model.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_columns/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_cloze/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_story_order/model.dart';
 import 'package:larnes_mobile/trainers/reading/reading_main_idea/model.dart';
@@ -863,13 +863,13 @@ ValidateTrainerParamsResult validateReadingFindSpanParams(
   });
 }
 
-ValidateTrainerParamsResult validateReadingWordSprintParams(
+ValidateTrainerParamsResult validateReadingWordColumnsParams(
   Map<String, dynamic> raw,
 ) {
-  final error = validateReadingWordSprintRaw(raw);
+  final error = validateReadingWordColumnsRaw(raw);
   if (error != null) return _fail(error);
   return ValidateTrainerParamsResult.success({
-    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
+    'contentBank': raw['contentBank'],
   });
 }
 

@@ -36,7 +36,7 @@ void main() {
       expect(isTrainerKey('reading-echo'), isTrue);
       expect(isTrainerKey('reading-phrases'), isTrue);
       expect(isTrainerKey('reading-find-span'), isTrue);
-      expect(isTrainerKey('reading-word-sprint'), isTrue);
+      expect(isTrainerKey('reading-word-columns'), isTrue);
       expect(isTrainerKey('reading-cloze'), isTrue);
       expect(isTrainerKey('reading-story-order'), isTrue);
       expect(isTrainerKey('reading-main-idea'), isTrue);

@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/core/api/trainer_results_api.dart';
 import 'package:larnes_mobile/core/time/user_time_zone.dart';
 import 'trainer_content_bank_api.dart';
 import 'package:dio/dio.dart';
@@ -84,6 +85,7 @@ class ApiClient {
   TimeZoneSearchApi? _timeZoneSearchApi;
   RegisterSchoolOffersApi? _registerSchoolOffersApi;
 
+  TrainerResultsApi get trainerResultsApi => TrainerResultsApi(this);
   Dio get dio => _dio;
   TrainerContentBankApi get trainerContentBankApi =>
       _trainerContentBankApi ??= TrainerContentBankApi(this);

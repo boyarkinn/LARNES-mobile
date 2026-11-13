@@ -183,6 +183,13 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
     }
 
     final snapshot = _snapshot!;
+    if (snapshot.contentBankError != null) {
+      return ParentPlayerError(
+        message: snapshot.contentBankError!,
+        retryLabel: l10n.continueButton,
+        onRetry: _loadSnapshot,
+      );
+    }
 
     if (snapshot.steps.isEmpty && !_isCompleted) {
       final message =
@@ -223,6 +230,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       child: TrainerPlayer(
         key: ValueKey(step.id),
         audioManifest: step.audioManifest,
+        runtimeSnapshot: step.runtimeSnapshot,
         onAudioIssue: (issue) {
           if (!mounted) return;
           reportNativeTrainerAudioIssue(

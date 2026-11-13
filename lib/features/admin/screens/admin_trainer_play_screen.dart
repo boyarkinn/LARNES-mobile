@@ -6,6 +6,7 @@ import 'package:larnes_mobile/trainers/runtime/trainer_play_shell.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_play_theme.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_player.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
+import 'package:larnes_mobile/features/shared/prepared_trainer_content_gate.dart';
 
 class AdminTrainerPlayScreen extends StatelessWidget {
   const AdminTrainerPlayScreen({super.key, required this.launch});
@@ -36,19 +37,25 @@ class AdminTrainerPlayScreen extends StatelessWidget {
         menuContinueLabel: l10n.adminTrainerPlayMenuContinue,
         menuExitLabel: l10n.adminTrainerPlayExit,
         onExit: () => _exit(context),
-        child: TrainerPlayer(
-          key: ValueKey('${launch.trainerKey}-${launch.params.hashCode}'),
+        child: PreparedTrainerContentGate(
           trainerKey: launch.trainerKey,
           params: launch.params,
-          l10n: l10n,
-          onComplete: isInteractive ? () => _exit(context) : null,
-          stepChrome: TrainerStepChrome(
-            finishLabel: l10n.adminTrainerPlayFinish,
-            isInteractive: isInteractive,
-            isLast: true,
-            nextLabel: l10n.adminTrainerPlayNext,
-            onAdvance: () => _exit(context),
-            theme: TrainerPlayTheme.admin,
+          builder: (prepared) => TrainerPlayer(
+            key: ValueKey('${launch.trainerKey}-${launch.params.hashCode}'),
+            trainerKey: launch.trainerKey,
+            params: prepared?.params ?? launch.params,
+            runtimeSnapshot: prepared?.runtimeSnapshot,
+            audioManifest: prepared?.audioManifest,
+            l10n: l10n,
+            onComplete: isInteractive ? () => _exit(context) : null,
+            stepChrome: TrainerStepChrome(
+              finishLabel: l10n.adminTrainerPlayFinish,
+              isInteractive: isInteractive,
+              isLast: true,
+              nextLabel: l10n.adminTrainerPlayNext,
+              onAdvance: () => _exit(context),
+              theme: TrainerPlayTheme.admin,
+            ),
           ),
         ),
       ),

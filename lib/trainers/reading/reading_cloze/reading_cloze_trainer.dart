@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_cloze/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
@@ -37,7 +36,8 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -70,16 +70,18 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
     final choices = payload?['choices'];
     final prompt = payload?['prompt'];
     final correct = payload?['correctIndex'];
-    if (choices is List && choices.length == 3 && prompt is String && correct is num) {
+    if (choices is List &&
+        choices.length >= 2 &&
+        choices.length <= 20 &&
+        prompt is String &&
+        correct is num) {
       _choices = choices.map((item) => item.toString()).toList();
       _prompt = prompt;
       _correctIndex = correct.toInt();
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId);
-      final task = readingClozeMode(widget.params['clozeMode']) == 'story' ? passage?.cloze.story : passage?.cloze.simple;
-      _choices = [...?task?.choices];
-      _prompt = task?.prompt ?? '';
-      _correctIndex = task?.correctIndex ?? 0;
+      _prompt = '';
+      _choices = const [];
+      _correctIndex = -1;
     }
     _resetToken = '$_prompt|${_choices.join('|')}|$_correctIndex';
   }
@@ -100,8 +102,8 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
       fallbackText: readingClozeInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'play');
+        if (!mounted) return;
+        setState(() => _phase = 'play');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -126,7 +128,12 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingClozeInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingClozeInstructionText
+            : _instructionSpeech,
+      );
     }
 
     return TrainerScene(
@@ -139,7 +146,11 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
               _prompt,
               textAlign: TextAlign.center,
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: Color(0xFF20352D), fontSize: 28, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF20352D),
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 24),
             Wrap(
@@ -151,16 +162,23 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
                   GestureDetector(
                     onTap: () => _choose(index),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
-                        color: _accepted == index ? const Color(0xFF4338CA) : const Color(0xFFE7EEF2),
+                        color: _accepted == index
+                            ? const Color(0xFF4338CA)
+                            : const Color(0xFFE7EEF2),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         _choices[index],
                         textDirection: TextDirection.ltr,
                         style: TextStyle(
-                          color: _accepted == index ? const Color(0xFFF8FAFC) : const Color(0xFF20352D),
+                          color: _accepted == index
+                              ? const Color(0xFFF8FAFC)
+                              : const Color(0xFF20352D),
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                         ),

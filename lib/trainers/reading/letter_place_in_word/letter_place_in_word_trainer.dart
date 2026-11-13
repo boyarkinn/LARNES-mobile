@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/fill_gap_scene.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/letter_place_in_word_audio.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_model.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/runtime/trainer_telemetry.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
-import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 enum LetterPlaceInWordPhase { instruction, countdown, play }
@@ -34,8 +32,6 @@ class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
   static const _countdownLabels = ['3', '2', '1', 'СТАРТ'];
   static const _countdownStepMs = 750;
 
-  late final int _layoutSalt;
-  late final List<String> _practiceLetters;
   late final List<FillGapTask> _tasks;
   late final List<LetterPoolTile> _poolTiles;
 
@@ -49,44 +45,12 @@ class _LetterPlaceInWordTrainerState extends State<LetterPlaceInWordTrainer> {
   @override
   void initState() {
     super.initState();
-    _layoutSalt = createLayoutSalt();
-    _practiceLetters = parseFillGapPracticeLetters(
-      widget.params['practiceLetters'] as String? ?? 'А',
-    );
-    final entityCount = widget.params['entityCount'] as int? ?? 1;
-    final distractorCount = widget.params['distractorCount'] as int? ?? 3;
-    final letterCase = widget.params['letterCase'] as String? ?? 'upper';
-    final wordCase = widget.params['wordCase'] as String? ?? 'upper';
-    final seed = buildPlaceInWordRoundSeed([
-      entityCount,
-      widget.params['practiceLetters'] ?? 'А',
-      distractorCount,
-      wordCase,
-      letterCase,
-      _layoutSalt,
-    ]);
-    final snapshotSeed = readTrainerSnapshotSeed(
+    final payload = readTrainerRuntimeSnapshot(
       'letter-place-in-word',
       widget.params,
     );
-    final snapshotRng = snapshotSeed == null
-        ? null
-        : TrainerSnapshotRandom(snapshotSeed);
-    _tasks = buildFillGapTasks(
-      entityCount: entityCount,
-      letterCase: letterCase,
-      practiceLetters: _practiceLetters,
-      seed: snapshotRng == null ? seed : null,
-      random: snapshotRng?.nextDouble,
-      wordCase: wordCase,
-    );
-    final poolRng = snapshotRng?.nextDouble ?? createSeededRng(seed + 17);
-    _poolTiles = buildLetterPoolTiles(
-      distractorCount: distractorCount,
-      letterCase: letterCase,
-      rng: poolRng,
-      tasks: _tasks,
-    );
+    _tasks = fillGapTasksFromPayload(payload);
+    _poolTiles = letterPoolFromPayload(payload);
     unawaited(_runInstruction(_runToken));
   }
 

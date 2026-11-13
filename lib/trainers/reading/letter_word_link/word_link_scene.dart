@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/match_hit_test.dart';
@@ -7,7 +6,6 @@ import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_card.d
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_word_link/word_link_size.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
 import 'package:larnes_mobile/trainers/shared/match_connection/connection_lines_painter.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_timings.dart';
 
@@ -147,11 +145,7 @@ class _WordLinkSceneState extends State<WordLinkScene> {
     }
 
     return boardPointToOffset(
-      getElementAnchorPoint(
-        itemBox,
-        boardBox,
-        rightSide: rightSide,
-      ),
+      getElementAnchorPoint(itemBox, boardBox, rightSide: rightSide),
     );
   }
 
@@ -280,8 +274,9 @@ class _WordLinkSceneState extends State<WordLinkScene> {
     }
 
     final wordKey = _wordKeys[wordItem.id];
-    final wrongTo =
-        wordKey == null ? null : _getAnchor(wordKey, rightSide: false);
+    final wrongTo = wordKey == null
+        ? null
+        : _getAnchor(wordKey, rightSide: false);
 
     if (wrongTo != null) {
       _wrongFlashTimer?.cancel();
@@ -306,7 +301,8 @@ class _WordLinkSceneState extends State<WordLinkScene> {
   @override
   Widget build(BuildContext context) {
     final lockedLines = _lockedLines();
-    final missingAnchors = widget.connections.isNotEmpty &&
+    final missingAnchors =
+        widget.connections.isNotEmpty &&
         lockedLines.length < widget.connections.length;
 
     if (missingAnchors) {
@@ -337,7 +333,10 @@ class _WordLinkSceneState extends State<WordLinkScene> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 768),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
                 child: SizedBox(
                   key: _boardKey,
                   width: constraints.maxWidth.clamp(0, 768),
@@ -367,26 +366,36 @@ class _WordLinkSceneState extends State<WordLinkScene> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                for (var index = 0; index < cardCount; index++) ...[
+                                for (
+                                  var index = 0;
+                                  index < cardCount;
+                                  index++
+                                ) ...[
                                   if (index > 0) const SizedBox(height: 12),
                                   KeyedSubtree(
-                                    key: _wordKeys[widget.round.wordItems[index].id],
+                                    key:
+                                        _wordKeys[widget
+                                            .round
+                                            .wordItems[index]
+                                            .id],
                                     child: WordLinkCard(
                                       connected: _connectedRightIds.contains(
                                         widget.round.wordItems[index].id,
                                       ),
-                                      displayLabel:
-                                          widget.round.wordItems[index].displayLabel,
-                                      imageSrc: getWordLinkImageSrc(
-                                        widget.round.wordItems[index].slug,
-                                      ),
+                                      displayLabel: widget
+                                          .round
+                                          .wordItems[index]
+                                          .displayLabel,
+                                      imageSrc:
+                                          widget.round.wordItems[index].slug,
                                       onPlaySound: () => widget.onPlayWord(
                                         widget.round.wordItems[index],
                                       ),
-                                      revealDelayMs: getWordLinkCardRevealDelayMs(
-                                        index,
-                                        cardCount,
-                                      ),
+                                      revealDelayMs:
+                                          getWordLinkCardRevealDelayMs(
+                                            index,
+                                            cardCount,
+                                          ),
                                       wrongFlash:
                                           _wrongFlashRightId ==
                                           widget.round.wordItems[index].id,
@@ -440,4 +449,3 @@ class _WordLinkSceneState extends State<WordLinkScene> {
     );
   }
 }
-

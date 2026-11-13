@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 
@@ -20,7 +21,8 @@ class WordCard extends StatefulWidget {
   State<WordCard> createState() => _WordCardState();
 }
 
-class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin {
+class _WordCardState extends State<WordCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _progress;
 
@@ -50,10 +52,7 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
 
         return Opacity(
           opacity: t,
-          child: Transform.scale(
-            scale: 0.88 + 0.12 * t,
-            child: child,
-          ),
+          child: Transform.scale(scale: 0.88 + 0.12 * t, child: child),
         );
       },
       child: Material(
@@ -77,17 +76,14 @@ class _WordCardState extends State<WordCard> with SingleTickerProviderStateMixin
                     : LayoutBuilder(
                         builder: (context, constraints) {
                           final size = MediaQuery.sizeOf(context);
-                          final maxHeight = (size.height * 0.21)
-                              .clamp(72.0, size.width * 0.28);
+                          final maxHeight = (size.height * 0.21).clamp(
+                            72.0,
+                            size.width * 0.28,
+                          );
 
                           return ConstrainedBox(
                             constraints: BoxConstraints(maxHeight: maxHeight),
-                            child: Image.asset(
-                              widget.imageSrc!,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
+                            child: ContentBankImage(slug: widget.imageSrc!),
                           );
                         },
                       ),

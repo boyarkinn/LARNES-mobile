@@ -12,7 +12,11 @@ const readingRereadInstructionText = 'Читай вслух два раза';
 const readingRereadInstructionMs = 2400;
 
 class ReadingRereadTrainer extends StatefulWidget {
-  const ReadingRereadTrainer({super.key, required this.params, this.onComplete});
+  const ReadingRereadTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -39,7 +43,10 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   ReadingRereadAttempt? _first;
   ReadingRereadAttempt? _second;
   late String _text;
-  ReadingPassageQuestion? _question;
+  List<ReadingPassageQuestion> _questions = const [];
+  int _questionIndex = 0;
+  ReadingPassageQuestion? get _question =>
+      _questions.elementAtOrNull(_questionIndex);
   late String _resetToken;
   var _accumulatedMs = 0;
   DateTime? _startedAt;
@@ -49,7 +56,8 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -84,13 +92,8 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   void _readPlan() {
     final payload = readTrainerRuntimeSnapshot('reading-reread', widget.params);
     _text = payload?['text']?.toString() ?? resolvePassageText(widget.params);
-    if (payload != null && payload.containsKey('question')) {
-      _question = readingRereadQuestionFromPayload(payload['question']);
-    } else if (widget.params['source'] == 'custom') {
-      _question = null;
-    } else {
-      _question = passageById(widget.params['passageId']?.toString() ?? defaultPassageId)?.question;
-    }
+    _questions = readingRereadQuestionsFromPayload(payload);
+    _questionIndex = 0;
     _resetToken = '$_text|${_question?.prompt ?? ''}';
   }
 
@@ -118,8 +121,8 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
       fallbackText: readingRereadInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'read');
+        if (!mounted) return;
+        setState(() => _phase = 'read');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -152,7 +155,9 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
     _clockTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (!mounted || _startedAt == null) return;
       setState(() {
-        _elapsedMs = _accumulatedMs + DateTime.now().difference(_startedAt!).inMilliseconds;
+        _elapsedMs =
+            _accumulatedMs +
+            DateTime.now().difference(_startedAt!).inMilliseconds;
       });
     });
     setState(() {});
@@ -171,7 +176,10 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   }
 
   void _commit() {
-    final attempt = ReadingRereadAttempt(elapsedMs: _accumulatedMs, errors: _errors);
+    final attempt = ReadingRereadAttempt(
+      elapsedMs: _accumulatedMs,
+      errors: _errors,
+    );
     if (_round == 0) {
       setState(() {
         _first = attempt;
@@ -202,7 +210,12 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingRereadInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingRereadInstructionText
+            : _instructionSpeech,
+      );
     }
 
     if (_phase == 'read') {
@@ -216,22 +229,37 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
                 _text,
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: Color(0xFF20352D), fontSize: 32, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Color(0xFF20352D),
+                  fontSize: 32,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
                 '${formatReadingRereadSeconds(_elapsedMs)} с',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF20352D)),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF20352D),
+                ),
               ),
               Text(
                 'ошибок: $_errors',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF20352D)),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF20352D),
+                ),
               ),
               const SizedBox(height: 12),
               Wrap(
                 alignment: WrapAlignment.center,
                 children: [
-                  _button(_running ? 'Стоп' : 'Старт', _running ? _stop : _start),
+                  _button(
+                    _running ? 'Стоп' : 'Старт',
+                    _running ? _stop : _start,
+                  ),
                   _button('Ошибка', () => setState(() => _errors += 1)),
                   if (_stopped && !_running) _button('Дальше', _commit),
                 ],
@@ -248,9 +276,22 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Первый раз', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Color(0xFF20352D))),
-            Text('${formatReadingRereadSeconds(first.elapsedMs)} с', style: const TextStyle(fontSize: 24, color: Color(0xFF20352D))),
-            Text('ошибок: ${first.errors}', style: const TextStyle(fontSize: 24, color: Color(0xFF20352D))),
+            const Text(
+              'Первый раз',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF20352D),
+              ),
+            ),
+            Text(
+              '${formatReadingRereadSeconds(first.elapsedMs)} с',
+              style: const TextStyle(fontSize: 24, color: Color(0xFF20352D)),
+            ),
+            Text(
+              'ошибок: ${first.errors}',
+              style: const TextStyle(fontSize: 24, color: Color(0xFF20352D)),
+            ),
             const SizedBox(height: 16),
             _button('Ещё раз', () {
               setState(() {
@@ -270,9 +311,22 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Второй раз', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600, color: Color(0xFF20352D))),
-            Text(gap.time, style: const TextStyle(fontSize: 24, color: Color(0xFF20352D))),
-            Text(gap.errors, style: const TextStyle(fontSize: 24, color: Color(0xFF20352D))),
+            const Text(
+              'Второй раз',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF20352D),
+              ),
+            ),
+            Text(
+              gap.time,
+              style: const TextStyle(fontSize: 24, color: Color(0xFF20352D)),
+            ),
+            Text(
+              gap.errors,
+              style: const TextStyle(fontSize: 24, color: Color(0xFF20352D)),
+            ),
             const SizedBox(height: 16),
             _button(_question == null ? 'Дальше' : 'К вопросу', () {
               if (_question == null) {
@@ -294,7 +348,15 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(question.prompt, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFF20352D))),
+              Text(
+                question.prompt,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF20352D),
+                ),
+              ),
               const SizedBox(height: 16),
               for (var index = 0; index < question.choices.length; index++)
                 Padding(
@@ -303,17 +365,27 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
                     _selectedIndex < 0
                         ? question.choices[index]
                         : index == question.correctIndex
-                            ? '${question.choices[index]} · верно'
-                            : index == _selectedIndex
-                                ? '${question.choices[index]} · неверно'
-                                : question.choices[index],
+                        ? '${question.choices[index]} · верно'
+                        : index == _selectedIndex
+                        ? '${question.choices[index]} · неверно'
+                        : question.choices[index],
                     () {
                       if (_selectedIndex >= 0) return;
                       setState(() => _selectedIndex = index);
                     },
                   ),
                 ),
-              if (_selectedIndex >= 0) _button('Дальше', _finish),
+              if (_selectedIndex >= 0)
+                _button('Дальше', () {
+                  if (_questionIndex + 1 >= _questions.length) {
+                    _finish();
+                    return;
+                  }
+                  setState(() {
+                    _questionIndex++;
+                    _selectedIndex = -1;
+                  });
+                }),
             ],
           ),
         ),

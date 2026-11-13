@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_find_span/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingFindSpanTrainer extends StatefulWidget {
-  const ReadingFindSpanTrainer({super.key, required this.params, this.onComplete});
+  const ReadingFindSpanTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -37,7 +40,8 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -66,22 +70,27 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-find-span', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-find-span',
+      widget.params,
+    );
     final words = payload?['words'];
     final targets = payload?['targetIndexes'];
     final prompt = payload?['prompt'];
-    if (words is List && words.isNotEmpty && targets is List && prompt is String) {
+    if (words is List &&
+        words.isNotEmpty &&
+        targets is List &&
+        prompt is String) {
       _words = words.map((item) => item.toString()).toList();
-      _targets = targets.map((item) => item is num ? item.toInt() : -1).where((item) => item >= 0).toList();
+      _targets = targets
+          .map((item) => item is num ? item.toInt() : -1)
+          .where((item) => item >= 0)
+          .toList();
       _prompt = prompt;
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId);
-      final mode = readingFindMode(widget.params['findMode']);
-      _words = readingFindWords(passage?.text ?? '');
-      _targets = passage == null
-          ? <int>[]
-          : readingFindTargetIndexes(_words, mode == 'answer' ? passage.find.answer : [passage.find.word]);
-      _prompt = passage == null ? '' : (mode == 'answer' ? passage.question.prompt : passage.find.word);
+      _words = const [];
+      _targets = const [];
+      _prompt = '';
     }
     _resetToken = '$_prompt|${_words.join('|')}|${_targets.join(',')}';
   }
@@ -102,8 +111,8 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
       fallbackText: readingFindInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'play');
+        if (!mounted) return;
+        setState(() => _phase = 'play');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -119,7 +128,8 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   }
 
   void _acceptWord(int index) {
-    if (_finished || _accepted.contains(index) || !_targets.contains(index)) return;
+    if (_finished || _accepted.contains(index) || !_targets.contains(index))
+      return;
     setState(() => _accepted.add(index));
     if (_targets.every(_accepted.contains)) {
       _finished = true;
@@ -130,7 +140,12 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingFindInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingFindInstructionText
+            : _instructionSpeech,
+      );
     }
 
     return TrainerScene(
@@ -142,7 +157,11 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
             Text(
               _prompt,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFF3730A3), fontSize: 22, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF3730A3),
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 24),
             Wrap(
@@ -154,16 +173,23 @@ class _ReadingFindSpanTrainerState extends State<ReadingFindSpanTrainer> {
                   GestureDetector(
                     onTap: () => _acceptWord(index),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: _accepted.contains(index) ? const Color(0xFF3730A3) : const Color(0xFFE7EEF2),
+                        color: _accepted.contains(index)
+                            ? const Color(0xFF3730A3)
+                            : const Color(0xFFE7EEF2),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         _words[index],
                         textDirection: TextDirection.ltr,
                         style: TextStyle(
-                          color: _accepted.contains(index) ? const Color(0xFFF8FAFC) : const Color(0xFF20352D),
+                          color: _accepted.contains(index)
+                              ? const Color(0xFFF8FAFC)
+                              : const Color(0xFF20352D),
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
                         ),

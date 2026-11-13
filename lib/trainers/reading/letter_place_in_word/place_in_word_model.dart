@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_rules.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 
 /// Web: `platform/src/trainers/reading/letter-place-in-word/model.ts`
@@ -85,89 +85,6 @@ bool isWordEligibleForPractice(String label, List<String> practiceLetters) {
   return resolveOmitForWord(label, practiceLetters) != null;
 }
 
-int countEligibleWords(List<String> practiceLetters) {
-  return countEligibleFillGapWords(practiceLetters);
-}
-
-List<String> pickWordsForRound({
-  required int entityCount,
-  required List<String> practiceLetters,
-  required double Function() rng,
-}) {
-  final shuffledEligible = _shuffleItems(
-    fillGapWordSlugs
-        .where(
-          (slug) => isWordEligibleForPractice(
-            getFillGapWordLabel(slug),
-            practiceLetters,
-          ),
-        )
-        .toList(),
-    rng,
-  );
-  final seenLabels = <String>{};
-  final eligible = shuffledEligible.where((slug) {
-    final label = getFillGapWordLabel(slug).toLowerCase();
-    return seenLabels.add(label);
-  }).toList();
-
-  if (eligible.length < entityCount) {
-    return const [];
-  }
-
-  return eligible.take(entityCount).toList();
-}
-
-FillGapTask buildFillGapTask(
-  String slug,
-  List<String> practiceLetters,
-  String wordCase,
-  String letterCase,
-) {
-  final label = getFillGapWordLabel(slug);
-  final resolution = resolveOmitForWord(label, practiceLetters);
-
-  if (resolution == null) {
-    throw StateError('Word "$slug" is not eligible for practice letters');
-  }
-
-  final displayWord = applyWordCase(label, wordCase);
-  final correctLetter = applyLetterCase(resolution.omitLetter, letterCase);
-
-  return FillGapTask(
-    after: displayWord.substring(resolution.omitIndex + 1),
-    before: displayWord.substring(0, resolution.omitIndex),
-    correctLetter: correctLetter,
-    displayWord: displayWord,
-    omitIndex: resolution.omitIndex,
-    slug: slug,
-  );
-}
-
-List<FillGapTask> buildFillGapTasks({
-  required int entityCount,
-  required String letterCase,
-  required List<String> practiceLetters,
-  int? seed,
-  double Function()? random,
-  required String wordCase,
-}) {
-  if (random == null && seed == null) {
-    throw ArgumentError('Either random or seed must be provided.');
-  }
-  final rng = random ?? createSeededRng(seed!);
-  final slugs = pickWordsForRound(
-    entityCount: entityCount,
-    practiceLetters: practiceLetters,
-    rng: rng,
-  );
-
-  return [
-    for (final slug in slugs)
-      buildFillGapTask(slug, practiceLetters, wordCase, letterCase),
-  ];
-}
-
 List<LetterPoolTile> buildLetterPoolTiles({
   required int distractorCount,
   required String letterCase,
@@ -232,4 +149,37 @@ List<T> _shuffleItems<T>(List<T> items, double Function() rng) {
   }
 
   return next;
+}
+
+List<FillGapTask> fillGapTasksFromPayload(Map<String, dynamic>? payload) {
+  final tasks = payload?['tasks'];
+  if (tasks is! List) return const [];
+  return tasks
+      .whereType<Map>()
+      .map(
+        (task) => FillGapTask(
+          after: task['after'].toString(),
+          before: task['before'].toString(),
+          correctLetter: task['correctLetter'].toString(),
+          displayWord: task['displayWord'].toString(),
+          omitIndex: (task['omitIndex'] as num).toInt(),
+          slug: task['slug'].toString(),
+        ),
+      )
+      .toList();
+}
+
+List<LetterPoolTile> letterPoolFromPayload(Map<String, dynamic>? payload) {
+  final tiles = payload?['pool'];
+  if (tiles is! List) return const [];
+  return tiles
+      .whereType<Map>()
+      .map(
+        (tile) => LetterPoolTile(
+          id: tile['id'].toString(),
+          letter: tile['letter'].toString(),
+          used: tile['used'] == true,
+        ),
+      )
+      .toList();
 }

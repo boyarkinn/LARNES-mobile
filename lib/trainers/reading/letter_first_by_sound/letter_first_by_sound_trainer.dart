@@ -5,15 +5,14 @@ import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_answer_bar_lay
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
 import 'package:larnes_mobile/trainers/reading/letter_colors.dart';
 import 'package:larnes_mobile/trainers/reading/letter_find_tap/letter_field_scene.dart';
-import 'package:larnes_mobile/trainers/reading/letter_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_choice_bar.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_audio.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/word_card.dart';
 import 'package:larnes_mobile/trainers/reading/sound_play_button.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/play_first_word_audio.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
+import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/load_trainer_instruction_duration.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_typewriter.dart';
@@ -72,8 +71,9 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
   Timer? _answerRevealTimer;
   Timer? _completeTimer;
 
-  FirstBySoundRound? get _current =>
-      _rounds.isEmpty ? null : _rounds[_roundIndex.clamp(0, _rounds.length - 1)];
+  FirstBySoundRound? get _current => _rounds.isEmpty
+      ? null
+      : _rounds[_roundIndex.clamp(0, _rounds.length - 1)];
 
   @override
   void initState() {
@@ -109,7 +109,8 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
     Map<String, dynamic> previous,
     Map<String, dynamic> next,
   ) {
-    return previous['practiceLetters'] != next['practiceLetters'] ||
+    return previous['__runtimeSnapshot'] != next['__runtimeSnapshot'] ||
+        previous['practiceLetters'] != next['practiceLetters'] ||
         previous['rounds'] != next['rounds'] ||
         previous['letterCase'] != next['letterCase'] ||
         previous['distractorCount'] != next['distractorCount'];
@@ -125,23 +126,8 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
     _completeTimer?.cancel();
     unawaited(cancelLetterFirstBySoundAudio());
 
-    final practiceLetters = resolveFirstBySoundPracticeLetters(
-      widget.params['practiceLetters']?.toString(),
-    );
-    final rounds = widget.params['rounds'] as int? ?? defaultFirstBySoundRounds;
-    final planRng = _snapshotSeed == null
-        ? createSeededRng(
-            buildFirstBySoundPlanSeed(
-              practiceLetters: formatPracticeLetters(practiceLetters),
-              rounds: rounds,
-              layoutSalt: _layoutSalt,
-            ),
-          )
-        : TrainerSnapshotRandom(_snapshotSeed!).nextDouble;
-    _rounds = buildRoundPlan(
-      letters: practiceLetters,
-      rng: planRng,
-      rounds: rounds,
+    _rounds = firstBySoundRoundsFromPayload(
+      readTrainerRuntimeSnapshot('letter-first-by-sound', widget.params),
     );
     _roundIndex = 0;
     _applyRoundChoices();
@@ -184,20 +170,22 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
           )
         : TrainerSnapshotRandom(
             hashParamsSeed([
-              _snapshotSeed!,
+              _snapshotSeed,
               current.slug,
               _roundIndex,
               'first-by-sound-choices',
             ]),
           ).nextDouble;
-    _choices = buildLetterChoices(
-      BuildLetterChoicesInput(
-        distractorCount: distractorCount,
-        firstLetter: current.firstLetter,
-        letterCase: letterCase,
-        rng: rng,
-      ),
-    );
+    _choices = current.choices.isNotEmpty
+        ? current.choices
+        : buildLetterChoices(
+            BuildLetterChoicesInput(
+              distractorCount: distractorCount,
+              firstLetter: current.firstLetter,
+              letterCase: letterCase,
+              rng: rng,
+            ),
+          );
     _choiceColors = {
       for (final letter in _choices)
         letter: letterDisplayColorFromHex(pickLetterDisplayColor(rng)),
@@ -317,7 +305,10 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
     }
 
     _playedWord = true;
-    final played = await playFirstWordAudio(current.slug);
+    final path = speechPlaybackPath(current.audioKey);
+    final played = path != null;
+    if (path != null)
+      await getSharedClipPlayer().play([path], playbackRate: 1.0);
     if (played || !mounted || _isCompleted) {
       return;
     }
@@ -459,15 +450,16 @@ class _LetterFirstBySoundTrainerState extends State<LetterFirstBySoundTrainer> {
             children: [
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       WordCard(
                         key: ValueKey(current?.slug ?? 'empty'),
-                        imageSrc: current == null
-                            ? null
-                            : getFirstWordImageWidgetAsset(current.slug),
+                        imageSrc: current == null ? null : current.slug,
                         disabled: _isCompleted,
                         onPlay: _handlePlayWord,
                       ),

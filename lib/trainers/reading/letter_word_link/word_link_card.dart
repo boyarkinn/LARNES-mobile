@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -74,10 +75,7 @@ class _LetterWordLinkAnchorCardState extends State<LetterWordLinkAnchorCard>
 
         return Opacity(
           opacity: t,
-          child: Transform.scale(
-            scale: 0.88 + 0.12 * t,
-            child: child,
-          ),
+          child: Transform.scale(scale: 0.88 + 0.12 * t, child: child),
         );
       },
       child: Listener(
@@ -142,7 +140,8 @@ class WordLinkCard extends StatefulWidget {
   State<WordLinkCard> createState() => _WordLinkCardState();
 }
 
-class _WordLinkCardState extends State<WordLinkCard> with TickerProviderStateMixin {
+class _WordLinkCardState extends State<WordLinkCard>
+    with TickerProviderStateMixin {
   late final AnimationController _revealController;
   late final Animation<double> _revealProgress;
   late final AnimationController _shakeController;
@@ -164,15 +163,16 @@ class _WordLinkCardState extends State<WordLinkCard> with TickerProviderStateMix
       vsync: this,
       duration: const Duration(milliseconds: 450),
     );
-    _shakeOffset = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: -7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -7.0, end: 7.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 7.0, end: -5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: 5.0, end: 0.0), weight: 1),
-    ]).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
-    );
+    _shakeOffset =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: Tween(begin: 0.0, end: -7.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -7.0, end: 7.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 7.0, end: -5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: -5.0, end: 5.0), weight: 1),
+          TweenSequenceItem(tween: Tween(begin: 5.0, end: 0.0), weight: 1),
+        ]).animate(
+          CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+        );
     _delayTimer = Timer(Duration(milliseconds: widget.revealDelayMs), () {
       if (mounted) {
         _revealController.forward();
@@ -261,14 +261,12 @@ class _WordLinkCardState extends State<WordLinkCard> with TickerProviderStateMix
                   ),
                   alignment: Alignment.center,
                   child: widget.imageSrc != null
-                      ? Image.asset(
-                          widget.imageSrc!,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _WordLinkLabel(
-                                displayLabel: widget.displayLabel,
-                                color: labelColor,
-                              ),
+                      ? ContentBankImage(
+                          slug: widget.imageSrc!,
+                          fallback: _WordLinkLabel(
+                            displayLabel: widget.displayLabel,
+                            color: labelColor,
+                          ),
                         )
                       : _WordLinkLabel(
                           displayLabel: widget.displayLabel,
@@ -294,10 +292,7 @@ class _WordLinkCardState extends State<WordLinkCard> with TickerProviderStateMix
 }
 
 class _WordLinkLabel extends StatelessWidget {
-  const _WordLinkLabel({
-    required this.displayLabel,
-    required this.color,
-  });
+  const _WordLinkLabel({required this.displayLabel, required this.color});
 
   final String displayLabel;
   final Color color;

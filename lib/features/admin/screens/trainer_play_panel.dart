@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/shared/trainer_content_bank_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import 'package:larnes_mobile/features/admin/widgets/admin_text_field.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/catalog/registry.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 class TrainerPlayPanel extends StatefulWidget {
   const TrainerPlayPanel({super.key, required this.trainerKey});
@@ -109,6 +111,16 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
     }
 
     final payload = buildPlayParamsPayload(config, _values);
+    if (usesReadingContentBank(widget.trainerKey) &&
+        payload['source'] != 'custom') {
+      final error = validateReadingContentSelection(payload);
+      if (error != null) {
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(error)));
+        return;
+      }
+    }
     context.push(
       '/admin/trainers/${widget.trainerKey}/play',
       extra: AdminTrainerPlayLaunch(
@@ -208,18 +220,27 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
         ),
       for (final field in config.fields)
         if (trainerPlayFieldVisible(config, field, _values)) ...[
-          _FieldEditor(
-            key: ValueKey('${field.key}-$fieldRevision'),
-            field: field,
-            l10n: l10n,
-            value: _values[field.key] ?? '',
-            companionValue: _values[field.optionToggleKey] ?? 'inherit',
-            companionDefaultEnabled: _values['withExplanations'] != 'false',
-            onCompanionChanged: field.optionToggleKey == null
-                ? null
-                : (value) => _setValue(field.optionToggleKey!, value),
-            onChanged: (value) => _setValue(field.key, value),
-          ),
+          if (field.type == TrainerPlayFieldType.contentBank)
+            TrainerContentBankField(
+              trainerKey: config.trainerKey,
+              params: buildPlayParamsPayload(config, _values),
+              selectionMode: field.selectionMode,
+              value: _values[field.key] ?? '',
+              onChanged: (value) => _setValue(field.key, value),
+            )
+          else
+            _FieldEditor(
+              key: ValueKey('${field.key}-$fieldRevision'),
+              field: field,
+              l10n: l10n,
+              value: _values[field.key] ?? '',
+              companionValue: _values[field.optionToggleKey] ?? 'inherit',
+              companionDefaultEnabled: _values['withExplanations'] != 'false',
+              onCompanionChanged: field.optionToggleKey == null
+                  ? null
+                  : (value) => _setValue(field.optionToggleKey!, value),
+              onChanged: (value) => _setValue(field.key, value),
+            ),
           const SizedBox(height: 12),
         ],
       FilledButton(
@@ -497,6 +518,8 @@ class _FieldEditorState extends State<_FieldEditor> {
     final label = trainerPlayFieldLabel(widget.l10n, widget.field.labelKey);
 
     switch (widget.field.type) {
+      case TrainerPlayFieldType.contentBank:
+        return const SizedBox.shrink();
       case TrainerPlayFieldType.multiSelect:
         final available = widget.field.options
             .map((option) => option.value)

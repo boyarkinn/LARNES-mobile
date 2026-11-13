@@ -61,7 +61,10 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
       return;
     }
 
-    final validated = validateTrainerParams(widget.trainerKey, session.params);
+    final validated = validateTrainerParams(widget.trainerKey, {
+      ...session.params,
+      '__runtimeSnapshot': ?session.runtimeSnapshot,
+    });
     if (!validated.ok || validated.params == null) {
       context.go(_paramsPath());
       return;
@@ -160,7 +163,7 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
           : player(
               _params!,
               _session?.runtimeSnapshot,
-              null,
+              _session?.audioManifest,
               isInteractive ? _returnToParams : null,
             ),
     );

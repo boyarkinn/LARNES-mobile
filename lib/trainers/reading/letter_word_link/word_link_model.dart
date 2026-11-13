@@ -1,5 +1,5 @@
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/reading_word_rules.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 
 /// Web: `platform/src/trainers/reading/letter-word-link/model.ts`
@@ -14,6 +14,7 @@ class WordLinkItem {
     required this.isMatch,
     required this.label,
     required this.slug,
+    this.audioKey,
   });
 
   final String displayLabel;
@@ -21,6 +22,7 @@ class WordLinkItem {
   final bool isMatch;
   final String label;
   final String slug;
+  final String? audioKey;
 }
 
 class WordLinkRound {
@@ -36,10 +38,7 @@ class WordLinkRound {
 }
 
 class WordLinkConnection {
-  const WordLinkConnection({
-    required this.rightId,
-    required this.slug,
-  });
+  const WordLinkConnection({required this.rightId, required this.slug});
 
   final String rightId;
   final String slug;
@@ -67,48 +66,14 @@ int countCorrectWordLinkRoundItems(int entityCount, int correctPoolSize) {
   return countCorrectWordLinkItems(entityCount, correctPoolSize);
 }
 
-WordLinkRound buildWordLinkRound(BuildWordLinkRoundInput input) {
-  final letter = normalizeTargetLetter(input.letter);
-  final rng = input.random ?? createSeededRng(input.seed!);
-  final correctPool = getWordsByFirstLetter(letter);
-  final distractorPool = getWordsNotStartingWith(letter);
-  final correctCount =
-      countCorrectWordLinkItems(input.entityCount, correctPool.length);
-  final distractorCount = input.entityCount - correctCount;
-  final selectedCorrect = _pickUniqueSlugs(correctPool, correctCount, rng);
-  final selectedDistractors =
-      _pickUniqueSlugs(distractorPool, distractorCount, rng);
-  final selectedSlugs =
-      _shuffleItems([...selectedCorrect, ...selectedDistractors], rng);
-
-  final wordItems = <WordLinkItem>[
-    for (var index = 0; index < selectedSlugs.length; index++)
-      WordLinkItem(
-        displayLabel: applyWordCase(
-          getWordLinkLabel(selectedSlugs[index]),
-          input.wordCase,
-        ),
-        id: 'word-$index-${selectedSlugs[index]}',
-        isMatch: getWordLinkFirstLetter(selectedSlugs[index]) == letter,
-        label: getWordLinkLabel(selectedSlugs[index]),
-        slug: selectedSlugs[index],
-      ),
-  ];
-
-  return WordLinkRound(
-    displayLetter: applyLetterCase(letter, input.letterCase),
-    letter: letter,
-    wordItems: wordItems,
-  );
-}
-
 int buildWordLinkRoundSeed(List<Object> parts) {
   return hashParamsSeed([...parts, 'word-link']);
 }
 
 bool isCorrectWordLink(WordLinkItem item, String letter) {
   return item.isMatch &&
-      getWordLinkFirstLetter(item.slug) == normalizeTargetLetter(letter);
+      normalizeTargetLetter(item.label.isEmpty ? "" : item.label[0]) ==
+          normalizeTargetLetter(letter);
 }
 
 bool isWordLinkRoundComplete(
@@ -121,8 +86,9 @@ bool isWordLinkRoundComplete(
     return false;
   }
 
-  final connectedIds =
-      connections.map((connection) => connection.rightId).toSet();
+  final connectedIds = connections
+      .map((connection) => connection.rightId)
+      .toSet();
 
   return required.every((item) => connectedIds.contains(item.id));
 }
@@ -131,27 +97,26 @@ String normalizeWordLinkRoundLetter(String letter) {
   return normalizeTargetLetter(letter);
 }
 
-String getWordLinkAudioStubMessage(String displayLabel) {
-  return 'Озвучка «$displayLabel» — в следующем цикле.';
-}
-
-List<String> _pickUniqueSlugs(
-  List<String> pool,
-  int count,
-  double Function() rng,
-) {
-  return _shuffleItems([...pool], rng).take(count).toList();
-}
-
-List<T> _shuffleItems<T>(List<T> items, double Function() rng) {
-  final next = [...items];
-
-  for (var index = next.length - 1; index > 0; index--) {
-    final swapIndex = (rng() * (index + 1)).floor();
-    final temp = next[index];
-    next[index] = next[swapIndex];
-    next[swapIndex] = temp;
-  }
-
-  return next;
+WordLinkRound? wordLinkRoundFromPayload(Map<String, dynamic>? payload) {
+  final round = payload?['round'];
+  if (round is! Map || round['wordItems'] is! List) return null;
+  return WordLinkRound(
+    displayLetter: round['displayLetter'].toString(),
+    letter: round['letter'].toString(),
+    wordItems: (round['wordItems'] as List)
+        .whereType<Map>()
+        .map(
+          (item) => WordLinkItem(
+            displayLabel: item['displayLabel'].toString(),
+            id: item['id'].toString(),
+            isMatch: item['isMatch'] == true,
+            label: item['label'].toString(),
+            slug: item['slug'].toString(),
+            audioKey: item['audio'] is Map
+                ? item['audio']['semanticKey']?.toString()
+                : null,
+          ),
+        )
+        .toList(),
+  );
 }

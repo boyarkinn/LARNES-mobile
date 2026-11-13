@@ -1,8 +1,16 @@
+import 'dart:convert';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flash_cards/flash_cards_model.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 import 'package:larnes_mobile/trainers/shared/param_coerce.dart';
 
-enum TrainerPlayFieldType { number, text, select, checkbox, multiSelect }
+enum TrainerPlayFieldType {
+  number,
+  text,
+  select,
+  checkbox,
+  multiSelect,
+  contentBank,
+}
 
 class TrainerPlayFieldOption {
   const TrainerPlayFieldOption({
@@ -59,6 +67,7 @@ class TrainerPlayField {
     this.selectedLabels = false,
     this.optionToggleKey,
     this.optionToggleLabelKey,
+    this.selectionMode = 'single',
   });
 
   factory TrainerPlayField.fromJson(Map<String, dynamic> json) {
@@ -72,6 +81,7 @@ class TrainerPlayField {
       selectedLabels: json['selectedLabels'] == true,
       optionToggleKey: json['optionToggleKey'] as String?,
       optionToggleLabelKey: json['optionToggleLabelKey'] as String?,
+      selectionMode: json['selectionMode'] as String? ?? 'single',
       type: _parseType(json['type'] as String?),
       min: _parseOptionalNum(json['min']),
       max: _parseOptionalNum(json['max']),
@@ -98,6 +108,7 @@ class TrainerPlayField {
   final bool selectedLabels;
   final String? optionToggleKey;
   final String? optionToggleLabelKey;
+  final String selectionMode;
   final TrainerPlayFieldType type;
   final num? min;
   final num? max;
@@ -160,6 +171,7 @@ class TrainerPlayConfig {
   }
 
   static String _stringifyValue(dynamic value) {
+    if (value is Map) return jsonEncode(value);
     if (value is List) {
       return value.join(',');
     }
@@ -195,6 +207,8 @@ class AdminTrainerPlayLaunch {
 
 TrainerPlayFieldType _parseType(String? raw) {
   switch (raw) {
+    case 'content-bank':
+      return TrainerPlayFieldType.contentBank;
     case 'multi-select':
       return TrainerPlayFieldType.multiSelect;
     case 'checkbox':
@@ -294,6 +308,16 @@ Map<String, dynamic> buildPlayParamsPayload(
       continue;
     }
     final raw = values[field.key];
+    if (field.type == TrainerPlayFieldType.contentBank) {
+      try {
+        final decoded = jsonDecode(raw ?? '{}');
+        if (decoded is Map)
+          payload[field.key] = Map<String, dynamic>.from(decoded);
+      } catch (_) {
+        /* Server validates selection. */
+      }
+      continue;
+    }
     if (field.type == TrainerPlayFieldType.multiSelect) {
       final selected = raw == 'all'
           ? field.options.map((option) => option.value)

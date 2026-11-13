@@ -1,4 +1,4 @@
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 const readingWordMazeInstructionText = 'Веди путь';
 const readingWordMazeInstructionMs = 2400;
@@ -16,10 +16,5 @@ bool readingMazeNeighbors(int left, int right) {
 }
 
 String? validateReadingWordMazeRaw(Map<String, dynamic> raw) {
-  final id = raw['passageId']?.toString() ?? defaultPassageId;
-  final passage = passageById(id);
-  if (passage == null) return 'Выберите текст из банка.';
-  final task = readingMazeMode(raw['mazeMode']) == 'sentence' ? passage.maze.sentence : passage.maze.group;
-  if (task.words.length != readingMazeCells || task.path.length < 3) return 'Выберите текст из банка.';
-  return null;
+  return validateReadingContentSelection(raw);
 }

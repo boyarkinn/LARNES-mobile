@@ -8,7 +8,7 @@ import 'package:larnes_mobile/trainers/reading/letter_place_in_word/gap_word_row
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_model.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/place_in_word_sizes.dart';
 import 'package:larnes_mobile/trainers/reading/letter_place_in_word/word_card_with_gap.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/play_first_word_audio.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 
 const _popCurve = Cubic(0.34, 1.2, 0.64, 1);
 const _poolTileSize = 56.0;
@@ -461,8 +461,9 @@ class _FillGapSceneState extends State<FillGapScene> {
                             WordCardWithGap(
                               displayWord: task.displayWord,
                               enterDelayMs: getFruitRevealDelayMs(0, 1),
-                              onPlay: () =>
-                                  unawaited(playFirstWordAudio(task.slug)),
+                              onPlay: () => unawaited(
+                                playContentBankWord(context, task.slug),
+                              ),
                               slug: task.slug,
                               success: fill.filledLetter != null,
                             ),

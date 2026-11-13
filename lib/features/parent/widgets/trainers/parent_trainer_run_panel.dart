@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/features/shared/trainer_content_bank_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -16,6 +17,8 @@ import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
 import 'package:larnes_mobile/trainers/catalog/registry.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
+import 'package:larnes_mobile/core/api/trainer_content_bank_api.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 class ParentTrainerRunPanel extends StatefulWidget {
   const ParentTrainerRunPanel({
@@ -71,10 +74,9 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
 
     try {
       final locale = LocaleScope.read(context).localeCode;
-      final config = await AuthScope.of(context).parentApi.fetchTrainerPlayConfig(
-        widget.trainerKey,
-        locale: locale,
-      );
+      final config = await AuthScope.of(
+        context,
+      ).parentApi.fetchTrainerPlayConfig(widget.trainerKey, locale: locale);
 
       if (config.direction != widget.direction) {
         if (!mounted) {
@@ -88,9 +90,14 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
       }
 
       var values = config.initialValues();
-      final stored = await ParentTrainerPlaySessionStore.read(widget.trainerKey);
+      final stored = await ParentTrainerPlaySessionStore.read(
+        widget.trainerKey,
+      );
       if (stored != null) {
-        final validated = validateTrainerParams(widget.trainerKey, stored.params);
+        final validated = validateTrainerParams(
+          widget.trainerKey,
+          stored.params,
+        );
         if (validated.ok && validated.params != null) {
           values = mergeStoredParamsIntoFormValues(config, validated.params!);
         }
@@ -164,10 +171,29 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
     final returnPath =
         '/parent/${widget.childId}/trainers/${widget.direction}/${widget.trainerKey}';
 
+    PreparedTrainerContent? prepared;
+    try {
+      if (usesReadingContentBank(widget.trainerKey)) {
+        prepared = await AuthScope.of(context).trainerContentBankApi.prepare(
+          trainerKey: widget.trainerKey,
+          params: validated.params!,
+          uiLocale: LocaleScope.read(context).localeCode,
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLaunching = false;
+        _clientError = error.toString().replaceFirst('Exception: ', '');
+      });
+      return;
+    }
     await ParentTrainerPlaySessionStore.write(
       trainerKey: widget.trainerKey,
-      params: validated.params!,
+      params: prepared?.params ?? validated.params!,
       returnPath: returnPath,
+      runtimeSnapshot: prepared?.runtimeSnapshot,
+      audioManifest: prepared?.audioManifestJson,
     );
 
     if (!mounted) {
@@ -178,7 +204,9 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
       _isLaunching = false;
     });
 
-    context.push('/parent/${widget.childId}/trainers/play/${widget.trainerKey}');
+    context.push(
+      '/parent/${widget.childId}/trainers/play/${widget.trainerKey}',
+    );
   }
 
   @override
@@ -219,10 +247,7 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
 
     if (_error != null && _config == null) {
       return Center(
-        child: ParentPanelErrorPanel(
-          message: _error!,
-          onRetry: _load,
-        ),
+        child: ParentPanelErrorPanel(message: _error!, onRetry: _load),
       );
     }
 
@@ -241,7 +266,9 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
       children: [
         Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: ParentChildCardMetrics.pickerMaxWidth),
+            constraints: const BoxConstraints(
+              maxWidth: ParentChildCardMetrics.pickerMaxWidth,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -257,25 +284,40 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
                   const SizedBox(height: 8),
                   Text(
                     l10n.parentTrainersPlayInteractiveHint,
-                    style: const TextStyle(fontSize: 13, color: ParentColors.inkMuted),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: ParentColors.inkMuted,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
                 for (final field in config.fields)
                   if (trainerPlayFieldVisible(config, field, _values)) ...[
-                    _ParentTrainerFieldEditor(
-                      key: ValueKey('${field.key}-$fieldRevision'),
-                      field: field,
-                      l10n: l10n,
-                      value: _values[field.key] ?? '',
-                      onChanged: (value) => _setValue(field.key, value),
-                    ),
+                    if (field.type == TrainerPlayFieldType.contentBank)
+                      TrainerContentBankField(
+                        trainerKey: config.trainerKey,
+                        params: buildPlayParamsPayload(config, _values),
+                        selectionMode: field.selectionMode,
+                        value: _values[field.key] ?? '',
+                        onChanged: (value) => _setValue(field.key, value),
+                      )
+                    else
+                      _ParentTrainerFieldEditor(
+                        key: ValueKey('${field.key}-$fieldRevision'),
+                        field: field,
+                        l10n: l10n,
+                        value: _values[field.key] ?? '',
+                        onChanged: (value) => _setValue(field.key, value),
+                      ),
                     const SizedBox(height: 12),
                   ],
                 if (_clientError != null) ...[
                   Text(
                     _clientError!,
-                    style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13),
+                    style: const TextStyle(
+                      color: Color(0xFFDC2626),
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -286,7 +328,9 @@ class _ParentTrainerRunPanelState extends State<ParentTrainerRunPanel> {
                   ),
                   onPressed: _isLaunching ? null : _launch,
                   child: Text(
-                    _isLaunching ? l10n.parentTrainersLaunching : l10n.parentTrainersLaunch,
+                    _isLaunching
+                        ? l10n.parentTrainersLaunching
+                        : l10n.parentTrainersLaunch,
                   ),
                 ),
               ],
@@ -313,7 +357,8 @@ class _ParentTrainerFieldEditor extends StatefulWidget {
   final ValueChanged<String> onChanged;
 
   @override
-  State<_ParentTrainerFieldEditor> createState() => _ParentTrainerFieldEditorState();
+  State<_ParentTrainerFieldEditor> createState() =>
+      _ParentTrainerFieldEditorState();
 }
 
 class _ParentTrainerFieldEditorState extends State<_ParentTrainerFieldEditor> {
@@ -347,6 +392,36 @@ class _ParentTrainerFieldEditorState extends State<_ParentTrainerFieldEditor> {
     final label = trainerPlayFieldLabel(widget.l10n, widget.field.labelKey);
 
     switch (widget.field.type) {
+      case TrainerPlayFieldType.contentBank:
+        return const SizedBox.shrink();
+      case TrainerPlayFieldType.checkbox:
+        return SwitchListTile(
+          title: Text(label),
+          value: widget.value == 'true',
+          onChanged: (value) => widget.onChanged('$value'),
+        );
+      case TrainerPlayFieldType.multiSelect:
+        final selected = widget.value.split(',').toSet();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(label),
+            for (final option in widget.field.options)
+              CheckboxListTile(
+                title: Text(trainerPlayOptionLabel(widget.l10n, option)),
+                value: widget.value == 'all' || selected.contains(option.value),
+                onChanged: (checked) {
+                  final next = widget.value == 'all'
+                      ? widget.field.options.map((item) => item.value).toSet()
+                      : {...selected};
+                  checked == true
+                      ? next.add(option.value)
+                      : next.remove(option.value);
+                  widget.onChanged(next.join(','));
+                },
+              ),
+          ],
+        );
       case TrainerPlayFieldType.select:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

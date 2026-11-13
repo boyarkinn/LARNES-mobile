@@ -31,22 +31,55 @@ class CubeRound {
   final List<WordCube> cubes;
 }
 
-List<CubeRound> buildCubeRounds(String slug, double Function() rng) {
-  final words = cubeWords.where((word) => slug == 'all' || word.slug == slug).toList();
-  if (words.isEmpty) throw ArgumentError('INVALID_CUBE_WORD_SELECTION');
-  return words.map((word) {
-    if (!RegExp(r'^[А-ЯЁ]{1,4}$').hasMatch(word.word) || word.parts.map((part) => part.target).join() != word.word) {
-      throw ArgumentError('INVALID_CUBE_WORD');
-    }
-    return CubeRound(word, word.parts.map((part) {
-      final cube = warehouseCubes.firstWhere((cube) => cube.id == part.cubeId);
-      if (!cube.faces.contains(part.target)) throw ArgumentError('INVALID_CUBE_WORD');
-      final incorrect = [for (var i = 0; i < cube.faces.length; i++) if (cube.faces[i] != part.target) i];
-      return WordCube(cube, part.target, incorrect[(rng() * incorrect.length).floor()]);
-    }).toList());
+List<CubeRound> cubeRoundsFromPayload(Map<String, dynamic>? payload) {
+  final rounds = payload?['rounds'];
+  if (rounds is! List || rounds.isEmpty) return const [];
+  return rounds.map((raw) {
+    final word = raw['word'] as Map;
+    final parts = (word['parts'] as List)
+        .map(
+          (part) => CubeWordPart(
+            part['cubeId'].toString(),
+            part['target'].toString(),
+          ),
+        )
+        .toList();
+    final cubes = (raw['cubes'] as List).map((item) {
+      final cube = item['cube'] as Map;
+      final faces = (cube['faces'] as List)
+          .map((face) => face.toString())
+          .toList();
+      final initial = (item['initialFace'] as num).toInt();
+      if (initial < 0 ||
+          initial >= faces.length ||
+          !faces.contains(item['target']))
+        throw const FormatException('Invalid frozen cube');
+      return WordCube(
+        WarehouseCube(
+          cube['id'].toString(),
+          cube['kind'].toString(),
+          cube['small'] == true,
+          faces,
+        ),
+        item['target'].toString(),
+        initial,
+      );
+    }).toList();
+    return CubeRound(
+      CubeWord(word['slug'].toString(), word['word'].toString(), parts),
+      cubes,
+    );
   }).toList();
 }
 
-int nextCubeFace(WarehouseCube cube, int face) => (face + 1) % cube.faces.length;
-bool isCubeRoundComplete(CubeRound round, List<int> faces) => faces.length == round.cubes.length &&
-    List.generate(round.cubes.length, (index) => index).every((index) => faces[index] >= 0 && faces[index] < round.cubes[index].cube.faces.length && round.cubes[index].cube.faces[faces[index]] == round.cubes[index].target);
+int nextCubeFace(WarehouseCube cube, int face) =>
+    (face + 1) % cube.faces.length;
+bool isCubeRoundComplete(CubeRound round, List<int> faces) =>
+    faces.length == round.cubes.length &&
+    List.generate(round.cubes.length, (index) => index).every(
+      (index) =>
+          faces[index] >= 0 &&
+          faces[index] < round.cubes[index].cube.faces.length &&
+          round.cubes[index].cube.faces[faces[index]] ==
+              round.cubes[index].target,
+    );

@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_maze/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingWordMazeTrainer extends StatefulWidget {
-  const ReadingWordMazeTrainer({super.key, required this.params, this.onComplete});
+  const ReadingWordMazeTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -37,7 +40,8 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -65,22 +69,25 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-word-maze', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-word-maze',
+      widget.params,
+    );
     final words = payload?['words'];
     final path = payload?['path'];
-    if (words is List && words.length == readingMazeCells && path is List && path.length >= 3) {
+    if (words is List &&
+        words.length == readingMazeCells &&
+        path is List &&
+        path.length >= 3) {
       _words = words.map((item) => item.toString()).toList();
       _path = path.map((item) => item is num ? item.toInt() : 0).toList();
       _mode = readingMazeMode(payload?['mode']);
       _rule = payload?['rule']?.toString() ?? '';
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId) ??
-          passageById(defaultPassageId);
+      _words = const [];
+      _path = const [];
+      _rule = '';
       _mode = readingMazeMode(widget.params['mazeMode']);
-      final task = _mode == 'sentence' ? passage?.maze.sentence : passage?.maze.group;
-      _words = task?.words ?? const <String>[];
-      _path = task?.path ?? const <int>[];
-      _rule = task?.rule ?? '';
     }
     _resetToken = '$_mode|${_path.join(',')}|${_words.join('|')}';
   }
@@ -101,8 +108,8 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
       fallbackText: readingWordMazeInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'play');
+        if (!mounted) return;
+        setState(() => _phase = 'play');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -127,11 +134,19 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingWordMazeInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingWordMazeInstructionText
+            : _instructionSpeech,
+      );
     }
 
     final taken = _path.take(_step).toSet();
-    final built = _path.take(_step).map((index) => index < _words.length ? _words[index] : '').join(' ');
+    final built = _path
+        .take(_step)
+        .map((index) => index < _words.length ? _words[index] : '')
+        .join(' ');
 
     return TrainerScene(
       child: Padding(
@@ -143,14 +158,22 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
               _rule,
               textAlign: TextAlign.center,
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: Color(0xFF20352D), fontSize: 22, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF20352D),
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               built,
               textAlign: TextAlign.center,
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: Color(0xFF7E22CE), fontSize: 22, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: Color(0xFF7E22CE),
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 12),
             for (var row = 0; row < 3; row++)
@@ -185,7 +208,11 @@ class _ReadingWordMazeTrainerState extends State<ReadingWordMazeTrainer> {
         minimumSize: const Size(0, 56),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       ),
-      child: Text(word, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+      child: Text(
+        word,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

@@ -3,19 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_story_order/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingStoryOrderTrainer extends StatefulWidget {
-  const ReadingStoryOrderTrainer({super.key, required this.params, this.onComplete});
+  const ReadingStoryOrderTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
 
   @override
-  State<ReadingStoryOrderTrainer> createState() => _ReadingStoryOrderTrainerState();
+  State<ReadingStoryOrderTrainer> createState() =>
+      _ReadingStoryOrderTrainerState();
 }
 
 class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
@@ -35,7 +39,8 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -63,19 +68,21 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-story-order', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-story-order',
+      widget.params,
+    );
     final sentences = payload?['sentences'];
     final order = payload?['order'];
-    if (sentences is List && sentences.length >= 3 && order is List && order.isNotEmpty) {
+    if (sentences is List &&
+        sentences.length >= 3 &&
+        order is List &&
+        order.isNotEmpty) {
       _sentences = sentences.map((item) => item.toString()).toList();
       _order = order.map((item) => item is num ? item.toInt() : 0).toList();
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId);
-      final count = readingStoryCards(widget.params['storyCards']);
-      final available = passage?.story ?? const <String>[];
-      final take = count < available.length ? count : available.length;
-      _sentences = available.take(take).toList();
-      _order = readingStoryOrder(_sentences.length);
+      _sentences = const [];
+      _order = const [];
     }
     _resetToken = '${_sentences.join('|')}|${_order.join(',')}';
   }
@@ -96,8 +103,8 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
       fallbackText: readingStoryInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'order');
+        if (!mounted) return;
+        setState(() => _phase = 'order');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -124,7 +131,12 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingStoryInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingStoryInstructionText
+            : _instructionSpeech,
+      );
     }
 
     if (_phase == 'text') {
@@ -138,12 +150,18 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
                 _sentences.join(' '),
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: Color(0xFF20352D), fontSize: 26, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Color(0xFF20352D),
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: widget.onComplete,
-                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF20352D)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF20352D),
+                ),
                 child: const Text('Готово'),
               ),
             ],
@@ -165,7 +183,11 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
                   _sentences[index],
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.ltr,
-                  style: const TextStyle(color: Color(0xFF4D7C0F), fontSize: 22, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Color(0xFF4D7C0F),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             const SizedBox(height: 12),
@@ -179,7 +201,10 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
                     GestureDetector(
                       onTap: () => _choose(index),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE7EEF2),
                           borderRadius: BorderRadius.circular(999),
@@ -187,7 +212,11 @@ class _ReadingStoryOrderTrainerState extends State<ReadingStoryOrderTrainer> {
                         child: Text(
                           _sentences[index],
                           textDirection: TextDirection.ltr,
-                          style: const TextStyle(color: Color(0xFF20352D), fontSize: 18, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            color: Color(0xFF20352D),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_phrases/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingPhrasesTrainer extends StatefulWidget {
-  const ReadingPhrasesTrainer({super.key, required this.params, this.onComplete});
+  const ReadingPhrasesTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -38,7 +41,8 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -68,14 +72,16 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-phrases', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-phrases',
+      widget.params,
+    );
     final phrases = payload?['phrases'];
     if (phrases is List && phrases.isNotEmpty) {
       _phrases = phrases.map((item) => item.toString()).toList();
       _mode = readingPhraseMode(payload?['phraseMode']);
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId);
-      _phrases = [...?passage?.phrases];
+      _phrases = const [];
       _mode = readingPhraseMode(widget.params['phraseMode']);
     }
     _resetToken = '$_mode|${_phrases.join('|')}';
@@ -99,9 +105,9 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
       fallbackText: readingPhraseInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'play');
-      if (_mode == 'fade') _armHold();
+        if (!mounted) return;
+        setState(() => _phase = 'play');
+        if (_mode == 'fade') _armHold();
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -148,7 +154,9 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
     if (_phase == 'instruction') {
       return TrainerInstructionScene(
         length: _instructionLength,
-        text: _instructionSpeech.isEmpty ? readingPhraseInstructionText : _instructionSpeech,
+        text: _instructionSpeech.isEmpty
+            ? readingPhraseInstructionText
+            : _instructionSpeech,
       );
     }
 
@@ -181,7 +189,9 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
                           width: 14,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: _accepted.contains(index) ? const Color(0xFF9F1239) : const Color(0xFFE7EEF2),
+                            color: _accepted.contains(index)
+                                ? const Color(0xFF9F1239)
+                                : const Color(0xFFE7EEF2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
@@ -205,9 +215,16 @@ class _ReadingPhrasesTrainerState extends State<ReadingPhrasesTrainer> {
                 for (var index = 0; index < _phrases.length; index++) ...[
                   if (index > 0)
                     TextSpan(
-                      text: readingPhraseBoundaryVisible(index - 1, _hiddenCount) ? ' / ' : ' ',
+                      text:
+                          readingPhraseBoundaryVisible(index - 1, _hiddenCount)
+                          ? ' / '
+                          : ' ',
                       style: TextStyle(
-                        color: readingPhraseBoundaryVisible(index - 1, _hiddenCount)
+                        color:
+                            readingPhraseBoundaryVisible(
+                              index - 1,
+                              _hiddenCount,
+                            )
                             ? const Color(0xFF9F1239)
                             : const Color(0xFF20352D),
                       ),

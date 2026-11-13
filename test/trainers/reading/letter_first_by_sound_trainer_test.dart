@@ -11,7 +11,9 @@ import 'package:larnes_mobile/trainers/shared/trainer_shell.dart';
 
 void main() {
   group('LetterFirstBySoundTrainer', () {
-    testWidgets('starts in instruction phase inside TrainerScene', (tester) async {
+    testWidgets('starts in instruction phase inside TrainerScene', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -86,9 +88,9 @@ void main() {
         trainerSource,
         contains('Прослушай слово и нажми на первую букву этого слова'),
       );
-      expect(trainerSource, contains('playFirstWordAudio'));
+      expect(trainerSource, contains('speechPlaybackPath'));
       expect(trainerSource, contains('playLetterFirstBySoundInstruction'));
-      expect(trainerSource, contains('getFirstWordImageWidgetAsset'));
+      expect(trainerSource, contains('current.slug'));
       expect(trainerSource, contains('SoundPlayButtonVariant.chrome'));
       expect(trainerSource, contains('Positioned'));
       expect(trainerSource, contains('_advanceRound'));

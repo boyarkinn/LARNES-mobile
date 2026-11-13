@@ -1,5 +1,5 @@
 import 'package:characters/characters.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 const readingSprintInstructionText = 'Читай слова';
 const readingSprintInstructionMs = 2400;
@@ -12,7 +12,10 @@ int readingSprintLength(String word) => word.characters.length;
 
 bool readingSprintTextHasWord(String text, String word) {
   final needle = readingSprintBare(word);
-  return text.trim().split(RegExp(r'\s+')).any((token) => token.isNotEmpty && readingSprintBare(token) == needle);
+  return text
+      .trim()
+      .split(RegExp(r'\s+'))
+      .any((token) => token.isNotEmpty && readingSprintBare(token) == needle);
 }
 
 List<String> readingSprintQueueAfter(List<String> queue, String mark) {
@@ -23,7 +26,5 @@ List<String> readingSprintQueueAfter(List<String> queue, String mark) {
 }
 
 String? validateReadingWordSprintRaw(Map<String, dynamic> raw) {
-  final id = raw['passageId']?.toString() ?? defaultPassageId;
-  if (passageById(id) == null) return 'Выберите текст из банка.';
-  return null;
+  return validateReadingContentSelection(raw);
 }

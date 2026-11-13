@@ -1,4 +1,4 @@
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 const readingMainIdeaInstructionText = 'Выбери мысль';
 const readingMainIdeaInstructionMs = 2400;
@@ -20,7 +20,5 @@ List<String> readingMainIdeaSentences(String text) {
 }
 
 String? validateReadingMainIdeaRaw(Map<String, dynamic> raw) {
-  final id = raw['passageId']?.toString() ?? defaultPassageId;
-  if (passageById(id) == null) return 'Выберите текст из банка.';
-  return null;
+  return validateReadingContentSelection(raw);
 }

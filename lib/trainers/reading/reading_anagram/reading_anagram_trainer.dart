@@ -4,12 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_anagram/model.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingAnagramTrainer extends StatefulWidget {
-  const ReadingAnagramTrainer({super.key, required this.params, this.onComplete});
+  const ReadingAnagramTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
@@ -38,7 +42,8 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -66,27 +71,27 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-anagram', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-anagram',
+      widget.params,
+    );
     final letters = payload?['letters'];
     final order = payload?['order'];
-    if (letters is List && letters.length >= 2 && order is List && order.isNotEmpty) {
+    if (letters is List &&
+        letters.length >= 2 &&
+        order is List &&
+        order.isNotEmpty) {
       _letters = letters.map((item) => item.toString()).toList();
       _order = order.map((item) => item is num ? item.toInt() : 0).toList();
       _hint = readingAnagramHint(payload?['hint']);
       _hintText = payload?['hintText']?.toString() ?? '';
       _slug = payload?['slug']?.toString() ?? readingAnagramDefaultSlug;
     } else {
-      final card = readingAnagramCardBySlug(widget.params['anagramSlug']?.toString() ?? readingAnagramDefaultSlug) ??
-          readingAnagramCardBySlug(readingAnagramDefaultSlug);
       _hint = readingAnagramHint(widget.params['anagramHint']);
-      _letters = card?.label.split('') ?? const <String>[];
-      _order = readingAnagramOrder(_letters.length);
-      _hintText = _hint == 'definition'
-          ? (card?.definition ?? '')
-          : _hint == 'sentence'
-              ? (card?.sentence ?? '')
-              : '';
-      _slug = card?.slug ?? readingAnagramDefaultSlug;
+      _letters = const [];
+      _order = const [];
+      _hintText = '';
+      _slug = '';
     }
     _resetToken = '$_slug|$_hint|${_letters.join()}|${_order.join(',')}';
   }
@@ -107,8 +112,8 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
       fallbackText: readingAnagramInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'play');
+        if (!mounted) return;
+        setState(() => _phase = 'play');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -133,30 +138,42 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingAnagramInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingAnagramInstructionText
+            : _instructionSpeech,
+      );
     }
 
-    final image = _hint == 'picture' ? getFirstWordImageWidgetAsset(_slug) : null;
     return TrainerScene(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (image != null)
-              Image.asset(image, height: 140, fit: BoxFit.contain, semanticLabel: ''),
+            if (_hint == 'picture') ContentBankImage(slug: _slug, height: 140),
             if (_hint != 'picture')
               Text(
                 _hintText,
                 textAlign: TextAlign.center,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: Color(0xFF20352D), fontSize: 24, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Color(0xFF20352D),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             const SizedBox(height: 16),
             Text(
               _letters.take(_placed).join(),
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: Color(0xFFDB2777), fontSize: 36, fontWeight: FontWeight.w700, letterSpacing: 8),
+              style: const TextStyle(
+                color: Color(0xFFDB2777),
+                fontSize: 36,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 8,
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -173,7 +190,10 @@ class _ReadingAnagramTrainerState extends State<ReadingAnagramTrainer> {
                         foregroundColor: const Color(0xFF20352D),
                         minimumSize: const Size(56, 56),
                       ),
-                      child: Text(_letters[index], style: const TextStyle(fontSize: 24)),
+                      child: Text(
+                        _letters[index],
+                        style: const TextStyle(fontSize: 24),
+                      ),
                     ),
               ],
             ),

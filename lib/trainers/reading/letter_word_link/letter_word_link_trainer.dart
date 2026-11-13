@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -49,24 +50,17 @@ class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
       widget.params['wordCase'] ?? 'upper',
       _layoutSalt,
     ]);
-    _round = buildWordLinkRound(
-      BuildWordLinkRoundInput(
-        entityCount: widget.params['entityCount'] as int? ?? 4,
-        letter: widget.params['letter'] as String? ?? 'А',
-        letterCase: widget.params['letterCase'] as String? ?? 'upper',
-        random: _snapshotSeed == null
-            ? null
-            : TrainerSnapshotRandom(_snapshotSeed!).nextDouble,
-        seed: _snapshotSeed == null ? _seed : null,
-        wordCase: widget.params['wordCase'] as String? ?? 'upper',
-      ),
-    );
+    _round =
+        wordLinkRoundFromPayload(
+          readTrainerRuntimeSnapshot('letter-word-link', widget.params),
+        ) ??
+        const WordLinkRound(displayLetter: '', letter: '', wordItems: []);
     _letterColor = letterDisplayColorFromHex(
       pickLetterDisplayColor(
         _snapshotSeed == null
             ? createSeededRng(_seed + 9)
             : TrainerSnapshotRandom(
-                buildWordLinkRoundSeed([_snapshotSeed!, 'color']),
+                buildWordLinkRoundSeed([_snapshotSeed, 'color']),
               ).nextDouble,
       ),
     );
@@ -92,13 +86,7 @@ class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
       return;
     }
 
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    messenger?.showSnackBar(
-      SnackBar(
-        content: Text(getWordLinkAudioStubMessage(item.displayLabel)),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    unawaited(playContentBankWord(context, item.slug));
   }
 
   void _scheduleComplete() {
@@ -120,6 +108,7 @@ class _LetterWordLinkTrainerState extends State<LetterWordLinkTrainer> {
   @override
   void dispose() {
     _completeTimer?.cancel();
+    unawaited(cancelContentBankWordAudio());
     super.dispose();
   }
 

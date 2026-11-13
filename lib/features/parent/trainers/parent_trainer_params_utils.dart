@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/flashcard_digit_match/flashcard_digit_match_model.dart';
 
 String stringifyTrainerFormValue(dynamic value) {
+  if (value is Map) return jsonEncode(value);
   if (value is List) {
     return value.join(',');
   }
@@ -29,7 +31,9 @@ Map<String, String> mergeStoredParamsIntoFormValues(
     if (params.containsKey('topicId')) {
       values['chainTopicId'] = stringifyTrainerFormValue(params['topicId']);
     } else if (params.containsKey('chainTopicId')) {
-      values['chainTopicId'] = stringifyTrainerFormValue(params['chainTopicId']);
+      values['chainTopicId'] = stringifyTrainerFormValue(
+        params['chainTopicId'],
+      );
     } else if (params.containsKey('totalRods')) {
       values['chainTopicId'] = resolveMatchTopicId(null, params['totalRods']);
     }
@@ -38,7 +42,9 @@ Map<String, String> mergeStoredParamsIntoFormValues(
 
   if (config.trainerKey == 'letter-grid-match') {
     if (params.containsKey('practiceLetters')) {
-      values['practiceLetters'] = stringifyTrainerFormValue(params['practiceLetters']);
+      values['practiceLetters'] = stringifyTrainerFormValue(
+        params['practiceLetters'],
+      );
     }
     if (params.containsKey('gridSize')) {
       values['digit'] = stringifyTrainerFormValue(params['gridSize']);
@@ -52,7 +58,8 @@ Map<String, String> mergeStoredParamsIntoFormValues(
     return values;
   }
 
-  if (config.trainerKey == 'topic-chain-flash' || config.trainerKey == 'topic-chain-table') {
+  if (config.trainerKey == 'topic-chain-flash' ||
+      config.trainerKey == 'topic-chain-table') {
     if (params.containsKey('topicId')) {
       values['chainTopicId'] = stringifyTrainerFormValue(params['topicId']);
     }

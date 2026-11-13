@@ -20,10 +20,10 @@ void main() {
       'source': 'bank',
     });
 
-    expect(plan.text, contains('Маша'));
+    expect(plan.text, isEmpty);
     expect(plan.cover, 'half');
     expect(plan.edge, 'bottom');
-    expect(plan.letterCount, greaterThan(0));
+    expect(plan.letterCount, 0);
   });
 
   test('snapshot text wins over the bank id', () {

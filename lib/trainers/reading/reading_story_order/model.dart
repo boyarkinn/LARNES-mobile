@@ -1,4 +1,4 @@
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 const readingStoryInstructionText = 'Собери историю';
 const readingStoryInstructionMs = 2400;
@@ -6,7 +6,9 @@ const readingStoryCardsMin = 3;
 const readingStoryCardsMax = 5;
 
 int readingStoryCards(Object? raw) {
-  final value = raw is num ? raw.toInt() : int.tryParse(raw?.toString() ?? '') ?? readingStoryCardsMin;
+  final value = raw is num
+      ? raw.toInt()
+      : int.tryParse(raw?.toString() ?? '') ?? readingStoryCardsMin;
   if (value < readingStoryCardsMin) return readingStoryCardsMin;
   if (value > readingStoryCardsMax) return readingStoryCardsMax;
   return value;
@@ -18,7 +20,5 @@ List<int> readingStoryOrder(int length) {
 }
 
 String? validateReadingStoryOrderRaw(Map<String, dynamic> raw) {
-  final id = raw['passageId']?.toString() ?? defaultPassageId;
-  if (passageById(id) == null) return 'Выберите текст из банка.';
-  return null;
+  return validateReadingContentSelection(raw);
 }

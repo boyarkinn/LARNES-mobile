@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/math/fruit_count_tap/fruit_reveal.dart';
-import 'package:larnes_mobile/trainers/reading/reading_word_catalogs.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
 
 const _popCurve = Cubic(0.34, 1.2, 0.64, 1);
 
@@ -72,8 +72,6 @@ class _WordCardWithGapState extends State<WordCardWithGap>
 
   @override
   Widget build(BuildContext context) {
-    final imageSrc = getFillGapWordImageSrc(widget.slug);
-
     return AnimatedBuilder(
       animation: _progress,
       builder: (context, child) {
@@ -112,22 +110,20 @@ class _WordCardWithGapState extends State<WordCardWithGap>
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
-                      child: imageSrc != null
-                          ? Image.asset(
-                              imageSrc,
-                              fit: BoxFit.contain,
-                              semanticLabel: widget.displayWord.toLowerCase(),
-                            )
-                          : Text(
-                              widget.displayWord,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 34,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF20352D),
-                                height: 1.1,
-                              ),
-                            ),
+                      child: ContentBankImage(
+                        slug: widget.slug,
+                        semanticLabel: widget.displayWord,
+                        fallback: Text(
+                          widget.displayWord,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF20352D),
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
                     ),
                     Positioned(
                       right: 10,

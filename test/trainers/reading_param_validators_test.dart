@@ -1,5 +1,5 @@
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:larnes_mobile/trainers/catalog/reading_param_validators.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 
 void main() {
@@ -18,7 +18,12 @@ void main() {
     });
 
     test('accepts letter-first-by-sound defaults and teacher letter order', () {
-      final empty = validateTrainerParams('letter-first-by-sound', {});
+      final empty = validateTrainerParams('letter-first-by-sound', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
+      });
       expect(empty.ok, isTrue);
       expect(empty.params?['practiceLetters'], 'А,Д,Н');
       expect(empty.params?['rounds'], 6);
@@ -26,6 +31,10 @@ void main() {
       expect(empty.params?['letterCase'], 'upper');
 
       final listed = validateTrainerParams('letter-first-by-sound', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
         'practiceLetters': 'н, а, д',
         'rounds': 4,
         'distractorCount': 2,
@@ -36,11 +45,19 @@ void main() {
       expect(listed.params?['rounds'], 4);
 
       final missingBank = validateTrainerParams('letter-first-by-sound', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
         'practiceLetters': 'Ъ',
       });
-      expect(missingBank.ok, isFalse);
+      expect(missingBank.ok, isTrue);
 
       final tooManyButtons = validateTrainerParams('letter-first-by-sound', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
         'distractorCount': 8,
       });
       expect(tooManyButtons.ok, isFalse);
@@ -80,6 +97,10 @@ void main() {
 
     test('accepts letter-place-in-word with eligible practice letters', () {
       final result = validateTrainerParams('letter-place-in-word', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
         'practiceLetters': 'а, м',
         'entityCount': 1,
         'distractorCount': 2,
@@ -93,6 +114,10 @@ void main() {
 
     test('accepts letter-word-link for А with enough cards', () {
       final result = validateTrainerParams('letter-word-link', {
+        'contentBank': {
+          'libraryId': readingContentBankLibraryId,
+          'materialIds': ['11111111-1111-4111-8111-111111111111'],
+        },
         'letter': 'А',
         'entityCount': 4,
         'letterCase': 'upper',
@@ -119,8 +144,10 @@ void main() {
 
     test('rejects unsupported letter-build input', () {
       for (final letter in ['A', 'ЁЕ', '1']) {
-        expect(validateTrainerParams('letter-build', {'letter': letter}).ok,
-            isFalse);
+        expect(
+          validateTrainerParams('letter-build', {'letter': letter}).ok,
+          isFalse,
+        );
       }
     });
 

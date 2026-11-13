@@ -1,7 +1,5 @@
 // Смысловые ключи букв, слогов, слов и фруктов. Совпадают с web `speech-bank.ts`.
 
-import 'package:larnes_mobile/trainers/shared/first_words/catalog.dart';
-
 const speechFruitSlugs = [
   'apple',
   'banana',
@@ -15,38 +13,52 @@ const speechFruitSlugs = [
   'watermelon',
 ];
 
-final _wordSlugs = {for (final word in firstWords) word.slug};
 final _fruitSlugs = speechFruitSlugs.toSet();
 final _cyrillicLetter = RegExp(r'^[\u0400-\u04FF]$');
 final _cyrillicSyllable = RegExp(r'^[\u0400-\u04FF]{2}$');
 
-String? wordAudioKey(String slug) => _wordSlugs.contains(slug) ? 'word:ru:$slug' : null;
+String? wordAudioKey(String slug) => slug.isEmpty ? null : 'word:ru:$slug';
 
-String? fruitAudioKey(String slug) => _fruitSlugs.contains(slug) ? 'stimulus:fruit:$slug' : null;
+String? fruitAudioKey(String slug) =>
+    _fruitSlugs.contains(slug) ? 'stimulus:fruit:$slug' : null;
 
 bool isSpeechBankAudioKey(String semanticKey) {
+  if (semanticKey.startsWith('stimulus:content-bank:')) {
+    return RegExp(
+      r'^stimulus:content-bank:[0-9a-fA-F-]{36}$',
+    ).hasMatch(semanticKey);
+  }
   if (semanticKey.startsWith('phoneme:ru:')) {
     final letter = semanticKey.substring('phoneme:ru:'.length);
     return letter != 'Ь' && letter != 'Ъ' && _cyrillicLetter.hasMatch(letter);
   }
 
   if (semanticKey.startsWith('syllable:ru:')) {
-    return _cyrillicSyllable.hasMatch(semanticKey.substring('syllable:ru:'.length));
+    return _cyrillicSyllable.hasMatch(
+      semanticKey.substring('syllable:ru:'.length),
+    );
   }
 
   if (semanticKey.startsWith('word:ru:')) {
-    return wordAudioKey(semanticKey.substring('word:ru:'.length)) == semanticKey;
+    return wordAudioKey(semanticKey.substring('word:ru:'.length)) ==
+        semanticKey;
   }
 
   if (semanticKey.startsWith('stimulus:fruit:')) {
-    return fruitAudioKey(semanticKey.substring('stimulus:fruit:'.length)) == semanticKey;
+    return fruitAudioKey(semanticKey.substring('stimulus:fruit:'.length)) ==
+        semanticKey;
   }
 
   return false;
 }
 
 class SpeechAudioFile {
-  const SpeechAudioFile({required this.path, this.durationMs = 0, this.locale = '', this.text = ''});
+  const SpeechAudioFile({
+    required this.path,
+    this.durationMs = 0,
+    this.locale = '',
+    this.text = '',
+  });
 
   final int durationMs;
   final String locale;
@@ -67,7 +79,10 @@ String publishedSpeechText(String? semanticKey, String fallback) {
 final Map<String, SpeechAudioFile> _speechAudioFiles = {};
 final Set<String> _speechCatalogKeys = {};
 
-void setSpeechAudioFiles(Map<String, SpeechAudioFile> files, {Set<String> catalogKeys = const {}}) {
+void setSpeechAudioFiles(
+  Map<String, SpeechAudioFile> files, {
+  Set<String> catalogKeys = const {},
+}) {
   _speechAudioFiles
     ..clear()
     ..addAll(files);
@@ -77,9 +92,11 @@ void setSpeechAudioFiles(Map<String, SpeechAudioFile> files, {Set<String> catalo
 }
 
 /// Готовый файл каталога заменяет старый. Опубликованный, но ещё не скачанный — null.
-SpeechAudioFile? speechAudioFile(String semanticKey) => _speechAudioFiles[semanticKey];
+SpeechAudioFile? speechAudioFile(String semanticKey) =>
+    _speechAudioFiles[semanticKey];
 
-bool speechCatalogHas(String semanticKey) => _speechCatalogKeys.contains(semanticKey);
+bool speechCatalogHas(String semanticKey) =>
+    _speechCatalogKeys.contains(semanticKey);
 
 String? speechPlaybackPath(String? semanticKey) {
   if (semanticKey == null) {

@@ -3,19 +3,23 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_word_sprint/model.dart';
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
 
 class ReadingWordSprintTrainer extends StatefulWidget {
-  const ReadingWordSprintTrainer({super.key, required this.params, this.onComplete});
+  const ReadingWordSprintTrainer({
+    super.key,
+    required this.params,
+    this.onComplete,
+  });
 
   final Map<String, dynamic> params;
   final VoidCallback? onComplete;
 
   @override
-  State<ReadingWordSprintTrainer> createState() => _ReadingWordSprintTrainerState();
+  State<ReadingWordSprintTrainer> createState() =>
+      _ReadingWordSprintTrainerState();
 }
 
 class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
@@ -34,7 +38,8 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
     super.initState();
     _readPlan();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _phase != 'instruction' || _instructionTimer != null) return;
+      if (!mounted || _phase != 'instruction' || _instructionTimer != null)
+        return;
       _armInstruction();
     });
   }
@@ -61,16 +66,21 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
   }
 
   void _readPlan() {
-    final payload = readTrainerRuntimeSnapshot('reading-word-sprint', widget.params);
+    final payload = readTrainerRuntimeSnapshot(
+      'reading-word-sprint',
+      widget.params,
+    );
     final words = payload?['words'];
     final sentences = payload?['sentences'];
-    if (words is List && words.isNotEmpty && sentences is List && sentences.isNotEmpty) {
+    if (words is List &&
+        words.isNotEmpty &&
+        sentences is List &&
+        sentences.isNotEmpty) {
       _queue = words.map((item) => item.toString()).toList();
       _sentences = sentences.map((item) => item.toString()).toList();
     } else {
-      final passage = passageById(widget.params['passageId']?.toString() ?? defaultPassageId);
-      _queue = [...?passage?.sprint.words];
-      _sentences = [...?passage?.sprint.sentences];
+      _queue = const [];
+      _sentences = const [];
     }
     _resetToken = '${_queue.join('|')}::${_sentences.join('|')}';
   }
@@ -91,8 +101,8 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
       fallbackText: readingSprintInstructionText,
       isMounted: () => mounted,
       onFinished: () {
-      if (!mounted) return;
-      setState(() => _phase = 'word');
+        if (!mounted) return;
+        setState(() => _phase = 'word');
       },
       onFrame: (text, length) {
         _instructionSpeech = text;
@@ -118,7 +128,12 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
   @override
   Widget build(BuildContext context) {
     if (_phase == 'instruction') {
-      return TrainerInstructionScene(length: _instructionLength, text: _instructionSpeech.isEmpty ? readingSprintInstructionText : _instructionSpeech);
+      return TrainerInstructionScene(
+        length: _instructionLength,
+        text: _instructionSpeech.isEmpty
+            ? readingSprintInstructionText
+            : _instructionSpeech,
+      );
     }
 
     if (_phase == 'sentences') {
@@ -135,13 +150,19 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
                     sentence,
                     textAlign: TextAlign.center,
                     textDirection: TextDirection.ltr,
-                    style: const TextStyle(color: Color(0xFF20352D), fontSize: 28, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Color(0xFF20352D),
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: widget.onComplete,
-                style: FilledButton.styleFrom(backgroundColor: const Color(0xFF20352D)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF20352D),
+                ),
                 child: const Text('Дальше'),
               ),
             ],
@@ -160,7 +181,11 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
               _queue.isEmpty ? '' : _queue.first,
               textAlign: TextAlign.center,
               textDirection: TextDirection.ltr,
-              style: const TextStyle(color: Color(0xFF047857), fontSize: 48, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Color(0xFF047857),
+                fontSize: 48,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 24),
             Wrap(
@@ -169,7 +194,9 @@ class _ReadingWordSprintTrainerState extends State<ReadingWordSprintTrainer> {
               children: [
                 FilledButton(
                   onPressed: () => _mark('ok'),
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF20352D)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF20352D),
+                  ),
                   child: const Text('Верно'),
                 ),
                 OutlinedButton(

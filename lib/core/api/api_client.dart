@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/core/time/user_time_zone.dart';
+import 'trainer_content_bank_api.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:larnes_mobile/core/api/api_error_body.dart';
@@ -70,6 +71,7 @@ class ApiClient {
   ParentAccountApi? _parentAccountApi;
   AdminAccountApi? _adminAccountApi;
   AdminTrainersApi? _adminTrainersApi;
+  TrainerContentBankApi? _trainerContentBankApi;
   FamilySetupApi? _familySetupApi;
   GuardiansApi? _guardiansApi;
   FamilyInvitesApi? _familyInvitesApi;
@@ -83,6 +85,8 @@ class ApiClient {
   RegisterSchoolOffersApi? _registerSchoolOffersApi;
 
   Dio get dio => _dio;
+  TrainerContentBankApi get trainerContentBankApi =>
+      _trainerContentBankApi ??= TrainerContentBankApi(this);
 
   TokenStorage get tokenStorage => _tokenStorage;
 

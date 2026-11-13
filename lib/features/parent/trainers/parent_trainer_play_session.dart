@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:larnes_mobile/trainers/runtime/topic_chain_run_state.dart';
+import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 
 class ParentTrainerPlaySession {
   const ParentTrainerPlaySession({
@@ -9,12 +10,14 @@ class ParentTrainerPlaySession {
     this.returnPath,
     this.runtimeSnapshot,
     this.launchId,
+    this.audioManifest,
   });
 
   final Map<String, dynamic> params;
   final String? returnPath;
   final Map<String, dynamic>? runtimeSnapshot;
   final String? launchId;
+  final ExerciseAudioManifest? audioManifest;
 }
 
 class ParentTrainerPlaySessionStore {
@@ -77,6 +80,7 @@ class ParentTrainerPlaySessionStore {
               ? Map<String, dynamic>.from(runtimeSnapshot)
               : null,
           launchId: launchId,
+          audioManifest: ExerciseAudioManifest.fromJson(map['audioManifest']),
         );
       }
 
@@ -103,6 +107,7 @@ class ParentTrainerPlaySessionStore {
     required Map<String, dynamic> params,
     String? returnPath,
     Map<String, dynamic>? runtimeSnapshot,
+    Map<String, dynamic>? audioManifest,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -112,6 +117,7 @@ class ParentTrainerPlaySessionStore {
         'params': params,
         'returnPath': isValidReturnPath(returnPath) ? returnPath : null,
         'runtimeSnapshot': runtimeSnapshot,
+        'audioManifest': audioManifest,
         if (trainerKey == 'topic-chain-flash') 'launchId': topicChainUuid(),
       }),
     );

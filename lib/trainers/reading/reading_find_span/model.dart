@@ -1,4 +1,4 @@
-import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
 const readingFindInstructionText = 'Найди в тексте';
 const readingFindInstructionMs = 2400;
@@ -8,7 +8,11 @@ String readingFindMode(Object? raw) {
 }
 
 List<String> readingFindWords(String text) {
-  return text.trim().split(RegExp(r'\s+')).where((word) => word.isNotEmpty).toList();
+  return text
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
 }
 
 List<int> readingFindTargetIndexes(List<String> words, List<String> targets) {
@@ -32,7 +36,5 @@ List<int> readingFindTargetIndexes(List<String> words, List<String> targets) {
 }
 
 String? validateReadingFindSpanRaw(Map<String, dynamic> raw) {
-  final id = raw['passageId']?.toString() ?? defaultPassageId;
-  if (passageById(id) == null) return 'Выберите текст из банка.';
-  return null;
+  return validateReadingContentSelection(raw);
 }

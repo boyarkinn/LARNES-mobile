@@ -1,7 +1,6 @@
 /// Web: `platform/src/trainers/reading/letter-first-by-sound/model.ts`
 
 import 'package:larnes_mobile/trainers/reading/letter_model.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
 import 'package:larnes_mobile/trainers/shared/seeded_rng.dart';
 
 const maxLetterChoices = 8;
@@ -15,10 +14,16 @@ class FirstBySoundRound {
   const FirstBySoundRound({
     required this.firstLetter,
     required this.slug,
+    this.label = '',
+    this.choices = const [],
+    this.audioKey,
   });
 
   final String firstLetter;
   final String slug;
+  final String label;
+  final List<String> choices;
+  final String? audioKey;
 }
 
 class BuildLetterChoicesInput {
@@ -46,65 +51,15 @@ List<String> resolveFirstBySoundPracticeLetters([String? practiceLettersRaw]) {
   );
 }
 
-bool hasFirstWordsForLetters(List<String> letters) {
-  return letters.isNotEmpty &&
-      letters.every((letter) => listFirstWordsByLetter(letter).isNotEmpty);
-}
-
-bool isValidFirstBySoundPracticeLetters([String? practiceLettersRaw]) {
-  final letters = parsePracticeLetters(practiceLettersRaw?.trim() ?? '');
-  return letters.isNotEmpty &&
-      letters.length <= maxFirstBySoundPracticeLetters &&
-      hasFirstWordsForLetters(letters);
-}
-
 List<String> cyclePracticeLetters(List<String> letters, int rounds) {
   if (letters.isEmpty || rounds <= 0) {
     return const [];
   }
 
   return [
-    for (var index = 0; index < rounds; index++) letters[index % letters.length],
+    for (var index = 0; index < rounds; index++)
+      letters[index % letters.length],
   ];
-}
-
-String? pickWordSlugForLetter(
-  String letter,
-  String? previousSlug,
-  double Function() rng,
-) {
-  final pool = listFirstWordsByLetter(letter);
-  if (pool.isEmpty) {
-    return null;
-  }
-
-  final candidates = previousSlug == null
-      ? pool
-      : pool.where((word) => word.slug != previousSlug).toList();
-  final pickFrom = candidates.isNotEmpty ? candidates : pool;
-  return pickFrom[(rng() * pickFrom.length).floor()].slug;
-}
-
-List<FirstBySoundRound> buildRoundPlan({
-  required List<String> letters,
-  required double Function() rng,
-  required int rounds,
-}) {
-  final cycle = cyclePracticeLetters(letters, rounds);
-  final plan = <FirstBySoundRound>[];
-  String? previousSlug;
-
-  for (final letter in cycle) {
-    final slug = pickWordSlugForLetter(letter, previousSlug, rng);
-    if (slug == null) {
-      continue;
-    }
-
-    plan.add(FirstBySoundRound(firstLetter: letter, slug: slug));
-    previousSlug = slug;
-  }
-
-  return plan;
 }
 
 List<String> buildLetterChoices(BuildLetterChoicesInput input) {
@@ -179,4 +134,23 @@ List<String> _shuffleLetters(List<String> items, double Function() rng) {
   }
 
   return next;
+}
+
+List<FirstBySoundRound> firstBySoundRoundsFromPayload(
+  Map<String, dynamic>? payload,
+) {
+  final rounds = payload?['rounds'];
+  if (rounds is! List) return const [];
+  return rounds.whereType<Map>().map((raw) {
+    final audio = raw['audio'];
+    return FirstBySoundRound(
+      firstLetter: raw['firstLetter'].toString(),
+      slug: raw['slug'].toString(),
+      label: raw['label']?.toString() ?? '',
+      choices: (raw['choices'] as List? ?? const [])
+          .map((item) => item.toString())
+          .toList(),
+      audioKey: audio is Map ? audio['semanticKey']?.toString() : null,
+    );
+  }).toList();
 }

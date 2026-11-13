@@ -89,7 +89,9 @@ class DirectionTrack {
       programId: json['programId'] as String?,
       progressStatus: json['progressStatus'] == null
           ? null
-          : ParentProgramProgressStatus.fromApiValue(json['progressStatus'] as String?),
+          : ParentProgramProgressStatus.fromApiValue(
+              json['progressStatus'] as String?,
+            ),
       title: json['title'] as String?,
     );
   }
@@ -132,15 +134,21 @@ class ParentProgramPlayStep {
     required this.isLastInLesson,
     required this.isLastInProgram,
     this.audioManifest,
+    this.runtimeSnapshot,
   });
 
   factory ParentProgramPlayStep.fromJson(Map<String, dynamic> json) {
     final rawParams = json['params'];
     return ParentProgramPlayStep(
       audioManifest: ExerciseAudioManifest.fromJson(json['audioManifest']),
+      runtimeSnapshot: json['runtimeSnapshot'] is Map
+          ? Map<String, dynamic>.from(json['runtimeSnapshot'] as Map)
+          : null,
       id: json['id'] as String,
       trainerKey: json['trainerKey'] as String,
-      params: rawParams is Map ? Map<String, dynamic>.from(rawParams) : const {},
+      params: rawParams is Map
+          ? Map<String, dynamic>.from(rawParams)
+          : const {},
       topicOrdinal: json['topicOrdinal'] as int? ?? 0,
       lessonOrdinal: json['lessonOrdinal'] as int? ?? 0,
       isLastInLesson: json['isLastInLesson'] as bool? ?? false,
@@ -156,6 +164,7 @@ class ParentProgramPlayStep {
   final bool isLastInLesson;
   final bool isLastInProgram;
   final ExerciseAudioManifest? audioManifest;
+  final Map<String, dynamic>? runtimeSnapshot;
 }
 
 enum ParentProgramUnavailableReason {
@@ -189,6 +198,7 @@ class ParentProgramPlaySnapshot {
     required this.lessonOrdinal,
     required this.steps,
     this.unavailableReason,
+    this.contentBankError,
   });
 
   factory ParentProgramPlaySnapshot.fromJson(Map<String, dynamic> json) {
@@ -208,6 +218,7 @@ class ParentProgramPlaySnapshot {
       topicOrdinal: json['topicOrdinal'] as int? ?? 0,
       lessonOrdinal: json['lessonOrdinal'] as int? ?? 0,
       steps: steps,
+      contentBankError: json['contentBankError'] as String?,
       unavailableReason: ParentProgramUnavailableReason.fromApiValue(
         json['unavailableReason'] as String?,
       ),
@@ -222,14 +233,13 @@ class ParentProgramPlaySnapshot {
   final int lessonOrdinal;
   final List<ParentProgramPlayStep> steps;
   final ParentProgramUnavailableReason? unavailableReason;
+  final String? contentBankError;
 
   bool get isCompleted => status == 'completed';
 }
 
 class ParentProgramCompleteLessonResult {
-  const ParentProgramCompleteLessonResult({
-    required this.progressStatus,
-  });
+  const ParentProgramCompleteLessonResult({required this.progressStatus});
 
   final String progressStatus;
 

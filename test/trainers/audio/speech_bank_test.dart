@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
-import 'package:larnes_mobile/trainers/shared/first_words/resolve_first_word.dart';
 import 'package:larnes_mobile/trainers/shared/letters_syllables/resolve_letter_syllable_audio.dart';
 
 void main() {
@@ -14,18 +13,20 @@ void main() {
     expect(isSpeechBankAudioKey('letter-name:ru:М'), isFalse);
     expect(wordAudioKey('21_замок1'), 'word:ru:21_замок1');
     expect(wordAudioKey('21_замок2'), isNot(wordAudioKey('21_замок1')));
-    expect(getFirstWordImageAsset('21_замок1'), contains('21_замок1.png'));
     expect(getLetterSyllableAudioAsset('м'), isNull);
   });
 
-  test('a published file replaces the old asset and a missing download does not', () {
-    setSpeechAudioFiles(
-      {'phoneme:ru:М': const SpeechAudioFile(path: r'C:\cache\em.mp3')},
-      catalogKeys: {'phoneme:ru:М', 'word:ru:1_арка'},
-    );
+  test(
+    'a published file replaces the old asset and a missing download does not',
+    () {
+      setSpeechAudioFiles(
+        {'phoneme:ru:М': const SpeechAudioFile(path: r'C:\cache\em.mp3')},
+        catalogKeys: {'phoneme:ru:М', 'word:ru:1_арка'},
+      );
 
-    expect(getLetterSyllableAudioAsset('м'), r'C:\cache\em.mp3');
-    expect(getFirstWordAudioAsset('1_арка'), isNull);
-    expect(getLetterSyllableAudioAsset('а'), isNull);
-  });
+      expect(getLetterSyllableAudioAsset('м'), r'C:\cache\em.mp3');
+      expect(speechPlaybackPath(wordAudioKey('1_арка')), isNull);
+      expect(getLetterSyllableAudioAsset('а'), isNull);
+    },
+  );
 }

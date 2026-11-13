@@ -18,6 +18,9 @@ import 'package:larnes_mobile/trainers/runtime/trainer_step_chrome.dart';
 import 'package:larnes_mobile/trainers/runtime/unimplemented_trainer.dart';
 import 'package:larnes_mobile/trainers/runtime/validate_params.dart';
 import 'package:larnes_mobile/trainers/shared/theme/trainer_direction_theme.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
+import 'package:larnes_mobile/trainers/reading/shared/content_bank_image.dart';
+import 'runtime_snapshot.dart';
 
 class TrainerPlayer extends StatefulWidget {
   const TrainerPlayer({
@@ -72,7 +75,11 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
     setRequiredCatalogPaths(const []);
     setObservedCatalogPaths(const []);
     catalogPlaybackIssues.addListener(_onPlaybackFailure);
-    _pinnedAudio = scopeTrainerAudioForParams(widget.audioManifest, widget.trainerKey, widget.params);
+    _pinnedAudio = scopeTrainerAudioForParams(
+      widget.audioManifest,
+      widget.trainerKey,
+      widget.params,
+    );
     _pack = catalogNeedsPreparation(_pinnedAudio)
         ? CatalogPack.preparing
         : CatalogPack.missing;
@@ -366,7 +373,17 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
       );
     }
 
-    final validated = validateTrainerParams(trainerKey, params);
+    final preparedParams = <String, dynamic>{
+      ...params,
+      '__runtimeSnapshot': ?runtimeSnapshot,
+    };
+    if (!hasPreparedReadingContent(trainerKey, preparedParams)) {
+      return _TrainerPlayerError(
+        message:
+            'Материалы упражнения не подготовлены. Откройте настройки и запустите упражнение заново.',
+      );
+    }
+    final validated = validateTrainerParams(trainerKey, preparedParams);
     if (!validated.ok) {
       return _TrainerPlayerError(message: validated.error ?? l10n.requestError);
     }
@@ -388,7 +405,13 @@ class _TrainerPlayerState extends State<TrainerPlayer> {
             onRetry: _retry,
           )
         : builder != null
-        ? builder(params: validatedParams, onComplete: onComplete)
+        ? ContentBankImageScope(
+            payload: readTrainerRuntimeSnapshot(trainerKey, validatedParams),
+            child: KeyedSubtree(
+              key: ValueKey(runtimeSnapshot ?? params['__runtimeSnapshot']),
+              child: builder(params: validatedParams, onComplete: onComplete),
+            ),
+          )
         : UnimplementedTrainer(
             title: definition.title,
             trainerKey: trainerKey,

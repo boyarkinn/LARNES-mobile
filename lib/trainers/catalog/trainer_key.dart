@@ -32,6 +32,7 @@ enum TrainerKey {
   wedgeTables('wedge-tables'),
   readingShutter('reading-shutter'),
   readingVanish('reading-vanish'),
+  readingTug('reading-tug'),
   readingUpsideDown('reading-upside-down'),
   readingPaceTrack('reading-pace-track'),
   readingNoisyText('reading-noisy-text'),

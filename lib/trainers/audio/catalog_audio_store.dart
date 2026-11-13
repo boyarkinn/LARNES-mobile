@@ -13,6 +13,7 @@ import 'package:larnes_mobile/trainers/audio/background_music.dart';
 const catalogAudioPublicBase = 'https://audio.larnes.ru';
 const catalogAudioTimeout = Duration(seconds: 10);
 const catalogAudioMaxBytes = 48 * 1024 * 1024;
+const catalogAudioMaxRecordingBytes = 64 * 1024 * 1024;
 const catalogAudioConcurrency = 4;
 const catalogStartupTimeout = Duration(seconds: 20);
 const catalogCacheReadTimeout = Duration(milliseconds: 250);
@@ -362,7 +363,10 @@ class CatalogAudioStore {
           clip.sha256,
     ]);
     final timer = Timer(
-      startupTimeout,
+      clips.any((clip) => clip.bytes > 8 * 1024 * 1024) &&
+              startupTimeout == catalogStartupTimeout
+          ? const Duration(seconds: 90)
+          : startupTimeout,
       () => scope.stop(CatalogFetchStop.timedOut),
     );
     CatalogLaunch stopped(CatalogFetchStop reason, [String? code]) {
@@ -638,11 +642,16 @@ class CatalogAudioStore {
       try {
         if (job.signal.isStopped) return null;
         // Network time starts when this request actually has a slot.
-        job.timer = Timer(timeout, () {
-          job.timedOut = true;
-          job.failureCode = 'timeout';
-          job.signal.stop(CatalogFetchStop.timedOut);
-        });
+        job.timer = Timer(
+          clip.bytes > 8 * 1024 * 1024 && timeout == catalogAudioTimeout
+              ? const Duration(seconds: 60)
+              : timeout,
+          () {
+            job.timedOut = true;
+            job.failureCode = 'timeout';
+            job.signal.stop(CatalogFetchStop.timedOut);
+          },
+        );
         final bytes = await _fetchUntilStop(_clipUri(clip), job.signal);
         if (bytes.length != clip.bytes ||
             sha256.convert(bytes).toString() != clip.sha256) {
@@ -692,7 +701,7 @@ class CatalogAudioStore {
       final builder = BytesBuilder(copy: false);
       await for (final chunk in response) {
         builder.add(chunk);
-        if (builder.length > catalogAudioMaxBytes) {
+        if (builder.length > catalogAudioMaxRecordingBytes) {
           throw const CatalogAudioFailure('memory');
         }
       }

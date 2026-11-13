@@ -2,6 +2,7 @@
 
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/abacus_warmup_plan.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture_plan.dart';
+import 'speech_alignment.dart';
 
 class PublishedAudioClip {
   const PublishedAudioClip({
@@ -15,9 +16,11 @@ class PublishedAudioClip {
     this.contentLocale,
     this.isRequired,
     this.text = '',
+    this.alignment,
   });
 
   final int bytes;
+  final SpeechAlignment? alignment;
   final String? contentLocale;
   final bool? isRequired;
   final int durationMs;
@@ -95,6 +98,11 @@ class ExerciseAudioManifest {
             semanticKey: item['semanticKey'] as String? ?? '',
             sha256: item['sha256'] as String? ?? '',
             text: item['text'] as String? ?? '',
+            alignment: SpeechAlignment.fromJson(
+              item['alignment'],
+              item['text'] as String? ?? '',
+              durationMs,
+            ),
             url: url,
             versionId: item['versionId'] as String? ?? '',
           ),

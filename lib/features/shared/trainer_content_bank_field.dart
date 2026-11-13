@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/text_passage_model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'grouped_multi_select.dart';
 import 'dart:async';
@@ -98,6 +99,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
 
   void _change(String key, Object? value) {
     setState(() {
+      if (key == 'categoryId') _selection['materialIds'] = <String>[];
       if (value == null || value == '') {
         _selection.remove(key);
       } else {
@@ -110,15 +112,18 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
   }
 
   Future<void> _load() async {
-    if (isWordListTrainerKey(widget.trainerKey)) {
+    if ((isWordListTrainerKey(widget.trainerKey) ||
+        isTextPassageTrainerKey(widget.trainerKey))) {
       _selection = {
         'libraryId': readingContentBankLibraryId,
         if (widget.trainerKey == 'reading-marathon')
           'categoryIds': readingWordListCategoryIds(_selection)
         else
           'categoryId': _selection['categoryId'],
-        'materialIds': <String>[],
-        'kind': 'word',
+        'materialIds': isTextPassageTrainerKey(widget.trainerKey)
+            ? (_selection['materialIds'] as List? ?? <String>[])
+            : <String>[],
+        'kind': isTextPassageTrainerKey(widget.trainerKey) ? 'text' : 'word',
         'locale': 'ru-RU',
       };
     }
@@ -144,7 +149,11 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
               readingWordListCategoryIds(_selection).isNotEmpty)
             'categoryIds': readingWordListCategoryIds(_selection).join(','),
         },
-        query: isWordListTrainerKey(widget.trainerKey) ? '' : _search.text,
+        query:
+            (isWordListTrainerKey(widget.trainerKey) ||
+                isTextPassageTrainerKey(widget.trainerKey))
+            ? ''
+            : _search.text,
         page: _page,
         uiLocale: Localizations.localeOf(context).languageCode,
       );
@@ -318,7 +327,9 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         ],
       );
     }
-    if (isWordListTrainerKey(widget.trainerKey)) {
+    if ((isWordListTrainerKey(widget.trainerKey) ||
+        isTextPassageTrainerKey(widget.trainerKey))) {
+      final textOnly = isTextPassageTrainerKey(widget.trainerKey);
       final categories = (_result?['categories'] as List? ?? const [])
           .whereType<Map>()
           .toList();
@@ -329,6 +340,14 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           selectedCategory?['parentId'] ?? _selection['categoryId'] ?? '';
       final roots = categories.where((c) => c['parentId'] == null).toList();
       final leaves = categories.where((c) => c['parentId'] == topic).toList();
+      final texts = <String, Map>{
+        for (final raw in [
+          ...materials,
+          ...(_result?['selectedMaterials'] as List? ?? const []),
+        ])
+          if (raw is Map) raw['materialId'].toString(): raw,
+      };
+      final textId = selected.length == 1 ? selected.single : '';
       Widget field(
         String label,
         String value,
@@ -382,6 +401,76 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
             leaves,
             true,
           ),
+          if (textOnly) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: ValueKey('text:$textId:${texts.keys.join(',')}'),
+              initialValue:
+                  selectedCategory?['parentId'] != null &&
+                      texts.containsKey(textId)
+                  ? textId
+                  : '',
+              decoration: InputDecoration(
+                labelText: _copy('Текст', 'Text', 'النص'),
+              ),
+              isExpanded: true,
+              items: [
+                DropdownMenuItem(
+                  value: '',
+                  child: Text(
+                    _copy('Выберите текст', 'Choose a text', 'اختر نصاً'),
+                  ),
+                ),
+                if (selectedCategory?['parentId'] != null)
+                  for (final entry in texts.entries)
+                    DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(
+                        entry.value['title'].toString(),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+              ],
+              validator: (value) => value == null || value.isEmpty
+                  ? _copy('Выберите текст', 'Choose a text', 'اختر نصاً')
+                  : null,
+              onChanged:
+                  _loading ||
+                      _error != null ||
+                      selectedCategory?['parentId'] == null ||
+                      texts.isEmpty
+                  ? null
+                  : (value) => _change(
+                      'materialIds',
+                      value == null || value.isEmpty ? <String>[] : [value],
+                    ),
+            ),
+            if (total > 25)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: _page > 1 && !_loading
+                        ? () {
+                            _page--;
+                            _load();
+                          }
+                        : null,
+                    icon: const Icon(Icons.chevron_left),
+                  ),
+                  Text('$_page / ${(total / 25).ceil()}'),
+                  IconButton(
+                    onPressed: _page * 25 < total && !_loading
+                        ? () {
+                            _page++;
+                            _load();
+                          }
+                        : null,
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                ],
+              ),
+          ],
           if (_loading) const LinearProgressIndicator(),
           if (_error != null)
             Text(
@@ -391,9 +480,15 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           if (!_loading && selectedCategory?['parentId'] != null && total == 0)
             Text(
               _copy(
-                'В подтеме нет русских слов.',
-                'No Russian words in this subtopic.',
-                'لا توجد كلمات روسية في هذا الموضوع الفرعي.',
+                textOnly
+                    ? 'В подтеме нет подходящих текстов.'
+                    : 'В подтеме нет русских слов.',
+                textOnly
+                    ? 'No matching texts in this subtopic.'
+                    : 'No Russian words in this subtopic.',
+                textOnly
+                    ? 'لا توجد نصوص مناسبة في هذا الموضوع الفرعي.'
+                    : 'لا توجد كلمات روسية في هذا الموضوع الفرعي.',
               ),
             ),
         ],

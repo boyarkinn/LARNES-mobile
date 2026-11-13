@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/trainers/reading/reading_shutter/model.dart';
+import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 
 void main() {
   test('spaces vanish with the previous letter', () {
@@ -13,7 +14,7 @@ void main() {
 
   test('bank text and shutter are frozen from params', () {
     final plan = readingShutterPlanFromParams({
-      'cover': 'half',
+      'disappearance': 'on',
       'edge': 'bottom',
       'letterPauseMs': 240,
       'passageId': 'short-ball',
@@ -21,8 +22,8 @@ void main() {
     });
 
     expect(plan.text, isEmpty);
-    expect(plan.cover, 'half');
-    expect(plan.edge, 'bottom');
+    expect(plan.disappearance, isTrue);
+    expect(plan.visibleHalf, 'top');
     expect(plan.letterCount, 0);
   });
 
@@ -38,10 +39,7 @@ void main() {
     expect(plan?.letterPauseMs, 180);
   });
 
-  test('empty custom text is rejected', () {
-    expect(
-      validateReadingShutterRaw({'customText': '   ', 'source': 'custom'}),
-      'Впишите текст.',
-    );
+  test('empty frozen text is rejected', () {
+    expect(readingShutterPlanFromSnapshot({'text': ''}), isNull);
   });
 }

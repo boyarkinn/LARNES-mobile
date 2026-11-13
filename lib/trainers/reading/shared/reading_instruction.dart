@@ -16,6 +16,11 @@ const readingInstructionPhrases = <String, Map<String, String>>{
     'en': 'Read, part of the text is covered',
     'ru': 'Читай, часть текста закрыта',
   },
+  'reading-tug': {
+    'ru': 'Читай вслух вместе с диктором и старайся успевать за ним.',
+    'en': 'Read aloud with the narrator and try to keep up.',
+    'ar': 'اقرأ بصوت عالٍ مع الراوي وحاول أن تواكب قراءته.',
+  },
   'reading-upside-down': {
     'ar': 'اقرأ، النص مقلوب',
     'en': 'Read, the text is upside down',

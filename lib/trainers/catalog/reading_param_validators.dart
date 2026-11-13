@@ -1,3 +1,5 @@
+import 'package:larnes_mobile/trainers/reading/shared/text_passage_model.dart';
+import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
@@ -660,19 +662,16 @@ ValidateTrainerParamsResult validateWedgeTablesParams(
 ValidateTrainerParamsResult validateReadingShutterParams(
   Map<String, dynamic> raw,
 ) {
-  final error = validateReadingShutterRaw(raw);
+  final error =
+      validateReadingShutterRaw(raw) ??
+      validateReadingContentSelection(raw, singleText: true);
   if (error != null) return _fail(error);
-
-  final plan = readingShutterPlanFromParams(raw);
   return ValidateTrainerParamsResult.success({
-    'cover': plan.cover,
-    'customText': raw['source'] == 'custom'
-        ? raw['customText']?.toString().trim() ?? ''
-        : '',
-    'edge': plan.edge,
-    'letterPauseMs': plan.letterPauseMs,
-    'passageId': raw['passageId']?.toString() ?? defaultPassageId,
-    'source': raw['source'] == 'custom' ? 'custom' : 'bank',
+    'source': 'bank',
+    'contentBank': raw['contentBank'],
+    'edge': raw['edge'] == 'top' ? 'top' : 'bottom',
+    'disappearance': raw['disappearance'] == 'on' ? 'on' : 'off',
+    'letterPauseMs': int.tryParse('${raw['letterPauseMs'] ?? 180}') ?? 180,
   });
 }
 
@@ -699,9 +698,9 @@ ValidateTrainerParamsResult validateReadingVanishParams(
 ValidateTrainerParamsResult validateReadingUpsideDownParams(
   Map<String, dynamic> raw,
 ) {
-  final error = validatePassageAssignment(raw);
+  final error = validateTextPassageParams(raw);
   if (error != null) return _fail(error);
-  return ValidateTrainerParamsResult.success(_passageSuccess(raw));
+  return ValidateTrainerParamsResult.success(textPassageParams(raw));
 }
 
 ValidateTrainerParamsResult validateReadingPaceTrackParams(

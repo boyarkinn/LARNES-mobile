@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/text_passage_model.dart';
 import 'package:larnes_mobile/features/shared/grouped_multi_select.dart';
 import 'package:larnes_mobile/features/shared/trainer_content_bank_field.dart';
 import 'package:flutter/material.dart';
@@ -114,7 +115,10 @@ class TrainerPlayPanelState extends State<TrainerPlayPanel> {
     final payload = buildPlayParamsPayload(config, _values);
     if (usesReadingContentBank(widget.trainerKey) &&
         payload['source'] != 'custom') {
-      final error = validateReadingContentSelection(payload);
+      final error = validateReadingContentSelection(
+        payload,
+        singleText: isTextPassageTrainerKey(widget.trainerKey),
+      );
       if (error != null) {
         ScaffoldMessenger.maybeOf(
           context,

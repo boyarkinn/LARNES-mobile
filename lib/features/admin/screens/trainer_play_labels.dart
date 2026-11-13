@@ -6,31 +6,91 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'topicLessonLabel':
       return _passageLabel(l10n, ru: 'Урок', en: 'Lesson', ar: 'الدرس');
     case 'warmupTypeLabel':
-      return _passageLabel(l10n, ru: 'Вид разминки', en: 'Warm-up type', ar: 'نوع الإحماء');
+      return _passageLabel(
+        l10n,
+        ru: 'Вид разминки',
+        en: 'Warm-up type',
+        ar: 'نوع الإحماء',
+      );
     case 'withExplanationsLabel':
-      return _passageLabel(l10n, ru: 'Озвучивать пояснения', en: 'Play spoken explanations', ar: 'تشغيل الشرح الصوتي');
+      return _passageLabel(
+        l10n,
+        ru: 'Озвучивать пояснения',
+        en: 'Play spoken explanations',
+        ar: 'تشغيل الشرح الصوتي',
+      );
     case 'warmupTopicNarrationLabel':
-      return _passageLabel(l10n, ru: 'Озвучка', en: 'Narration', ar: 'الشرح الصوتي');
+      return _passageLabel(
+        l10n,
+        ru: 'Озвучка',
+        en: 'Narration',
+        ar: 'الشرح الصوتي',
+      );
     case 'warmupHandRight':
-      return _passageLabel(l10n, ru: 'правая рука', en: 'right hand', ar: 'اليد اليمنى');
+      return _passageLabel(
+        l10n,
+        ru: 'правая рука',
+        en: 'right hand',
+        ar: 'اليد اليمنى',
+      );
     case 'warmupHandLeft':
-      return _passageLabel(l10n, ru: 'левая рука', en: 'left hand', ar: 'اليد اليسرى');
+      return _passageLabel(
+        l10n,
+        ru: 'левая рука',
+        en: 'left hand',
+        ar: 'اليد اليسرى',
+      );
     case 'warmupHandBoth':
-      return _passageLabel(l10n, ru: 'обе руки', en: 'both hands', ar: 'كلتا اليدين');
+      return _passageLabel(
+        l10n,
+        ru: 'обе руки',
+        en: 'both hands',
+        ar: 'كلتا اليدين',
+      );
     case 'warmupTopicsSearch':
-      return _passageLabel(l10n, ru: 'Поиск тем разминки', en: 'Search warm-up topics', ar: 'ابحث عن مواضيع الإحماء');
+      return _passageLabel(
+        l10n,
+        ru: 'Поиск тем разминки',
+        en: 'Search warm-up topics',
+        ar: 'ابحث عن مواضيع الإحماء',
+      );
     case 'warmupTopicsSelected':
-      return _passageLabel(l10n, ru: 'Выбрано тем', en: 'Topics selected', ar: 'المواضيع المحددة');
+      return _passageLabel(
+        l10n,
+        ru: 'Выбрано тем',
+        en: 'Topics selected',
+        ar: 'المواضيع المحددة',
+      );
     case 'warmupTopicsClear':
-      return _passageLabel(l10n, ru: 'Снять выбор', en: 'Clear selection', ar: 'إلغاء التحديد');
+      return _passageLabel(
+        l10n,
+        ru: 'Снять выбор',
+        en: 'Clear selection',
+        ar: 'إلغاء التحديد',
+      );
     case 'warmupTopicsLabel':
-      return _passageLabel(l10n, ru: 'Темы разминки', en: 'Warm-up topics', ar: 'مواضيع الإحماء');
+      return _passageLabel(
+        l10n,
+        ru: 'Темы разминки',
+        en: 'Warm-up topics',
+        ar: 'مواضيع الإحماء',
+      );
     case 'warmupAllTopicsLabel':
-      return _passageLabel(l10n, ru: 'Все темы', en: 'All topics', ar: 'جميع المواضيع');
+      return _passageLabel(
+        l10n,
+        ru: 'Все темы',
+        en: 'All topics',
+        ar: 'جميع المواضيع',
+      );
     case 'allOptionsLabel':
       return _passageLabel(l10n, ru: 'Все', en: 'All', ar: 'الكل');
     case 'syllableTypeLabel':
-      return _passageLabel(l10n, ru: 'Тип слогов', en: 'Syllable type', ar: 'نوع المقاطع');
+      return _passageLabel(
+        l10n,
+        ru: 'Тип слогов',
+        en: 'Syllable type',
+        ar: 'نوع المقاطع',
+      );
     case 'letterCaseLabel':
       return l10n.adminTrainerPlayLetterCaseLabel;
     case 'wordCaseLabel':
@@ -118,9 +178,19 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'totalRodsLabel':
       return l10n.adminTrainerPlayTotalRodsLabel;
     case 'reviewErrorsLabel':
-      return _passageLabel(l10n, ru: 'Разбирать ошибки', en: 'Review mistakes', ar: 'مراجعة الأخطاء');
+      return _passageLabel(
+        l10n,
+        ru: 'Разбирать ошибки',
+        en: 'Review mistakes',
+        ar: 'مراجعة الأخطاء',
+      );
     case 'errorReviewStepSecLabel':
-      return _passageLabel(l10n, ru: 'Скорость разбора ошибки, сек/действие', en: 'Mistake review speed, sec/action', ar: 'سرعة مراجعة الخطأ، ثانية/خطوة');
+      return _passageLabel(
+        l10n,
+        ru: 'Скорость разбора ошибки, сек/действие',
+        en: 'Mistake review speed, sec/action',
+        ar: 'سرعة مراجعة الخطأ، ثانية/خطوة',
+      );
     case 'stepPauseSecLabel':
       return l10n.adminTrainerPlayStepPauseSecLabel;
     case 'exampleStringLabel':
@@ -152,39 +222,109 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'targetModeLabel':
       return l10n.adminTrainerPlayTargetModeLabel;
     case 'vanishSourceLabel':
-      return _passageLabel(l10n, ru: 'Откуда текст', en: 'Text source', ar: 'مصدر النص');
+      return _passageLabel(
+        l10n,
+        ru: 'Откуда текст',
+        en: 'Text source',
+        ar: 'مصدر النص',
+      );
     case 'vanishPassageLabel':
       return _passageLabel(l10n, ru: 'Текст', en: 'Text', ar: 'النص');
     case 'vanishCustomTextLabel':
-      return _passageLabel(l10n, ru: 'Свой текст', en: 'My own text', ar: 'نصي');
+      return _passageLabel(
+        l10n,
+        ru: 'Свой текст',
+        en: 'My own text',
+        ar: 'نصي',
+      );
     case 'vanishPauseLabel':
-      return _passageLabel(l10n, ru: 'Пауза на букву, мс', en: 'Pause per letter, ms', ar: 'وقفة لكل حرف، مللي ثانية');
+      return _passageLabel(
+        l10n,
+        ru: 'Пауза на букву, мс',
+        en: 'Pause per letter, ms',
+        ar: 'وقفة لكل حرف، مللي ثانية',
+      );
     case 'shutterEdgeLabel':
-      return _passageLabel(l10n, ru: 'Край шторки', en: 'Shutter edge', ar: 'طرف الستارة');
-    case 'shutterCoverLabel':
-      return _passageLabel(l10n, ru: 'Сколько закрыто', en: 'How much is covered', ar: 'مقدار التغطية');
+      return _passageLabel(
+        l10n,
+        ru: 'Видимая часть строки',
+        en: 'Visible part of each line',
+        ar: 'الجزء المرئي من كل سطر',
+      );
+    case 'disappearanceLabel':
+      return _passageLabel(
+        l10n,
+        ru: 'Исчезновение',
+        en: 'Disappearance',
+        ar: 'اختفاء النص',
+      );
     case 'paceTrackLabel':
       return _passageLabel(l10n, ru: 'Дорожка', en: 'Track', ar: 'المسار');
     case 'noiseLabel':
       return _passageLabel(l10n, ru: 'Помеха', en: 'Noise', ar: 'التشويش');
     case 'blocksWordsLabel':
-      return _passageLabel(l10n, ru: 'Слов в строке', en: 'Words per line', ar: 'كلمات في السطر');
+      return _passageLabel(
+        l10n,
+        ru: 'Слов в строке',
+        en: 'Words per line',
+        ar: 'كلمات في السطر',
+      );
     case 'flashKindLabel':
-      return _passageLabel(l10n, ru: 'Что показываем', en: 'What to show', ar: 'ماذا نعرض');
+      return _passageLabel(
+        l10n,
+        ru: 'Что показываем',
+        en: 'What to show',
+        ar: 'ماذا نعرض',
+      );
     case 'flashDurationLabel':
-      return _passageLabel(l10n, ru: 'Длительность, мс', en: 'Duration, ms', ar: 'المدة، مللي ثانية');
+      return _passageLabel(
+        l10n,
+        ru: 'Длительность, мс',
+        en: 'Duration, ms',
+        ar: 'المدة، مللي ثانية',
+      );
     case 'flashShowsLabel':
-      return _passageLabel(l10n, ru: 'Число показов', en: 'Number of flashes', ar: 'عدد الومضات');
+      return _passageLabel(
+        l10n,
+        ru: 'Число показов',
+        en: 'Number of flashes',
+        ar: 'عدد الومضات',
+      );
     case 'fixationFragmentLabel':
-      return _passageLabel(l10n, ru: 'Вид фрагмента', en: 'Fragment', ar: 'نوع الجزء');
+      return _passageLabel(
+        l10n,
+        ru: 'Вид фрагмента',
+        en: 'Fragment',
+        ar: 'نوع الجزء',
+      );
     case 'fixationPauseLabel':
-      return _passageLabel(l10n, ru: 'Пауза, мс', en: 'Pause, ms', ar: 'الوقفة، مللي ثانية');
+      return _passageLabel(
+        l10n,
+        ru: 'Пауза, мс',
+        en: 'Pause, ms',
+        ar: 'الوقفة، مللي ثانية',
+      );
     case 'echoSpanLabel':
-      return _passageLabel(l10n, ru: 'Предложений во фрагменте', en: 'Sentences in the fragment', ar: 'عدد الجمل في المقطع');
+      return _passageLabel(
+        l10n,
+        ru: 'Предложений во фрагменте',
+        en: 'Sentences in the fragment',
+        ar: 'عدد الجمل في المقطع',
+      );
     case 'echoPauseLabel':
-      return _passageLabel(l10n, ru: 'Пауза на повтор, мс', en: 'Repeat pause, ms', ar: 'وقفة التكرار، مللي ثانية');
+      return _passageLabel(
+        l10n,
+        ru: 'Пауза на повтор, мс',
+        en: 'Repeat pause, ms',
+        ar: 'وقفة التكرار، مللي ثانية',
+      );
     case 'echoHighlightLabel':
-      return _passageLabel(l10n, ru: 'Подсветка', en: 'Highlight', ar: 'التظليل');
+      return _passageLabel(
+        l10n,
+        ru: 'Подсветка',
+        en: 'Highlight',
+        ar: 'التظليل',
+      );
     case 'echoRepeatLabel':
       return _passageLabel(l10n, ru: 'Повтор', en: 'Repeat', ar: 'التكرار');
     case 'phraseModeLabel':
@@ -194,7 +334,12 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'clozeModeLabel':
       return _passageLabel(l10n, ru: 'Режим', en: 'Mode', ar: 'الوضع');
     case 'storyCardsLabel':
-      return _passageLabel(l10n, ru: 'Сколько предложений', en: 'How many sentences', ar: 'عدد الجمل');
+      return _passageLabel(
+        l10n,
+        ru: 'Сколько предложений',
+        en: 'How many sentences',
+        ar: 'عدد الجمل',
+      );
     case 'anagramWordLabel':
       return _passageLabel(l10n, ru: 'Слово', en: 'Word', ar: 'الكلمة');
     case 'anagramHintLabel':
@@ -202,7 +347,12 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'anagramPicture':
       return _passageLabel(l10n, ru: 'Картинка', en: 'Picture', ar: 'صورة');
     case 'anagramDefinition':
-      return _passageLabel(l10n, ru: 'Определение', en: 'Definition', ar: 'تعريف');
+      return _passageLabel(
+        l10n,
+        ru: 'Определение',
+        en: 'Definition',
+        ar: 'تعريف',
+      );
     case 'anagramSentence':
       return _passageLabel(l10n, ru: 'Предложение', en: 'Sentence', ar: 'جملة');
     case 'mazeModeLabel':
@@ -212,7 +362,12 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'mazeSentence':
       return _passageLabel(l10n, ru: 'Предложение', en: 'Sentence', ar: 'جملة');
     case 'gridStepLabel':
-      return _passageLabel(l10n, ru: 'Шаг сетки', en: 'Grid step', ar: 'خطوة الشبكة');
+      return _passageLabel(
+        l10n,
+        ru: 'Шаг сетки',
+        en: 'Grid step',
+        ar: 'خطوة الشبكة',
+      );
     case 'gridStepFine':
       return _passageLabel(l10n, ru: 'Мелкий', en: 'Fine', ar: 'ناعم');
     case 'gridStepMedium':
@@ -220,9 +375,19 @@ String trainerPlayFieldLabel(AppLocalizations l10n, String labelKey) {
     case 'gridStepWide':
       return _passageLabel(l10n, ru: 'Крупный', en: 'Wide', ar: 'واسع');
     case 'linePaceLabel':
-      return _passageLabel(l10n, ru: 'Время на строку, мс', en: 'Time per line, ms', ar: 'وقت السطر، مللي ثانية');
+      return _passageLabel(
+        l10n,
+        ru: 'Время на строку, мс',
+        en: 'Time per line, ms',
+        ar: 'وقت السطر، مللي ثانية',
+      );
     case 'lineKeepLabel':
-      return _passageLabel(l10n, ru: 'Прошлые строки', en: 'Earlier lines', ar: 'الأسطر السابقة');
+      return _passageLabel(
+        l10n,
+        ru: 'Прошлые строки',
+        en: 'Earlier lines',
+        ar: 'الأسطر السابقة',
+      );
     case 'lineKeepKeep':
       return _passageLabel(l10n, ru: 'Оставлять', en: 'Keep', ar: 'تبقى');
     case 'lineKeepDrop':
@@ -244,7 +409,10 @@ String _passageLabel(
   return ru;
 }
 
-String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption option) {
+String trainerPlayOptionLabel(
+  AppLocalizations l10n,
+  TrainerPlayFieldOption option,
+) {
   if (option.label != null && option.label!.isNotEmpty) {
     return option.label!;
   }
@@ -258,56 +426,122 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
     final suffix = labelKey.substring(friendBrotherPrefix.length);
     if (const {'6', '7', '8', '9'}.contains(suffix)) {
       const arabicDigits = {'6': '٦', '7': '٧', '8': '٨', '9': '٩'};
-      return _passageLabel(l10n, ru: 'Друг + брат $suffix', en: 'Friend + brother $suffix', ar: 'الصديق والأخ ${arabicDigits[suffix]}');
+      return _passageLabel(
+        l10n,
+        ru: 'Друг + брат $suffix',
+        en: 'Friend + brother $suffix',
+        ar: 'الصديق والأخ ${arabicDigits[suffix]}',
+      );
     }
   }
   if (labelKey.startsWith(friendPrefix)) {
     final suffix = labelKey.substring(friendPrefix.length);
     if (RegExp(r'^[1-9]$').hasMatch(suffix)) {
-      const arabicDigits = {'1': '١', '2': '٢', '3': '٣', '4': '٤', '5': '٥', '6': '٦', '7': '٧', '8': '٨', '9': '٩'};
-      return _passageLabel(l10n, ru: 'Друг $suffix', en: 'Friend $suffix', ar: 'الصديق ${arabicDigits[suffix]}');
+      const arabicDigits = {
+        '1': '١',
+        '2': '٢',
+        '3': '٣',
+        '4': '٤',
+        '5': '٥',
+        '6': '٦',
+        '7': '٧',
+        '8': '٨',
+        '9': '٩',
+      };
+      return _passageLabel(
+        l10n,
+        ru: 'Друг $suffix',
+        en: 'Friend $suffix',
+        ar: 'الصديق ${arabicDigits[suffix]}',
+      );
     }
   }
   if (labelKey.startsWith(brotherPrefix)) {
     final suffix = labelKey.substring(brotherPrefix.length);
     if (const {'1', '2', '3', '4'}.contains(suffix)) {
       const arabicDigits = {'1': '١', '2': '٢', '3': '٣', '4': '٤'};
-      return _passageLabel(l10n, ru: 'Брат $suffix', en: 'Brother $suffix', ar: 'الأخ ${arabicDigits[suffix]}');
+      return _passageLabel(
+        l10n,
+        ru: 'Брат $suffix',
+        en: 'Brother $suffix',
+        ar: 'الأخ ${arabicDigits[suffix]}',
+      );
     }
   }
   if (labelKey.startsWith(lessonPrefix)) {
     final suffix = labelKey.substring(lessonPrefix.length);
     if (suffix == 'Tens') {
-      return _passageLabel(l10n, ru: 'Просто десятки', en: 'Simple tens', ar: 'العشرات البسيطة');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто десятки',
+        en: 'Simple tens',
+        ar: 'العشرات البسيطة',
+      );
     }
     if (suffix == '1119') {
-      return _passageLabel(l10n, ru: 'Просто 11–19', en: 'Simple 11–19', ar: 'الأعداد من ١١ إلى ١٩');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто 11–19',
+        en: 'Simple 11–19',
+        ar: 'الأعداد من ١١ إلى ١٩',
+      );
     }
     if (suffix == 'Hundreds') {
-      return _passageLabel(l10n, ru: 'Просто сотни', en: 'Simple hundreds', ar: 'المئات البسيطة');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто сотни',
+        en: 'Simple hundreds',
+        ar: 'المئات البسيطة',
+      );
     }
     if (RegExp(r'^(?:[1-9]|44|55|66|77|88|99|000)$').hasMatch(suffix)) {
       const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
       final arabicNumber = suffix.replaceAllMapped(
-        RegExp(r'[0-9]'), (match) => digits[int.parse(match.group(0)!)],
+        RegExp(r'[0-9]'),
+        (match) => digits[int.parse(match.group(0)!)],
       );
-      return _passageLabel(l10n, ru: 'Просто $suffix', en: 'Simple $suffix', ar: 'البسيط $arabicNumber');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто $suffix',
+        en: 'Simple $suffix',
+        ar: 'البسيط $arabicNumber',
+      );
     }
   }
 
   switch (option.labelKey) {
     case 'warmupSimple9':
-      return _passageLabel(l10n, ru: 'Просто 1–9 (правая рука)', en: 'Simple 1–9 (right hand)', ar: 'البسيط ١–٩ (اليد اليمنى)');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто 1–9 (правая рука)',
+        en: 'Simple 1–9 (right hand)',
+        ar: 'البسيط ١–٩ (اليد اليمنى)',
+      );
     case 'warmupSimpleTens':
-      return _passageLabel(l10n, ru: 'Просто десятки (левая рука)', en: 'Simple tens (left hand)', ar: 'العشرات البسيطة (اليد اليسرى)');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто десятки (левая рука)',
+        en: 'Simple tens (left hand)',
+        ar: 'العشرات البسيطة (اليد اليسرى)',
+      );
     case 'warmupSimple2Digit':
-      return _passageLabel(l10n, ru: 'Просто двузначные (обе руки)', en: 'Simple two-digit numbers (both hands)', ar: 'الأعداد المكونة من رقمين (كلتا اليدين)');
+      return _passageLabel(
+        l10n,
+        ru: 'Просто двузначные (обе руки)',
+        en: 'Simple two-digit numbers (both hands)',
+        ar: 'الأعداد المكونة من رقمين (كلتا اليدين)',
+      );
     case 'warmupBrothers':
       return _passageLabel(l10n, ru: 'Братья', en: 'Brothers', ar: 'الإخوة');
     case 'warmupFriends':
       return _passageLabel(l10n, ru: 'Друзья', en: 'Friends', ar: 'الأصدقاء');
     case 'syllableTypeAll':
-      return _passageLabel(l10n, ru: 'Оба вида', en: 'Both types', ar: 'النوعان');
+      return _passageLabel(
+        l10n,
+        ru: 'Оба вида',
+        en: 'Both types',
+        ar: 'النوعان',
+      );
     case 'syllableTypeOpen':
       return _passageLabel(l10n, ru: 'Открытые', en: 'Open', ar: 'مفتوحة');
     case 'syllableTypeClosed':
@@ -361,47 +595,112 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
     case 'schulteToggleYes':
       return l10n.adminTrainerPlaySchulteToggleYes;
     case 'vanishSourceBank':
-      return _passageLabel(l10n, ru: 'Из банка', en: 'From the bank', ar: 'من المجموعة');
+      return _passageLabel(
+        l10n,
+        ru: 'Из банка',
+        en: 'From the bank',
+        ar: 'من المجموعة',
+      );
     case 'vanishSourceCustom':
-      return _passageLabel(l10n, ru: 'Свой текст', en: 'My own text', ar: 'نصي');
+      return _passageLabel(
+        l10n,
+        ru: 'Свой текст',
+        en: 'My own text',
+        ar: 'نصي',
+      );
     case 'shutterTop':
-      return _passageLabel(l10n, ru: 'Сверху', en: 'From the top', ar: 'من الأعلى');
+      return _passageLabel(l10n, ru: 'Нижняя', en: 'Lower', ar: 'السفلي');
     case 'shutterBottom':
-      return _passageLabel(l10n, ru: 'Снизу', en: 'From the bottom', ar: 'من الأسفل');
-    case 'shutterQuarter':
-      return _passageLabel(l10n, ru: 'Четверть', en: 'A quarter', ar: 'الربع');
-    case 'shutterHalf':
-      return _passageLabel(l10n, ru: 'Половина', en: 'Half', ar: 'النصف');
+      return _passageLabel(l10n, ru: 'Верхняя', en: 'Upper', ar: 'العلوي');
+    case 'disappearanceOff':
+      return _passageLabel(l10n, ru: 'Нет', en: 'No', ar: 'لا');
+    case 'disappearanceOn':
+      return _passageLabel(l10n, ru: 'Да', en: 'Yes', ar: 'نعم');
     case 'paceMetronome':
-      return _passageLabel(l10n, ru: 'Метроном', en: 'Metronome', ar: 'المترونوم');
+      return _passageLabel(
+        l10n,
+        ru: 'Метроном',
+        en: 'Metronome',
+        ar: 'المترونوم',
+      );
     case 'paceZhinkin':
-      return _passageLabel(l10n, ru: 'Ритм Жинкина', en: 'Zhinkin rhythm', ar: 'إيقاع جينكين');
+      return _passageLabel(
+        l10n,
+        ru: 'Ритм Жинкина',
+        en: 'Zhinkin rhythm',
+        ar: 'إيقاع جينكين',
+      );
     case 'paceRhythmic':
-      return _passageLabel(l10n, ru: 'Ритмическое чтение', en: 'Rhythmic reading', ar: 'القراءة الإيقاعية');
+      return _passageLabel(
+        l10n,
+        ru: 'Ритмическое чтение',
+        en: 'Rhythmic reading',
+        ar: 'القراءة الإيقاعية',
+      );
     case 'paceCountdown':
-      return _passageLabel(l10n, ru: 'Обратный счет', en: 'Countdown', ar: 'العد العكسي');
+      return _passageLabel(
+        l10n,
+        ru: 'Обратный счет',
+        en: 'Countdown',
+        ar: 'العد العكسي',
+      );
     case 'noiseStrokes':
       return _passageLabel(l10n, ru: 'Штрихи', en: 'Strokes', ar: 'خطوط');
     case 'noiseExtraLetters':
-      return _passageLabel(l10n, ru: 'Лишние буквы', en: 'Extra letters', ar: 'حروف زائدة');
+      return _passageLabel(
+        l10n,
+        ru: 'Лишние буквы',
+        en: 'Extra letters',
+        ar: 'حروف زائدة',
+      );
     case 'noiseExtraWords':
-      return _passageLabel(l10n, ru: 'Лишние слова', en: 'Extra words', ar: 'كلمات زائدة');
+      return _passageLabel(
+        l10n,
+        ru: 'Лишние слова',
+        en: 'Extra words',
+        ar: 'كلمات زائدة',
+      );
     case 'noiseZigzag':
       return _passageLabel(l10n, ru: 'Зигзаг', en: 'Zigzag', ar: 'متعرج');
     case 'noiseCircle':
-      return _passageLabel(l10n, ru: 'По кругу', en: 'In a circle', ar: 'على دائرة');
+      return _passageLabel(
+        l10n,
+        ru: 'По кругу',
+        en: 'In a circle',
+        ar: 'على دائرة',
+      );
     case 'noiseWave':
       return _passageLabel(l10n, ru: 'Волна', en: 'Wave', ar: 'موجة');
     case 'noiseFlip':
-      return _passageLabel(l10n, ru: 'То прямо, то вверх ногами', en: 'Upright, then upside down', ar: 'مستقيم ثم مقلوب');
+      return _passageLabel(
+        l10n,
+        ru: 'То прямо, то вверх ногами',
+        en: 'Upright, then upside down',
+        ar: 'مستقيم ثم مقلوب',
+      );
     case 'flashLetters':
-      return _passageLabel(l10n, ru: 'Несколько букв', en: 'Several letters', ar: 'عدة حروف');
+      return _passageLabel(
+        l10n,
+        ru: 'Несколько букв',
+        en: 'Several letters',
+        ar: 'عدة حروف',
+      );
     case 'flashLine':
-      return _passageLabel(l10n, ru: 'Короткая строка', en: 'Short line', ar: 'سطر قصير');
+      return _passageLabel(
+        l10n,
+        ru: 'Короткая строка',
+        en: 'Short line',
+        ar: 'سطر قصير',
+      );
     case 'fixationWord':
       return _passageLabel(l10n, ru: 'Слово', en: 'Word', ar: 'كلمة');
     case 'fixationPair':
-      return _passageLabel(l10n, ru: 'Два слова', en: 'Two words', ar: 'كلمتان');
+      return _passageLabel(
+        l10n,
+        ru: 'Два слова',
+        en: 'Two words',
+        ar: 'كلمتان',
+      );
     case 'fixationSentence':
       return _passageLabel(l10n, ru: 'Предложение', en: 'Sentence', ar: 'جملة');
     case 'echoHighlightOn':
@@ -409,17 +708,47 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
     case 'echoHighlightOff':
       return _passageLabel(l10n, ru: 'Выключена', en: 'Off', ar: 'متوقفة');
     case 'echoRepeatOn':
-      return _passageLabel(l10n, ru: 'Можно ещё раз', en: 'Again is allowed', ar: 'يمكن الإعادة');
+      return _passageLabel(
+        l10n,
+        ru: 'Можно ещё раз',
+        en: 'Again is allowed',
+        ar: 'يمكن الإعادة',
+      );
     case 'echoRepeatOff':
-      return _passageLabel(l10n, ru: 'Без кнопки', en: 'No button', ar: 'بدون زر');
+      return _passageLabel(
+        l10n,
+        ru: 'Без кнопки',
+        en: 'No button',
+        ar: 'بدون زر',
+      );
     case 'phraseFade':
-      return _passageLabel(l10n, ru: 'Границы гаснут', en: 'Boundaries fade', ar: 'تختفي الحدود');
+      return _passageLabel(
+        l10n,
+        ru: 'Границы гаснут',
+        en: 'Boundaries fade',
+        ar: 'تختفي الحدود',
+      );
     case 'phrasePlace':
-      return _passageLabel(l10n, ru: 'Расставь границы', en: 'Place the boundaries', ar: 'ضع الحدود');
+      return _passageLabel(
+        l10n,
+        ru: 'Расставь границы',
+        en: 'Place the boundaries',
+        ar: 'ضع الحدود',
+      );
     case 'findWord':
-      return _passageLabel(l10n, ru: 'Найди слово', en: 'Find the word', ar: 'ابحث عن الكلمة');
+      return _passageLabel(
+        l10n,
+        ru: 'Найди слово',
+        en: 'Find the word',
+        ar: 'ابحث عن الكلمة',
+      );
     case 'findAnswer':
-      return _passageLabel(l10n, ru: 'Найди ответ', en: 'Find the answer', ar: 'ابحث عن الإجابة');
+      return _passageLabel(
+        l10n,
+        ru: 'Найди ответ',
+        en: 'Find the answer',
+        ar: 'ابحث عن الإجابة',
+      );
     case 'clozeSimple':
       return _passageLabel(l10n, ru: 'Просто', en: 'Simple', ar: 'بسيط');
     case 'clozeStory':
@@ -429,6 +758,10 @@ String trainerPlayOptionLabel(AppLocalizations l10n, TrainerPlayFieldOption opti
   }
 }
 
-bool trainerPlayFieldVisible(TrainerPlayConfig config, TrainerPlayField field, Map<String, String> values) {
+bool trainerPlayFieldVisible(
+  TrainerPlayConfig config,
+  TrainerPlayField field,
+  Map<String, String> values,
+) {
   return field.isVisible(values);
 }

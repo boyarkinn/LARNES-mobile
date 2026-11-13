@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:larnes_mobile/trainers/reading/reading_tug/reading_tug_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/reading_marathon/reading_marathon_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/word_cubes/definition.dart';
 import 'package:larnes_mobile/trainers/reading/word_cubes/word_cubes_trainer.dart';
@@ -166,6 +167,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       ReadingShutterTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingVanish: ({required params, onComplete}) =>
       ReadingVanishTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingTug: ({required params, onComplete}) =>
+      ReadingTugTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingUpsideDown: ({required params, onComplete}) =>
       ReadingUpsideDownTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingPaceTrack: ({required params, onComplete}) =>
@@ -473,7 +476,7 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
   ),
   TrainerKey.readingShutter: TrainerDefinition(
     key: TrainerKey.readingShutter,
-    title: 'Шторка',
+    title: 'Чтение по полстроки',
     direction: TrainerDirection.speedReading,
     isInteractive: true,
     validate: validateReadingShutterParams,
@@ -484,6 +487,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.speedReading,
     isInteractive: true,
     validate: validateReadingVanishParams,
+  ),
+  TrainerKey.readingTug: TrainerDefinition(
+    key: TrainerKey.readingTug,
+    title: 'Буксир',
+    direction: TrainerDirection.speedReading,
+    isInteractive: true,
+    validate: validateReadingTugParams,
   ),
   TrainerKey.readingUpsideDown: TrainerDefinition(
     key: TrainerKey.readingUpsideDown,

@@ -11,6 +11,7 @@ const readingContentBankTrainerKeys = {
   'reading-shutter',
   'reading-vanish',
   'reading-upside-down',
+  'reading-tug',
   'reading-pace-track',
   'reading-noisy-text',
   'reading-pointer',
@@ -39,7 +40,10 @@ bool usesReadingContentBank(String trainerKey) =>
 
 /// Assignment validation never resolves content on the device. Historical full
 /// snapshots remain valid even after their source material has been removed.
-String? validateReadingContentSelection(Map<String, dynamic> raw) {
+String? validateReadingContentSelection(
+  Map<String, dynamic> raw, {
+  bool singleText = false,
+}) {
   if (raw['__runtimeSnapshot'] is Map) return null;
   final selection = raw['contentBank'];
   if (selection is! Map ||
@@ -47,6 +51,12 @@ String? validateReadingContentSelection(Map<String, dynamic> raw) {
       selection['materialIds'] is! List ||
       (selection['materialIds'] as List).isEmpty) {
     return 'Выберите материалы из банка.';
+  }
+  if (singleText &&
+      (selection['categoryId'] is! String ||
+          (selection['categoryId'] as String).isEmpty ||
+          (selection['materialIds'] as List).length != 1)) {
+    return 'Выберите подтему и конкретный текст.';
   }
   return null;
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
@@ -6,7 +7,7 @@ import 'package:larnes_mobile/trainers/reading/reading_reread/model.dart';
 import 'package:larnes_mobile/trainers/reading/shared/passage.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
-import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_scrollable_scene.dart';
 
 const readingRereadInstructionText = 'Читай вслух два раза';
 const readingRereadInstructionMs = 2400;
@@ -78,6 +79,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
         _first = null;
         _second = null;
         _selectedIndex = -1;
+        _questionIndex = 0;
       });
       _armInstruction();
     }
@@ -93,8 +95,11 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
     final payload = readTrainerRuntimeSnapshot('reading-reread', widget.params);
     _text = payload?['text']?.toString() ?? resolvePassageText(widget.params);
     _questions = readingRereadQuestionsFromPayload(payload);
-    _questionIndex = 0;
-    _resetToken = '$_text|${_question?.prompt ?? ''}';
+    _resetToken = jsonEncode([
+      _text,
+      for (final question in _questions)
+        [question.prompt, question.choices, question.correctIndex],
+    ]);
   }
 
   void _cancelTimers() {
@@ -219,7 +224,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
     }
 
     if (_phase == 'read') {
-      return TrainerScene(
+      return ReadingScrollableScene(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -272,7 +277,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
 
     if (_phase == 'between' && _first != null) {
       final first = _first!;
-      return TrainerScene(
+      return ReadingScrollableScene(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -307,7 +312,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
 
     if (_phase == 'compare' && _first != null && _second != null) {
       final gap = describeReadingRereadGap(_first!, _second!);
-      return TrainerScene(
+      return ReadingScrollableScene(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -342,7 +347,7 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
 
     final question = _question;
     if (_phase == 'question' && question != null) {
-      return TrainerScene(
+      return ReadingScrollableScene(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -392,6 +397,6 @@ class _ReadingRereadTrainerState extends State<ReadingRereadTrainer> {
       );
     }
 
-    return const TrainerScene(child: SizedBox.shrink());
+    return const ReadingScrollableScene(child: SizedBox.shrink());
   }
 }

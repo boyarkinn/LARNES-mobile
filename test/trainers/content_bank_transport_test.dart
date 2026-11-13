@@ -45,6 +45,102 @@ class _Adapter implements HttpClientAdapter {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test(
+    'offline bank requests provide retry copy without transport internals',
+    () async {
+      final dio = Dio(BaseOptions(baseUrl: 'https://unit.invalid'));
+      final client = ApiClient(dio: dio, tokenStorage: _Token());
+      dio.interceptors.clear();
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            handler.reject(
+              DioException(
+                requestOptions: options,
+                type: DioExceptionType.connectionError,
+                error: 'internal transport details',
+              ),
+            );
+          },
+        ),
+      );
+      await expectLater(
+        client.trainerContentBankApi.browse(
+          trainerKey: 'reading-vanish',
+          uiLocale: 'en',
+        ),
+        throwsA(
+          predicate(
+            (error) =>
+                error.toString() ==
+                'Exception: No connection. Check your internet and try again.',
+          ),
+        ),
+      );
+      await expectLater(
+        client.trainerContentBankApi.prepare(
+          trainerKey: 'reading-vanish',
+          params: {},
+          uiLocale: 'ru',
+        ),
+        throwsA(
+          predicate(
+            (error) =>
+                error.toString() ==
+                'Exception: Нет соединения. Проверьте интернет и повторите.',
+          ),
+        ),
+      );
+    },
+  );
+  testWidgets(
+    'chooser follows an external form reset and keeps empty bank state usable',
+    (tester) async {
+      final adapter = _Adapter()
+        ..response = {
+          'status': 'success',
+          'materials': [],
+          'selectedMaterials': [],
+          'categories': [],
+          'levels': [],
+          'total': 0,
+        };
+      final dio = Dio(BaseOptions(baseUrl: 'https://unit.invalid'))
+        ..httpClientAdapter = adapter;
+      final client = ApiClient(dio: dio, tokenStorage: _Token());
+      dio.interceptors.clear();
+      final session = AuthSession(apiClient: client);
+      Widget form(List<String> materialIds) => AuthScope(
+        authSession: session,
+        child: MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: TrainerContentBankField(
+                trainerKey: 'reading-vanish',
+                value: jsonEncode({
+                  'libraryId': readingContentBankLibraryId,
+                  'materialIds': materialIds,
+                }),
+                onChanged: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(form(['removed-material']));
+      await tester.pumpAndSettle();
+      expect(find.text('Unavailable material'), findsOneWidget);
+      expect(find.text('No matching published materials.'), findsOneWidget);
+      await tester.pumpWidget(form([]));
+      await tester.pumpAndSettle();
+      expect(find.byType(InputChip), findsNothing);
+      expect(find.text('Select at least one material.'), findsOneWidget);
+      expect(adapter.request?.queryParameters['selectedMaterialIds'], '');
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      session.dispose();
+    },
+  );
+  test(
     'new launches require explicit IDs while bounded custom input is preserved for server preparation',
     () {
       expect(
@@ -223,7 +319,8 @@ void main() {
       tokenStorage: _Token(),
     ).trainerContentBankApi;
     final descriptor = {
-      'url': '/api/trainers/content-bank/images/version/file?grant=opaque',
+      'url':
+          '/api/trainers/content-bank/images/11111111-1111-4111-8111-111111111111/22222222-2222-4222-8222-222222222222?grant=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       'byteSize': 3,
       'sha256': sha256.convert(bytes).toString(),
     };
@@ -232,6 +329,17 @@ void main() {
       api.image({...descriptor, 'sha256': 'wrong'}),
       throwsFormatException,
     );
+    for (final url in [
+      '/api/trainers/content-bank/images/../../../../api/mobile/parent/children',
+      '/api/trainers/content-bank/images/version/file?grant=unsigned',
+      '${descriptor['url']}\n',
+      '${descriptor['url']}&extra=1',
+    ]) {
+      await expectLater(
+        api.image({...descriptor, 'url': url}),
+        throwsFormatException,
+      );
+    }
   });
   test('program steps retain exact frozen snapshots and bank error', () {
     final snapshot = ParentProgramPlaySnapshot.fromJson({

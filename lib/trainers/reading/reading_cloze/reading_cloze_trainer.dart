@@ -5,7 +5,7 @@ import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_cloze/model.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
-import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_scrollable_scene.dart';
 
 class ReadingClozeTrainer extends StatefulWidget {
   const ReadingClozeTrainer({super.key, required this.params, this.onComplete});
@@ -136,7 +136,7 @@ class _ReadingClozeTrainerState extends State<ReadingClozeTrainer> {
       );
     }
 
-    return TrainerScene(
+    return ReadingScrollableScene(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(

@@ -63,9 +63,29 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
   @override
   void didUpdateWidget(TrainerContentBankField oldWidget) {
     super.didUpdateWidget(oldWidget);
+    var selectionChanged = false;
+    if (oldWidget.value != widget.value) {
+      Map<String, dynamic> incoming = {};
+      try {
+        final decoded = jsonDecode(widget.value);
+        if (decoded is Map) incoming = Map<String, dynamic>.from(decoded);
+      } catch (_) {
+        // A reset to an empty field clears the previous selection.
+      }
+      incoming = {
+        'libraryId': readingContentBankLibraryId,
+        'materialIds': <String>[],
+        ...incoming,
+      };
+      if (jsonEncode(incoming) != jsonEncode(_selection)) {
+        _selection = incoming;
+        _page = 1;
+        selectionChanged = true;
+      }
+    }
     final previous = {...oldWidget.params}..remove('contentBank');
     final next = {...widget.params}..remove('contentBank');
-    if (jsonEncode(previous) != jsonEncode(next)) {
+    if (selectionChanged || jsonEncode(previous) != jsonEncode(next)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _load();
       });
@@ -109,6 +129,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         },
         query: _search.text,
         page: _page,
+        uiLocale: Localizations.localeOf(context).languageCode,
       );
       if (!mounted || request != _request) return;
       setState(() {
@@ -137,6 +158,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
 
   Widget _filter(String key, String label, List<dynamic> items) =>
       DropdownButtonFormField<String>(
+        key: ValueKey('$key:${_selection[key] ?? ''}'),
         initialValue:
             items.any((item) => item is Map && item['id'] == _selection[key])
             ? _selection[key] as String?
@@ -228,6 +250,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           _result?['levels'] as List? ?? const [],
         ),
         DropdownButtonFormField<String>(
+          key: ValueKey('kind:${_selection['kind'] ?? ''}'),
           initialValue: _selection['kind'] as String? ?? '',
           decoration: InputDecoration(
             labelText: _copy('Тип материала', 'Material type', 'نوع المادة'),
@@ -253,6 +276,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           onChanged: (value) => _change('kind', value),
         ),
         DropdownButtonFormField<String>(
+          key: ValueKey('locale:${_selection['locale'] ?? ''}'),
           initialValue: _selection['locale'] as String? ?? '',
           decoration: InputDecoration(
             labelText: _copy(

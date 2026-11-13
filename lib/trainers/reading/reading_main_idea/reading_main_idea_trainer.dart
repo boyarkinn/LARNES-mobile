@@ -5,7 +5,7 @@ import 'package:larnes_mobile/trainers/reading/shared/reading_instruction.dart';
 import 'package:larnes_mobile/trainers/reading/reading_main_idea/model.dart';
 import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
 import 'package:larnes_mobile/trainers/shared/instruction/trainer_instruction_scene.dart';
-import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/reading/shared/reading_scrollable_scene.dart';
 
 class ReadingMainIdeaTrainer extends StatefulWidget {
   const ReadingMainIdeaTrainer({
@@ -157,7 +157,7 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
       final picked = _correctIndex >= 0 && _correctIndex < _choices.length
           ? _choices[_correctIndex]
           : '';
-      return TrainerScene(
+      return ReadingScrollableScene(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
@@ -195,7 +195,7 @@ class _ReadingMainIdeaTrainerState extends State<ReadingMainIdeaTrainer> {
       );
     }
 
-    return TrainerScene(
+    return ReadingScrollableScene(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(

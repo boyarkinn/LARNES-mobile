@@ -4,6 +4,13 @@ import 'package:crypto/crypto.dart';
 import 'api_client.dart';
 import 'package:larnes_mobile/trainers/audio/exercise_audio_manifest.dart';
 
+const _bankImageUuid =
+    '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+final _bankImageUrl = RegExp(
+  '^/api/trainers/content-bank/images/$_bankImageUuid/$_bankImageUuid'
+  r'\?grant=[A-Za-z0-9_-]{43}$',
+);
+
 class PreparedTrainerContent {
   const PreparedTrainerContent({
     required this.params,
@@ -26,18 +33,21 @@ class TrainerContentBankApi {
     Map<String, dynamic> filters = const {},
     String query = '',
     int page = 1,
+    String uiLocale = 'ru',
   }) async {
-    final response = await _client.dio.get(
-      '/api/mobile/trainers/content-bank',
-      queryParameters: {
-        'trainerKey': trainerKey,
-        ...filters,
-        'q': query,
-        'page': page,
-        'pageSize': 25,
-      },
+    return _request(
+      () => _client.dio.get(
+        '/api/mobile/trainers/content-bank',
+        queryParameters: {
+          'trainerKey': trainerKey,
+          ...filters,
+          'q': query,
+          'page': page,
+          'pageSize': 25,
+        },
+      ),
+      uiLocale,
     );
-    return _body(response.data);
   }
 
   Future<PreparedTrainerContent> prepare({
@@ -45,11 +55,17 @@ class TrainerContentBankApi {
     required Map<String, dynamic> params,
     required String uiLocale,
   }) async {
-    final response = await _client.dio.post(
-      '/api/mobile/trainers/content-bank/prepare',
-      data: {'trainerKey': trainerKey, 'params': params, 'uiLocale': uiLocale},
+    final body = await _request(
+      () => _client.dio.post(
+        '/api/mobile/trainers/content-bank/prepare',
+        data: {
+          'trainerKey': trainerKey,
+          'params': params,
+          'uiLocale': uiLocale,
+        },
+      ),
+      uiLocale,
     );
-    final body = _body(response.data);
     if (body['params'] is! Map || body['runtimeSnapshot'] is! Map)
       throw const FormatException('Invalid prepared trainer content');
     return PreparedTrainerContent(
@@ -64,9 +80,45 @@ class TrainerContentBankApi {
     );
   }
 
+  Future<Map<String, dynamic>> _request(
+    Future<Response<dynamic>> Function() send,
+    String uiLocale,
+  ) async {
+    try {
+      return _body((await send()).data);
+    } on DioException catch (error) {
+      final data = error.response?.data;
+      final serverMessage = data is Map ? data['message'] : null;
+      if (serverMessage is String && serverMessage.trim().isNotEmpty) {
+        throw Exception(serverMessage);
+      }
+      final offline = const {
+        DioExceptionType.connectionError,
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.receiveTimeout,
+        DioExceptionType.sendTimeout,
+      }.contains(error.type);
+      final message = switch (uiLocale.split('-').first) {
+        'en' =>
+          offline
+              ? 'No connection. Check your internet and try again.'
+              : 'Unable to load materials. Please try again.',
+        'ar' =>
+          offline
+              ? 'لا يوجد اتصال. تحقق من الإنترنت وحاول مرة أخرى.'
+              : 'تعذر تحميل المواد. حاول مرة أخرى.',
+        _ =>
+          offline
+              ? 'Нет соединения. Проверьте интернет и повторите.'
+              : 'Не удалось загрузить материалы. Повторите попытку.',
+      };
+      throw Exception(message);
+    }
+  }
+
   Future<Uint8List> image(Map descriptor) async {
     final url = descriptor['url'];
-    if (url is! String || !url.startsWith('/api/trainers/content-bank/images/'))
+    if (url is! String || _bankImageUrl.stringMatch(url) != url)
       throw const FormatException('Invalid bank image URL');
     final response = await _client.dio.get<List<int>>(
       url,

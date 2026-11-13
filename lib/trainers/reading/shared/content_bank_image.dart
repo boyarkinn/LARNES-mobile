@@ -101,6 +101,7 @@ class _ContentBankImageState extends State<ContentBankImage> {
   Widget build(BuildContext context) {
     if (_bytes == null) return widget.fallback;
     return FutureBuilder<Uint8List>(
+      key: ValueKey(_url),
       future: _bytes,
       builder: (context, snapshot) => snapshot.hasData
           ? Image.memory(

@@ -86,36 +86,6 @@ flutter:
     - assets/sounds/
     - assets/brand/
     - assets/call/
-    - assets/images/ru/first-words/1-А/
-    - assets/images/ru/first-words/2-О/
-    - assets/images/ru/first-words/3-У/
-    - assets/images/ru/first-words/5-Э/
-    - assets/images/ru/first-words/6-Я/
-    - assets/images/ru/first-words/7-Ё/
-    - assets/images/ru/first-words/8-Ю/
-    - assets/images/ru/first-words/9-И/
-    - assets/images/ru/first-words/10-Е/
-    - assets/images/ru/first-words/11-Б/
-    - assets/images/ru/first-words/12-П/
-    - assets/images/ru/first-words/13-В/
-    - assets/images/ru/first-words/14-Ф/
-    - assets/images/ru/first-words/15-Г/
-    - assets/images/ru/first-words/16-К/
-    - assets/images/ru/first-words/17-Д/
-    - assets/images/ru/first-words/18-Т/
-    - assets/images/ru/first-words/19-Ж/
-    - assets/images/ru/first-words/20-Ш/
-    - assets/images/ru/first-words/21-З/
-    - assets/images/ru/first-words/22-С/
-    - assets/images/ru/first-words/23-Л/
-    - assets/images/ru/first-words/24-М/
-    - assets/images/ru/first-words/25-Н/
-    - assets/images/ru/first-words/26-Р/
-    - assets/images/ru/first-words/27-Й/
-    - assets/images/ru/first-words/28-Х/
-    - assets/images/ru/first-words/29-Ц/
-    - assets/images/ru/first-words/30-Ч/
-    - assets/images/ru/first-words/31-Щ/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

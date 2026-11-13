@@ -4,6 +4,28 @@ import 'package:flutter/material.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
 
+Map<String, dynamic> _bankSelection(String value) {
+  Map raw = const {};
+  try {
+    final decoded = jsonDecode(value);
+    if (decoded is Map) raw = decoded;
+  } catch (_) {
+    /* empty field */
+  }
+  return {
+    'libraryId': readingContentBankLibraryId,
+    'materialIds': <String>[],
+    for (final key in [
+      'materialIds',
+      'categoryId',
+      'locale',
+      'kind',
+      'hasImage',
+    ])
+      if (raw[key] != null) key: raw[key],
+  };
+}
+
 /// The same published bank chooser is used by native parent and admin forms.
 class TrainerContentBankField extends StatefulWidget {
   const TrainerContentBankField({
@@ -37,17 +59,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
   @override
   void initState() {
     super.initState();
-    try {
-      final raw = jsonDecode(widget.value);
-      if (raw is Map) _selection = Map<String, dynamic>.from(raw);
-    } catch (_) {
-      /* empty form */
-    }
-    _selection = {
-      'libraryId': readingContentBankLibraryId,
-      'materialIds': <String>[],
-      ..._selection,
-    };
+    _selection = _bankSelection(widget.value);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load();
     });
@@ -65,18 +77,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
     super.didUpdateWidget(oldWidget);
     var selectionChanged = false;
     if (oldWidget.value != widget.value) {
-      Map<String, dynamic> incoming = {};
-      try {
-        final decoded = jsonDecode(widget.value);
-        if (decoded is Map) incoming = Map<String, dynamic>.from(decoded);
-      } catch (_) {
-        // A reset to an empty field clears the previous selection.
-      }
-      incoming = {
-        'libraryId': readingContentBankLibraryId,
-        'materialIds': <String>[],
-        ...incoming,
-      };
+      final incoming = _bankSelection(widget.value);
       if (jsonEncode(incoming) != jsonEncode(_selection)) {
         _selection = incoming;
         _page = 1;
@@ -118,13 +119,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           'params': jsonEncode(widget.params),
           'selectedMaterialIds':
               (_selection['materialIds'] as List? ?? const []).join(','),
-          for (final key in [
-            'categoryId',
-            'levelId',
-            'kind',
-            'locale',
-            'hasImage',
-          ])
+          for (final key in ['categoryId', 'kind', 'locale', 'hasImage'])
             if (_selection[key] != null) key: _selection[key],
         },
         query: _search.text,
@@ -243,11 +238,6 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
           'categoryId',
           _copy('Тема / подтема', 'Topic / subtopic', 'الموضوع'),
           _result?['categories'] as List? ?? const [],
-        ),
-        _filter(
-          'levelId',
-          _copy('Уровень', 'Level', 'المستوى'),
-          _result?['levels'] as List? ?? const [],
         ),
         DropdownButtonFormField<String>(
           key: ValueKey('kind:${_selection['kind'] ?? ''}'),

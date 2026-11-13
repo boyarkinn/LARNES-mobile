@@ -101,7 +101,6 @@ void main() {
           'materials': [],
           'selectedMaterials': [],
           'categories': [],
-          'levels': [],
           'total': 0,
         };
       final dio = Dio(BaseOptions(baseUrl: 'https://unit.invalid'))
@@ -190,7 +189,6 @@ void main() {
             },
           ],
           'categories': [],
-          'levels': [],
           'total': 1,
           'page': 1,
           'pageSize': 25,

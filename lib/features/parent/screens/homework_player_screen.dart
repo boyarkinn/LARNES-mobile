@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -267,7 +268,14 @@ class _HomeworkPlayerScreenState extends State<HomeworkPlayerScreen> {
       },
       trainerKey: step.trainerKey,
       params: params,
-      resultContext: step.trainerKey == 'reading-word-columns' ? {'source':'homework','childId':widget.childId,'assignmentId':widget.assignmentId,'stepIndex':_stepIndex} : null,
+      resultContext: isWordListTrainerKey(step.trainerKey)
+          ? {
+              'source': 'homework',
+              'childId': widget.childId,
+              'assignmentId': widget.assignmentId,
+              'stepIndex': _stepIndex,
+            }
+          : null,
       runtimeSnapshot: runtimeSnapshot,
       l10n: l10n,
       onComplete: onComplete,

@@ -47,8 +47,11 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(seconds: 13));
-      await tester.tap(find.text('Start'));
-      await tester.pump();
+      expect(find.text('Start'), findsNothing);
+      expect(find.text('3'), findsOneWidget);
+      for (var i = 0; i < 3; i++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
       expect(find.text('и́ва'), findsOneWidget);
       for (var i = 0; i < 3; i++) {
         await tester.tap(find.text('Next'));

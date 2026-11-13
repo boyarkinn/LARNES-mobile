@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
@@ -231,7 +232,7 @@ class _ProgramPlayerScreenState extends State<ProgramPlayerScreen> {
       onExit: _exit,
       child: TrainerPlayer(
         key: ValueKey(step.id),
-        resultContext: step.trainerKey == 'reading-word-columns'
+        resultContext: isWordListTrainerKey(step.trainerKey)
             ? {
                 'source': 'direct',
                 'childId': widget.childId,

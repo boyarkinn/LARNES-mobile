@@ -1,3 +1,4 @@
+import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/features/parent/trainers/parent_trainer_play_session.dart';
@@ -129,7 +130,14 @@ class _TrainerPlayScreenState extends State<TrainerPlayScreen> {
       key: ValueKey(widget.trainerKey),
       trainerKey: widget.trainerKey,
       params: params,
-      resultContext: widget.trainerKey == 'reading-word-columns' && _session?.launchId != null ? {'source':'direct','childId':widget.childId,'launchId':_session!.launchId} : null,
+      resultContext:
+          isWordListTrainerKey(widget.trainerKey) && _session?.launchId != null
+          ? {
+              'source': 'direct',
+              'childId': widget.childId,
+              'launchId': _session!.launchId,
+            }
+          : null,
       runtimeSnapshot: snapshot,
       audioManifest: audio,
       l10n: l10n,

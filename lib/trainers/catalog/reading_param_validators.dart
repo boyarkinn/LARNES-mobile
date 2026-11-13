@@ -1,4 +1,5 @@
 import 'package:larnes_mobile/trainers/reading/shared/content_bank.dart';
+import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
 import 'package:larnes_mobile/trainers/catalog/validate_trainer_params_result.dart';
 import 'package:larnes_mobile/trainers/reading/letter_first_by_sound/letter_first_by_sound_model.dart'
     hide maxLetterChoices;
@@ -956,5 +957,15 @@ ValidateTrainerParamsResult validateReadingLinePaceParams(
     'lineKeep': readingLineKeep(raw['lineKeep']),
     'linePaceMs': readingLinePaceMs(raw['linePaceMs']),
     'wordsPerLine': readingBlocksWordsPerLine(raw['wordsPerLine']),
+  });
+}
+
+ValidateTrainerParamsResult validateReadingMarathonParams(
+  Map<String, dynamic> raw,
+) {
+  final error = validateReadingWordListRaw(raw, allowMultiple: true);
+  if (error != null) return _fail(error);
+  return ValidateTrainerParamsResult.success({
+    'contentBank': raw['contentBank'],
   });
 }

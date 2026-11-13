@@ -24,6 +24,7 @@ const readingContentBankTrainerKeys = {
   'reading-phrases',
   'reading-find-span',
   'reading-word-columns',
+  'reading-marathon',
   'reading-cloze',
   'reading-story-order',
   'reading-main-idea',
@@ -78,6 +79,7 @@ bool hasPreparedReadingContent(String trainerKey, Map<String, dynamic> params) {
       return payload['sentences'] is List && payload['order'] is List;
     case 'reading-find-span':
       return payload['words'] is List && payload['targetIndexes'] is List;
+    case 'reading-marathon':
     case 'reading-word-columns':
       return payload['words'] is List && (payload['words'] as List).isNotEmpty;
     case 'reading-word-maze':

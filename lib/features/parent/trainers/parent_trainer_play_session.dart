@@ -62,7 +62,11 @@ class ParentTrainerPlaySessionStore {
             storedLaunchId is String &&
                 RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(storedLaunchId)
             ? storedLaunchId
-            : {'topic-chain-flash', 'reading-word-columns'}.contains(trainerKey)
+            : {
+                'topic-chain-flash',
+                'reading-word-columns',
+                'reading-marathon',
+              }.contains(trainerKey)
             ? topicChainUuid()
             : null;
         if (launchId != null && storedLaunchId != launchId) {
@@ -84,7 +88,12 @@ class ParentTrainerPlaySessionStore {
         );
       }
 
-      final launchId = {'topic-chain-flash', 'reading-word-columns'}.contains(trainerKey)
+      final launchId =
+          {
+            'topic-chain-flash',
+            'reading-word-columns',
+            'reading-marathon',
+          }.contains(trainerKey)
           ? topicChainUuid()
           : null;
       if (launchId != null) {
@@ -118,7 +127,12 @@ class ParentTrainerPlaySessionStore {
         'returnPath': isValidReturnPath(returnPath) ? returnPath : null,
         'runtimeSnapshot': runtimeSnapshot,
         'audioManifest': audioManifest,
-        if ({'topic-chain-flash', 'reading-word-columns'}.contains(trainerKey)) 'launchId': topicChainUuid(),
+        if ({
+          'topic-chain-flash',
+          'reading-word-columns',
+          'reading-marathon',
+        }.contains(trainerKey))
+          'launchId': topicChainUuid(),
       }),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:larnes_mobile/trainers/reading/reading_marathon/reading_marathon_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/word_cubes/definition.dart';
 import 'package:larnes_mobile/trainers/reading/word_cubes/word_cubes_trainer.dart';
 import 'package:larnes_mobile/trainers/reading/letter_pair_connect/definition.dart';
@@ -74,10 +75,11 @@ import 'package:larnes_mobile/trainers/reading/letter_orientation_pick/letter_or
 import 'package:larnes_mobile/trainers/reading/letter_trace/letter_trace_trainer.dart';
 import 'package:larnes_mobile/trainers/intel/fly_track/fly_track_trainer.dart';
 
-typedef TrainerWidgetBuilder = Widget Function({
-  required Map<String, dynamic> params,
-  VoidCallback? onComplete,
-});
+typedef TrainerWidgetBuilder =
+    Widget Function({
+      required Map<String, dynamic> params,
+      VoidCallback? onComplete,
+    });
 
 final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
   TrainerKey.abacusTopicExplanation: ({required params, onComplete}) =>
@@ -190,6 +192,8 @@ final Map<TrainerKey, TrainerWidgetBuilder> trainerBuilders = {
       ReadingPhrasesTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingFindSpan: ({required params, onComplete}) =>
       ReadingFindSpanTrainer(params: params, onComplete: onComplete),
+  TrainerKey.readingMarathon: ({required params, onComplete}) =>
+      ReadingMarathonTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingWordColumns: ({required params, onComplete}) =>
       ReadingWordColumnsTrainer(params: params, onComplete: onComplete),
   TrainerKey.readingCloze: ({required params, onComplete}) =>
@@ -567,6 +571,13 @@ final Map<TrainerKey, TrainerDefinition> trainerDefinitions = {
     direction: TrainerDirection.speedReading,
     isInteractive: true,
     validate: validateReadingFindSpanParams,
+  ),
+  TrainerKey.readingMarathon: TrainerDefinition(
+    key: TrainerKey.readingMarathon,
+    title: 'Марафон',
+    direction: TrainerDirection.speedReading,
+    isInteractive: true,
+    validate: validateReadingMarathonParams,
   ),
   TrainerKey.readingWordColumns: TrainerDefinition(
     key: TrainerKey.readingWordColumns,

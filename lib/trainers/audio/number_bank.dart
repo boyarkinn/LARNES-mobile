@@ -3,6 +3,33 @@
 String operationAudioKey(String sign) =>
     sign == '+' ? 'operation:plus' : 'operation:minus';
 const numberBankAndKey = 'number:and';
+const numberOneNeuterKey = 'number:one:neuter';
+
+List<String> countedNumberAudioKeys(
+  int amount, [
+  String locale = 'ru-RU',
+  bool neuter = false,
+]) {
+  if (amount < 0 || amount > 999) return [];
+  if (!locale.startsWith('ru')) return amountAudioKeys(amount, locale);
+  if (neuter && amount % 10 == 1 && amount % 100 != 11) {
+    return [
+      ...(amount > 1 ? countedNumberAudioKeys(amount - 1, locale) : <String>[]),
+      numberOneNeuterKey,
+    ];
+  }
+  if (amount >= 100) {
+    return [
+      'number:hundreds:${amount ~/ 100 * 100}',
+      if (amount % 100 > 0) ...countedNumberAudioKeys(amount % 100, locale),
+    ];
+  }
+  if (amount >= 20 && amount % 10 > 0) {
+    return ['number:${amount ~/ 10 * 10}', 'number:${amount % 10}'];
+  }
+  return ['number:$amount'];
+}
+
 String _numberAudioLocale = 'ru-RU';
 String get numberAudioLocale => _numberAudioLocale;
 
@@ -52,6 +79,7 @@ List<String> stepAudioKeys({
 }
 
 bool isNumberBankAudioKey(String semanticKey) {
+  if (semanticKey == numberOneNeuterKey) return true;
   if (semanticKey == numberBankAndKey) return true;
   if (semanticKey == 'operation:plus' || semanticKey == 'operation:minus') {
     return true;

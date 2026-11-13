@@ -6,8 +6,8 @@ import 'package:larnes_mobile/trainers/catalog/trainer_key.dart';
 void main() {
   group('trainer registry', () {
     test('registers the Web trainer keys with native implementations', () {
-      expect(TrainerKey.values.length, 66);
-      expect(trainerDefinitions.length, 66);
+      expect(TrainerKey.values.length, 67);
+      expect(trainerDefinitions.length, 67);
       expect(isTrainerKey('abacus-topic-explanation'), isTrue);
       expect(isTrainerKey('abacus-warmup'), isTrue);
       expect(isTrainerKey('letter-pair-connect'), isTrue);
@@ -48,48 +48,53 @@ void main() {
       expect(isTrainerKey('missing-trainer'), isFalse);
     });
 
-    test('letter and syllable pairs keep independent registrations and settings', () {
-      final letters = getTrainerDefinition('letter-pair-connect')!;
-      final syllables = getTrainerDefinition('syllable-pair-connect')!;
-      expect(letters.title, 'Соедини одинаковые буквы');
-      expect(syllables.title, 'Соедини одинаковые слоги');
-      expect(hasTrainerBuilder('letter-pair-connect'), isTrue);
-      expect(hasTrainerBuilder('syllable-pair-connect'), isTrue);
-      final letterParams = letters.validate({}).params!;
-      final syllableParams = syllables.validate({}).params!;
-      expect(letterParams['practiceLetters'], 'А,О,У,М,С');
-      expect(letterParams.containsKey('pairCount'), isFalse);
-      expect(syllableParams['practiceLetters'], 'А,О,У');
-      expect(syllableParams['pairCount'], 5);
-    });
+    test(
+      'letter and syllable pairs keep independent registrations and settings',
+      () {
+        final letters = getTrainerDefinition('letter-pair-connect')!;
+        final syllables = getTrainerDefinition('syllable-pair-connect')!;
+        expect(letters.title, 'Соедини одинаковые буквы');
+        expect(syllables.title, 'Соедини одинаковые слоги');
+        expect(hasTrainerBuilder('letter-pair-connect'), isTrue);
+        expect(hasTrainerBuilder('syllable-pair-connect'), isTrue);
+        final letterParams = letters.validate({}).params!;
+        final syllableParams = syllables.validate({}).params!;
+        expect(letterParams['practiceLetters'], 'А,О,У,М,С');
+        expect(letterParams.containsKey('pairCount'), isFalse);
+        expect(syllableParams['practiceLetters'], 'А,О,У');
+        expect(syllableParams['pairCount'], 5);
+      },
+    );
 
     test('has native builder for every registered trainer', () {
-      expect(trainerBuilders.length, 66);
+      expect(trainerBuilders.length, 67);
 
       for (final key in TrainerKey.values) {
-        expect(
-          hasTrainerBuilder(key.apiValue),
-          isTrue,
-          reason: key.apiValue,
-        );
+        expect(hasTrainerBuilder(key.apiValue), isTrue, reason: key.apiValue);
       }
     });
 
     test('reading trainers are interactive', () {
-      final readingDefinitions = trainerDefinitions.values
-          .where((definition) => definition.direction == TrainerDirection.reading);
+      final readingDefinitions = trainerDefinitions.values.where(
+        (definition) => definition.direction == TrainerDirection.reading,
+      );
 
       expect(readingDefinitions.length, 23);
       for (final definition in readingDefinitions) {
-        expect(definition.isInteractive, isTrue, reason: definition.key.apiValue);
+        expect(
+          definition.isInteractive,
+          isTrue,
+          reason: definition.key.apiValue,
+        );
       }
     });
 
     test('speed-reading trainers keep the web interactive flags', () {
-      final definitions = trainerDefinitions.values
-          .where((definition) => definition.direction == TrainerDirection.speedReading);
+      final definitions = trainerDefinitions.values.where(
+        (definition) => definition.direction == TrainerDirection.speedReading,
+      );
 
-      expect(definitions.length, 26);
+      expect(definitions.length, 27);
       for (final definition in definitions) {
         expect(
           definition.isInteractive,
@@ -112,10 +117,22 @@ void main() {
         getTrainerDefinition('abacus-topic-explanation')?.isInteractive,
         isTrue,
       );
-      expect(getTrainerDefinition('example-visualization')?.isInteractive, isTrue);
-      expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
-      expect(getTrainerDefinition('static-example-show')?.isInteractive, isFalse);
-      expect(getTrainerDefinition('flashcard-digit-match')?.isInteractive, isTrue);
+      expect(
+        getTrainerDefinition('example-visualization')?.isInteractive,
+        isTrue,
+      );
+      expect(
+        getTrainerDefinition('static-example-show')?.isInteractive,
+        isFalse,
+      );
+      expect(
+        getTrainerDefinition('static-example-show')?.isInteractive,
+        isFalse,
+      );
+      expect(
+        getTrainerDefinition('flashcard-digit-match')?.isInteractive,
+        isTrue,
+      );
       expect(getTrainerDefinition('topic-chain-flash')?.isInteractive, isTrue);
       expect(getTrainerDefinition('topic-chain-table')?.isInteractive, isFalse);
     });

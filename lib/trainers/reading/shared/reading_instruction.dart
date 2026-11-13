@@ -6,34 +6,145 @@ import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 
 const readingInstructionPhrases = <String, Map<String, String>>{
-  'reading-vanish': {'ar': 'اقرأ، سيختفي النص', 'en': 'Read, the text will disappear', 'ru': 'Читай, текст будет исчезать'},
-  'reading-shutter': {'ar': 'اقرأ، جزء من النص مغطى', 'en': 'Read, part of the text is covered', 'ru': 'Читай, часть текста закрыта'},
-  'reading-upside-down': {'ar': 'اقرأ، النص مقلوب', 'en': 'Read, the text is upside down', 'ru': 'Читай, текст перевёрнут'},
-  'reading-pace-track': {'ar': 'اقرأ بالإيقاع', 'en': 'Read in rhythm', 'ru': 'Читай в ритме'},
-  'reading-noisy-text': {'ar': 'اقرأ، النص مشوش', 'en': 'Read, the text has noise', 'ru': 'Читай, текст с помехами'},
-  'reading-pointer': {'ar': 'اقرأ، المؤشر يدل على الحرف', 'en': 'Read, the pointer shows the letter', 'ru': 'Читай, указка показывает букву'},
-  'reading-blocks': {'ar': 'اقرأ سطراً سطراً', 'en': 'Read line by line', 'ru': 'Читай по строкам'},
-  'reading-tree': {'ar': 'اقرأ على شكل الشجرة', 'en': 'Read along the tree shape', 'ru': 'Читай по ёлочке'},
-  'reading-flash': {'ar': 'اقرأ الومضة', 'en': 'Read the flash', 'ru': 'Читай вспышку'},
-  'reading-fixation': {'ar': 'اقرأ في نقطة واحدة', 'en': 'Read at one point', 'ru': 'Читай в одной точке'},
-  'reading-diagonal': {'ar': 'اقرأ على القطر', 'en': 'Read along the diagonal', 'ru': 'Читай по диагонали'},
-  'reading-reread': {'ar': 'اقرأ بصوت عالٍ مرتين', 'en': 'Read aloud twice', 'ru': 'Читай вслух два раза'},
-  'reading-echo': {'ar': 'ردد بعد النص', 'en': 'Repeat after the text', 'ru': 'Повторяй за текстом'},
-  'reading-phrases': {'ar': 'اقرأ حسب المعنى', 'en': 'Read by meaning', 'ru': 'Читай по смыслу'},
-  'reading-find-span': {'ar': 'جده في النص', 'en': 'Find it in the text', 'ru': 'Найди в тексте'},
-  'reading-word-columns': {'ar': 'خذ نفساً عميقاً واقرأ الكلمات حتى تخرج الهواء كله. بعد قراءة كل كلمة، اضغط على التالي. عندما ينفد الهواء، اضغط على إنهاء.', 'en': 'Take a deep breath and read the words until you have breathed out completely. After reading a word, press Next. When you run out of breath, press Finish.', 'ru': 'Сделай глубокий вдох и читай слова, пока полностью не выдохнешь. Когда прочитаешь слово, нажми «Далее». Когда воздух закончится, нажми «Завершить».'},
-  'reading-cloze': {'ar': 'اختر الكلمة', 'en': 'Choose the word', 'ru': 'Выбери слово'},
-  'reading-story-order': {'ar': 'رتب القصة', 'en': 'Put the story in order', 'ru': 'Собери историю'},
-  'reading-main-idea': {'ar': 'اختر الفكرة', 'en': 'Choose the main idea', 'ru': 'Выбери мысль'},
-  'reading-anagram': {'ar': 'ركّب الكلمة', 'en': 'Build the word', 'ru': 'Собери слово'},
-  'reading-word-maze': {'ar': 'اتبع الطريق', 'en': 'Follow the path', 'ru': 'Веди путь'},
-  'reading-grid-mask': {'ar': 'اقرأ عبر الشبكة', 'en': 'Read through the grid', 'ru': 'Читай сквозь сетку'},
-  'reading-snake': {'ar': 'انظر إلى الرأس', 'en': 'Watch the head', 'ru': 'Смотри на головку'},
-  'reading-line-pace': {'ar': 'اقرأ السطر في الوقت', 'en': 'Read the line in time', 'ru': 'Успей прочитать строку'},
+  'reading-vanish': {
+    'ar': 'اقرأ، سيختفي النص',
+    'en': 'Read, the text will disappear',
+    'ru': 'Читай, текст будет исчезать',
+  },
+  'reading-shutter': {
+    'ar': 'اقرأ، جزء من النص مغطى',
+    'en': 'Read, part of the text is covered',
+    'ru': 'Читай, часть текста закрыта',
+  },
+  'reading-upside-down': {
+    'ar': 'اقرأ، النص مقلوب',
+    'en': 'Read, the text is upside down',
+    'ru': 'Читай, текст перевёрнут',
+  },
+  'reading-pace-track': {
+    'ar': 'اقرأ بالإيقاع',
+    'en': 'Read in rhythm',
+    'ru': 'Читай в ритме',
+  },
+  'reading-noisy-text': {
+    'ar': 'اقرأ، النص مشوش',
+    'en': 'Read, the text has noise',
+    'ru': 'Читай, текст с помехами',
+  },
+  'reading-pointer': {
+    'ar': 'اقرأ، المؤشر يدل على الحرف',
+    'en': 'Read, the pointer shows the letter',
+    'ru': 'Читай, указка показывает букву',
+  },
+  'reading-blocks': {
+    'ar': 'اقرأ سطراً سطراً',
+    'en': 'Read line by line',
+    'ru': 'Читай по строкам',
+  },
+  'reading-tree': {
+    'ar': 'اقرأ على شكل الشجرة',
+    'en': 'Read along the tree shape',
+    'ru': 'Читай по ёлочке',
+  },
+  'reading-flash': {
+    'ar': 'اقرأ الومضة',
+    'en': 'Read the flash',
+    'ru': 'Читай вспышку',
+  },
+  'reading-fixation': {
+    'ar': 'اقرأ في نقطة واحدة',
+    'en': 'Read at one point',
+    'ru': 'Читай в одной точке',
+  },
+  'reading-diagonal': {
+    'ar': 'اقرأ على القطر',
+    'en': 'Read along the diagonal',
+    'ru': 'Читай по диагонали',
+  },
+  'reading-reread': {
+    'ar': 'اقرأ بصوت عالٍ مرتين',
+    'en': 'Read aloud twice',
+    'ru': 'Читай вслух два раза',
+  },
+  'reading-echo': {
+    'ar': 'ردد بعد النص',
+    'en': 'Repeat after the text',
+    'ru': 'Повторяй за текстом',
+  },
+  'reading-phrases': {
+    'ar': 'اقرأ حسب المعنى',
+    'en': 'Read by meaning',
+    'ru': 'Читай по смыслу',
+  },
+  'reading-find-span': {
+    'ar': 'جده في النص',
+    'en': 'Find it in the text',
+    'ru': 'Найди в тексте',
+  },
+  'reading-marathon': {
+    'ru':
+        'Прочитай как можно больше слов за одну минуту. Читай вслух. Когда прочитаешь слово, нажми «Далее».',
+    'en':
+        'Read as many words as you can in one minute. Read aloud. After reading a word, press Next.',
+    'ar':
+        'اقرأ أكبر عدد ممكن من الكلمات خلال دقيقة واحدة. اقرأ بصوت عالٍ. بعد قراءة كل كلمة، اضغط على التالي.',
+  },
+  'reading-word-columns': {
+    'ar':
+        'خذ نفساً عميقاً واقرأ الكلمات حتى تخرج الهواء كله. بعد قراءة كل كلمة، اضغط على التالي. عندما ينفد الهواء، اضغط على إنهاء.',
+    'en':
+        'Take a deep breath and read the words until you have breathed out completely. After reading a word, press Next. When you run out of breath, press Finish.',
+    'ru':
+        'Сделай глубокий вдох и читай слова, пока полностью не выдохнешь. Когда прочитаешь слово, нажми «Далее». Когда воздух закончится, нажми «Завершить».',
+  },
+  'reading-cloze': {
+    'ar': 'اختر الكلمة',
+    'en': 'Choose the word',
+    'ru': 'Выбери слово',
+  },
+  'reading-story-order': {
+    'ar': 'رتب القصة',
+    'en': 'Put the story in order',
+    'ru': 'Собери историю',
+  },
+  'reading-main-idea': {
+    'ar': 'اختر الفكرة',
+    'en': 'Choose the main idea',
+    'ru': 'Выбери мысль',
+  },
+  'reading-anagram': {
+    'ar': 'ركّب الكلمة',
+    'en': 'Build the word',
+    'ru': 'Собери слово',
+  },
+  'reading-word-maze': {
+    'ar': 'اتبع الطريق',
+    'en': 'Follow the path',
+    'ru': 'Веди путь',
+  },
+  'reading-grid-mask': {
+    'ar': 'اقرأ عبر الشبكة',
+    'en': 'Read through the grid',
+    'ru': 'Читай сквозь сетку',
+  },
+  'reading-snake': {
+    'ar': 'انظر إلى الرأس',
+    'en': 'Watch the head',
+    'ru': 'Смотри на головку',
+  },
+  'reading-line-pace': {
+    'ar': 'اقرأ السطر في الوقت',
+    'en': 'Read the line in time',
+    'ru': 'Успей прочитать строку',
+  },
 };
 
 class ReadingInstructionPlayback {
-  const ReadingInstructionPlayback({required this.durationMs, required this.text, this.filePath});
+  const ReadingInstructionPlayback({
+    required this.durationMs,
+    required this.text,
+    this.filePath,
+  });
 
   final int durationMs;
   final String? filePath;
@@ -44,9 +155,12 @@ ReadingInstructionPlayback readingInstructionPlayback({
   required String trainerKey,
   required String fallbackText,
   required int fallbackMs,
+  String? semanticKey,
 }) {
-  final file = speechAudioFile('instruction:$trainerKey');
-  final phrases = readingInstructionPhrases[trainerKey];
+  final file = speechAudioFile(semanticKey ?? 'instruction:$trainerKey');
+  final phrases = semanticKey == null
+      ? readingInstructionPhrases[trainerKey]
+      : null;
   String? localeText;
   if (file != null && phrases != null) {
     if (file.locale == 'en-US') {
@@ -66,12 +180,38 @@ ReadingInstructionPlayback readingInstructionPlayback({
       text: published.isNotEmpty
           ? published
           : (localeText == null || localeText.isEmpty)
-              ? fallbackText
-              : localeText,
+          ? fallbackText
+          : localeText,
     );
   }
 
   return ReadingInstructionPlayback(durationMs: fallbackMs, text: fallbackText);
+}
+
+void Function() startReadingInstructionText({
+  required String text,
+  required int durationMs,
+  required bool reduceMotion,
+  required bool Function() isMounted,
+  required void Function(String text, int length) onFrame,
+}) {
+  var length = 0;
+  onFrame(text, 0);
+  final stepMs = text.isEmpty
+      ? durationMs
+      : (durationMs / text.length).round().clamp(16, 400);
+  final timer = Timer.periodic(
+    Duration(milliseconds: reduceMotion ? 16 : stepMs),
+    (timer) {
+      if (!isMounted() || length >= text.length) {
+        timer.cancel();
+        return;
+      }
+      length += 1;
+      onFrame(text, length);
+    },
+  );
+  return timer.cancel;
 }
 
 /// Возвращает отмену. Без файла остаётся прежний таймер и текст, сеть не открывается.
@@ -83,28 +223,22 @@ void Function() startReadingInstruction({
   required bool Function() isMounted,
   required void Function(String text, int length) onFrame,
   required void Function() onFinished,
+  String? semanticKey,
+  Future<void> Function()? playbackOverride,
 }) {
   final playback = readingInstructionPlayback(
     fallbackMs: fallbackMs,
     fallbackText: fallbackText,
     trainerKey: trainerKey,
+    semanticKey: semanticKey,
   );
-  var length = 0;
-  onFrame(playback.text, 0);
-  final stepMs = playback.text.isEmpty
-      ? playback.durationMs
-      : (playback.durationMs / playback.text.length).round().clamp(16, 400);
-  final typeTimer = Timer.periodic(Duration(milliseconds: reduceMotion ? 16 : stepMs), (timer) {
-    if (!isMounted()) {
-      return;
-    }
-    if (length >= playback.text.length) {
-      timer.cancel();
-      return;
-    }
-    length += 1;
-    onFrame(playback.text, length);
-  });
+  final cancelText = startReadingInstructionText(
+    text: playback.text,
+    durationMs: playback.durationMs,
+    reduceMotion: reduceMotion,
+    isMounted: isMounted,
+    onFrame: onFrame,
+  );
   var finished = false;
   Timer? safety;
   Timer? prepareCap;
@@ -114,13 +248,20 @@ void Function() startReadingInstruction({
       return;
     }
     finished = true;
-    typeTimer.cancel();
+    cancelText();
     safety?.cancel();
     prepareCap?.cancel();
     onFinished();
   }
 
-  if (playback.filePath == null) {
+  if (playbackOverride != null) {
+    unawaited(
+      playbackOverride().then(
+        (_) => finish(),
+        onError: (Object error) => finish(),
+      ),
+    );
+  } else if (playback.filePath == null) {
     safety = Timer(Duration(milliseconds: playback.durationMs), finish);
   } else {
     final path = playback.filePath!;
@@ -131,28 +272,39 @@ void Function() startReadingInstruction({
       unawaited(getSharedClipPlayer().cancel());
       finish();
     });
-    unawaited(getSharedClipPlayer().play([path], playbackRate: 1, onStarted: () {
-      if (finished || !isMounted()) {
-        return;
-      }
-      prepareCap?.cancel();
-      safety = Timer(Duration(milliseconds: playback.durationMs + 400), () {
-        unawaited(getSharedClipPlayer().cancel());
-        finish();
-      });
-    }).then((_) {
-      prepareCap?.cancel();
-      safety?.cancel();
-      finish();
-    }));
+    unawaited(
+      getSharedClipPlayer()
+          .play(
+            [path],
+            playbackRate: 1,
+            onStarted: () {
+              if (finished || !isMounted()) {
+                return;
+              }
+              prepareCap?.cancel();
+              safety = Timer(
+                Duration(milliseconds: playback.durationMs + 400),
+                () {
+                  unawaited(getSharedClipPlayer().cancel());
+                  finish();
+                },
+              );
+            },
+          )
+          .then((_) {
+            prepareCap?.cancel();
+            safety?.cancel();
+            finish();
+          }),
+    );
   }
 
   return () {
     finished = true;
-    typeTimer.cancel();
+    cancelText();
     safety?.cancel();
     prepareCap?.cancel();
-    if (playback.filePath != null) {
+    if (playback.filePath != null && playbackOverride == null) {
       unawaited(getSharedClipPlayer().cancel());
     }
   };

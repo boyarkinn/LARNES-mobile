@@ -1,3 +1,5 @@
+import 'package:larnes_mobile/trainers/reading/shared/word_list.dart';
+import 'grouped_multi_select.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ Map<String, dynamic> _bankSelection(String value) {
     for (final key in [
       'materialIds',
       'categoryId',
+      'categoryIds',
       'locale',
       'kind',
       'hasImage',
@@ -107,10 +110,13 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
   }
 
   Future<void> _load() async {
-    if (widget.trainerKey == 'reading-word-columns') {
+    if (isWordListTrainerKey(widget.trainerKey)) {
       _selection = {
         'libraryId': readingContentBankLibraryId,
-        'categoryId': _selection['categoryId'],
+        if (widget.trainerKey == 'reading-marathon')
+          'categoryIds': readingWordListCategoryIds(_selection)
+        else
+          'categoryId': _selection['categoryId'],
         'materialIds': <String>[],
         'kind': 'word',
         'locale': 'ru-RU',
@@ -125,13 +131,20 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
       final result = await AuthScope.of(context).trainerContentBankApi.browse(
         trainerKey: widget.trainerKey,
         filters: {
-          'params': jsonEncode(widget.params),
+          'params': jsonEncode(
+            widget.trainerKey == 'reading-marathon'
+                ? <String, dynamic>{}
+                : widget.params,
+          ),
           'selectedMaterialIds':
               (_selection['materialIds'] as List? ?? const []).join(','),
           for (final key in ['categoryId', 'kind', 'locale', 'hasImage'])
             if (_selection[key] != null) key: _selection[key],
+          if (widget.trainerKey == 'reading-marathon' &&
+              readingWordListCategoryIds(_selection).isNotEmpty)
+            'categoryIds': readingWordListCategoryIds(_selection).join(','),
         },
-        query: widget.trainerKey == 'reading-word-columns' ? '' : _search.text,
+        query: isWordListTrainerKey(widget.trainerKey) ? '' : _search.text,
         page: _page,
         uiLocale: Localizations.localeOf(context).languageCode,
       );
@@ -196,7 +209,116 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         .toSet();
     final materials = _result?['materials'] as List? ?? const [];
     final total = _result?['total'] as num? ?? 0;
-    if (widget.trainerKey == 'reading-word-columns') {
+    if (widget.trainerKey == 'reading-marathon') {
+      final categories = (_result?['categories'] as List? ?? const [])
+          .whereType<Map>()
+          .toList();
+      final options = [
+        for (final topic in categories.where((c) => c['parentId'] == null))
+          for (final c in categories.where((c) => c['parentId'] == topic['id']))
+            GroupedSelectOption(
+              value: c['id'].toString(),
+              label: c['title'].toString(),
+              group: topic['title'].toString(),
+            ),
+      ];
+      final ids = readingWordListCategoryIds(_selection);
+      final title = _copy(
+        'Темы и подтемы',
+        'Topics and subtopics',
+        'المواضيع والمواضيع الفرعية',
+      );
+      final summary = readingWordListCategorySummary(categories, ids);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FormField<List<String>>(
+            key: ValueKey(ids.join(',')),
+            initialValue: ids,
+            validator: (value) =>
+                value == null ||
+                    value.isEmpty ||
+                    value.any(
+                      (id) => !options.any((option) => option.value == id),
+                    )
+                ? _copy(
+                    'Выберите подтемы',
+                    'Choose subtopics',
+                    'اختر المواضيع الفرعية',
+                  )
+                : null,
+            builder: (field) => InkWell(
+              onTap: _loading
+                  ? null
+                  : () async {
+                      final result = await showGroupedMultiSelect(
+                        context: context,
+                        options: options,
+                        selected: ids,
+                        title: title,
+                        searchLabel: _copy(
+                          'Поиск тем и подтем',
+                          'Search topics and subtopics',
+                          'ابحث عن المواضيع',
+                        ),
+                        allLabel: _copy(
+                          'Все темы',
+                          'All topics',
+                          'كل المواضيع',
+                        ),
+                        clearLabel: _copy(
+                          'Снять выбор',
+                          'Clear selection',
+                          'إلغاء التحديد',
+                        ),
+                      );
+                      if (result != null && mounted) {
+                        _selection.remove('categoryId');
+                        _change('categoryIds', result.selected);
+                      }
+                    },
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: title,
+                  errorText: field.errorText,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        summary.isEmpty
+                            ? _copy(
+                                'Выберите подтемы',
+                                'Choose subtopics',
+                                'اختر المواضيع الفرعية',
+                              )
+                            : summary,
+                      ),
+                    ),
+                    const Icon(Icons.expand_more),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (_loading) const LinearProgressIndicator(),
+          if (_error != null)
+            Text(
+              _error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          if (!_loading && ids.isNotEmpty && total == 0)
+            Text(
+              _copy(
+                'В выбранных подтемах нет русских слов.',
+                'No Russian words in the selected subtopics.',
+                'لا توجد كلمات روسية في المواضيع الفرعية المختارة.',
+              ),
+            ),
+        ],
+      );
+    }
+    if (isWordListTrainerKey(widget.trainerKey)) {
       final categories = (_result?['categories'] as List? ?? const [])
           .whereType<Map>()
           .toList();

@@ -21,6 +21,31 @@ class TrainerInstructionScene extends StatelessWidget {
   final String text;
 
   @override
+  Widget build(BuildContext context) => TrainerScene(
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Center(
+        child: TrainerInstructionText(
+          length: length,
+          text: text,
+          speechKey: speechKey,
+        ),
+      ),
+    ),
+  );
+}
+
+class TrainerInstructionText extends StatelessWidget {
+  const TrainerInstructionText({
+    super.key,
+    required this.length,
+    required this.text,
+    this.speechKey,
+  });
+  final int length;
+  final String text;
+  final String? speechKey;
+  @override
   Widget build(BuildContext context) {
     final shown = publishedSpeechText(speechKey, text);
     final visibleText = shown.substring(0, length.clamp(0, shown.length));
@@ -28,33 +53,26 @@ class TrainerInstructionScene extends StatelessWidget {
     final textColor = directionTheme?.deep ?? kTrainerInstructionColor;
     final cursorColor = directionTheme?.base ?? kTrainerInstructionCursorColor;
 
-    return TrainerScene(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Center(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: visibleText,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    height: 1.15,
-                    color: textColor,
-                  ),
-                ),
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.baseline,
-                  baseline: TextBaseline.alphabetic,
-                  child: _TrainerInstructionCursor(color: cursorColor),
-                ),
-              ],
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: visibleText,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+              color: textColor,
             ),
-            textAlign: TextAlign.center,
           ),
-        ),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: _TrainerInstructionCursor(color: cursorColor),
+          ),
+        ],
       ),
+      textAlign: TextAlign.center,
     );
   }
 }

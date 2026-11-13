@@ -46,6 +46,7 @@ enum TrainerKey {
   readingPhrases('reading-phrases'),
   readingFindSpan('reading-find-span'),
   readingWordColumns('reading-word-columns'),
+  readingMarathon('reading-marathon'),
   readingCloze('reading-cloze'),
   readingStoryOrder('reading-story-order'),
   readingMainIdea('reading-main-idea'),

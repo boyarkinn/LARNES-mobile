@@ -1,3 +1,5 @@
+import 'package:larnes_mobile/trainers/reading/shared/reading_word_display.dart';
+import 'package:larnes_mobile/trainers/shared/trainer_ready_countdown.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
@@ -184,14 +186,12 @@ class _ReadingWordColumnsState extends State<ReadingWordColumnsTrainer> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_phase == 'ready')
-                TrainerPlayButton(
-                  width: 144,
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  onPressed: () {
+                TrainerReadyCountdown(
+                  onComplete: () {
+                    if (_phase != 'ready') return;
                     setState(() => _phase = 'reading');
                     _persist();
                   },
-                  child: Text(label('Начать', 'Start', 'ابدأ')),
                 )
               else if (_phase == 'finished') ...[
                 Text(
@@ -217,22 +217,8 @@ class _ReadingWordColumnsState extends State<ReadingWordColumnsTrainer> {
                   ),
                 ],
               ] else ...[
-                SizedBox(
-                  width: box.maxWidth,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      _words[_sequence!.order[_sequence!.position]],
-                      textDirection: TextDirection.ltr,
-                      locale: const Locale('ru'),
-                      style: TextStyle(
-                        fontSize: (box.maxWidth * 0.09)
-                            .clamp(32, 80)
-                            .toDouble(),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                ReadingWordDisplay(
+                  word: _words[_sequence!.order[_sequence!.position]],
                 ),
                 const SizedBox(height: 32),
                 Directionality(

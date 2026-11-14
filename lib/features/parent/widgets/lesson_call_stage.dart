@@ -157,6 +157,15 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _boardBusy = false;
   int _boardGen = 1;
   String _boardKey = '';
+  String? _boardETag;
+  int _boardCacheGeneration = 0;
+  String get _boardCacheScope =>
+      '${widget.childId}|${widget.lessonSessionId}|${widget.inviteToken}|$_boardLink|$_pageGen';
+
+  void _invalidateBoardCache() {
+    _boardETag = null;
+    _boardCacheGeneration++;
+  }
   MessengerRoom? _messenger;
   bool _messengerOpen = false;
   final _workspaceMessengerApi = MessengerApi();
@@ -213,6 +222,7 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _invalidateBoardCache();
     if (state == AppLifecycleState.resumed) {
       _messenger?.resume();
     } else {
@@ -609,18 +619,20 @@ class _LessonCallStageState extends State<LessonCallStage>
     unawaited(_pullBoard());
   }
 
-  Future<LessonChildBoard?> _fetchBoard() {
+  Future<LessonChildBoard?> _fetchBoard({void Function(String?)? onETag}) {
     final injected = widget.fetchBoard;
     if (injected != null) return injected(link: _boardLink);
     final invite = widget.inviteToken;
     if (invite != null) {
       return AuthScope.of(
         context,
-      ).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink);
+      ).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink,
+        ifNoneMatch: _boardETag, onETag: onETag);
     }
     return AuthScope.of(
       context,
-    ).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink);
+    ).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink,
+      ifNoneMatch: _boardETag, onETag: onETag);
   }
 
   Future<bool> _sendBoard(Map<String, dynamic> body) {
@@ -641,12 +653,22 @@ class _LessonCallStageState extends State<LessonCallStage>
     if (_boardBusy || _ended || !mounted) return;
     if (!_boardWorkspace && !_holding) return;
     _boardBusy = true;
+    final generation = _boardCacheGeneration, scope = _boardCacheScope;
+    bool current() => mounted && !_ended && generation == _boardCacheGeneration && scope == _boardCacheScope;
+    String? receivedETag;
     try {
-      final board = await _fetchBoard();
-      if (!mounted || board == null || _ended) return;
-      if (widget.lessonSessionId != null &&
-          board.lessonSessionId != widget.lessonSessionId)
+      final board = await _fetchBoard(onETag: (value) => receivedETag = value);
+      if (!current()) return;
+      if (board == null) {
+        // 304 preserves the applied board; failures invalidate the next validator.
+        _boardETag = receivedETag;
         return;
+      }
+      if (widget.lessonSessionId != null &&
+          board.lessonSessionId != widget.lessonSessionId) {
+        _boardETag = null;
+        return;
+      }
       final key =
           '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
       final previous = _board;
@@ -707,8 +729,11 @@ class _LessonCallStageState extends State<LessonCallStage>
         source: 'setChildRoom(${jsonEncode(roomPayload)})',
       );
       await _syncLessonChrome();
+      // Only acknowledge a snapshot after it reached this WebView generation.
+      if (current()) _boardETag = _web == null ? null : receivedETag;
     } catch (_) {
       // A missed snapshot does not end the lesson or the call.
+      if (current()) _boardETag = null;
     } finally {
       _boardBusy = false;
     }
@@ -757,6 +782,7 @@ class _LessonCallStageState extends State<LessonCallStage>
 
     _starting = true;
     _awaitingPage = true;
+    _invalidateBoardCache();
     _pageGen += 1;
     _closeBoardVideo();
     web.loadData(
@@ -1579,6 +1605,11 @@ class _LessonCallStageState extends State<LessonCallStage>
   @override
   void didUpdateWidget(covariant LessonCallStage oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.childId != widget.childId ||
+        oldWidget.lessonSessionId != widget.lessonSessionId ||
+        oldWidget.inviteToken != widget.inviteToken) {
+      _invalidateBoardCache();
+    }
     if (oldWidget.handle != widget.handle) {
       oldWidget.handle?.detach(endCall);
       widget.handle?.attach(endCall);
@@ -1697,6 +1728,7 @@ class _LessonCallStageState extends State<LessonCallStage>
             source:
                 'openWorkspace(${jsonEncode({'workspaceFormat': _boardWorkspace ? 'board' : widget.workspaceFormat})})',
           );
+          _invalidateBoardCache();
           await _pullBoard();
           _pageReady = true;
           _onDeskMedia();

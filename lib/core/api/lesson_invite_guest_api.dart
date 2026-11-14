@@ -137,18 +137,30 @@ class LessonInviteGuestApi {
     }
   }
 
-  Future<LessonChildBoard?> fetchBoard({required String token, String? link}) async {
+  Future<LessonChildBoard?> fetchBoard({required String token, String? link,
+    String? ifNoneMatch, void Function(String?)? onETag}) async {
     try {
+      final options = await _guestOptions();
       final response = await _client.dio.get(
         '/api/invite/lesson/guest/board',
         queryParameters: {
           'token': token,
           if (link != null && link.isNotEmpty) 'link': link,
         },
-        options: await _guestOptions(),
+        options: options.copyWith(headers: {
+          ...?options.headers,
+          'If-None-Match': ?ifNoneMatch,
+        }, validateStatus: (status) => status != null && status < 500),
       );
-      return LessonChildBoard.fromJson(_asJsonMap(response.data));
+      if (response.statusCode == 304) {
+        onETag?.call(response.headers.value('etag'));
+        return null;
+      }
+      final board = LessonChildBoard.fromJson(_asJsonMap(response.data));
+      onETag?.call(board == null ? null : response.headers.value('etag'));
+      return board;
     } on DioException {
+      onETag?.call(null);
       return null;
     }
   }

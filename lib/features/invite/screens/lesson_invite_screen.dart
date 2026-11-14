@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:larnes_mobile/features/parent/navigation/parent_child_routes.dart';
 import 'package:larnes_mobile/core/api/parent_api.dart';
 import 'package:larnes_mobile/core/auth/auth_scope.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
@@ -154,6 +155,7 @@ class _LessonInviteScreenState extends State<LessonInviteScreen>
         if (!auth.isAuthenticated) {
           final guest = await auth.lessonInviteGuestApi.fetchRoom(
             token: widget.token,
+            connectionId: null,
             locale: locale,
             poll: true,
           );
@@ -226,6 +228,7 @@ class _LessonInviteScreenState extends State<LessonInviteScreen>
     try {
       final guest = await AuthScope.of(context).lessonInviteGuestApi.fetchRoom(
             token: widget.token,
+            connectionId: null,
             locale: LocaleScope.read(context).localeCode,
             poll: true,
           );
@@ -302,7 +305,7 @@ class _LessonInviteScreenState extends State<LessonInviteScreen>
   }
 
   Future<void> _openRoom(String childId) async {
-    context.go('/parent/$childId/lesson');
+    context.go(ParentChildRoutes.lessonLocation(childId, _invite?.sessionId));
   }
 
   Future<void> _join(ParentLessonInviteChild child) async {

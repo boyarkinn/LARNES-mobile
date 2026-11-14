@@ -38,6 +38,8 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   String? _joinErrorChildId;
   String? _joinErrorMessage;
   Timer? _livePoll;
+  int _loadRevision = 0;
+  bool _loadingChildren = false;
 
   @override
   void initState() {
@@ -162,8 +164,8 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
   }
 
-  Future<void> _openLesson(String childId) async {
-    await ParentChildRoutes.openLesson(context, childId);
+  Future<void> _openLesson(String childId, String sessionId) async {
+    await ParentChildRoutes.openLesson(context, childId, sessionId);
     if (mounted) {
       await _load(refreshing: true);
     }
@@ -203,7 +205,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     }
 
     if (live.presence == ParentLiveLessonPresence.online) {
-      await _openLesson(child.id);
+      await _openLesson(child.id, live.sessionId);
       return;
     }
 
@@ -242,7 +244,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
             .toList();
         _joiningChildId = null;
       });
-      await _openLesson(child.id);
+      await _openLesson(child.id, live.sessionId);
     } on ParentApiException catch (error) {
       if (!mounted) {
         return;
@@ -267,6 +269,9 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
   }
 
   Future<void> _load({bool refreshing = false, bool silent = false}) async {
+    if (silent && _loadingChildren) return;
+    final revision = ++_loadRevision;
+    _loadingChildren = true;
     if (refreshing && !silent) {
       setState(() => _isRefreshing = true);
     } else if (_children.isEmpty) {
@@ -280,7 +285,7 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
     try {
       final locale = LocaleScope.read(context).localeCode;
       final children = await AuthScope.of(context).parentApi.listChildren(locale: locale);
-      if (!mounted) {
+      if (!mounted || revision != _loadRevision) {
         return;
       }
       setState(() {
@@ -292,25 +297,26 @@ class _ChildPickerScreenState extends State<ChildPickerScreen> {
       });
       _ensureLivePoll();
     } on ParentApiException catch (error) {
-      if (mounted && redirectToFamilySetupIfRequired(context, code: error.code)) {
+      if (!mounted || revision != _loadRevision) return;
+      if (redirectToFamilySetupIfRequired(context, code: error.code)) {
         return;
       }
-      if (mounted) {
-        setState(() {
-          _error = error.message;
-          _errorCode = error.code;
-          _isLoading = false;
-          _isRefreshing = false;
-        });
-      }
+      setState(() {
+        _error = error.message;
+        _errorCode = error.code;
+        _isLoading = false;
+        _isRefreshing = false;
+      });
     } catch (_) {
-      if (mounted) {
+      if (mounted && revision == _loadRevision) {
         setState(() {
           _error = context.l10n.parentLoadChildrenFailed;
           _isLoading = false;
           _isRefreshing = false;
         });
       }
+    } finally {
+      if (revision == _loadRevision) _loadingChildren = false;
     }
   }
 

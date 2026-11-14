@@ -12,11 +12,17 @@ import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.d
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:uuid/uuid.dart';
 
 class LiveLessonRoomScreen extends StatefulWidget {
-  const LiveLessonRoomScreen({super.key, required this.childId});
+  const LiveLessonRoomScreen({
+    super.key,
+    required this.childId,
+    this.sessionId,
+  });
 
   final String childId;
+  final String? sessionId;
 
   @override
   State<LiveLessonRoomScreen> createState() => _LiveLessonRoomScreenState();
@@ -31,6 +37,9 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
   ParentLiveLessonRoomState? _room;
   bool _leaving = false;
   bool _exited = false;
+  bool _reading = false;
+  Future<ParentLiveLessonRoomState>? _opening;
+  final _connectionId = const Uuid().v4();
   Timer? _poll;
   final _call = LessonCallStageHandle();
 
@@ -54,8 +63,8 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted && !_leaving) {
-      unawaited(_pollRoom());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_loadRoom(poll: _room != null));
     }
   }
 
@@ -65,91 +74,70 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
 
   void _ensurePoll() {
     _poll ??= Timer.periodic(_pollInterval, (_) {
-      if (!mounted || _leaving) {
-        return;
-      }
-
-      unawaited(_pollRoom());
+      unawaited(_loadRoom(poll: true));
     });
   }
 
-  Future<void> _loadRoom() async {
-    setState(() {
-      _isLoading = _room == null;
-      _loadError = null;
-    });
+  bool get _active => mounted && !_leaving && !_exited;
+
+  Future<void> _loadRoom({bool poll = false}) async {
+    if (!_active || _reading) return;
+    _reading = true;
+    if (!poll) {
+      setState(() {
+        _isLoading = _room == null;
+        _loadError = null;
+      });
+    }
 
     try {
-      final room = await _api.fetchLiveLessonRoom(
+      final sessionId = _room?.sessionId ?? widget.sessionId;
+      final request = _api.fetchLiveLessonRoom(
         childId: widget.childId,
         locale: _locale,
+        connectionId: _connectionId,
+        sessionId: sessionId,
+        poll: poll,
       );
-      if (!mounted) {
-        return;
+      if (sessionId == null) _opening = request;
+      var room = await request;
+      if (!_active) return;
+      if (poll && room.isOk) {
+        if (room.sessionId == _room?.sessionId) return;
+        room = await _api.fetchLiveLessonRoom(
+          childId: widget.childId,
+          locale: _locale,
+          connectionId: _connectionId,
+          sessionId: room.sessionId,
+        );
+        if (!_active) return;
       }
-
       if (room.isGone) {
         _goPicker();
         return;
       }
-
       _applyRoom(room);
       _ensurePoll();
     } on ParentApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-
+      if (!_active) return;
       if (error.code == 'gone') {
         _goPicker();
-        return;
-      }
-
-      setState(() {
-        _loadError = error.message;
-        _isLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _loadError = context.l10n.parentLiveLessonLoadFailed;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _pollRoom() async {
-    try {
-      final poll = await _api.fetchLiveLessonRoom(
-        childId: widget.childId,
-        locale: _locale,
-        poll: true,
-      );
-      if (!mounted || _leaving) {
-        return;
-      }
-
-      if (poll.isGone) {
-        _goPicker();
-        return;
-      }
-
-      if (poll.isOk && poll.sessionId != _room?.sessionId) {
-        await _loadRoom();
-      }
-    } on ParentApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      if (error.code == 'gone') {
-        _goPicker();
+      } else if (!poll) {
+        setState(() {
+          _loadError = error.message;
+          _isLoading = false;
+        });
       }
     } catch (_) {
-      return;
+      if (_active && !poll) {
+        setState(() {
+          _loadError = context.l10n.parentLiveLessonLoadFailed;
+          _isLoading = false;
+        });
+      }
+    } finally {
+      _reading = false;
+      _opening = null;
     }
   }
 
@@ -190,20 +178,35 @@ class _LiveLessonRoomScreenState extends State<LiveLessonRoomScreen>
   }
 
   Future<void> _leaveLesson() async {
-    if (_leaving) {
+    if (!_active) {
       return;
     }
 
     _leaving = true;
     _poll?.cancel();
     final api = _api;
+    final childId = widget.childId;
     final locale = _locale;
-    await _call.end();
-
     try {
-      await api.leaveLiveLesson(childId: widget.childId, locale: locale);
+      var sessionId = _room?.sessionId ?? widget.sessionId;
+      if (sessionId == null) {
+        // A direct link can be closed before its first response names the lesson.
+        final opening = _opening;
+        _goPicker();
+        sessionId = (await opening)?.sessionId;
+        if (sessionId == null) return;
+      }
+      await Future.wait([
+        api.leaveLiveLesson(
+          childId: childId,
+          connectionId: _connectionId,
+          sessionId: sessionId,
+          locale: locale,
+        ),
+        _call.end(),
+      ]);
     } catch (_) {
-      // Web also leaves the room even if the action fails.
+      // Once polling stops, a dropped leave request expires on the server.
     } finally {
       _goPicker();
     }

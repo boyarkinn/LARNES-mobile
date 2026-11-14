@@ -19,6 +19,8 @@ import 'package:larnes_mobile/features/parent/models/parent_trainer_catalog.dart
 import 'package:larnes_mobile/features/admin/models/trainer_play.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 
+const lessonConnectionHeader = 'X-Larnes-Lesson-Connection';
+
 Map<String, dynamic>? _asJsonMap(dynamic body) => parentPanelErrorMap(body);
 
 String _messageFromBody(
@@ -253,6 +255,8 @@ class ParentApi {
 
   Future<ParentLiveLessonRoomState> fetchLiveLessonRoom({
     required String childId,
+    required String connectionId,
+    String? sessionId,
     String locale = 'ru',
     bool poll = false,
   }) async {
@@ -260,9 +264,11 @@ class ParentApi {
     try {
       final response = await _client.dio.get(
         '/api/mobile/parent/children/$childId/live-lesson',
+        options: Options(headers: {lessonConnectionHeader: connectionId}),
         queryParameters: {
           'locale': locale,
           if (poll) 'poll': '1',
+          'sessionId': ?sessionId,
         },
       );
       final data = _asJsonMap(response.data);
@@ -411,13 +417,16 @@ class ParentApi {
 
   Future<void> leaveLiveLesson({
     required String childId,
+    required String connectionId,
+    required String sessionId,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/mobile/parent/children/$childId/live-lesson/leave',
-        data: {'locale': locale},
+        options: Options(headers: {lessonConnectionHeader: connectionId}),
+        data: {'locale': locale, 'sessionId': sessionId},
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'ok') {

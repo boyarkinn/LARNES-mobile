@@ -393,7 +393,12 @@ GoRouter createAppRouter({
                           if (childId == null || childId.isEmpty) {
                             return const ChildPickerScreen();
                           }
-                          return LiveLessonRoomScreen(childId: childId);
+                          final sessionId = state.uri.queryParameters['sessionId'];
+                          return LiveLessonRoomScreen(
+                            key: ValueKey((childId, sessionId)),
+                            childId: childId,
+                            sessionId: sessionId,
+                          );
                         },
                       ),
                       GoRoute(
@@ -787,7 +792,10 @@ GoRouter createAppRouter({
         path: '/invite/lesson/room',
         builder: (context, state) {
           final token = state.uri.queryParameters['token'] ?? '';
-          return LessonInviteGuestRoomScreen(token: token);
+          return LessonInviteGuestRoomScreen(
+            key: ValueKey(token),
+            token: token,
+          );
         },
       ),
       GoRoute(

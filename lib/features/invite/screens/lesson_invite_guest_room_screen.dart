@@ -13,6 +13,7 @@ import 'package:larnes_mobile/features/parent/widgets/live_lesson_waiting_view.d
 import 'package:larnes_mobile/features/parent/widgets/parent_player_shell.dart';
 import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/l10n/l10n_extensions.dart';
+import 'package:uuid/uuid.dart';
 
 class LessonInviteGuestRoomScreen extends StatefulWidget {
   const LessonInviteGuestRoomScreen({super.key, required this.token});
@@ -35,6 +36,8 @@ class _LessonInviteGuestRoomScreenState
   bool _leaving = false;
   final _call = LessonCallStageHandle();
   bool _exited = false;
+  bool _reading = false;
+  final _connectionId = const Uuid().v4();
   Timer? _poll;
 
   String get _exitPath =>
@@ -60,8 +63,8 @@ class _LessonInviteGuestRoomScreenState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && mounted && !_leaving) {
-      unawaited(_pollRoom());
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_loadRoom(poll: _room != null));
     }
   }
 
@@ -69,77 +72,65 @@ class _LessonInviteGuestRoomScreenState
 
   void _ensurePoll() {
     _poll ??= Timer.periodic(_pollInterval, (_) {
-      if (!mounted || _leaving) {
-        return;
-      }
-
-      unawaited(_pollRoom());
+      unawaited(_loadRoom(poll: true));
     });
   }
 
-  Future<void> _loadRoom() async {
-    setState(() {
-      _isLoading = _room == null;
-      _loadError = null;
-    });
+  bool get _active => mounted && !_leaving && !_exited;
+
+  Future<void> _loadRoom({bool poll = false}) async {
+    if (!_active || _reading) return;
+    _reading = true;
+    if (!poll) {
+      setState(() {
+        _isLoading = _room == null;
+        _loadError = null;
+      });
+    }
 
     try {
-      final room = await AuthScope.of(
-        context,
-      ).lessonInviteGuestApi.fetchRoom(token: widget.token, locale: _locale);
-      if (!mounted || _leaving || _exited) {
-        return;
+      final api = AuthScope.of(context).lessonInviteGuestApi;
+      var room = await api.fetchRoom(
+        token: widget.token,
+        connectionId: _connectionId,
+        locale: _locale,
+        poll: poll,
+      );
+      if (!_active) return;
+      if (poll && room != null && room.isOk) {
+        if (room.sessionId == _room?.sessionId &&
+            room.commandSeq == _room?.commandSeq) {
+          return;
+        }
+        room = await api.fetchRoom(
+          token: widget.token,
+          connectionId: _connectionId,
+          locale: _locale,
+        );
+        if (!_active) return;
       }
-
       if (room == null || !room.isOk) {
         _showExit();
         return;
       }
-
       _applyRoom(room);
       _ensurePoll();
     } on ParentApiException catch (error) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _loadError = error.message;
-        _isLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _loadError = context.l10n.parentLiveLessonLoadFailed;
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _pollRoom() async {
-    try {
-      final poll = await AuthScope.of(context).lessonInviteGuestApi.fetchRoom(
-        token: widget.token,
-        locale: _locale,
-        poll: true,
-      );
-      if (!mounted || _leaving || _exited) {
-        return;
-      }
-
-      if (poll == null || !poll.isOk) {
-        _showExit();
-        return;
-      }
-
-      if (poll.commandSeq != (_room?.commandSeq ?? -1)) {
-        await _loadRoom();
+      if (_active && !poll) {
+        setState(() {
+          _loadError = error.message;
+          _isLoading = false;
+        });
       }
     } catch (_) {
-      return;
+      if (_active && !poll) {
+        setState(() {
+          _loadError = context.l10n.parentLiveLessonLoadFailed;
+          _isLoading = false;
+        });
+      }
+    } finally {
+      _reading = false;
     }
   }
 
@@ -162,7 +153,7 @@ class _LessonInviteGuestRoomScreenState
   }
 
   Future<void> _leaveLesson() async {
-    if (_leaving) {
+    if (!_active) {
       return;
     }
 
@@ -170,15 +161,27 @@ class _LessonInviteGuestRoomScreenState
     _poll?.cancel();
     final api = AuthScope.of(context).lessonInviteGuestApi;
     final locale = _locale;
-    await _call.end();
-
     try {
-      await api.leave(token: widget.token, locale: locale);
+      await Future.wait([
+        api.leave(
+          token: widget.token,
+          connectionId: _connectionId,
+          sessionId: _room?.sessionId,
+          locale: locale,
+        ),
+        _call.end(),
+      ]);
     } catch (_) {
-      // Web also leaves the room even if the action fails.
+      // Once polling stops, a dropped leave request expires on the server.
     } finally {
-      await MessengerRooms.clearGuest();
-      _showExit();
+      if (mounted) {
+        unawaited(
+          MessengerRooms.clearGuest().catchError((Object error) {
+            debugPrint('Could not clear the lesson guest chat cache: $error');
+          }),
+        );
+        _showExit();
+      }
     }
   }
 

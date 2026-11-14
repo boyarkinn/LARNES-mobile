@@ -24,9 +24,15 @@ class ParentChildRoutes {
   }
 
   /// Opens the live-lesson room (`/parent/:childId/lesson`).
-  static Future<T?> openLesson<T>(BuildContext context, String childId) {
-    return pushForChild<T>(context, childId: childId, segment: 'lesson');
+  static Future<T?> openLesson<T>(BuildContext context, String childId, String sessionId) {
+    _ensureChildrenBranch(context);
+    return context.push<T>(lessonLocation(childId, sessionId));
   }
+
+  static String lessonLocation(String childId, String? sessionId) => Uri(
+    path: '/parent/$childId/lesson',
+    queryParameters: sessionId == null ? null : {'sessionId': sessionId},
+  ).toString();
 
   /// Pushes `/parent/:childId/:segment` (absolute — relative `./` breaks when shell URI drifts).
   static Future<T?> pushForChild<T>(

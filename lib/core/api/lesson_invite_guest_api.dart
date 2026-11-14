@@ -53,6 +53,7 @@ class LessonInviteGuestApi {
 
   Future<ParentLiveLessonRoomState?> fetchRoom({
     required String token,
+    required String? connectionId,
     String locale = 'ru',
     bool poll = false,
   }) async {
@@ -67,10 +68,11 @@ class LessonInviteGuestApi {
         '/api/invite/lesson/guest',
         queryParameters: {
           'token': token,
+          if (connectionId == null) 'observeOnly': '1',
           if (poll) 'poll': '1',
           if (!poll) 'locale': locale,
         },
-        options: await _guestOptions(key),
+        options: await _guestOptions(knownKey: key, connectionId: connectionId),
       );
       if (response.statusCode == 404) {
         return const ParentLiveLessonRoomState(status: 'invalid');
@@ -89,14 +91,16 @@ class LessonInviteGuestApi {
 
   Future<void> leave({
     required String token,
+    required String connectionId,
+    required String? sessionId,
     String locale = 'ru',
   }) async {
     final l10n = lookupAppLocalizations(Locale(locale));
     try {
       final response = await _client.dio.post(
         '/api/invite/lesson/guest/leave',
-        data: {'token': token},
-        options: await _guestOptions(),
+        data: {'token': token, 'sessionId': ?sessionId},
+        options: await _guestOptions(connectionId: connectionId),
       );
       final data = _asJsonMap(response.data);
       if (data == null || data['status'] != 'ok') {
@@ -218,11 +222,12 @@ class LessonInviteGuestApi {
     );
   }
 
-  Future<Options> _guestOptions([String? knownKey]) async {
+  Future<Options> _guestOptions({String? knownKey, String? connectionId}) async {
     final key = knownKey ?? await _storage.readKey();
     return Options(
       headers: {
         if (key != null && key.isNotEmpty) lessonGuestKeyHeader: key,
+        lessonConnectionHeader: ?connectionId,
       },
     );
   }

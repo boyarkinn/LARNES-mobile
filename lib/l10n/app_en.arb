@@ -715,6 +715,8 @@
   "inviteLessonRegister": "Register",
   "inviteLessonWrongAccountTitle": "Parent cabinet required",
   "inviteLessonWrongAccountSubtitle": "This link is for a parent. Sign in with another account.",
+  "inviteLessonLeftTitle": "You’ve left the lesson.",
+  "inviteLessonReturn": "Return to the lesson",
   "inviteLessonExpiredTitle": "This lesson has already ended",
   "inviteLessonExpiredMessage": "This link is no longer valid.",
   "inviteLessonContinueAsGuest": "Continue without signing in",

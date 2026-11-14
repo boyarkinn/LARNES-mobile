@@ -42,6 +42,7 @@ import 'package:larnes_mobile/features/parent/screens/account/account_edit_child
 import 'package:larnes_mobile/features/invite/screens/family_adult_claim_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_guardian_invite_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/family_join_request_invite_screen.dart';
+import 'package:larnes_mobile/features/invite/screens/lesson_invite_exit_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/lesson_invite_guest_room_screen.dart';
 import 'package:larnes_mobile/features/invite/screens/lesson_invite_screen.dart';
 import 'package:larnes_mobile/features/parent/screens/account/account_hub_screen.dart';
@@ -774,6 +775,13 @@ GoRouter createAppRouter({
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/invite/lesson/left',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ?? '';
+          return LessonInviteExitScreen(key: ValueKey(token), token: token);
+        },
       ),
       GoRoute(
         path: '/invite/lesson/room',

@@ -1776,6 +1776,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'This link is for a parent. Sign in with another account.';
 
   @override
+  String get inviteLessonLeftTitle => 'You’ve left the lesson.';
+
+  @override
+  String get inviteLessonReturn => 'Return to the lesson';
+
+  @override
   String get inviteLessonExpiredTitle => 'This lesson has already ended';
 
   @override

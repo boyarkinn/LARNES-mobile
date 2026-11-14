@@ -666,6 +666,8 @@
   "inviteLessonRegister": "Регистрация",
   "inviteLessonWrongAccountTitle": "Нужен кабинет родителя",
   "inviteLessonWrongAccountSubtitle": "Эта ссылка для родителя. Войдите другим аккаунтом.",
+  "inviteLessonLeftTitle": "Вы вышли с урока.",
+  "inviteLessonReturn": "Вернуться на урок",
   "inviteLessonExpiredTitle": "Урок уже закончился",
   "inviteLessonExpiredMessage": "Эта ссылка больше не действует.",
   "inviteLessonContinueAsGuest": "Продолжить без входа",

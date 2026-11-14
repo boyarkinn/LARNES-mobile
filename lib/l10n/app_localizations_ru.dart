@@ -1785,6 +1785,12 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта ссылка для родителя. Войдите другим аккаунтом.';
 
   @override
+  String get inviteLessonLeftTitle => 'Вы вышли с урока.';
+
+  @override
+  String get inviteLessonReturn => 'Вернуться на урок';
+
+  @override
   String get inviteLessonExpiredTitle => 'Урок уже закончился';
 
   @override

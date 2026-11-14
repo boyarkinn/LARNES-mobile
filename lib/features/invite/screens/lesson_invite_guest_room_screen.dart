@@ -37,8 +37,8 @@ class _LessonInviteGuestRoomScreenState
   bool _exited = false;
   Timer? _poll;
 
-  String get _invitePath =>
-      '/invite/lesson?token=${Uri.encodeComponent(widget.token)}';
+  String get _exitPath =>
+      '/invite/lesson/left?token=${Uri.encodeComponent(widget.token)}';
 
   @override
   void initState() {
@@ -87,12 +87,12 @@ class _LessonInviteGuestRoomScreenState
       final room = await AuthScope.of(
         context,
       ).lessonInviteGuestApi.fetchRoom(token: widget.token, locale: _locale);
-      if (!mounted) {
+      if (!mounted || _leaving || _exited) {
         return;
       }
 
       if (room == null || !room.isOk) {
-        _goInvite();
+        _showExit();
         return;
       }
 
@@ -126,12 +126,12 @@ class _LessonInviteGuestRoomScreenState
         locale: _locale,
         poll: true,
       );
-      if (!mounted || _leaving) {
+      if (!mounted || _leaving || _exited) {
         return;
       }
 
       if (poll == null || !poll.isOk) {
-        _goInvite();
+        _showExit();
         return;
       }
 
@@ -151,14 +151,14 @@ class _LessonInviteGuestRoomScreenState
     });
   }
 
-  void _goInvite() {
+  void _showExit() {
     if (!mounted || _exited) {
       return;
     }
 
     _exited = true;
     _poll?.cancel();
-    context.go(_invitePath);
+    context.go(_exitPath);
   }
 
   Future<void> _leaveLesson() async {
@@ -178,7 +178,7 @@ class _LessonInviteGuestRoomScreenState
       // Web also leaves the room even if the action fails.
     } finally {
       await MessengerRooms.clearGuest();
-      _goInvite();
+      _showExit();
     }
   }
 

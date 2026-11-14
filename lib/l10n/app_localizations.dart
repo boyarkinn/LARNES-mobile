@@ -3398,6 +3398,18 @@ abstract class AppLocalizations {
   /// **'This link is for a parent. Sign in with another account.'**
   String get inviteLessonWrongAccountSubtitle;
 
+  /// No description provided for @inviteLessonLeftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve left the lesson.'**
+  String get inviteLessonLeftTitle;
+
+  /// No description provided for @inviteLessonReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to the lesson'**
+  String get inviteLessonReturn;
+
   /// No description provided for @inviteLessonExpiredTitle.
   ///
   /// In en, this message translates to:

@@ -116,7 +116,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         isTextPassageTrainerKey(widget.trainerKey))) {
       _selection = {
         'libraryId': readingContentBankLibraryId,
-        if (widget.trainerKey == 'reading-marathon')
+        if (isWordListTrainerKey(widget.trainerKey))
           'categoryIds': readingWordListCategoryIds(_selection)
         else
           'categoryId': _selection['categoryId'],
@@ -137,7 +137,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         trainerKey: widget.trainerKey,
         filters: {
           'params': jsonEncode(
-            widget.trainerKey == 'reading-marathon'
+            isWordListTrainerKey(widget.trainerKey)
                 ? <String, dynamic>{}
                 : widget.params,
           ),
@@ -145,7 +145,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
               (_selection['materialIds'] as List? ?? const []).join(','),
           for (final key in ['categoryId', 'kind', 'locale', 'hasImage'])
             if (_selection[key] != null) key: _selection[key],
-          if (widget.trainerKey == 'reading-marathon' &&
+          if (isWordListTrainerKey(widget.trainerKey) &&
               readingWordListCategoryIds(_selection).isNotEmpty)
             'categoryIds': readingWordListCategoryIds(_selection).join(','),
         },
@@ -218,7 +218,7 @@ class _TrainerContentBankFieldState extends State<TrainerContentBankField> {
         .toSet();
     final materials = _result?['materials'] as List? ?? const [];
     final total = _result?['total'] as num? ?? 0;
-    if (widget.trainerKey == 'reading-marathon') {
+    if (isWordListTrainerKey(widget.trainerKey)) {
       final categories = (_result?['categories'] as List? ?? const [])
           .whereType<Map>()
           .toList();

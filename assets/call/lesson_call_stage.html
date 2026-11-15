@@ -1505,8 +1505,7 @@
           var current = function () { return thisAttempt === attempt && !leaving && connection === connected; };
           var startTarget = function () {
           if (!current()) return;
-          var options = { p2p: { enabled: false } };
-          if (address.customDomain) options.customDomain = address.customDomain;
+          var options = LarnesLessonMedia.conferenceOptions(address.customDomain);
           room = connected.initJitsiConference(address.room, options);
           if (pass.displayName) {
             room.setDisplayName(pass.displayName);
@@ -1736,7 +1735,7 @@
           };
           if (!address.customDomain) startTarget();
           else cancelRoomBootstrap = bootstrapBreakout({
-            create: function () { return connected.initJitsiConference(address.mainRoom, { p2p: { enabled: false } }); },
+            create: function () { return connected.initJitsiConference(address.mainRoom, LarnesLessonMedia.conferenceOptions()); },
             joinedEvent: meet.events.conference.CONFERENCE_JOINED,
             failedEvent: meet.events.conference.CONFERENCE_FAILED,
             current: current,

@@ -81,6 +81,13 @@ test('actual native start joins and leaves main before the confirmed breakout on
   assert.equal(conferences.length, 2);
   assert.equal(conferences[1].name, 'provider');
   assert.equal(conferences[1].options.customDomain, 'breakout.meet.jitsi');
+  for (const conference of conferences) {
+    const quality = JSON.parse(JSON.stringify(conference.options.videoQuality));
+    assert.deepEqual(quality.codecPreferenceOrder, ['VP8', 'VP9', 'H264', 'AV1']);
+    assert.deepEqual(quality.mobileCodecPreferenceOrder, quality.codecPreferenceOrder);
+    assert.equal(quality.screenshareCodec, 'VP8');
+    assert.equal(quality.mobileScreenshareCodec, 'VP8');
+  }
   assert.deepEqual(calls.filter(value => ['join', 'leave'].includes(value[0])), [['join', 'lesson'], ['leave', 'lesson'], ['join', 'provider']]);
 });
 

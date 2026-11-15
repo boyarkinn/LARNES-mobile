@@ -43,9 +43,21 @@ function jitsi(c) {
   const conferenceEvents = Object.fromEntries(['TRACK_ADDED', 'TRACK_REMOVED', 'TRACK_MUTE_CHANGED', 'USER_JOINED', 'USER_LEFT',
     'DISPLAY_NAME_CHANGED', 'CONFERENCE_JOINED', 'CONFERENCE_FAILED'].map(key => [key, key]));
   class Connection {
+    xmpp = {
+      connection: { connected: false },
+      sendDominantSpeakerEvent() {
+        if (!this.connection.connected) throw new Error('Not connected');
+        calls.push(['speaker-stats']);
+      },
+    };
     constructor(_app, token, options) { this.token = token; this.options = options; this.handlers = new Map(); connections.push(this); }
     addEventListener(event, fn) { this.handlers.set(event, fn); }
-    connect() { this.handlers.get('established')(); }
+    connect() {
+      this.xmpp.sendDominantSpeakerEvent();
+      this.xmpp.connection.connected = true;
+      this.xmpp.sendDominantSpeakerEvent();
+      this.handlers.get('established')();
+    }
     disconnect() { calls.push(['disconnect']); }
     initJitsiConference(name, options) {
       const handlers = new Map(), conn = this;
@@ -77,6 +89,7 @@ test('actual native start joins and leaves main before the confirmed breakout on
   assert.equal(f.events.some(e => ['endpoint', 'joined'].includes(e[1].kind)), false);
   conferences[0].handlers.get('CONFERENCE_JOINED')(); await flush();
   assert.equal(connections.length, 1);
+  assert.equal(calls.filter(value => value[0] === 'speaker-stats').length, 1);
   assert.equal(connections[0].options.serviceUrl, 'wss://meet.example.test/xmpp-websocket?room=lesson');
   assert.equal(conferences.length, 2);
   assert.equal(conferences[1].name, 'provider');

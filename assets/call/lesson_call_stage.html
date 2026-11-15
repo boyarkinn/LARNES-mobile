@@ -1491,6 +1491,7 @@
           serviceUrl: "wss://" + pass.domain + "/xmpp-websocket?room=" + encodeURIComponent(address.mainRoom),
           clientNode: "http://jitsi.org/jitsimeet",
         });
+        LarnesLessonMedia.guardSpeakerStats(connection);
         connection.addEventListener(meet.events.connection.CONNECTION_FAILED, function () {
           if (thisAttempt !== attempt || leaving) {
             return;

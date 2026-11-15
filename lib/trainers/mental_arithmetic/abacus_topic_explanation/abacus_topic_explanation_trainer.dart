@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:larnes_mobile/trainers/audio/speech_bank.dart';
@@ -11,6 +12,29 @@ import 'package:larnes_mobile/trainers/mental_arithmetic/shared/physical_gesture
 import 'package:larnes_mobile/trainers/mental_arithmetic/shared/topic_example_generation.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/shared/trainer_scene.dart';
+import 'package:larnes_mobile/trainers/runtime/runtime_snapshot.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/topic_chain_attempt_record.dart';
+
+Chain? readPreparedTopicExplanationExample(Map<String, dynamic> params) {
+  final payload = readTrainerRuntimeSnapshot(
+    'abacus-topic-explanation',
+    params,
+  );
+  if (payload?['lessonId'] != (params['lessonId'] ?? 'simple-1')) return null;
+  final example = payload?['example'];
+  if (example is! Map) return null;
+  try {
+    final chain = topicChainFromJson(Map<String, dynamic>.from(example));
+    return chain.topicId ==
+            topicExplanationExampleProfile(
+              payload!['lessonId'] as String,
+            ).topicId
+        ? chain
+        : null;
+  } catch (_) {
+    return null;
+  }
+}
 
 /// One player per lesson instance keeps a cancelled cue from muting another trainer.
 class AbacusTopicExplanationTrainer extends StatefulWidget {
@@ -46,10 +70,12 @@ class _AbacusTopicExplanationTrainerState
 
   void _createRun() {
     _lessonId = widget.params['lessonId'] as String? ?? 'simple-1';
-    _example = generateTopicExample(
-      topicExplanationExampleProfile(_lessonId),
-      previousSignature: _previousExamples[_lessonId],
-    );
+    _example =
+        readPreparedTopicExplanationExample(widget.params) ??
+        generateTopicExample(
+          topicExplanationExampleProfile(_lessonId),
+          previousSignature: _previousExamples[_lessonId],
+        );
     _previousExamples[_lessonId] = chainExampleSignature(_example.steps);
     _buildPlan();
   }
@@ -63,7 +89,9 @@ class _AbacusTopicExplanationTrainerState
   @override
   void didUpdateWidget(AbacusTopicExplanationTrainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if ((widget.params['lessonId'] as String? ?? 'simple-1') != _lessonId) {
+    if ((widget.params['lessonId'] as String? ?? 'simple-1') != _lessonId ||
+        jsonEncode(widget.params['__runtimeSnapshot']) !=
+            jsonEncode(oldWidget.params['__runtimeSnapshot'])) {
       _createRun();
     } else if ((speechAudioFile('explanation:abacus-topic:answer')?.locale ??
             'ru-RU') !=
@@ -101,7 +129,7 @@ class _AbacusTopicExplanationTrainerState
     return TrainerScene(
       child: PhysicalGestureTrainer(
         instructionKey: 'instruction:abacus-topic-explanation',
-        key: ValueKey(_lessonId),
+        key: ValueKey('$_lessonId:${chainExampleSignature(_example.steps)}'),
         plan: _plan,
         speed: switch (widget.params['speed']) {
           'slow' => PhysicalGestureSpeed.slow,

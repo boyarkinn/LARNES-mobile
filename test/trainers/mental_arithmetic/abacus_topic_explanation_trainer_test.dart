@@ -14,6 +14,45 @@ import 'package:larnes_mobile/trainers/shared/abacus/abacus_model.dart';
 import 'package:larnes_mobile/trainers/shared/abacus/abacus_widget.dart';
 
 void main() {
+  test(
+    'prepared topic example survives native playback and old params remain valid',
+    () {
+      final params = <String, dynamic>{
+        'lessonId': 'simple-1',
+        '__runtimeSnapshot': {
+          'trainerKey': 'abacus-topic-explanation',
+          'version': 1,
+          'mode': 'materialized',
+          'payload': {
+            'lessonId': 'simple-1',
+            'example': {
+              'topicId': 'simple-1',
+              'answer': 1,
+              'intermediates': [1, 2, 1, 2, 1],
+              'steps': [
+                for (final sign in ['+', '+', '-', '+', '-'])
+                  {'sign': sign, 'amount': 1},
+              ],
+            },
+          },
+        },
+      };
+      final first = readPreparedTopicExplanationExample(params)!;
+      expect(first.answer, 1);
+      expect(first.steps, readPreparedTopicExplanationExample(params)!.steps);
+      expect(
+        readPreparedTopicExplanationExample({'lessonId': 'simple-1'}),
+        isNull,
+      );
+      expect(
+        readPreparedTopicExplanationExample({
+          ...params,
+          'lessonId': 'simple-2',
+        }),
+        isNull,
+      );
+    },
+  );
   test('simple one matches the filmed bases and final example', () {
     final plan = topicExplanationRecipe('simple-1');
     final frames = compilePhysicalGesturePlan(plan);
@@ -113,8 +152,15 @@ void main() {
     );
 
     expect(find.byType(PhysicalGestureAbacus), findsOneWidget);
-    final generatedPlan = tester.widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus)).plan;
-    expect(generatedPlan.audioSequences.keys.where((key) => key.startsWith(r'$physical-example:operation:')), hasLength(5));
+    final generatedPlan = tester
+        .widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus))
+        .plan;
+    expect(
+      generatedPlan.audioSequences.keys.where(
+        (key) => key.startsWith(r'$physical-example:operation:'),
+      ),
+      hasLength(5),
+    );
     expect(
       tester
           .widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus))
@@ -135,10 +181,25 @@ void main() {
     expect(find.byType(TextButton), findsNothing);
     expect(find.byType(ElevatedButton), findsNothing);
     expect(completions, 0);
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: AbacusTopicExplanationTrainer(
-      params: const {'lessonId': 'simple-1', 'speed': 'slow'}, onComplete: () => completions++,
-    ))));
-    expect(identical(tester.widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus)).plan, generatedPlan), isTrue);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: AbacusTopicExplanationTrainer(
+            params: const {'lessonId': 'simple-1', 'speed': 'slow'},
+            onComplete: () => completions++,
+          ),
+        ),
+      ),
+    );
+    expect(
+      identical(
+        tester
+            .widget<PhysicalGestureAbacus>(find.byType(PhysicalGestureAbacus))
+            .plan,
+        generatedPlan,
+      ),
+      isTrue,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });

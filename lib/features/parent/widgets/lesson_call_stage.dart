@@ -166,6 +166,7 @@ class _LessonCallStageState extends State<LessonCallStage>
     _boardETag = null;
     _boardCacheGeneration++;
   }
+
   MessengerRoom? _messenger;
   bool _messengerOpen = false;
   final _workspaceMessengerApi = MessengerApi();
@@ -624,15 +625,19 @@ class _LessonCallStageState extends State<LessonCallStage>
     if (injected != null) return injected(link: _boardLink);
     final invite = widget.inviteToken;
     if (invite != null) {
-      return AuthScope.of(
-        context,
-      ).lessonInviteGuestApi.fetchBoard(token: invite, link: _boardLink,
-        ifNoneMatch: _boardETag, onETag: onETag);
+      return AuthScope.of(context).lessonInviteGuestApi.fetchBoard(
+        token: invite,
+        link: _boardLink,
+        ifNoneMatch: _boardETag,
+        onETag: onETag,
+      );
     }
-    return AuthScope.of(
-      context,
-    ).parentApi.fetchChildBoard(childId: widget.childId, link: _boardLink,
-      ifNoneMatch: _boardETag, onETag: onETag);
+    return AuthScope.of(context).parentApi.fetchChildBoard(
+      childId: widget.childId,
+      link: _boardLink,
+      ifNoneMatch: _boardETag,
+      onETag: onETag,
+    );
   }
 
   Future<bool> _sendBoard(Map<String, dynamic> body) {
@@ -654,7 +659,11 @@ class _LessonCallStageState extends State<LessonCallStage>
     if (!_boardWorkspace && !_holding) return;
     _boardBusy = true;
     final generation = _boardCacheGeneration, scope = _boardCacheScope;
-    bool current() => mounted && !_ended && generation == _boardCacheGeneration && scope == _boardCacheScope;
+    bool current() =>
+        mounted &&
+        !_ended &&
+        generation == _boardCacheGeneration &&
+        scope == _boardCacheScope;
     String? receivedETag;
     try {
       final board = await _fetchBoard(onETag: (value) => receivedETag = value);
@@ -714,7 +723,8 @@ class _LessonCallStageState extends State<LessonCallStage>
         'lessonSessionId': board.lessonSessionId,
         'presence': board.presence,
         'participants': board.participants,
-        if (board.participantIds != null) 'participantIds': board.participantIds,
+        if (board.participantIds != null)
+          'participantIds': board.participantIds,
         'rulerScale': board.rulerScale,
         'navigation': board.navigation,
         'gen': _boardGen,
@@ -803,6 +813,11 @@ class _LessonCallStageState extends State<LessonCallStage>
     if (web == null) {
       return;
     }
+    final mediaSource = await rootBundle.loadString(
+      'assets/call/lesson-media-command.js',
+    );
+    if (!mounted || _web != web || _pageGen != pageGen) return;
+    await web.evaluateJavascript(source: mediaSource);
     final source = await rootBundle.loadString('assets/call/larnes-board.js');
     if (!mounted || _web != web || _pageGen != pageGen) {
       return;
@@ -1194,11 +1209,49 @@ class _LessonCallStageState extends State<LessonCallStage>
         _link != _LessonCallLink.closed;
   }
 
+  Future<Map<String, Object>> _teacherMediaPermission(
+    List<dynamic> args,
+  ) async {
+    final input = args.isNotEmpty ? args.first : null;
+    if (input is! Map ||
+        (input['device'] != 'video' && input['device'] != 'audio') ||
+        input['muted'] is! bool ||
+        input['commandId'] is! String ||
+        !_mediaWanted ||
+        !_inRoom ||
+        !mounted ||
+        _ended) {
+      return const {'ok': false, 'reason': 'disconnected'};
+    }
+    final video = input['device'] == 'video';
+    final seq = video ? ++_cameraSeq : ++_micSeq;
+    final callGen = _callGen;
+    if (input['muted'] == true) return const {'ok': true};
+    final desk = _desk;
+    if (desk != null &&
+        (!desk.requested(video ? 'video' : 'audio') ||
+            (video ? desk.media?.video != true : desk.media?.audio != true))) {
+      return const {'ok': false, 'reason': 'route-locked'};
+    }
+    final permission = video ? Permission.camera : Permission.microphone;
+    final granted = (await permission.request()).isGranted;
+    if (!_deviceWishCurrent(video, seq, callGen) || !_mediaWanted || _ended) {
+      return const {'ok': false, 'reason': 'superseded'};
+    }
+    return granted
+        ? const {'ok': true}
+        : const {'ok': false, 'reason': 'denied'};
+  }
+
   Future<void> _setDeviceWish(String device, bool muted) async {
     if (!_mediaWanted) return;
     final video = device == 'video';
     final seq = video ? ++_cameraSeq : ++_micSeq;
     final callGen = _callGen;
+    await _web?.evaluateJavascript(
+      source: 'cancelTeacherMedia(${jsonEncode(device)})',
+    );
+    if (!_deviceWishCurrent(video, seq, callGen)) return;
     final expectedMedia = _desk?.media;
     setState(() {
       if (video) {
@@ -1686,6 +1739,10 @@ class _LessonCallStageState extends State<LessonCallStage>
         controller.addJavaScriptHandler(
           handlerName: 'lessonCall',
           callback: _onBridge,
+        );
+        controller.addJavaScriptHandler(
+          handlerName: 'lessonMediaPermission',
+          callback: _teacherMediaPermission,
         );
         controller.addJavaScriptHandler(
           handlerName: 'boardExercise',

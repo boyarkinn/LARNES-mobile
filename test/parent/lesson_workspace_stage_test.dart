@@ -125,6 +125,7 @@ class _MediaHarness {
   Future<void> pump(WidgetTester tester) async {
     rootBundle.evict('assets/call/lesson_call_stage.html');
     rootBundle.evict('assets/call/larnes-board.js');
+    rootBundle.evict('assets/call/lesson-media-command.js');
     tester.binding.defaultBinaryMessenger.setMockMessageHandler(
       'flutter/assets',
       (_) async => ByteData.sublistView(utf8.encode('void 0;')),
@@ -136,6 +137,7 @@ class _MediaHarness {
       );
       rootBundle.evict('assets/call/lesson_call_stage.html');
       rootBundle.evict('assets/call/larnes-board.js');
+      rootBundle.evict('assets/call/lesson-media-command.js');
       locale.dispose();
     });
     InAppWebViewPlatform.instance = platform;
@@ -506,6 +508,61 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
     expect(f.boards, before);
     expect(f.platform.controller.loads, 1);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('correlated media bridge returns permission denial without claiming camera activation', (tester) async {
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') return {Permission.camera.value: 0};
+      return 0;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    final f = _MediaHarness()..home = true;
+    await f.pump(tester);
+    await f.emit(tester, 'joined');
+    final permission = f.platform.controller.handlers['lessonMediaPermission']!([
+      {'device': 'video', 'muted': false, 'commandId': 'camera-1'},
+    ]);
+    await tester.pumpAndSettle();
+    expect(await permission, {'ok': false, 'reason': 'denied'});
+    expect(f.platform.controller.scripts, isNot(contains('setDevice("video", false)')));
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('correlated permission is fenced by a newer mute and by lesson exit', (tester) async {
+    const channel = MethodChannel('flutter.baseflow.com/permissions/methods');
+    var permission = Completer<Map<int, int>>();
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'requestPermissions') return permission.future;
+      return 1;
+    });
+    addTearDown(() => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    final f = _MediaHarness()..home = true;
+    await f.pump(tester);
+    await f.emit(tester, 'joined');
+    final bridge = f.platform.controller.handlers['lessonMediaPermission']!;
+    for (final leaving in [false, true]) {
+      permission = Completer<Map<int, int>>();
+      final pending = bridge([
+        {'device': 'video', 'muted': false, 'commandId': 'camera-on-$leaving'},
+      ]);
+      await tester.pump();
+      if (leaving) {
+        final ending = f.handle.end();
+        await tester.pump();
+        await f.emit(tester, 'left');
+        await ending;
+      } else {
+        expect(await bridge([
+          {'device': 'video', 'muted': true, 'commandId': 'camera-off'},
+        ]), {'ok': true});
+      }
+      permission.complete({Permission.camera.value: 1});
+      await tester.pumpAndSettle();
+      expect(await pending, {'ok': false, 'reason': 'superseded'});
+    }
+    expect(f.platform.controller.scripts, isNot(contains('setDevice("video", false)')));
     await tester.pumpWidget(const SizedBox());
   });
 

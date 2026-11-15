@@ -198,6 +198,7 @@
       var remoteAudios = new Map();
       var conferenceExit = null;
       var opening = { video: false, audio: false };
+      var openingGeneration = { video: 0, audio: 0 };
       var wishMuted = { video: true, audio: true };
       var deviceAllowed = { video: true, audio: true };
       var captureGen = { video: 0, audio: 0 };
@@ -249,6 +250,10 @@
       var mediaAppliedAt = { audio: 0, video: 0 };
       var mediaHold = { audio: null, video: null };
       var mediaSkewMs = 15 * 60 * 1000;
+      var remoteMedia = { audio: null, video: null };
+      var deviceMutationRevision = { audio: 0, video: 0 };
+      var deviceMutations = { audio: { running: false, pending: null }, video: { running: false, pending: null } };
+      var publishedLocalTracks = new Set();
 
       function post(kind, detail) {
         var bridge = window.flutter_inappwebview;
@@ -456,6 +461,12 @@
         if (!track) {
           return;
         }
+        var unwatch = localDeviceListeners.get(track);
+        if (unwatch) unwatch();
+        localDeviceListeners.delete(track);
+        publishedLocalTracks.delete(track);
+        var publication = publicationTasks.get(track);
+        if (publication) publication.cancel();
         try {
           if (typeof track.detach === "function") {
             track.detach();
@@ -774,6 +785,10 @@
         if (!value || typeof value !== "object") {
           return null;
         }
+        if (typeof LarnesLessonMedia !== "undefined") return LarnesLessonMedia.readCommand(value);
+        // The small shared contract is installed before joining. Without it,
+        // never downgrade a correlated command to the legacy bridge.
+        if (value.version !== undefined || value.commandId !== undefined || value.scopeId !== undefined || value.room !== undefined || value.generation !== undefined || value.expiresAt !== undefined) return null;
         if (value.kind !== "larnes-media") {
           return null;
         }
@@ -793,6 +808,7 @@
       }
 
       function decideCommand(command, sender) {
+        if (!mediaControllerRosterAt || Date.now() - mediaControllerRosterAt > 5000) return "drop";
         if (!localEndpoint || !sender || sender === localEndpoint) {
           return "drop";
         }
@@ -811,6 +827,156 @@
         if (observerIds.indexOf(sender) >= 0 && mediaControllerIds.indexOf(sender) >= 0
           && mediaControllerRosterAt > 0 && Date.now() - mediaControllerRosterAt <= 5000) return "apply";
         return "drop";
+      }
+
+      function sendMediaResult(entry) {
+        if (entry.room !== room || entry.attempt !== attempt || !room || !room.sendEndpointMessage) return;
+        try { room.sendEndpointMessage(entry.sender, entry.result); } catch (_) {}
+      }
+
+      function finishRemoteMedia(entry, status, reason) {
+        if (entry.result.status !== "pending") return;
+        clearTimeout(entry.timer);
+        entry.timer = null;
+        entry.result = LarnesLessonMedia.result(entry.command, status, reason);
+        if (status === "rejected" && entry.cancelCapture) entry.cancelCapture();
+        sendMediaResult(entry);
+      }
+
+      function cancelTeacherMedia(kind, reason) {
+        var entry = remoteMedia[kind];
+        if (entry) finishRemoteMedia(entry, "rejected", reason || "superseded");
+      }
+
+      function clearTeacherMedia(reason) {
+        cancelTeacherMedia("audio", reason || "disconnected");
+        cancelTeacherMedia("video", reason || "disconnected");
+        remoteMedia = { audio: null, video: null };
+        mediaHold = { audio: null, video: null };
+        mediaAppliedAt = { audio: 0, video: 0 };
+      }
+
+      function queueDeviceMutation(kind, run) {
+        var queue = deviceMutations[kind];
+        return new Promise(function (resolve) {
+          if (queue.pending) queue.pending.resolve({ ok: false, reason: "superseded" });
+          queue.pending = { run: run, resolve: resolve };
+          if (queue.running) return;
+          queue.running = true;
+          (async function () {
+            while (queue.pending) {
+              var job = queue.pending; queue.pending = null;
+              try { job.resolve(await job.run()); }
+              catch (_) { job.resolve({ ok: false, reason: "failed" }); }
+            }
+            queue.running = false;
+          })();
+        });
+      }
+
+      async function applyRemoteMedia(entry) {
+        var command = entry.command, kind = command.device, revision = ++deviceMutationRevision[kind];
+        if (kind === "video" && !command.muted && (shareState === "on" || shareState === "starting")) {
+          return { ok: false, reason: "route-locked" };
+        }
+        var current = function () { return remoteMedia[kind] === entry && entry.result.status === "pending"
+          && entry.room === room && entry.attempt === attempt && !leaving && Date.now() < command.expiresAt
+          && deviceMutationRevision[kind] === revision && mediaControllerRosterAt > 0
+          && Date.now() - mediaControllerRosterAt <= 5000 && mediaControllerIds.indexOf(entry.sender) >= 0; };
+        wishMuted[kind] = command.muted;
+        var track = localTrack(kind), captured = false;
+        {
+          var bridge = window.flutter_inappwebview;
+          if (!bridge || !bridge.callHandler) return { ok: false, reason: "failed" };
+          var permission = await bridge.callHandler("lessonMediaPermission", { device: kind, muted: command.muted, commandId: command.commandId });
+          if (!current()) return { ok: false, reason: "superseded" };
+          if (!permission || permission.ok !== true) return { ok: false, reason: permission && permission.reason || "denied" };
+          if (!command.muted) deviceAllowed[kind] = true;
+        }
+        if (!current()) return { ok: false, reason: "disconnected" };
+        if (!track && command.muted) {
+          captureGen[kind]++;
+          if (pending[kind]) {
+            var heldCapture = pending[kind]; pending[kind] = null;
+            try {
+              if (!heldCapture.isMuted()) await heldCapture.mute();
+              if (!heldCapture.isMuted()) return { ok: false, reason: "failed" };
+            } catch (_) { return { ok: false, reason: "failed" }; }
+            finally { releaseTrack(heldCapture); }
+            if (!current()) return { ok: false, reason: "superseded" };
+          }
+          applyMute(kind, true); return { ok: true };
+        }
+        if (!track) {
+          if (opening[kind]) return { ok: false, reason: "busy" };
+          var meet = window.JitsiMeetJS;
+          if (!meet || !meet.createLocalTracks) return { ok: false, reason: "missing" };
+          var gen = ++captureGen[kind];
+          openingGeneration[kind] = gen;
+          opening[kind] = true;
+          entry.cancelCapture = function () {
+            if (captureGen[kind] === gen) captureGen[kind]++;
+            if (pending[kind] === track && track) { pending[kind] = null; releaseTrack(track); }
+          };
+          try {
+            var tracks = tracksByKind(await meet.createLocalTracks({ devices: [kind] }));
+            track = tracks[kind];
+            releaseTrack(tracks[kind === "video" ? "audio" : "video"]);
+            if (!current() || captureGen[kind] !== gen) { releaseTrack(track); return { ok: false, reason: "superseded" }; }
+            if (!track) return { ok: false, reason: "missing" };
+            captured = true; pending[kind] = track;
+          } catch (error) { return { ok: false, reason: blockOf(error) }; }
+          finally { finishCapture(kind, gen); }
+        }
+        var result = await queueDeviceMutation(kind, async function () {
+          if (!current()) return { ok: false, reason: "superseded" };
+          if (localDeviceEnded(track)) { forgetStoppedDevice(kind, track); return { ok: false, reason: "missing" }; }
+          try {
+            if (track.isMuted() !== command.muted) await (command.muted ? track.mute() : track.unmute());
+            if (!current()) { if (!track.isMuted()) await track.mute(); return { ok: false, reason: "superseded" }; }
+            if (!command.muted && track.getTrack && (!track.getTrack() || track.getTrack().readyState !== "live")) {
+              forgetStoppedDevice(kind, track); return { ok: false, reason: "missing" };
+            }
+            if (track.isMuted() !== command.muted) return { ok: false, reason: "failed" };
+            if (!command.muted && !publishedLocalTracks.has(track)) {
+              var published = await publishLocalTrack(track, entry.room, entry.attempt, current);
+              if (!published || !current()) {
+                if (!track.isMuted()) await track.mute();
+                return { ok: false, reason: "unpublished" };
+              }
+            }
+            if (!command.muted && track.getTrack && (!track.getTrack() || track.getTrack().readyState !== "live")) {
+              forgetStoppedDevice(kind, track); return { ok: false, reason: "missing" };
+            }
+            if (captured) storeLocalTrack(kind, track);
+            applyMute(kind, track.isMuted());
+            return { ok: true };
+          } catch (error) { return { ok: false, reason: blockOf(error) }; }
+        });
+        entry.cancelCapture = null;
+        if (pending[kind] === track) pending[kind] = null;
+        if (captured && !result.ok) releaseTrack(track);
+        return result;
+      }
+
+      function acceptRemoteMedia(command, sender) {
+        var scope = boardRoster && boardRoster.scopeId || passHold && (passHold.mainRoom || passHold.room);
+        if (!room || !callJoined || command.scopeId !== scope || command.room !== (passHold && passHold.room)
+          || command.target !== localEndpoint || command.sentAt > Date.now() + 5000 || Date.now() >= command.expiresAt
+          || !mediaControllerRosterAt || Date.now() - mediaControllerRosterAt > 5000 || mediaControllerIds.indexOf(sender) < 0) return;
+        var previous = remoteMedia[command.device];
+        if (previous && previous.sender === sender && JSON.stringify(previous.command) === JSON.stringify(command)) { sendMediaResult(previous); return; }
+        if (decideCommand(command, sender) !== "apply") return;
+        cancelTeacherMedia(command.device);
+        mediaAppliedAt[command.device] = command.sentAt;
+        var entry = { command: command, sender: sender, room: room, attempt: attempt,
+          result: LarnesLessonMedia.result(command, "pending"), timer: null, cancelCapture: null };
+        remoteMedia[command.device] = entry;
+        entry.timer = setTimeout(function () { finishRemoteMedia(entry, "rejected", "disconnected"); }, Math.max(1, command.expiresAt - Date.now()));
+        sendMediaResult(entry);
+        applyRemoteMedia(entry).then(function (result) {
+          finishRemoteMedia(entry, result.ok ? "applied" : "rejected", result.reason);
+        }, function () { finishRemoteMedia(entry, "rejected", "failed"); });
       }
 
       function commandText(payload) {
@@ -925,6 +1091,7 @@
 
       function setBoardRoster(roster, endpoint) {
         if (boardEnded || !localEndpoint || endpoint !== localEndpoint) return;
+        if (!roster) { mediaControllerRosterAt = 0; clearTeacherMedia("disconnected"); }
         boardRoster = roster;
         boardRosterAt = Date.now();
         syncBoardChannel();
@@ -1046,6 +1213,7 @@
           return;
         }
         var sender = senderId(from);
+        if (command.version === 2) { acceptRemoteMedia(command, sender); return; }
         var decision = decideCommand(command, sender);
         if (decision === "wait") {
           var heldMedia = mediaHold[command.device];
@@ -1077,6 +1245,7 @@
       }
 
       function setTeachers(ids, primary, controllers, observers, roomAudio) {
+        if (mediaControllerRosterAt && Date.now() - mediaControllerRosterAt > 5000) clearTeacherMedia("disconnected");
         mediaControllerRosterAt = Date.now();
         function endpointIds(input) {
           return (input instanceof Array ? input : []).filter(function (id, index, all) {
@@ -1111,6 +1280,10 @@
         mediaControllerIds = nextControllers;
         observerIds = nextObservers;
         roomAudioIds = nextRoomAudio;
+        ["audio", "video"].forEach(function (kind) {
+          var entry = remoteMedia[kind];
+          if (entry && mediaControllerIds.indexOf(entry.sender) < 0) cancelTeacherMedia(kind, "disconnected");
+        });
         flushHold();
         emitWorkspace();
         render();
@@ -1456,6 +1629,9 @@
               return;
             }
             if (typeof id === "string") clearRemoteAudio(id);
+            ["audio", "video"].forEach(function (kind) {
+              if (remoteMedia[kind] && remoteMedia[kind].sender === id) cancelTeacherMedia(kind, "disconnected");
+            });
             if (typeof id === "string" && people[id] && !people[id].local) {
               delete people[id];
               delete shareSlots[id];
@@ -1592,7 +1768,7 @@
       }
 
       function finishCapture(kind, gen) {
-        if (gen === captureGen[kind]) {
+        if (gen === openingGeneration[kind]) {
           opening[kind] = false;
         }
       }
@@ -1618,6 +1794,7 @@
       }
 
       function storeLocalTrack(kind, created) {
+        watchLocalDevice(kind, created);
         if (kind === "video") {
           localVideo = created;
           var person = ensurePerson("local", true);
@@ -1625,6 +1802,39 @@
           return;
         }
         localAudio = created;
+      }
+
+      var localDeviceListeners = new Map();
+
+      function localDeviceEnded(track) {
+        // Camera mute deliberately releases its browser stream; Jitsi unmute reacquires it.
+        return track.isEnded ? track.isEnded() : !!(track.getTrack && track.getTrack()
+          && track.getTrack().readyState === "ended" && !track.isMuted());
+      }
+
+      function forgetStoppedDevice(kind, track) {
+        if (leaving || localTrack(kind) !== track) return;
+        if (kind === "video") {
+          localVideo = null;
+          if (people.local && people.local.camera === track) people.local.camera = null;
+        } else localAudio = null;
+        deviceMutationRevision[kind]++;
+        wishMuted[kind] = true;
+        releaseTrack(track);
+        applyMute(kind, true);
+        post(failKind(kind), "missing");
+      }
+
+      function watchLocalDevice(kind, track) {
+        var meet = window.JitsiMeetJS, event = meet && meet.events && meet.events.track && meet.events.track.LOCAL_TRACK_STOPPED;
+        if (!event || !track.addEventListener || localDeviceListeners.has(track)) return;
+        var ended = function () {
+          if (wishMuted[kind] && track.isMuted()) return;
+          if (track.getTrack && track.getTrack() && track.getTrack().readyState === "live") return;
+          forgetStoppedDevice(kind, track);
+        };
+        track.addEventListener(event, ended);
+        localDeviceListeners.set(track, function () { if (track.removeEventListener) track.removeEventListener(event, ended); });
       }
 
       function beginCapture(kind) {
@@ -1641,6 +1851,7 @@
         }
         var devices = [kind];
         var gens = { video: captureGen.video, audio: captureGen.audio };
+        openingGeneration[kind] = gens[kind];
         opening[kind] = true;
         meet
           .createLocalTracks({ devices: devices })
@@ -1674,7 +1885,7 @@
           }
           return Promise.resolve();
         }
-        if (gen !== captureGen[kind] || leaving || !room) {
+        if (gen !== captureGen[kind] || leaving || !room || wishMuted[kind]) {
           finishCapture(kind, gen);
           releaseTrack(created);
           return Promise.resolve();
@@ -1701,6 +1912,9 @@
               } catch (error) {}
               releaseTrack(created);
               return;
+            }
+            if (created.getTrack && (!created.getTrack() || created.getTrack().readyState !== "live")) {
+              releaseTrack(created); applyMute(kind, true); post(failKind(kind), "missing"); return;
             }
             storeLocalTrack(kind, created);
             if (wishMuted[kind]) {
@@ -1738,6 +1952,7 @@
       function clearPublicationTasks() {
         publicationTasks.forEach(function (task) { task.cancel(); });
         publicationTasks.clear();
+        publishedLocalTracks.clear();
       }
       function publishLocalTrack(track, target, generation, allowed) {
         if (!track || !target || !target.addTrack || room !== target || generation !== attempt || leaving || allowed && !allowed()) return Promise.resolve(false);
@@ -1754,6 +1969,7 @@
           if (task.timer) clearTimeout(task.timer);
           if (task.deadline) clearTimeout(task.deadline);
           if (publicationTasks.get(track) === task) publicationTasks.delete(track);
+          if (ok) publishedLocalTracks.add(track);
           resolveTask(ok);
         }
         task.cancel = function () { finish(false); };
@@ -1811,6 +2027,8 @@
       }
 
       function askDevice(kind, muted) {
+        cancelTeacherMedia(kind);
+        var revision = ++deviceMutationRevision[kind];
         var meet = window.JitsiMeetJS;
         if (!room || !meet) {
           post(failKind(kind), "failed");
@@ -1819,43 +2037,26 @@
         wishMuted[kind] = muted;
         var track = kind === "video" ? localVideo : localAudio;
         var heldAttempt = attempt;
-        if (muted) {
-          if (track && track.mute) {
-            Promise.resolve(track.mute())
-              .then(function () {
-                if (!sameTrack(kind, track, heldAttempt) || !wishMuted[kind]) {
-                  return;
-                }
-                applyMute(kind, true);
-              })
-              .catch(function (error) {
-                if (!sameTrack(kind, track, heldAttempt)) {
-                  return;
-                }
-                post(failKind(kind), blockOf(error));
-              });
-          } else {
-            applyMute(kind, true);
+        if (!track) { if (muted) applyMute(kind, true); else beginCapture(kind); return; }
+        var current = function () { return sameTrack(kind, track, heldAttempt) && revision === deviceMutationRevision[kind]; };
+        queueDeviceMutation(kind, async function () {
+          if (!current()) return { ok: false, reason: "superseded" };
+          try {
+            if (track.isMuted() !== muted) await (muted ? track.mute() : track.unmute());
+            if (!current()) {
+              if (!track.isMuted()) await track.mute();
+              return { ok: false, reason: "superseded" };
+            }
+            if (!muted && track.getTrack && (!track.getTrack() || track.getTrack().readyState !== "live")) {
+              forgetStoppedDevice(kind, track); return { ok: false, reason: "missing" };
+            }
+            applyMute(kind, track.isMuted());
+            return { ok: track.isMuted() === muted };
+          } catch (error) {
+            if (current()) post(failKind(kind), blockOf(error));
+            return { ok: false, reason: blockOf(error) };
           }
-          return;
-        }
-        if (track && track.unmute) {
-          Promise.resolve(track.unmute())
-            .then(function () {
-              if (!sameTrack(kind, track, heldAttempt) || wishMuted[kind]) {
-                return;
-              }
-              applyMute(kind, false);
-            })
-            .catch(function (error) {
-              if (!sameTrack(kind, track, heldAttempt)) {
-                return;
-              }
-              post(failKind(kind), blockOf(error));
-            });
-          return;
-        }
-        beginCapture(kind);
+        });
       }
 
       function toggleDevice(kind) {
@@ -2109,6 +2310,7 @@
             }
             Promise.resolve(heldRoom.removeTrack(camera)).then(
               function () {
+                publishedLocalTracks.delete(camera);
                 cameraRemoved = true;
                 addDesktop();
               },
@@ -2333,6 +2535,7 @@
       }
 
       function dropSession() {
+        clearTeacherMedia("disconnected");
         cancelBootstrap();
         roomSwitchGeneration += 1;
         attempt += 1;
@@ -2532,6 +2735,7 @@
       }
 
       function leaveConferenceOnly() {
+        clearTeacherMedia("disconnected");
         cancelBootstrap();
         attempt += 1;
         clearPublicationTasks();

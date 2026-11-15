@@ -5,6 +5,7 @@ import { test } from 'node:test';
 
 const html = readFileSync(new URL('../../assets/call/lesson_call_stage.html', import.meta.url), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const mediaContract = readFileSync(new URL('../../assets/call/lesson-media-command.js', import.meta.url), 'utf8');
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve(); };
 
 test('native call address preserves the provider domain and refuses foreign or incomplete breakout addresses', () => {
@@ -207,6 +208,7 @@ function stage() {
     document: { hidden: false, getElementById: () => null },
     window: { setTimeout, clearTimeout, flutter_inappwebview: { callHandler: (...args) => events.push(args) } },
   });
+  vm.runInContext(mediaContract, context);
   vm.runInContext(script, context);
   return { context, events, timers, async advance(ms) {
     const until = now + ms;
@@ -408,13 +410,257 @@ test('observer endpoints stay hidden and can control only targeted media under a
   assert.deepEqual([...c.teacherIds], ['teacher']);
   await f.advance(5001);
   assert.equal(c.decideCommand(command, 'observer'), 'drop');
-  assert.equal(c.decideCommand(command, 'teacher'), 'apply');
+  assert.equal(c.decideCommand(command, 'teacher'), 'drop', 'teachers also require a fresh server lease');
   vm.runInContext(`setTeachers(['teacher'], 'teacher', ['teacher','observer'], ['observer'])`, c);
   assert.equal(c.decideCommand(command, 'observer'), 'apply');
   vm.runInContext(`setTeachers(['teacher'],'teacher')`, c);
   assert.equal(c.decideCommand(command, 'observer'), 'drop');
-  assert.equal(c.observerParticipant({ getIdentity: () => ({ user: { id: 'observer:teacher-1' } }) }), true);
-  assert.equal(c.observerParticipant({ getIdentity: () => ({ user: { id: 'teacher:teacher-1' } }) }), false);
+  const hinted = { id: 'stranger', name: 'Role hint only' };
+  c.applyCallRole(hinted, { getIdentity: () => ({ user: { id: 'observer:teacher-1' } }) });
+  assert.equal(hinted.observer, true);
+  assert.equal(c.decideCommand(command, hinted.id), 'drop', 'presentation hints do not grant command authority');
+  c.applyCallRole(hinted, { getIdentity: () => ({ user: { id: 'teacher:teacher-1' } }) });
+  assert.equal(hinted.observer, false);
+});
+
+function correlatedMedia() {
+  const f = stage(), c = f.context, sent = [], changes = [];
+  let muted = true;
+  const camera = { isMuted: () => muted, getType: () => 'video', getTrack: () => ({ readyState: 'live' }),
+    mute: async () => { muted = true; changes.push('mute'); }, unmute: async () => { muted = false; changes.push('unmute'); }, dispose() {} };
+  c.render = () => {};
+  c.room = { sendEndpointMessage: (target, result) => sent.push({ target, result: JSON.parse(JSON.stringify(result)) }),
+    addTrack: async () => { changes.push('publish'); }, leave: async () => {}, removeTrack: async () => {} };
+  c.callJoined = true; c.localEndpoint = 'child'; c.passHold = { room: 'lesson' };
+  c.localVideo = camera;
+  c.window.flutter_inappwebview.callHandler = async (name, detail) => {
+    if (name === 'lessonMediaPermission') return { ok: true };
+    f.events.push([name, detail]);
+  };
+  vm.runInContext("setTeachers(['teacher'], 'teacher', ['teacher', 'observer'], ['observer'])", c);
+  const command = (overrides = {}) => ({ kind: 'larnes-media', version: 2, device: 'video', muted: false,
+    commandId: 'command-1', scopeId: 'lesson', room: 'lesson', generation: 'teacher-gen', target: 'child', sentAt: 100001, expiresAt: 110001, ...overrides });
+  return { ...f, c, camera, sent, changes, command, get muted() { return muted; }, setMuted: value => { muted = value; } };
+}
+
+test('native v2 reports actual published state and repeats the ACK without repeating device work', async () => {
+  const f = correlatedMedia(), command = f.command();
+  f.c.onEndpointMessage('observer', command); await flush(); await flush();
+  assert.deepEqual(f.sent.map(item => item.result.status), ['pending', 'applied']);
+  assert.deepEqual(f.changes, ['unmute', 'publish']);
+  assert.equal(f.muted, false);
+  assert.equal(f.sent[1].target, 'observer');
+  assert.equal(f.sent[1].result.commandId, command.commandId);
+  assert.equal(f.sent[1].result.generation, command.generation);
+  f.c.onEndpointMessage('observer', command); await flush();
+  assert.deepEqual(f.sent.map(item => item.result.status), ['pending', 'applied', 'applied']);
+  assert.deepEqual(f.changes, ['unmute', 'publish']);
+  f.c.clearTeacherMedia();
+  assert.equal(f.timers.size, 0);
+});
+
+test('native v2 permits the SDK to reacquire a normally muted camera and requires the new live track', async () => {
+  const f = correlatedMedia();
+  let ended = true;
+  f.camera.getTrack = () => ({ readyState: ended ? 'ended' : 'live' });
+  const unmute = f.camera.unmute;
+  f.camera.unmute = async () => { await unmute(); ended = false; };
+  f.c.onEndpointMessage('teacher', f.command()); await flush(); await flush();
+  assert.equal(f.sent.at(-1).result.status, 'applied');
+  assert.equal(ended, false);
+  f.setMuted(true); ended = true; f.camera.unmute = unmute;
+  f.c.onEndpointMessage('teacher', f.command({ commandId: 'failed-recapture', sentAt: 100002 })); await flush(); await flush();
+  assert.equal(f.sent.at(-1).result.status, 'rejected');
+  assert.equal(f.sent.at(-1).result.reason, 'missing');
+  f.c.clearTeacherMedia();
+});
+
+test('native hardware loss releases 100 captures and permits retry without retaining old stop listeners', async () => {
+  const f = correlatedMedia(), c = f.c;
+  c.localVideo = null; c.deviceAllowed.video = true;
+  c.window.JitsiMeetJS = { events: { track: { LOCAL_TRACK_STOPPED: 'track.stopped' } }, createLocalTracks: async () => {
+    let muted = false, ended = false;
+    const listeners = new Set();
+    return [{ getType: () => 'video', getTrack: () => ({ readyState: ended ? 'ended' : 'live' }), isMuted: () => muted,
+      mute: async () => { muted = true; ended = true; }, unmute: async () => { muted = false; ended = false; },
+      addEventListener: (_name, callback) => listeners.add(callback), removeEventListener: (_name, callback) => listeners.delete(callback),
+      dispose: () => { for (const callback of listeners) callback(); }, listeners,
+      stop: () => { ended = true; for (const callback of listeners) callback(); } }];
+  } };
+  for (let cycle = 0; cycle < 100; cycle++) {
+    c.askDevice('video', false); await flush(); await flush();
+    const capture = c.localVideo;
+    assert.ok(capture); assert.equal(c.videoMuted, false);
+    const oldStop = [...capture.listeners][0];
+    capture.stop();
+    assert.equal(c.videoMuted, true); assert.equal(c.localVideo, null);
+    assert.equal(c.localDeviceListeners.size, 0); assert.equal(capture.listeners.size, 0);
+    assert.equal(c.publishedLocalTracks.size, 0); assert.equal(c.publicationTasks.size, 0);
+    const messages = f.events.length; oldStop();
+    assert.equal(f.events.length, messages);
+  }
+  c.askDevice('video', false); await flush(); await flush();
+  const capture = c.localVideo;
+  c.askDevice('video', true); await flush();
+  for (const callback of capture.listeners) callback();
+  assert.equal(c.localVideo, capture, 'deliberate mute retains the reusable SDK track');
+  c.askDevice('video', false); await flush();
+  assert.equal(capture.getTrack().readyState, 'live');
+  c.leaving = true; c.localVideo = null; c.releaseTrack(capture);
+  assert.equal(c.localDeviceListeners.size, 0);
+  c.clearTeacherMedia(); c.clearPublicationTasks();
+});
+
+test('native v2 never acknowledges a capture that ends while its publication is pending', async () => {
+  for (const absent of [false, true]) {
+    const f = correlatedMedia(), c = f.c;
+    let finish, live = true, released = 0;
+    c.localVideo = null;
+    f.setMuted(false);
+    f.camera.getTrack = () => live ? { readyState: 'live' } : absent ? null : { readyState: 'ended' };
+    f.camera.dispose = () => { released++; };
+    c.window.JitsiMeetJS = { createLocalTracks: async () => [f.camera] };
+    c.room.addTrack = () => new Promise(resolve => { finish = resolve; });
+    c.onEndpointMessage('teacher', f.command()); await flush();
+    assert.equal(f.sent.at(-1).result.status, 'pending');
+    live = false; finish(); await flush(); await flush();
+    assert.equal(f.sent.at(-1).result.status, 'rejected'); assert.equal(f.sent.at(-1).result.reason, 'missing');
+    assert.equal(c.localVideo, null); assert.equal(released, 1); assert.equal(c.publishedLocalTracks.size, 0);
+    c.clearTeacherMedia(); c.clearPublicationTasks();
+  }
+});
+
+test('native v2 refuses bad scope, room, authority and malformed packets instead of running legacy actions', async () => {
+  const f = correlatedMedia();
+  for (const overrides of [{ scopeId: 'other' }, { room: 'other' }, { target: 'other' }, { version: 3 },
+    { version: undefined }, { commandId: '' }, { expiresAt: 111001 }, { expiresAt: 99999 }]) {
+    f.c.onEndpointMessage('teacher', f.command(overrides));
+  }
+  f.c.onEndpointMessage('stranger', f.command());
+  await f.advance(5001);
+  f.c.onEndpointMessage('teacher', f.command());
+  assert.deepEqual(f.sent, []); assert.deepEqual(f.changes, []);
+  assert.equal(f.events.some(([, value]) => value.kind === 'teacher-media'), false);
+});
+
+test('native v2 reports Android denial and failed publication without a false applied ACK', async () => {
+  const denied = correlatedMedia();
+  denied.c.window.flutter_inappwebview.callHandler = async () => ({ ok: false, reason: 'denied' });
+  denied.c.onEndpointMessage('teacher', denied.command()); await flush();
+  assert.equal(denied.sent.at(-1).result.reason, 'denied');
+  assert.deepEqual(denied.changes, []);
+  const browserDenied = correlatedMedia();
+  browserDenied.c.localVideo = null;
+  browserDenied.c.window.JitsiMeetJS = { createLocalTracks: async () => { throw Object.assign(new Error('denied'), { name: 'NotAllowedError' }); } };
+  browserDenied.c.onEndpointMessage('teacher', browserDenied.command()); await flush();
+  assert.equal(browserDenied.sent.at(-1).result.status, 'rejected');
+  assert.equal(browserDenied.sent.at(-1).result.reason, 'denied');
+  assert.deepEqual(browserDenied.changes, []);
+  const unavailable = correlatedMedia();
+  unavailable.c.room.addTrack = () => new Promise(() => {});
+  unavailable.c.onEndpointMessage('teacher', unavailable.command()); await flush();
+  await unavailable.advance(6001);
+  assert.equal(unavailable.sent.at(-1).result.status, 'rejected');
+  assert.equal(unavailable.sent.at(-1).result.reason, 'unpublished');
+  assert.equal(unavailable.muted, true);
+  assert.equal(unavailable.timers.size, 0);
+});
+
+test('native publication bookkeeping releases 100 replaced tracks and rejects camera enable while sharing', async () => {
+  const f = correlatedMedia();
+  for (let cycle = 0; cycle < 100; cycle++) {
+    const camera = { ...f.camera };
+    assert.equal(await f.c.publishLocalTrack(camera, f.c.room, f.c.attempt), true);
+    assert.equal(f.c.publishedLocalTracks.size, 1);
+    f.c.releaseTrack(camera);
+    assert.equal(f.c.publishedLocalTracks.size, 0);
+    assert.equal(f.c.publicationTasks.size, 0);
+    const pending = f.c.publishLocalTrack(camera, f.c.room, f.c.attempt);
+    f.c.releaseTrack(camera);
+    assert.equal(await pending, false);
+    await flush();
+    assert.equal(f.c.publishedLocalTracks.size, 0, 'late publication must not revive a disposed track');
+    assert.equal(f.c.publicationTasks.size, 0);
+  }
+  f.changes.length = 0;
+  f.c.shareState = 'on';
+  f.c.onEndpointMessage('teacher', f.command()); await flush();
+  assert.equal(f.sent.at(-1).result.status, 'rejected');
+  assert.equal(f.sent.at(-1).result.reason, 'route-locked');
+  assert.deepEqual(f.changes, []);
+});
+
+test('native v2 fences late permission after replacement, local action, room change and deadline', async () => {
+  for (const cancel of ['replacement', 'local', 'room', 'deadline']) {
+    const f = correlatedMedia(); let permit;
+    f.c.window.flutter_inappwebview.callHandler = (_name, request) => request.muted
+      ? Promise.resolve({ ok: true }) : new Promise(resolve => { permit = resolve; });
+    f.c.onEndpointMessage('teacher', f.command()); await flush();
+    if (cancel === 'replacement') f.c.onEndpointMessage('teacher', f.command({ commandId: 'command-2', sentAt: 100002, expiresAt: 110002, muted: true }));
+    if (cancel === 'local') { f.c.window.JitsiMeetJS = {}; f.c.setDevice('video', true); }
+    if (cancel === 'room') f.c.leaveConferenceOnly();
+    if (cancel === 'deadline') await f.advance(10002);
+    await flush(); permit({ ok: true }); await flush();
+    assert.equal(f.changes.includes('unmute'), false, cancel);
+    assert.equal(f.sent.some(item => item.result.commandId === 'command-1' && item.result.status === 'applied'), false, cancel);
+    assert.equal(f.muted, true, cancel);
+    f.c.clearTeacherMedia();
+  }
+});
+
+test('native v2 mutes an unmute promise that finishes after its command deadline', async () => {
+  const f = correlatedMedia(); let finishUnmute;
+  f.camera.unmute = () => new Promise(resolve => { finishUnmute = () => { f.setMuted(false); resolve(); }; });
+  f.c.onEndpointMessage('teacher', f.command()); await flush();
+  await f.advance(10002); finishUnmute(); await flush();
+  assert.equal(f.muted, true);
+  assert.equal(f.sent.at(-1).result.status, 'rejected');
+  assert.equal(f.sent.some(item => item.result.status === 'applied'), false);
+  assert.equal(f.changes.includes('publish'), false);
+});
+
+test('native v2 disposes a capture that resolves after expiry and preserves legacy bridge commands', async () => {
+  const f = correlatedMedia(); let finishCapture, disposed = 0;
+  f.c.localVideo = null;
+  f.camera.dispose = () => { disposed++; };
+  f.c.window.JitsiMeetJS = { createLocalTracks: () => new Promise(resolve => { finishCapture = resolve; }) };
+  f.c.onEndpointMessage('teacher', f.command()); await flush();
+  await f.advance(10002); finishCapture([f.camera]); await flush();
+  assert.equal(disposed, 1); assert.equal(f.c.localVideo, null);
+  assert.equal(f.changes.includes('publish'), false);
+  f.c.setTeachers(['teacher'], 'teacher', ['teacher']);
+  f.c.onEndpointMessage('teacher', { kind: 'larnes-media', target: 'child', device: 'audio', muted: true, sentAt: 110003 });
+  assert.equal(f.events.at(-1)[1].kind, 'teacher-media');
+  assert.equal(f.events.at(-1)[1].detail, 'audio:1');
+});
+
+test('native mute ACK prevents an already opening local camera from publishing later', async () => {
+  const f = correlatedMedia(); let finishCapture, disposed = 0;
+  f.c.localVideo = null; f.c.deviceAllowed.video = true; f.c.wishMuted.video = false;
+  f.camera.dispose = () => { disposed++; };
+  f.c.window.JitsiMeetJS = { createLocalTracks: () => new Promise(resolve => { finishCapture = resolve; }) };
+  f.c.beginCapture('video');
+  f.c.onEndpointMessage('teacher', f.command({ muted: true })); await flush();
+  assert.equal(f.sent.at(-1).result.status, 'applied');
+  f.c.onEndpointMessage('teacher', f.command({ commandId: 'camera-on-again', sentAt: 100002, expiresAt: 110002 })); await flush();
+  assert.equal(f.sent.at(-1).result.reason, 'busy');
+  finishCapture([f.camera]); await flush();
+  assert.equal(disposed, 1); assert.equal(f.c.localVideo, null);
+  assert.equal(f.c.opening.video, false);
+  assert.equal(f.changes.includes('publish'), false);
+});
+
+test('native mute waits until a pending local publication is muted before applied ACK', async () => {
+  const f = correlatedMedia(); let finishMute, disposed = 0;
+  f.c.localVideo = null; f.c.pending.video = f.camera; f.setMuted(false);
+  f.camera.dispose = () => { disposed++; };
+  f.camera.mute = () => new Promise(resolve => { finishMute = () => { f.setMuted(true); resolve(); }; });
+  f.c.onEndpointMessage('teacher', f.command({ muted: true })); await flush();
+  assert.deepEqual(f.sent.map(item => item.result.status), ['pending']);
+  finishMute(); await flush();
+  assert.equal(f.sent.at(-1).result.status, 'applied');
+  assert.equal(f.muted, true); assert.equal(disposed, 1);
+  assert.equal(f.c.pending.video, null);
 });
 
 test('failed camera restoration after sharing is retried and reports actual publication failure', async () => {

@@ -104,6 +104,7 @@ void main() {
           isAuthenticated: true,
           path: '/splash',
           accountType: 'parent',
+          familySetupComplete: true,
         ),
         '/parent',
       );

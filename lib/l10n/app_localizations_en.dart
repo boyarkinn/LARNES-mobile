@@ -9,6 +9,16 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get availabilityTitle => 'Choose lesson times';
+
+  @override
+  String get availabilityLoadFailed =>
+      'Could not open the calendar. Check your connection and try again.';
+
+  @override
+  String get availabilityRetry => 'Try again';
+
+  @override
   String get appTitle => 'LARNES';
 
   @override

@@ -98,6 +98,24 @@ abstract class AppLocalizations {
     Locale('ru'),
   ];
 
+  /// No description provided for @availabilityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose lesson times'**
+  String get availabilityTitle;
+
+  /// No description provided for @availabilityLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the calendar. Check your connection and try again.'**
+  String get availabilityLoadFailed;
+
+  /// No description provided for @availabilityRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get availabilityRetry;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:

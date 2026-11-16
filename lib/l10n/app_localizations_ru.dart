@@ -9,6 +9,16 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get availabilityTitle => 'Подбор времени';
+
+  @override
+  String get availabilityLoadFailed =>
+      'Не удалось открыть календарь. Проверьте подключение и попробуйте ещё раз.';
+
+  @override
+  String get availabilityRetry => 'Попробовать ещё раз';
+
+  @override
   String get appTitle => 'LARNES';
 
   @override

@@ -1,5 +1,6 @@
 import 'package:larnes_mobile/features/admin/screens/account/account_city_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/features/availability/availability_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:larnes_mobile/core/auth/auth_session.dart';
 import 'package:larnes_mobile/core/kiosk/kiosk_route_state.dart';
@@ -111,6 +112,13 @@ GoRouter createAppRouter({
       );
     },
     routes: [
+      GoRoute(
+        path: '/availability',
+        builder: (context, state) => AvailabilityScreen(
+          key: ValueKey(state.uri.toString()),
+          route: state.uri,
+        ),
+      ),
       GoRoute(
         path: '/splash',
         builder: (context, state) => SplashScreen(
@@ -393,7 +401,8 @@ GoRouter createAppRouter({
                           if (childId == null || childId.isEmpty) {
                             return const ChildPickerScreen();
                           }
-                          final sessionId = state.uri.queryParameters['sessionId'];
+                          final sessionId =
+                              state.uri.queryParameters['sessionId'];
                           return LiveLessonRoomScreen(
                             key: ValueKey((childId, sessionId)),
                             childId: childId,

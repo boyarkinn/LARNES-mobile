@@ -146,6 +146,8 @@ String? resolveAppRedirect({
   bool? familySetupComplete,
   String? parentTrainerResumePath,
 }) {
+  // Public poll links work without login or the family setup gate.
+  if (path.split('?').first == '/availability') return null;
   if (isKioskEnrollRoute(path)) {
     if (hasDeviceToken) {
       return '/kiosk';

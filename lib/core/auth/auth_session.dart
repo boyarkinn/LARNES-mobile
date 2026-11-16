@@ -188,7 +188,14 @@ class AuthSession extends ChangeNotifier {
     return result.homePath;
   }
 
-  Future<void> bootstrap() async {
+  Future<void>? _bootstrapInFlight;
+
+  Future<void> bootstrap() =>
+      _bootstrapInFlight ??= _bootstrap().whenComplete(() {
+        _bootstrapInFlight = null;
+      });
+
+  Future<void> _bootstrap() async {
     _isLoading = true;
     _topicChainResumePath = null;
     _notifySafely();

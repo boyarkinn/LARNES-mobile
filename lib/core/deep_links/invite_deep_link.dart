@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'availability_link.dart';
 
 /// Maps https://larnes.ru/{locale}/invite/... → in-app /invite/... path.
 String? mapInviteUriToAppPath(Uri uri) {
@@ -59,6 +61,7 @@ class InviteDeepLinkBinder extends StatefulWidget {
 class _InviteDeepLinkBinderState extends State<InviteDeepLinkBinder> {
   final _appLinks = AppLinks();
   var _bound = false;
+  StreamSubscription<Uri>? _links;
 
   @override
   void initState() {
@@ -81,17 +84,25 @@ class _InviteDeepLinkBinderState extends State<InviteDeepLinkBinder> {
       // ignore cold-start parse errors
     }
 
-    _appLinks.uriLinkStream.listen((uri) {
+    if (!mounted) return;
+    _links = _appLinks.uriLinkStream.listen((uri) {
       _go(uri);
     }, onError: (_) {});
   }
 
   void _go(Uri uri) {
-    final path = mapInviteUriToAppPath(uri);
+    if (!mounted || !isLarnesWebLink(uri)) return;
+    final path = mapAvailabilityUriToAppPath(uri) ?? mapInviteUriToAppPath(uri);
     if (path == null || path.isEmpty) {
       return;
     }
     widget.router.go(path);
+  }
+
+  @override
+  void dispose() {
+    _links?.cancel();
+    super.dispose();
   }
 
   @override

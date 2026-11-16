@@ -1,5 +1,8 @@
 {
   "@@locale": "ru",
+  "availabilityTitle": "Подбор времени",
+  "availabilityLoadFailed": "Не удалось открыть календарь. Проверьте подключение и попробуйте ещё раз.",
+  "availabilityRetry": "Попробовать ещё раз",
   "appTitle": "LARNES",
   "loginTitle": "Вход",
   "loginEyebrow": "Вход",

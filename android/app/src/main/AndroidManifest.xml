@@ -35,7 +35,12 @@
                 <data android:scheme="https" android:host="larnes.ru" android:pathPrefix="/invite"/>
                 <data android:scheme="https" android:host="larnes.ru" android:pathPrefix="/ru/invite"/>
                 <data android:scheme="https" android:host="larnes.ru" android:pathPrefix="/en/invite"/>
+                <data android:scheme="https" android:host="larnes.ru" android:path="/availability"/>
+                <data android:scheme="https" android:host="larnes.ru" android:path="/ru/availability"/>
+                <data android:scheme="https" android:host="larnes.ru" android:path="/en/availability"/>
+                <data android:scheme="https" android:host="larnes.ru" android:path="/ar/availability"/>
             </intent-filter>
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
         </activity>
         <meta-data
             android:name="flutterEmbedding"

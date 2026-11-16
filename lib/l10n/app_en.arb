@@ -1,5 +1,8 @@
 {
   "@@locale": "en",
+  "availabilityTitle": "Choose lesson times",
+  "availabilityLoadFailed": "Could not open the calendar. Check your connection and try again.",
+  "availabilityRetry": "Try again",
   "appTitle": "LARNES",
   "loginTitle": "Sign in",
   "loginEyebrow": "Sign in",

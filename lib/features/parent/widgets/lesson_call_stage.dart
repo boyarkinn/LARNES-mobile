@@ -18,6 +18,7 @@ import 'package:larnes_mobile/features/parent/models/lesson_device_media.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_device_media_controller.dart';
 import 'package:larnes_mobile/features/parent/widgets/board_image_bridge.dart';
 import 'package:larnes_mobile/features/parent/widgets/lesson_board_video_transport.dart';
+import 'package:larnes_mobile/features/parent/widgets/lesson_board_live_transport.dart';
 import 'package:larnes_mobile/features/messenger/messenger_panel.dart';
 import 'package:larnes_mobile/features/messenger/messenger_api.dart';
 import 'package:larnes_mobile/features/messenger/messenger_room.dart';
@@ -154,6 +155,10 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _followAgain = false;
   int _mediaRouteRevision = 0;
   Timer? _boardTimer;
+  LessonBoardLiveTransport? _boardLive;
+  bool _boardForeground = true;
+  String _boardLiveIdentity = '';
+  Map<String, dynamic>? _livePresence;
   bool _boardBusy = false;
   int _boardGen = 1;
   String _boardKey = '';
@@ -223,6 +228,15 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _boardForeground = state == AppLifecycleState.resumed;
+    if (state == AppLifecycleState.resumed) {
+      _boardLive?.wake();
+      _watchBoard();
+    } else {
+      _boardLive?.sleep();
+      _boardTimer?.cancel();
+      _boardTimer = null;
+    }
     _invalidateBoardCache();
     if (state == AppLifecycleState.resumed) {
       _messenger?.resume();
@@ -613,11 +627,13 @@ class _LessonCallStageState extends State<LessonCallStage>
   }
 
   void _watchBoard() {
+    if (!_boardForeground || _ended || !mounted) return;
+    if (_boardLive?.active == true) return;
     if (_boardTimer != null) return;
-    _boardTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
-      unawaited(_pullBoard());
-    });
-    unawaited(_pullBoard());
+    _boardTimer = startLessonBoardFallbackPolling(
+      pull: _pullBoard,
+      socketActive: () => _boardLive?.active == true,
+    );
   }
 
   Future<LessonChildBoard?> _fetchBoard({void Function(String?)? onETag}) {
@@ -655,6 +671,7 @@ class _LessonCallStageState extends State<LessonCallStage>
   }
 
   Future<void> _pullBoard() async {
+    if (!_boardForeground) return;
     if (_boardBusy || _ended || !mounted) return;
     if (!_boardWorkspace && !_holding) return;
     _boardBusy = true;
@@ -678,68 +695,7 @@ class _LessonCallStageState extends State<LessonCallStage>
         _boardETag = null;
         return;
       }
-      final key =
-          '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
-      final previous = _board;
-      final mediaRouteChanged =
-          previous != null &&
-          (previous.focusRoomId != board.focusRoomId ||
-              previous.roomEpoch != board.roomEpoch);
-      if (key != _boardKey) {
-        _boardKey = key;
-        _boardGen += 1;
-      }
-      _board = board;
-      if (previous?.lessonSessionId != board.lessonSessionId)
-        _closeBoardVideo();
-      if (mediaRouteChanged) {
-        _closeBoardVideo();
-        _mediaRouteRevision += 1;
-        if (_mediaWanted) {
-          // Fence old-room audio before asking for the next scoped call pass.
-          _callGen += 1;
-          _endpointId = null;
-          _holding = true;
-          _inRoom = false;
-          await _web?.evaluateJavascript(source: 'holdRoom()');
-          if (!mounted || _ended) return;
-          unawaited(_followRoom());
-        }
-      }
-      await _web?.evaluateJavascript(
-        source: 'noteLessonClock(${board.serverNow})',
-      );
-      if (!mounted || _ended) return;
-      final roomPayload = {
-        ..._clientVersion,
-        'childId': widget.childId,
-        'drawMode': board.drawMode,
-        'exercises': board.exercises,
-        'personalRuns': board.personalRuns,
-        'videos': board.videos,
-        'link': _boardLink,
-        'epoch': board.roomEpoch,
-        'focus': board.focusRoomId,
-        'lessonSessionId': board.lessonSessionId,
-        'presence': board.presence,
-        'participants': board.participants,
-        if (board.participantIds != null)
-          'participantIds': board.participantIds,
-        'rulerScale': board.rulerScale,
-        'navigation': board.navigation,
-        'pins': board.pins,
-        'gen': _boardGen,
-        'revision': board.sceneRevision,
-        'scene': board.scene,
-        'sceneGeneration': board.sceneGeneration,
-        'serverNow': board.serverNow,
-        'sound': board.sound,
-        'title': board.title,
-      };
-      await _web?.evaluateJavascript(
-        source: 'setChildRoom(${jsonEncode(roomPayload)})',
-      );
-      await _syncLessonChrome();
+      await _applyBoard(board);
       // Only acknowledge a snapshot after it reached this WebView generation.
       if (current()) _boardETag = _web == null ? null : receivedETag;
     } catch (_) {
@@ -748,6 +704,70 @@ class _LessonCallStageState extends State<LessonCallStage>
     } finally {
       _boardBusy = false;
     }
+  }
+
+  Future<void> _applyBoard(LessonChildBoard board) async {
+    final key =
+        '${board.focusRoomId}|${board.roomEpoch}|${board.sceneGeneration}|${board.instanceKey}';
+    final previous = _board;
+    final mediaRouteChanged =
+        previous != null &&
+        (previous.focusRoomId != board.focusRoomId ||
+            previous.roomEpoch != board.roomEpoch);
+    if (key != _boardKey) {
+      _boardKey = key;
+      _boardGen += 1;
+    }
+    _board = board;
+    if (previous?.lessonSessionId != board.lessonSessionId) _closeBoardVideo();
+    if (mediaRouteChanged) {
+      _closeBoardVideo();
+      _mediaRouteRevision += 1;
+      if (_mediaWanted) {
+        // Fence old-room audio before asking for the next scoped call pass.
+        _callGen += 1;
+        _endpointId = null;
+        _holding = true;
+        _inRoom = false;
+        await _web?.evaluateJavascript(source: 'holdRoom()');
+        if (!mounted || _ended) return;
+        unawaited(_followRoom());
+      }
+    }
+    await _web?.evaluateJavascript(
+      source: 'noteLessonClock(${board.serverNow})',
+    );
+    if (!mounted || _ended) return;
+    final roomPayload = {
+      ..._clientVersion,
+      'childId': widget.childId,
+      'drawMode': board.drawMode,
+      'exercises': board.exercises,
+      'personalRuns': board.personalRuns,
+      'videos': board.videos,
+      'link': _boardLink,
+      'epoch': board.roomEpoch,
+      'focus': board.focusRoomId,
+      'lessonSessionId': board.lessonSessionId,
+      'presence': board.presence,
+      'participants': board.participants,
+      if (board.participantIds != null) 'participantIds': board.participantIds,
+      'rulerScale': board.rulerScale,
+      'navigation': board.navigation,
+      'pins': board.pins,
+      'gen': _boardGen,
+      'revision': board.sceneRevision,
+      'scene': board.scene,
+      'sceneGeneration': board.sceneGeneration,
+      'serverNow': board.serverNow,
+      'sound': board.sound,
+      'title': board.title,
+    };
+    await _web?.evaluateJavascript(
+      source: 'setChildRoom(${jsonEncode(roomPayload)})',
+    );
+    await _syncLessonChrome();
+    _ensureBoardLive();
   }
 
   Future<void> _sceneRoom(String detail) async {
@@ -778,6 +798,149 @@ class _LessonCallStageState extends State<LessonCallStage>
     }
   }
 
+  Future<void> _resetBoardLiveView() async {
+    try {
+      await _web?.evaluateJavascript(source: "window.LarnesBoard?.resetLive()");
+    } catch (_) {}
+  }
+
+  void _closeBoardLive() {
+    unawaited(_resetBoardLiveView());
+    final old = _boardLive;
+    _boardLive = null;
+    _boardLiveIdentity = '';
+    _livePresence = null;
+    old?.stop();
+  }
+
+  Future<Map<String, dynamic>?> _boardRequest(Map<String, dynamic> body) async {
+    if (widget.requestBoard != null) return widget.requestBoard!(body);
+    if (widget.fetchBoard != null) return null;
+    final auth = AuthScope.of(context), invite = widget.inviteToken;
+    return invite != null
+        ? auth.lessonInviteGuestApi.requestBoard(token: invite, body: body)
+        : auth.parentApi.requestChildBoard(childId: widget.childId, body: body);
+  }
+
+  void _ensureBoardLive() {
+    final board = _board;
+    if (!mounted || _ended || !_pageReady || board == null) return;
+    final identity =
+        '${widget.childId}:${board.lessonSessionId}:${board.focusRoomId}:${board.roomEpoch}:${board.sceneGeneration}:$_pageGen';
+    if (identity == _boardLiveIdentity) return;
+    _closeBoardLive();
+    _boardLiveIdentity = identity;
+    late final LessonBoardLiveTransport transport;
+    transport = LessonBoardLiveTransport(
+      connectionId: _boardLink,
+      apiBase: Uri.parse(AppConfig.apiBaseUrl),
+      isCurrent: () =>
+          mounted &&
+          !_ended &&
+          identical(_boardLive, transport) &&
+          _boardLiveIdentity == identity,
+      ticket: (connectionId) async {
+        final grant = await _boardRequest({
+          'kind': 'live-ticket',
+          'connectionId': connectionId,
+          'roomId': board.focusRoomId,
+          'roomEpoch': board.roomEpoch,
+          'link': _boardLink,
+        });
+        if (grant?['accepted'] == true) {
+          final scope = grant?['scope'];
+          if (scope is! Map ||
+              scope['lessonSessionId'] != board.lessonSessionId ||
+              scope['roomId'] != board.focusRoomId ||
+              scope['roomEpoch'] != board.roomEpoch ||
+              scope['sceneGeneration'] != board.sceneGeneration ||
+              scope['sceneIdentity'] != 'child:${widget.childId}')
+            return {'accepted': false, 'reason': 'wrong-scope'};
+        }
+        return grant;
+      },
+      receive: (frame) async {
+        final deliveryGeneration = transport.generation;
+        final web = _web;
+        if (web == null ||
+            !mounted ||
+            _ended ||
+            !identical(_boardLive, transport))
+          return 'resync';
+        final raw = await web.evaluateJavascript(
+          source:
+              'JSON.stringify(window.LarnesBoard.receiveLive(${jsonEncode(frame)}))',
+        );
+        if (!mounted ||
+            _ended ||
+            !identical(_boardLive, transport) ||
+            transport.generation != deliveryGeneration)
+          return 'resync';
+        final result = raw is String ? jsonDecode(raw) : raw;
+        if (result is! Map) return 'resync';
+        if (result['kind'] == 'snapshot') {
+          if (result['lessonSessionId'] != board.lessonSessionId)
+            return 'resync';
+          final snapshot = result['snapshot'];
+          if (snapshot is! Map) return 'resync';
+          final next = LessonChildBoard.fromLiveSnapshot(
+            Map<String, dynamic>.from(snapshot),
+            board.lessonSessionId,
+            presence: _livePresence,
+          );
+          if (next == null) return 'resync';
+          _invalidateBoardCache();
+          await _applyBoard(next);
+          if (!mounted || _ended || !identical(_boardLive, transport))
+            return 'resync';
+          await web.evaluateJavascript(
+            source: 'window.LarnesBoard.activateLive()',
+          );
+          return 'snapshot';
+        }
+        if (result['kind'] == 'presence' && result['payload'] is Map)
+          _livePresence = Map<String, dynamic>.from(result['payload'] as Map);
+        return result['kind'] as String? ?? 'resync';
+      },
+      changed: (active) {
+        if (!mounted || _ended || !identical(_boardLive, transport)) return;
+        if (active) {
+          _boardTimer?.cancel();
+          _boardTimer = null;
+          _invalidateBoardCache();
+        } else {
+          _invalidateBoardCache();
+          unawaited(_resetBoardLiveView());
+          _watchBoard();
+        }
+      },
+    );
+    _boardLive = transport;
+    transport.start();
+  }
+
+  Future<Map<String, dynamic>> _boardLiveMessage(List<dynamic> args) async {
+    final board = _board, live = _boardLive;
+    if (!mounted ||
+        _ended ||
+        board == null ||
+        live == null ||
+        args.isEmpty ||
+        args.first is! Map)
+      return {'accepted': false};
+    final body = Map<String, dynamic>.from(args.first as Map);
+    if (body['gen'] != _boardGen ||
+        body['roomId'] != board.focusRoomId ||
+        body['epoch'] != board.roomEpoch)
+      return {'accepted': false};
+    if (body['reset'] == true) {
+      live.reconnect();
+      return {'accepted': false};
+    }
+    final samples = body['samples'];
+    return {'accepted': samples is List && await live.sendSamples(samples)};
+  }
+
   void _tryStart() {
     if (_ended || !mounted) return;
     final web = _web;
@@ -792,6 +955,8 @@ class _LessonCallStageState extends State<LessonCallStage>
     }
 
     _starting = true;
+    _pageReady = false;
+    _closeBoardLive();
     _awaitingPage = true;
     _invalidateBoardCache();
     _pageGen += 1;
@@ -1367,6 +1532,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       return;
     }
     _ended = true;
+    _closeBoardLive();
     _closeBoardVideo();
     _retireCall();
     _boardGen++;
@@ -1687,6 +1853,7 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   @override
   void dispose() {
+    _closeBoardLive();
     _closeBoardVideo();
     NativeMessageSound.enabled.removeListener(_onMessenger);
     if (widget.messenger != null)
@@ -1750,6 +1917,10 @@ class _LessonCallStageState extends State<LessonCallStage>
           callback: _requestBoardExercise,
         );
         controller.addJavaScriptHandler(
+          handlerName: 'boardLive',
+          callback: _boardLiveMessage,
+        );
+        controller.addJavaScriptHandler(
           handlerName: 'boardImage',
           callback: (args) => _boardWorkspace
               ? _lessonImage(args, true)
@@ -1789,6 +1960,7 @@ class _LessonCallStageState extends State<LessonCallStage>
           _invalidateBoardCache();
           await _pullBoard();
           _pageReady = true;
+          _ensureBoardLive();
           _onDeskMedia();
           if (widget.mediaEnabled) await _join();
           return;

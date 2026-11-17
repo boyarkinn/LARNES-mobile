@@ -41,6 +41,38 @@ class LessonChildBoard {
   final String sound;
   final String title;
 
+  /// v2 is decoded/assembled by the shared SDK; native only maps its validated projection.
+  static LessonChildBoard? fromLiveSnapshot(
+    Map<String, dynamic> snapshot,
+    String lessonSessionId, {
+    Map<String, dynamic>? presence,
+  }) {
+    final rooms = snapshot['rooms'];
+    Map<dynamic, dynamic>? room;
+    if (rooms is List) {
+      for (final value in rooms) {
+        if (value is Map && value['id'] == snapshot['focusRoomId']) {
+          room = value;
+          break;
+        }
+      }
+    }
+    return fromJson({
+      ...snapshot,
+      'status': 'ok',
+      'lessonSessionId': lessonSessionId,
+      'exercises': snapshot['room'] ?? const [],
+      'sound': room?['sound'] ?? 'main',
+      'title': room?['title'] ?? '',
+      if (presence != null) ...{
+        'presence': presence['peers'] ?? const [],
+        'navigation': presence['navigation'] ?? const [],
+        'pins': presence['pins'] ?? const [],
+        'rulerScale': presence['rulerScale'],
+      },
+    });
+  }
+
   static LessonChildBoard? fromJson(Map<String, dynamic>? json) {
     if (json == null || json['status'] != 'ok') {
       return null;

@@ -10,6 +10,7 @@ class LessonChildBoard {
     this.serverNow = 0,
     this.presence = const [],
     this.navigation = const [],
+    this.pins = const [],
     this.sceneGeneration = 0,
     this.participants = const [],
     this.participantIds,
@@ -30,6 +31,7 @@ class LessonChildBoard {
   final int serverNow;
   final List<dynamic> presence;
   final List<dynamic> navigation;
+  final List<dynamic> pins;
   final int sceneGeneration;
   final List<dynamic> participants;
   final List<String>? participantIds;
@@ -77,6 +79,7 @@ class LessonChildBoard {
       navigation: json['navigation'] is List
           ? json['navigation'] as List
           : const [],
+      pins: json['pins'] is List ? json['pins'] as List : const [],
       sceneGeneration: json['sceneGeneration'] is int
           ? json['sceneGeneration'] as int
           : 0,

@@ -727,6 +727,7 @@ class _LessonCallStageState extends State<LessonCallStage>
           'participantIds': board.participantIds,
         'rulerScale': board.rulerScale,
         'navigation': board.navigation,
+        'pins': board.pins,
         'gen': _boardGen,
         'revision': board.sceneRevision,
         'scene': board.scene,

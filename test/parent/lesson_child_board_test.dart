@@ -2,6 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 
 void main() {
+  test('retains versioned viewport pins and accepts older servers without pins', () {
+    final base = <String, dynamic>{'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main'};
+    expect(LessonChildBoard.fromJson(base)!.pins, isEmpty);
+    final pins = [{'connectionId': 'tablet', 'leaseId': 'lease', 'revision': 12,
+      'pinned': true, 'x': 20, 'y': -90, 'zoom': 1.5}];
+    expect(LessonChildBoard.fromJson({...base, 'pins': pins})!.pins, pins);
+    expect(LessonChildBoard.fromJson({...base, 'pins': 'invalid'})!.pins, isEmpty);
+  });
   test('document replacement generation is preserved while old responses default to zero', () {
     final base = <String, dynamic>{'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main'};
     expect(LessonChildBoard.fromJson(base)!.sceneGeneration, 0);

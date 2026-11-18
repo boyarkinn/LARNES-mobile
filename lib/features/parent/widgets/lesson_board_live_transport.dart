@@ -207,6 +207,7 @@ class LessonBoardLiveTransport {
             'tools',
             'angle-preview',
             'abacus-preview',
+            'abacus-hover',
           ].where(features.contains),
       ],
     });

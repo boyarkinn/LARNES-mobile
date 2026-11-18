@@ -161,6 +161,7 @@ void main() {
               'tools',
               'angle-preview',
               'abacus-preview',
+              'abacus-hover',
             ],
           };
         },
@@ -190,6 +191,7 @@ void main() {
         'tools',
         'angle-preview',
         'abacus-preview',
+        'abacus-hover',
       ]);
       expect(socket.sent.single.containsKey('leaseId'), false);
       expect(transport.active, false);

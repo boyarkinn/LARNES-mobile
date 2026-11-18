@@ -59,14 +59,14 @@ void main() {
     () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0),
           peers = <WebSocket>[],
-          received = <String>[];
+          hellos = <List<dynamic>>[];
       server.listen((request) async {
         final peer = await WebSocketTransformer.upgrade(request);
         peers.add(peer);
         peer.listen((raw) {
           final frame = jsonDecode(raw as String) as Map;
-          received.add(frame['kind'] as String);
           if (frame['kind'] == 'hello') {
+            hellos.add(frame['features'] as List<dynamic>);
             peer.add(
               jsonEncode({
                 'type': 'lesson-board-live',
@@ -122,7 +122,10 @@ void main() {
         transport.wake();
         await until(() => transport.active && peers.length == 2);
         expect(states, [true, false, true]);
-        expect(received.where((kind) => kind == 'hello').length, 2);
+        expect(
+          hellos,
+          List.filled(2, ['cursor', 'stroke', 'transform', 'state-v2']),
+        );
       } finally {
         transport.stop();
         for (final peer in peers) {
@@ -146,6 +149,14 @@ void main() {
             'accepted': true,
             'ticket': 'synthetic-ticket',
             'scope': scope,
+            'features': [
+              'cursor',
+              'stroke',
+              'transform',
+              'state-v2',
+              'translate',
+              'create-shape',
+            ],
           };
         },
         connect: (uri) async {
@@ -162,6 +173,14 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(ticketCalls, 1);
       expect(socket.sent.single['kind'], 'hello');
+      expect(socket.sent.single['features'], [
+        'cursor',
+        'stroke',
+        'transform',
+        'state-v2',
+        'translate',
+        'create-shape',
+      ]);
       expect(socket.sent.single.containsKey('leaseId'), false);
       expect(transport.active, false);
       socket.controller.add(

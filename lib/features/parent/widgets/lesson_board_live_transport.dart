@@ -145,7 +145,7 @@ class LessonBoardLiveTransport {
         onError: (_) => reconnect(),
         onDone: reconnect,
       );
-      await _hello(grant['ticket'] as String);
+      await _hello(grant);
     } catch (_) {
       if (gen == _generation) reconnect();
     } finally {
@@ -188,11 +188,19 @@ class LessonBoardLiveTransport {
     return result.future;
   }
 
-  Future<void> _hello(String value) async {
+  Future<void> _hello(Map<String, dynamic> grant) async {
+    final features = grant['features'];
     await _write({
       'kind': 'hello',
-      'ticket': value,
-      'features': ['cursor', 'stroke', 'transform', 'state-v2'],
+      'ticket': grant['ticket'],
+      'features': [
+        'cursor',
+        'stroke',
+        'transform',
+        'state-v2',
+        if (features is List)
+          ...['translate', 'create-shape'].where(features.contains),
+      ],
     });
   }
 
@@ -208,7 +216,7 @@ class LessonBoardLiveTransport {
         reconnect();
         return;
       }
-      await _hello(grant!['ticket'] as String);
+      await _hello(grant!);
     } catch (_) {
       if (gen == _generation) reconnect();
     }

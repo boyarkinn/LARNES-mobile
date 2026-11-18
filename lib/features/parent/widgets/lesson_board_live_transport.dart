@@ -199,7 +199,12 @@ class LessonBoardLiveTransport {
         'transform',
         'state-v2',
         if (features is List)
-          ...['translate', 'create-shape', 'tools'].where(features.contains),
+          ...[
+            'translate',
+            'create-shape',
+            'group-move',
+            'tools',
+          ].where(features.contains),
       ],
     });
   }

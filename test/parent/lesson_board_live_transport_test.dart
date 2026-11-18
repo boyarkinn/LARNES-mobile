@@ -156,6 +156,7 @@ void main() {
               'state-v2',
               'translate',
               'create-shape',
+              'group-move',
               'tools',
             ],
           };
@@ -181,6 +182,7 @@ void main() {
         'state-v2',
         'translate',
         'create-shape',
+        'group-move',
         'tools',
       ]);
       expect(socket.sent.single.containsKey('leaseId'), false);

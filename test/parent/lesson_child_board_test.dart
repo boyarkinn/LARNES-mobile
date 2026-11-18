@@ -14,27 +14,28 @@ void main() {
         'digits': [0, 9, 4],
       },
     };
-    final live = {'roomId': 'main', 'abacus': abacus};
-    expect(
-      LessonChildBoard.fromJson({
-        ...snapshot,
-        'status': 'ok',
-        'lessonSessionId': 'lesson',
-        'abacus': abacus,
-      })!.abacus,
-      abacus,
-    );
-    expect(
-      LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: live)!.abacus,
-      abacus,
-    );
-    expect(
-      LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: {
-        ...live,
-        'roomId': 'other',
-      })!.abacus,
-      isNull,
-    );
+    final abacuses = [
+      {'owner': 'teacher:one', 'mine': false, 'snapshot': abacus},
+      {'owner': 'child:one', 'mine': true, 'snapshot': {...abacus, 'value': null}},
+    ];
+    final live = {'roomId': 'main', 'abacus': abacus, 'abacuses': abacuses};
+    final http = LessonChildBoard.fromJson({
+      ...snapshot,
+      ...live,
+      'status': 'ok',
+      'lessonSessionId': 'lesson',
+    })!;
+    final current = LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: live)!;
+    final stale = LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: {...live, 'roomId': 'other'})!;
+    final legacy = LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: {'roomId': 'main', 'abacus': abacus})!;
+    expect(http.abacus, abacus);
+    expect(http.abacuses, abacuses);
+    expect(current.abacus, abacus);
+    expect(current.abacuses, abacuses);
+    expect(stale.abacus, isNull);
+    expect(stale.abacuses, isNull);
+    expect(legacy.abacus, abacus);
+    expect(legacy.abacuses, isNull);
   });
 
   test('retains versioned viewport pins and accepts older servers without pins', () {

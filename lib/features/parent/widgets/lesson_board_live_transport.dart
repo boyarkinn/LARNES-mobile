@@ -208,6 +208,7 @@ class LessonBoardLiveTransport {
             'angle-preview',
             'abacus-preview',
             'abacus-hover',
+            'abacus-owners',
           ].where(features.contains),
       ],
     });

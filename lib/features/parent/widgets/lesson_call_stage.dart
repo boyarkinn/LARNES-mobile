@@ -754,6 +754,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       if (board.participantIds != null) 'participantIds': board.participantIds,
       'rulerScale': board.rulerScale,
       'abacus': board.abacus,
+      'abacuses': board.abacuses,
       'navigation': board.navigation,
       'pins': board.pins,
       'gen': _boardGen,
@@ -1587,10 +1588,11 @@ class _LessonCallStageState extends State<LessonCallStage>
       'presence',
       'ready',
       'scene',
+      'abacus',
       'personal',
     }.contains(body['kind']))
       return {'accepted': false};
-    if (body['kind'] == 'scene' &&
+    if ((body['kind'] == 'scene' || body['kind'] == 'abacus') &&
         (body['roomId'] != board.focusRoomId ||
             body['roomEpoch'] != board.roomEpoch ||
             body['lessonSessionId'] != board.lessonSessionId))
@@ -1602,7 +1604,11 @@ class _LessonCallStageState extends State<LessonCallStage>
     if (body['kind'] == 'ready') body['link'] = _boardLink;
     if (body['kind'] == 'personal') body['writer'] = _boardLink;
     final injected = widget.requestBoard;
-    if (injected != null) return await injected(body) ?? {'accepted': false};
+    final unavailable = {
+      'accepted': false,
+      if (body['kind'] == 'abacus') 'reason': 'unavailable',
+    };
+    if (injected != null) return await injected(body) ?? unavailable;
     // Never fall through from a kiosk identity to the parent's credentials.
     if (widget.fetchBoard != null) return {'accepted': false};
     final invite = widget.inviteToken;
@@ -1616,7 +1622,7 @@ class _LessonCallStageState extends State<LessonCallStage>
             childId: widget.childId,
             body: body,
           );
-    return result ?? {'accepted': false};
+    return result ?? unavailable;
   }
 
   Future<Map<String, dynamic>> _lessonMessenger(List<dynamic> args) async {

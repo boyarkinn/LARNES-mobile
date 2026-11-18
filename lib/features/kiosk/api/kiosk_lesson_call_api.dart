@@ -79,7 +79,10 @@ class KioskLessonCallApi {
     try {
       final response = await _client.dio.post('/api/classroom/devices/me/lesson/board', data: body);
       return _asJsonMap(response.data);
-    } on DioException {
+    } on DioException catch (error) {
+      if (body['kind'] == 'abacus' && error.response?.statusCode == 409) {
+        return _asJsonMap(error.response?.data);
+      }
       return null;
     }
   }

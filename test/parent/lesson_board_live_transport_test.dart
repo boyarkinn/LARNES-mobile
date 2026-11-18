@@ -157,6 +157,7 @@ void main() {
               'translate',
               'create-shape',
               'group-move',
+              'card-move',
               'tools',
             ],
           };
@@ -183,6 +184,7 @@ void main() {
         'translate',
         'create-shape',
         'group-move',
+        'card-move',
         'tools',
       ]);
       expect(socket.sent.single.containsKey('leaseId'), false);

@@ -203,6 +203,7 @@ class LessonBoardLiveTransport {
             'translate',
             'create-shape',
             'group-move',
+            'card-move',
             'tools',
           ].where(features.contains),
       ],

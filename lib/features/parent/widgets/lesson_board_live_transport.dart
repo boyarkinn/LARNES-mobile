@@ -206,6 +206,7 @@ class LessonBoardLiveTransport {
             'card-move',
             'tools',
             'angle-preview',
+            'abacus-preview',
           ].where(features.contains),
       ],
     });

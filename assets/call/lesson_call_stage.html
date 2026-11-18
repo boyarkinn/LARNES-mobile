@@ -2677,7 +2677,7 @@
           lessonSessionId: payload.lessonSessionId, roomId: childRoomFocus,
           roomEpoch: childRoomEpoch, peers: payload.presence instanceof Array ? payload.presence : [],
           navigation: payload.navigation instanceof Array ? payload.navigation : [],
-          pins: payload.pins instanceof Array ? payload.pins : []
+          pins: payload.pins instanceof Array ? payload.pins : [], abacus: payload.abacus
         } : null);
       }
 

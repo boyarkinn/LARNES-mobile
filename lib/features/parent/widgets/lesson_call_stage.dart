@@ -753,6 +753,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       'participants': board.participants,
       if (board.participantIds != null) 'participantIds': board.participantIds,
       'rulerScale': board.rulerScale,
+      'abacus': board.abacus,
       'navigation': board.navigation,
       'pins': board.pins,
       'gen': _boardGen,

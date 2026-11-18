@@ -17,6 +17,7 @@ class LessonChildBoard {
     this.personalRuns = const [],
     this.videos,
     this.rulerScale,
+    this.abacus,
     required this.sound,
     required this.title,
   });
@@ -38,6 +39,7 @@ class LessonChildBoard {
   final List<dynamic> personalRuns;
   final Map<String, dynamic>? videos;
   final num? rulerScale;
+  final Map<String, dynamic>? abacus;
   final String sound;
   final String title;
 
@@ -69,6 +71,8 @@ class LessonChildBoard {
         'navigation': presence['navigation'] ?? const [],
         'pins': presence['pins'] ?? const [],
         'rulerScale': presence['rulerScale'],
+        if (presence['roomId'] == snapshot['focusRoomId'])
+          'abacus': presence['abacus'],
       },
     });
   }
@@ -128,6 +132,9 @@ class LessonChildBoard {
           ? participantIds.whereType<String>().toList(growable: false)
           : null,
       rulerScale: json['rulerScale'] is num ? json['rulerScale'] as num : null,
+      abacus: json['abacus'] is Map
+          ? Map<String, dynamic>.from(json['abacus'] as Map)
+          : null,
       sound: json['sound'] is String ? json['sound'] as String : 'main',
       title: json['title'] is String ? json['title'] as String : '',
     );

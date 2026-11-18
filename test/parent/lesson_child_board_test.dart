@@ -2,6 +2,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:larnes_mobile/features/parent/models/lesson_child_board.dart';
 
 void main() {
+  test('maps the abacus from HTTP and scoped live presence', () {
+    final snapshot = {'focusRoomId': 'main'};
+    final abacus = {
+      'session': 'owner-session',
+      'generation': 0,
+      'revision': 4,
+      'value': {
+        'x': 450,
+        'y': 120,
+        'digits': [0, 9, 4],
+      },
+    };
+    final live = {'roomId': 'main', 'abacus': abacus};
+    expect(
+      LessonChildBoard.fromJson({
+        ...snapshot,
+        'status': 'ok',
+        'lessonSessionId': 'lesson',
+        'abacus': abacus,
+      })!.abacus,
+      abacus,
+    );
+    expect(
+      LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: live)!.abacus,
+      abacus,
+    );
+    expect(
+      LessonChildBoard.fromLiveSnapshot(snapshot, 'lesson', presence: {
+        ...live,
+        'roomId': 'other',
+      })!.abacus,
+      isNull,
+    );
+  });
+
   test('retains versioned viewport pins and accepts older servers without pins', () {
     final base = <String, dynamic>{'status': 'ok', 'lessonSessionId': 'lesson', 'focusRoomId': 'main'};
     expect(LessonChildBoard.fromJson(base)!.pins, isEmpty);

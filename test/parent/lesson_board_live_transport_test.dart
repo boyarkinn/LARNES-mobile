@@ -160,6 +160,7 @@ void main() {
               'card-move',
               'tools',
               'angle-preview',
+              'abacus-preview',
             ],
           };
         },
@@ -188,6 +189,7 @@ void main() {
         'card-move',
         'tools',
         'angle-preview',
+        'abacus-preview',
       ]);
       expect(socket.sent.single.containsKey('leaseId'), false);
       expect(transport.active, false);

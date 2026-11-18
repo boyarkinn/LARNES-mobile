@@ -205,6 +205,7 @@ class LessonBoardLiveTransport {
             'group-move',
             'card-move',
             'tools',
+            'angle-preview',
           ].where(features.contains),
       ],
     });

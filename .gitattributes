@@ -1,3 +1,4 @@
 # Exact reproducible output of platform/scripts/mobile-board/build.mjs.
 # Vendor template literals contain intentional trailing whitespace; do not rewrite them.
 assets/call/larnes-board.js -text -whitespace linguist-generated=true
+assets/call/topic-chain-speech.js -text linguist-generated=true

@@ -3,10 +3,14 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:larnes_mobile/l10n/app_localizations.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/clip_player.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/flash_audio_tempo.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/instruction_audio.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/audio/play_step_audio.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/resolve_step_audio.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/topic_chain_flash_audio.dart';
+import 'package:larnes_mobile/trainers/mental_arithmetic/audio/topic_chain_speech_renderer.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/generate.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/chain_generator/types.dart';
 import 'package:larnes_mobile/trainers/mental_arithmetic/topic_chain_flash/answer_fireworks.dart';
@@ -77,6 +81,9 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   bool _completeCalled = false;
   bool _suspended = false;
   bool _pendingAdvance = false;
+  bool _speechWaiting = false;
+  bool _speechFailed = false;
+  final _speech = TopicChainFlashAudio();
   final Map<int, TopicChainAttemptRecord> _attempts = {};
   TopicChainRunController? _persistence;
   bool _bootstrapped = false, _restoring = false;
@@ -96,6 +103,9 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
 
   int get _totalExamples =>
       _readIntParam(widget.params['exampleCount'], 1).clamp(1, 10);
+
+  double get _stepPauseSec =>
+      double.tryParse('${widget.params['stepPauseSec'] ?? ''}') ?? 1;
 
   Chain? _fixedChain(int index) {
     final payload = readTrainerRuntimeSnapshot(
@@ -275,7 +285,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     _countdownTimer?.cancel();
     _instructionTimer?.cancel();
     _completeTimer?.cancel();
-    unawaited(cancelStepAudio());
+    unawaited(cancelStepAudio().whenComplete(_speech.dispose));
     _inputController.dispose();
     _inputFocus.dispose();
     super.dispose();
@@ -294,6 +304,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
   }
 
   void _startSession() {
+    _speech.discardTrack();
     _completeCalled = false;
     _pendingAdvance = false;
     _attempts.clear();
@@ -310,11 +321,6 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     unawaited(cancelStepAudio());
 
     final solveMode = normalizeSolveMode(widget.params['solveMode']);
-    final stepPauseSec =
-        (widget.params['stepPauseSec'] as num?)?.toDouble() ??
-        double.tryParse('${widget.params['stepPauseSec'] ?? ''}') ??
-        1;
-
     if (!mounted || _suspended || !identical(runToken, _runToken)) {
       return;
     }
@@ -326,12 +332,22 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       _flashStepIndex = -1;
       _errorMessage = null;
       _phase = _Phase.instruction;
+      _speechWaiting = false;
+      _speechFailed = false;
       _answerDraft = '';
       _isCorrect = false;
       _isSubmitting = false;
     });
 
-    if (shouldPlayFlashAudio(stepPauseSec)) {
+    if (shouldPlayFlashAudio(_stepPauseSec)) {
+      if (TopicChainSpeechRenderer.supported) {
+        try {
+          final firstChain = _fixedChain(0);
+          if (firstChain != null) unawaited(_prepareFlashSpeech(firstChain));
+        } on Object {
+          // The usual error handling in _startExample handles a bad snapshot.
+        }
+      }
       final instructionAsset = getInstructionAudioAsset(solveMode);
       await getSharedClipPlayer().play(
         [instructionAsset],
@@ -440,8 +456,45 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     });
   }
 
+  bool _isCurrent(Object runToken) =>
+      mounted && !_suspended && identical(runToken, _runToken);
+
+  Future<({PreparedTopicChainSpeech? track, bool failed})> _prepareFlashSpeech(
+    Chain chain,
+  ) async {
+    if (!TopicChainSpeechRenderer.supported ||
+        !shouldPlayFlashAudio(_stepPauseSec)) {
+      return (track: null, failed: false);
+    }
+
+    try {
+      final steps = chain.steps.map(resolveStepAudio).toList();
+      if (steps.every((step) => step.assets.isEmpty)) {
+        return (track: null, failed: false);
+      }
+      if (steps.any(
+        (step) => step.operationAsset.isEmpty || step.amountAssets.isEmpty,
+      )) {
+        throw const FormatException('Incomplete number bank');
+      }
+
+      final track = await _speech.prepare(
+        steps.map((step) => step.assets).toList(),
+        pauseMs: (_stepPauseSec * 1000).round(),
+        blankMs: _interFlashBlankMs,
+      );
+      return (track: track, failed: false);
+    } on Object catch (error) {
+      debugPrint('Topic chain speech preparation: ${error.runtimeType}');
+      return (track: null, failed: true);
+    }
+  }
+
   void _runCountdown(Object runToken, Chain chain) {
     const step = Duration(milliseconds: _countdownStepMs);
+    final speech = _prepareFlashSpeech(chain);
+    _speechWaiting = false;
+    _speechFailed = false;
     var index = 0;
 
     void showNext() {
@@ -450,12 +503,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       }
 
       if (index >= _countdownLabels.length) {
-        setState(() {
-          _flashLabel = null;
-          _flashStepIndex = -1;
-          _phase = _Phase.flash;
-        });
-        _runFlash(runToken, chain);
+        unawaited(_startFlash(runToken, chain, speech));
         return;
       }
 
@@ -468,30 +516,118 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     showNext();
   }
 
-  void _runFlash(Object runToken, Chain chain) {
-    final stepPauseSec =
-        (widget.params['stepPauseSec'] as num?)?.toDouble() ??
-        double.tryParse('${widget.params['stepPauseSec'] ?? ''}') ??
-        1;
-    final pause = Duration(milliseconds: (stepPauseSec * 1000).round());
-    const blank = Duration(milliseconds: _interFlashBlankMs);
-    final playAudio = shouldPlayFlashAudio(stepPauseSec);
-    const playbackRate = _actionPlaybackRate;
-    var index = 0;
+  Future<void> _startFlash(
+    Object runToken,
+    Chain chain,
+    Future<({PreparedTopicChainSpeech? track, bool failed})> speech,
+  ) async {
+    var preparing = true;
+    final waiting = Timer(const Duration(milliseconds: 150), () {
+      if (preparing && _isCurrent(runToken)) {
+        setState(() => _speechWaiting = true);
+      }
+    });
+    final prepared = await speech;
+    preparing = false;
+    waiting.cancel();
+    if (!_isCurrent(runToken)) return;
+    if (prepared.failed) {
+      _showSpeechFailure();
+      return;
+    }
 
-    void goToAnswer() {
-      unawaited(cancelStepAudio());
+    setState(() {
+      _speechWaiting = false;
+      _flashLabel = null;
+      _flashStepIndex = -1;
+      _phase = _Phase.flash;
+    });
+    final track = prepared.track;
+    if (track == null) {
+      _runTimedFlash(runToken, chain);
+      return;
+    }
+    await _playPreparedFlash(runToken, chain, track);
+  }
+
+  Future<void> _playPreparedFlash(
+    Object runToken,
+    Chain chain,
+    PreparedTopicChainSpeech track,
+  ) async {
+    final player = getSharedClipPlayer();
+    final generation = player.generation + 1;
+    final labels = chain.steps.map(formatChainStep).toList(growable: false);
+
+    void showAt(Duration position) {
+      if (!_isCurrent(runToken)) return;
+      final cue = track.at(position);
+      final label = cue.visible ? labels[cue.index] : null;
+      if (_flashLabel == label && _flashStepIndex == cue.index) return;
       setState(() {
-        _flashLabel = null;
-        _flashStepIndex = -1;
-        _phase = _Phase.answer;
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && identical(runToken, _runToken)) {
-          _focusAnswerInput();
-        }
+        _flashLabel = label;
+        _flashStepIndex = cue.index;
       });
     }
+
+    try {
+      await player
+          .play([track.path], onPosition: showAt)
+          .timeout(track.duration + const Duration(seconds: 6));
+    } on Object catch (error) {
+      debugPrint('Topic chain prepared track: ${error.runtimeType}');
+      if (player.generation == generation) await player.cancel();
+    }
+
+    if (!_isCurrent(runToken)) return;
+    if (player.generation == generation && player.lastPlaybackSucceeded) {
+      _goToAnswer(runToken);
+    } else {
+      debugPrint('Topic chain prepared track did not complete');
+      _showSpeechFailure();
+    }
+  }
+
+  void _showSpeechFailure() {
+    _speech.discardTrack();
+    setState(() {
+      _speechWaiting = false;
+      _speechFailed = true;
+      _flashLabel = null;
+      _flashStepIndex = -1;
+      _phase = _Phase.countdown;
+    });
+  }
+
+  void _retrySpeech() {
+    final chain = _chain;
+    if (_suspended || chain == null || !_speechFailed) return;
+    final runToken = Object();
+    _runToken = runToken;
+    _runCountdown(runToken, chain);
+  }
+
+  void _goToAnswer(Object runToken) {
+    unawaited(cancelStepAudio());
+    setState(() {
+      _flashLabel = null;
+      _flashStepIndex = -1;
+      _phase = _Phase.answer;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isCurrent(runToken)) _focusAnswerInput();
+    });
+  }
+
+  void _runTimedFlash(Object runToken, Chain chain) {
+    final stepPauseSec = _stepPauseSec;
+    final pause = Duration(milliseconds: (stepPauseSec * 1000).round());
+    const blank = Duration(milliseconds: _interFlashBlankMs);
+    final playAudio =
+        !TopicChainSpeechRenderer.supported &&
+        shouldPlayFlashAudio(stepPauseSec);
+    const playbackRate = _actionPlaybackRate;
+    var index = 0;
 
     void showNext() {
       if (!mounted || _suspended || !identical(runToken, _runToken)) {
@@ -499,7 +635,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
       }
 
       if (index >= chain.steps.length) {
-        goToAnswer();
+        _goToAnswer(runToken);
         return;
       }
 
@@ -521,7 +657,7 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
           }
 
           if (index >= chain.steps.length) {
-            goToAnswer();
+            _goToAnswer(runToken);
             return;
           }
 
@@ -796,6 +932,31 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
     );
   }
 
+  Widget _buildSpeechStatus(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_speechWaiting) const CircularProgressIndicator(),
+          const SizedBox(height: 12),
+          Text(
+            _speechFailed
+                ? l10n?.catalogAudioBlocked ?? 'Не удалось подготовить озвучку.'
+                : l10n?.catalogAudioPreparing ?? 'Подготовка озвучки…',
+            textAlign: TextAlign.center,
+          ),
+          if (_speechFailed)
+            TextButton(
+              onPressed: _retrySpeech,
+              child: Text(l10n?.catalogAudioRetry ?? 'Повторить'),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final reviewRun = _runToken;
@@ -851,6 +1012,8 @@ class _TopicChainFlashTrainerState extends State<TopicChainFlashTrainer>
                   ),
                 ),
               ),
+              _Phase.countdown when _speechWaiting || _speechFailed =>
+                _buildSpeechStatus(context),
               _Phase.boot ||
               _Phase.instruction ||
               _Phase.countdown ||

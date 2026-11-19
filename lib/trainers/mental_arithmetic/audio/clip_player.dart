@@ -29,6 +29,7 @@ class ClipPlayer {
     List<String> assetPaths, {
     double playbackRate = 1,
     void Function()? onStarted,
+    void Function(Duration)? onPosition,
   }) async {
     _lastPlaybackSucceeded = false;
     final expectedRun = _generation + 1;
@@ -61,6 +62,7 @@ class ClipPlayer {
     _playing = true;
     final player = AudioPlayer();
     _active = player;
+    StreamSubscription<Duration>? positions;
 
     try {
       await player
@@ -76,8 +78,21 @@ class ClipPlayer {
       }
 
       final playback = player.play();
+      final clock = onPosition == null
+          ? player.positionStream
+          : player.createPositionStream(
+              minPeriod: const Duration(milliseconds: 20),
+              maxPeriod: const Duration(milliseconds: 35),
+            );
+      if (onPosition != null) {
+        positions = clock.listen((position) {
+          if (runId != _generation || position <= Duration.zero) return;
+          notifyStarted();
+          onPosition(position);
+        });
+      }
       try {
-        await player.positionStream
+        await clock
             .firstWhere((position) => position > Duration.zero)
             .timeout(const Duration(seconds: 1));
       } catch (_) {
@@ -99,6 +114,7 @@ class ClipPlayer {
         notifyStarted();
       }
     } finally {
+      await positions?.cancel();
       if (identical(_active, player)) {
         _active = null;
         await player.dispose();

@@ -205,6 +205,7 @@ class LessonBoardLiveTransport {
             'group-move',
             'card-move',
             'tools',
+            'teaching-pointer',
             'angle-preview',
             'abacus-preview',
             'abacus-hover',

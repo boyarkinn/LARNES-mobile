@@ -190,7 +190,7 @@
   "parentLiveLessonShareOn": "Screen is on",
   "parentLiveLessonShareFailed": "The screen did not turn on. Press the screen button to ask again.",
   "parentLiveLessonLeave": "Leave",
-  "parentLiveLessonHear": "Turn sound on",
+  "parentLiveLessonHear": "Turn on lesson sound",
   "parentLiveLessonCameraDenied": "The phone blocked the camera. Allow it in settings and press the camera button.",
   "parentLiveLessonCameraMissing": "No camera found. Press the camera button to ask again.",
   "parentLiveLessonCameraAskAgain": "The camera did not turn on. Press the camera button to ask again.",

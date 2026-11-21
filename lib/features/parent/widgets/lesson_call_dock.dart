@@ -24,6 +24,7 @@ class LessonCallDock extends StatelessWidget {
     required this.videoOn,
     this.onChat,
     this.unread = 0,
+    this.hearBusy = false,
   });
 
   final bool audioOn;
@@ -33,6 +34,7 @@ class LessonCallDock extends StatelessWidget {
   final bool closed;
   final bool connectFailed;
   final bool hearBlocked;
+  final bool hearBusy;
   final bool lost;
   final String? micNote;
   final VoidCallback onHear;
@@ -52,7 +54,8 @@ class LessonCallDock extends StatelessWidget {
       if (connectFailed) l10n.parentLiveLessonCallFailed,
       if (closed) l10n.parentLiveLessonLinkClosed,
       if (lost) l10n.parentLiveLessonLinkLost,
-      if (cameraNote != null) _deviceNote(l10n, video: true, block: cameraNote!),
+      if (cameraNote != null)
+        _deviceNote(l10n, video: true, block: cameraNote!),
       if (micNote != null) _deviceNote(l10n, video: false, block: micNote!),
     ];
 
@@ -68,90 +71,101 @@ class LessonCallDock extends StatelessWidget {
           top: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                if (hearBlocked) ...[
-                  _CallDockButton(
-                    attention: false,
-                    enabled: true,
-                    icon: Icons.volume_off,
-                    label: l10n.parentLiveLessonHear,
-                    off: true,
-                    onPressed: onHear,
+                if (hearBlocked)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: LessonHearButton(busy: hearBusy, onPressed: onHear),
                   ),
-                  const SizedBox(width: 8),
-                ],
-                _CallDockButton(
-                  attention: callReady && !videoOn,
-                  enabled: callReady,
-                  icon: videoOn ? Icons.videocam : Icons.videocam_off,
-                  label: videoOn ? l10n.parentLiveLessonCameraOn : l10n.parentLiveLessonCameraOff,
-                  off: !videoOn,
-                  onPressed: onToggleVideo,
-                ),
-                const SizedBox(width: 8),
-                _CallDockButton(
-                  attention: callReady && !audioOn,
-                  enabled: callReady,
-                  icon: audioOn ? Icons.mic : Icons.mic_off,
-                  label: audioOn ? l10n.parentLiveLessonMicOn : l10n.parentLiveLessonMicOff,
-                  off: !audioOn,
-                  onPressed: onToggleAudio,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (reconnecting)
-                          Text(
-                            l10n.parentLiveLessonLinkReconnecting,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color(0xFF92400E),
-                              fontSize: 14,
-                              height: 1.25,
-                            ),
-                          ),
-                        for (final note in notes)
-                          Text(
-                            note,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color(0xFFB91C1C),
-                              fontSize: 14,
-                              height: 1.25,
-                            ),
-                          ),
-                        if (lost || (connectFailed && canRetry))
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: ParentColors.ink,
-                              minimumSize: const Size(0, 40),
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              side: const BorderSide(color: Color(0xFFE8E7E4)),
-                              textStyle: const TextStyle(fontSize: 14),
-                            ),
-                            onPressed: onRetry,
-                            child: Text(l10n.parentLiveLessonLinkRetry),
-                          ),
-                      ],
+                Row(
+                  children: [
+                    _CallDockButton(
+                      attention: callReady && !videoOn,
+                      enabled: callReady,
+                      icon: videoOn ? Icons.videocam : Icons.videocam_off,
+                      label: videoOn
+                          ? l10n.parentLiveLessonCameraOn
+                          : l10n.parentLiveLessonCameraOff,
+                      off: !videoOn,
+                      onPressed: onToggleVideo,
                     ),
-                  ),
-                ),
-                if (onChat != null) ...[
-                  _ChatDockButton(label: l10n.messengerOpen, onPressed: onChat!, unread: unread),
-                  const SizedBox(width: 8),
-                ],
-                _CallDockButton(
-                  attention: false,
-                  enabled: true,
-                  icon: Icons.call_end,
-                  label: l10n.parentLiveLessonLeave,
-                  off: true,
-                  onPressed: onLeave,
+                    const SizedBox(width: 8),
+                    _CallDockButton(
+                      attention: callReady && !audioOn,
+                      enabled: callReady,
+                      icon: audioOn ? Icons.mic : Icons.mic_off,
+                      label: audioOn
+                          ? l10n.parentLiveLessonMicOn
+                          : l10n.parentLiveLessonMicOff,
+                      off: !audioOn,
+                      onPressed: onToggleAudio,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (reconnecting)
+                              Text(
+                                l10n.parentLiveLessonLinkReconnecting,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFF92400E),
+                                  fontSize: 14,
+                                  height: 1.25,
+                                ),
+                              ),
+                            for (final note in notes)
+                              Text(
+                                note,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFB91C1C),
+                                  fontSize: 14,
+                                  height: 1.25,
+                                ),
+                              ),
+                            if (lost || (connectFailed && canRetry))
+                              OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: ParentColors.ink,
+                                  minimumSize: const Size(0, 40),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE8E7E4),
+                                  ),
+                                  textStyle: const TextStyle(fontSize: 14),
+                                ),
+                                onPressed: onRetry,
+                                child: Text(l10n.parentLiveLessonLinkRetry),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (onChat != null) ...[
+                      _ChatDockButton(
+                        label: l10n.messengerOpen,
+                        onPressed: onChat!,
+                        unread: unread,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    _CallDockButton(
+                      attention: false,
+                      enabled: true,
+                      icon: Icons.call_end,
+                      label: l10n.parentLiveLessonLeave,
+                      off: true,
+                      onPressed: onLeave,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -161,7 +175,11 @@ class LessonCallDock extends StatelessWidget {
     );
   }
 
-  String _deviceNote(AppLocalizations l10n, {required bool video, required String block}) {
+  String _deviceNote(
+    AppLocalizations l10n, {
+    required bool video,
+    required String block,
+  }) {
     if (video) {
       return switch (block) {
         'denied' => l10n.parentLiveLessonCameraDenied,
@@ -177,8 +195,37 @@ class LessonCallDock extends StatelessWidget {
   }
 }
 
+class LessonHearButton extends StatelessWidget {
+  const LessonHearButton({
+    super.key,
+    required this.busy,
+    required this.onPressed,
+  });
+
+  final bool busy;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: busy ? null : onPressed,
+      icon: busy
+          ? const SizedBox.square(
+              dimension: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.volume_up_outlined),
+      label: Text(context.l10n.parentLiveLessonHear),
+    );
+  }
+}
+
 class _ChatDockButton extends StatelessWidget {
-  const _ChatDockButton({required this.label, required this.onPressed, required this.unread});
+  const _ChatDockButton({
+    required this.label,
+    required this.onPressed,
+    required this.unread,
+  });
 
   final String label;
   final VoidCallback onPressed;
@@ -202,7 +249,10 @@ class _ChatDockButton extends StatelessWidget {
               right: 4,
               top: 4,
               child: DecoratedBox(
-                decoration: const BoxDecoration(color: Color(0xFFB42318), shape: BoxShape.circle),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFB42318),
+                  shape: BoxShape.circle,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Text(
@@ -239,7 +289,8 @@ class _CallDockButton extends StatefulWidget {
   State<_CallDockButton> createState() => _CallDockButtonState();
 }
 
-class _CallDockButtonState extends State<_CallDockButton> with SingleTickerProviderStateMixin {
+class _CallDockButtonState extends State<_CallDockButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ping = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
@@ -302,7 +353,9 @@ class _CallDockButtonState extends State<_CallDockButton> with SingleTickerProvi
                 color: off ? const Color(0xFFDC2626) : ParentColors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: off ? Colors.transparent : ParentColors.line),
+                  side: BorderSide(
+                    color: off ? Colors.transparent : ParentColors.line,
+                  ),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
@@ -329,7 +382,9 @@ class _CallDockButtonState extends State<_CallDockButton> with SingleTickerProvi
                           scale: 1 + 0.6 * t,
                           child: const DecoratedBox(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(12),
+                              ),
                               border: Border.fromBorderSide(
                                 BorderSide(color: Color(0xFFDC2626), width: 3),
                               ),

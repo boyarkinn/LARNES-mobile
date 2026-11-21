@@ -127,6 +127,7 @@ class _LessonCallStageState extends State<LessonCallStage>
   bool _cameraLive = false;
   bool _micLive = false;
   bool _hearBlocked = false;
+  bool _hearBusy = false;
   bool _starting = false;
   bool _awaitingPage = false;
   String? _claimingScope;
@@ -1232,9 +1233,7 @@ class _LessonCallStageState extends State<LessonCallStage>
           : null,
       'retry': _link == _LessonCallLink.lost || _link == _LessonCallLink.failed,
       'hearBlocked': _hearBlocked,
-      'retryLabel': _hearBlocked
-          ? l10n.parentLiveLessonHear
-          : l10n.parentLiveLessonLinkRetry,
+      'retryLabel': l10n.parentLiveLessonLinkRetry,
       'note': [
         if (_link == _LessonCallLink.failed) l10n.parentLiveLessonCallFailed,
         if (_link == _LessonCallLink.lost) l10n.parentLiveLessonLinkLost,
@@ -1358,6 +1357,8 @@ class _LessonCallStageState extends State<LessonCallStage>
     _micOn = false;
     _cameraLive = false;
     _micLive = false;
+    _hearBlocked = false;
+    _hearBusy = false;
   }
 
   Future<void> _stopSession({bool keepLocalTracks = false}) async {
@@ -1508,7 +1509,19 @@ class _LessonCallStageState extends State<LessonCallStage>
   }
 
   Future<void> _resumeHear() async {
-    await _web?.evaluateJavascript(source: 'resumeHear()');
+    final web = _web;
+    if (web == null || !_hearBlocked || _hearBusy) return;
+    final generation = _callGen;
+    setState(() => _hearBusy = true);
+    try {
+      await web.callAsyncJavaScript(functionBody: 'await resumeHear();');
+    } catch (_) {
+      // The WebView reports whether playback recovered.
+    } finally {
+      if (mounted && generation == _callGen) {
+        setState(() => _hearBusy = false);
+      }
+    }
   }
 
   Future<void> _rejoin() async {
@@ -1692,6 +1705,10 @@ class _LessonCallStageState extends State<LessonCallStage>
           _toggleChat();
         case 'leave':
           unawaited(_leaveFromDock());
+        case 'hear':
+          unawaited(_resumeHear());
+        case 'retry-call':
+          unawaited(_rejoin());
         case 'restore':
           if (_hearBlocked) {
             _resumeHear();
@@ -2119,6 +2136,7 @@ class _LessonCallStageState extends State<LessonCallStage>
       closed: _link == _LessonCallLink.closed,
       connectFailed: _link == _LessonCallLink.failed,
       hearBlocked: _hearBlocked,
+      hearBusy: _hearBusy,
       lost: _link == _LessonCallLink.lost,
       reconnecting: _link == _LessonCallLink.reconnecting,
       micNote: _micNote,
@@ -2149,10 +2167,10 @@ class _LessonCallStageState extends State<LessonCallStage>
 
   Widget _linkButton() {
     final l10n = context.l10n;
-    final hear = _hearBlocked;
-    final label = hear
-        ? l10n.parentLiveLessonHear
-        : _chromeOpen
+    if (_hearBlocked) {
+      return LessonHearButton(busy: _hearBusy, onPressed: _resumeHear);
+    }
+    final label = _chromeOpen
         ? l10n.parentLiveLessonCallHide
         : l10n.parentLiveLessonCallShow;
     return Tooltip(
@@ -2161,12 +2179,10 @@ class _LessonCallStageState extends State<LessonCallStage>
         button: true,
         label: label,
         child: Material(
-          color: hear ? const Color(0xFFDC2626) : ParentColors.surface,
+          color: ParentColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: hear ? const Color(0xFFDC2626) : ParentColors.line,
-            ),
+            side: const BorderSide(color: ParentColors.line),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
@@ -2174,9 +2190,9 @@ class _LessonCallStageState extends State<LessonCallStage>
             child: SizedBox(
               width: 48,
               height: 48,
-              child: Icon(
-                hear ? Icons.volume_off : Icons.call,
-                color: hear ? Colors.white : ParentColors.ink,
+              child: const Icon(
+                Icons.call,
+                color: ParentColors.ink,
                 size: 24,
               ),
             ),

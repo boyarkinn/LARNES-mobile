@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentLiveLessonHear.
   ///
   /// In en, this message translates to:
-  /// **'Turn sound on'**
+  /// **'Turn on lesson sound'**
   String get parentLiveLessonHear;
 
   /// No description provided for @parentLiveLessonCameraDenied.

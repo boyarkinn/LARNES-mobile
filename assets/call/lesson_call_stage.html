@@ -196,6 +196,7 @@
         ar: "جارٍ الانتقال إلى صوت الغرفة. المكالمة المشتركة تبقى متوقفة حتى يتصل.",
       };
       var remoteAudios = new Map();
+      var remoteAudioBlocked = false;
       var conferenceExit = null;
       var opening = { video: false, audio: false };
       var openingGeneration = { video: 0, audio: 0 };
@@ -288,18 +289,53 @@
       function attachRemoteAudio(track, participantId) {
         if (remoteAudios.has(track)) return;
         var audio = document.createElement("audio");
-        var entry = { audio: audio, participantId: participantId };
+        var entry = { audio: audio, participantId: participantId, blocked: false, playback: 0 };
         audio.autoplay = true;
         audio.setAttribute("playsinline", "");
         document.body.appendChild(audio);
         remoteAudios.set(track, entry);
-        function blocked() {
-          if (remoteAudios.get(track) === entry) post("hear-blocked");
+        void startRemoteAudio(track, entry, true);
+      }
+
+      function publishHearState() {
+        var blocked = Array.from(remoteAudios.values()).some(function (entry) { return entry.blocked; });
+        if (blocked === remoteAudioBlocked) return;
+        remoteAudioBlocked = blocked;
+        post(blocked ? "hear-blocked" : "hear-on");
+      }
+
+      function startRemoteAudio(track, entry, needsAttach) {
+        var audio = entry.audio;
+        var playback = ++entry.playback;
+        function current() {
+          return remoteAudios.get(track) === entry && entry.playback === playback;
         }
-        attach(track, audio).then(function () {
-          if (remoteAudios.get(track) !== entry) releaseRemoteAudioNode(track, audio);
-          else playMedia(audio, blocked);
-        }, blocked);
+        function finish(blocked) {
+          if (!current()) return;
+          entry.blocked = blocked;
+          publishHearState();
+        }
+        function failed(error) {
+          if (error && error.name === "AbortError" && (audio.srcObject || audio.currentSrc)) return;
+          finish(true);
+        }
+        function play() {
+          if (!current()) {
+            if (remoteAudios.get(track) !== entry) releaseRemoteAudioNode(track, audio);
+            return;
+          }
+          if (!audio.srcObject && !audio.currentSrc) {
+            finish(true);
+            return;
+          }
+          try { return Promise.resolve(audio.play()).then(function () { finish(false); }, failed); }
+          catch (error) { failed(error); }
+        }
+        if (!needsAttach) return play();
+        return attach(track, audio).then(play, function (error) {
+          if ((audio.srcObject || audio.currentSrc) && !audio.paused) finish(false);
+          else failed(error);
+        });
       }
 
       function releaseRemoteAudioNode(track, audio) {
@@ -313,6 +349,7 @@
         if (!entry) return;
         remoteAudios.delete(track);
         releaseRemoteAudioNode(track, entry.audio);
+        publishHearState();
       }
 
       function clearRemoteAudio(participantId) {
@@ -2350,20 +2387,17 @@
       }
 
       function resumeHear() {
-        var generation = attempt;
-        var pending = Array.from(remoteAudios.entries()).map(function (pair) {
+        var pending = Array.from(remoteAudios.entries()).filter(function (pair) {
+          return pair[1].blocked;
+        }).map(function (pair) {
           var track = pair[0], entry = pair[1];
-          return entry.audio.play().catch(function (error) {
-            if (remoteAudios.get(track) === entry) throw error;
-          });
+          var needsAttach = !entry.audio.srcObject && !entry.audio.currentSrc;
+          if (needsAttach && track.detach) {
+            try { track.detach(entry.audio); } catch (_) {}
+          }
+          return startRemoteAudio(track, entry, needsAttach);
         });
-        Promise.all(pending)
-          .then(function () {
-            if (generation === attempt) post("hear-on");
-          })
-          .catch(function () {
-            if (generation === attempt) post("hear-blocked");
-          });
+        return Promise.all(pending);
       }
 
       function linkSame(step) {

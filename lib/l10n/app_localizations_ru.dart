@@ -453,7 +453,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get parentLiveLessonLeave => 'Выйти';
 
   @override
-  String get parentLiveLessonHear => 'Включить звук';
+  String get parentLiveLessonHear => 'Включить звук урока';
 
   @override
   String get parentLiveLessonCameraDenied =>

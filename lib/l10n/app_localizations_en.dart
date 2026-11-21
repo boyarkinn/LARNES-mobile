@@ -452,7 +452,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get parentLiveLessonLeave => 'Leave';
 
   @override
-  String get parentLiveLessonHear => 'Turn sound on';
+  String get parentLiveLessonHear => 'Turn on lesson sound';
 
   @override
   String get parentLiveLessonCameraDenied =>

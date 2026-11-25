@@ -219,18 +219,18 @@ test('native participant identity retains an equal-name peer and detaches audio 
   assert.equal(c.remoteAudios.size, 0);
 });
 function stage() {
-  let now = 100000, next = 0;
+  let now = 100000, next = 0, wallOffset = 0;
   const timers = new Map(), events = [];
   const setTimeout = (fn, ms = 0) => { timers.set(++next, { at: now + ms, fn }); return next; };
   const clearTimeout = id => timers.delete(id);
   const context = vm.createContext({ Promise, TextEncoder, console,
-    Date: class extends Date { static now() { return now; } }, setTimeout, clearTimeout,
+    Date: class extends Date { static now() { return now + wallOffset; } }, performance: { now: () => now }, setTimeout, clearTimeout,
     document: { hidden: false, getElementById: () => null },
     window: { setTimeout, clearTimeout, flutter_inappwebview: { callHandler: (...args) => events.push(args) } },
   });
   vm.runInContext(mediaContract, context);
   vm.runInContext(script, context);
-  return { context, events, timers, async advance(ms) {
+  return { context, events, timers, setWallOffset: ms => { wallOffset = ms; }, async advance(ms) {
     const until = now + ms;
     for (;;) {
       const ready = [...timers].filter(([, value]) => value.at <= until).sort((a, b) => a[1].at - b[1].at)[0];
@@ -452,6 +452,7 @@ function correlatedMedia() {
   c.room = { sendEndpointMessage: (target, result) => sent.push({ target, result: JSON.parse(JSON.stringify(result)) }),
     addTrack: async () => { changes.push('publish'); }, leave: async () => {}, removeTrack: async () => {} };
   c.callJoined = true; c.localEndpoint = 'child'; c.passHold = { room: 'lesson' };
+  c.setBoardRoster({ scopeId: 'lesson', serverNow: 100000 }, 'child', 0);
   c.localVideo = camera;
   c.window.flutter_inappwebview.callHandler = async (name, detail) => {
     if (name === 'lessonMediaPermission') return { ok: true };
@@ -477,6 +478,30 @@ test('native v2 reports actual published state and repeats the ACK without repea
   assert.deepEqual(f.changes, ['unmute', 'publish']);
   f.c.clearTeacherMedia();
   assert.equal(f.timers.size, 0);
+});
+
+test('native WebView accepts fresh commands at ±1 hour and returns a specific clock or expiry rejection', async () => {
+  for (const skew of [-3600000, 3600000]) {
+    const f = correlatedMedia();
+    f.setWallOffset(skew);
+    f.c.setBoardRoster({ scopeId: 'lesson', serverNow: 100000 }, 'child', 80);
+    f.c.onEndpointMessage('observer', f.command({ sentAt: 90050, expiresAt: 100050 }));
+    f.c.onEndpointMessage('observer', f.command({ sentAt: 106000, expiresAt: 116000 }));
+    f.c.setBoardRoster({ scopeId: 'lesson' }, 'child', 80);
+    f.c.onEndpointMessage('observer', f.command());
+    assert.deepEqual(f.sent.map(item => item.result.reason), ['expired', 'clock-skew', 'clock-unavailable']);
+    assert.deepEqual(f.changes, []);
+    f.c.setBoardRoster({ scopeId: 'lesson', serverNow: 100000 }, 'child', 80);
+    f.c.onEndpointMessage('observer', f.command()); await flush(); await flush();
+    assert.equal(f.sent.at(-1).result.status, 'applied');
+    assert.deepEqual(f.changes, ['unmute', 'publish']);
+    f.setMuted(true);
+    f.c.localAudio = { ...f.camera, getType: () => 'audio' };
+    f.c.onEndpointMessage('observer', f.command({ device: 'audio', commandId: 'command-2' }));
+    await flush(); await flush();
+    assert.equal(f.sent.at(-1).result.status, 'applied');
+    assert.deepEqual(f.changes, ['unmute', 'publish', 'unmute', 'publish']);
+  }
 });
 
 test('native v2 permits the SDK to reacquire a normally muted camera and requires the new live track', async () => {

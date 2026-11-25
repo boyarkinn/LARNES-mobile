@@ -113,6 +113,7 @@ class LessonCallTeachers {
     required this.ids,
     required this.primary,
     this.scopeId = '',
+    this.serverNow,
     this.participants = const [],
     this.observers = const [],
     this.roomAudio = const [],
@@ -122,6 +123,7 @@ class LessonCallTeachers {
   final List<String> ids;
   final String primary;
   final String scopeId;
+  final int? serverNow;
   final List<String> participants;
   final List<String> observers;
   final List<String> roomAudio;
@@ -139,6 +141,7 @@ class LessonCallTeachers {
           ? json['teacherEndpointId'] as String
           : '',
       scopeId: json['scopeId'] is String ? json['scopeId'] as String : '',
+      serverNow: json['serverNow'] is int ? json['serverNow'] as int : null,
       participants: idsOf(json['participantEndpointIds']),
       observers: idsOf(json['observerEndpointIds']),
       roomAudio: idsOf(json['roomAudioEndpointIds']),
@@ -148,6 +151,7 @@ class LessonCallTeachers {
 
   Map<String, dynamic> toBoardJson() => {
     'scopeId': scopeId,
+    if (serverNow != null) 'serverNow': serverNow,
     'teacherEndpointIds': ids,
     'teacherEndpointId': primary.isEmpty ? null : primary,
     'participantEndpointIds': participants,

@@ -1280,6 +1280,7 @@ class _LessonCallStageState extends State<LessonCallStage>
     _claimingScope = claimScope;
     final locale = Localizations.localeOf(context).languageCode;
     final claim = widget.claimRoster;
+    final roundTrip = Stopwatch()..start();
     try {
       final teachers = claim != null
           ? await claim(
@@ -1308,17 +1309,8 @@ class _LessonCallStageState extends State<LessonCallStage>
       }
       await web.evaluateJavascript(
         source:
+            'setBoardRoster(${jsonEncode(teachers.toBoardJson())}, ${jsonEncode(endpointId)}, ${roundTrip.elapsedMilliseconds});'
             'setTeachers(${jsonEncode(teachers.ids)}, ${jsonEncode(teachers.primary)}, ${jsonEncode(teachers.mediaControllers)}, ${jsonEncode(teachers.observers)}, ${jsonEncode(teachers.roomAudio)})',
-      );
-      if (!mounted ||
-          _web != web ||
-          _endpointId != endpointId ||
-          _callGen != callGen) {
-        return;
-      }
-      await web.evaluateJavascript(
-        source:
-            'setBoardRoster(${jsonEncode(teachers.toBoardJson())}, ${jsonEncode(endpointId)})',
       );
     } on ParentApiException catch (error) {
       if (!mounted ||

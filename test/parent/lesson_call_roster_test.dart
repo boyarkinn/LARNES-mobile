@@ -5,6 +5,7 @@ void main() {
   test('all entry paths preserve endpoint-only v2 roster and omit child identities', () {
     final roster = LessonCallTeachers.fromJson({
       'scopeId': 'lesson-id',
+      'serverNow': 1795610000000,
       'teacherEndpointId': 'teacher',
       'teacherEndpointIds': ['teacher'],
       'participantEndpointIds': ['teacher', 'child'],
@@ -12,6 +13,7 @@ void main() {
     });
     expect(roster.toBoardJson(), {
       'scopeId': 'lesson-id',
+      'serverNow': 1795610000000,
       'teacherEndpointId': 'teacher',
       'teacherEndpointIds': ['teacher'],
       'participantEndpointIds': ['teacher', 'child'],
@@ -49,6 +51,7 @@ void main() {
     });
     expect(roster.ids, ['teacher']);
     expect(roster.scopeId, '');
+    expect(roster.serverNow, isNull);
     expect(roster.participants, isEmpty);
   });
   test('room audio classification is carried separately from authority', () {

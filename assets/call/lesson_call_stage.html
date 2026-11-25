@@ -225,6 +225,7 @@
       var observerIds = [];
       var roomAudioIds = [];
       var mediaControllerRosterAt = 0;
+      var mediaClock = null;
       var shownMode = "grid";
       var boardParts = [];
       var boardSourceChars = 0;
@@ -844,15 +845,20 @@
         return value;
       }
 
+      function hasFreshMediaRoster() {
+        return mediaControllerRosterAt > 0 && performance.now() - mediaControllerRosterAt < 5000;
+      }
+
       function decideCommand(command, sender) {
-        if (!mediaControllerRosterAt || Date.now() - mediaControllerRosterAt > 5000) return "drop";
+        if (!hasFreshMediaRoster()) return "drop";
         if (!localEndpoint || !sender || sender === localEndpoint) {
           return "drop";
         }
         if (command.target !== localEndpoint || teacherIds.indexOf(localEndpoint) >= 0) {
           return "drop";
         }
-        if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > Date.now() + mediaSkewMs) {
+        var time = mediaClock && mediaClock.read();
+        if (command.sentAt <= mediaAppliedAt[command.device] || command.sentAt > (time ? time.earliest : Date.now()) + mediaSkewMs) {
           return "drop";
         }
         if (mediaControllerIds.length === 0) {
@@ -861,8 +867,7 @@
         if (teacherIds.indexOf(sender) >= 0) {
           return "apply";
         }
-        if (observerIds.indexOf(sender) >= 0 && mediaControllerIds.indexOf(sender) >= 0
-          && mediaControllerRosterAt > 0 && Date.now() - mediaControllerRosterAt <= 5000) return "apply";
+        if (observerIds.indexOf(sender) >= 0 && mediaControllerIds.indexOf(sender) >= 0) return "apply";
         return "drop";
       }
 
@@ -916,10 +921,13 @@
         if (kind === "video" && !command.muted && (shareState === "on" || shareState === "starting")) {
           return { ok: false, reason: "route-locked" };
         }
-        var current = function () { return remoteMedia[kind] === entry && entry.result.status === "pending"
-          && entry.room === room && entry.attempt === attempt && !leaving && Date.now() < command.expiresAt
-          && deviceMutationRevision[kind] === revision && mediaControllerRosterAt > 0
-          && Date.now() - mediaControllerRosterAt <= 5000 && mediaControllerIds.indexOf(entry.sender) >= 0; };
+        var current = function () {
+          var time = mediaClock && mediaClock.read();
+          return remoteMedia[kind] === entry && entry.result.status === "pending"
+            && entry.room === room && entry.attempt === attempt && !leaving && performance.now() < entry.deadline
+            && time && time.latest < command.expiresAt && deviceMutationRevision[kind] === revision
+            && hasFreshMediaRoster() && mediaControllerIds.indexOf(entry.sender) >= 0;
+        };
         wishMuted[kind] = command.muted;
         var track = localTrack(kind), captured = false;
         {
@@ -999,17 +1007,25 @@
       function acceptRemoteMedia(command, sender) {
         var scope = boardRoster && boardRoster.scopeId || passHold && (passHold.mainRoom || passHold.room);
         if (!room || !callJoined || command.scopeId !== scope || command.room !== (passHold && passHold.room)
-          || command.target !== localEndpoint || command.sentAt > Date.now() + 5000 || Date.now() >= command.expiresAt
-          || !mediaControllerRosterAt || Date.now() - mediaControllerRosterAt > 5000 || mediaControllerIds.indexOf(sender) < 0) return;
+          || command.target !== localEndpoint || !sender || sender === localEndpoint || teacherIds.indexOf(localEndpoint) >= 0
+          || !hasFreshMediaRoster() || mediaControllerIds.indexOf(sender) < 0) return;
+        var time = mediaClock && mediaClock.read();
+        var timeFailure = LarnesLessonMedia.timeFailure(command, time);
+        if (timeFailure) {
+          try { room.sendEndpointMessage(sender, LarnesLessonMedia.result(command, "rejected", timeFailure)); } catch (_) {}
+          return;
+        }
         var previous = remoteMedia[command.device];
         if (previous && previous.sender === sender && JSON.stringify(previous.command) === JSON.stringify(command)) { sendMediaResult(previous); return; }
         if (decideCommand(command, sender) !== "apply") return;
         cancelTeacherMedia(command.device);
         mediaAppliedAt[command.device] = command.sentAt;
+        var remaining = command.expiresAt - time.latest;
         var entry = { command: command, sender: sender, room: room, attempt: attempt,
+          deadline: performance.now() + remaining,
           result: LarnesLessonMedia.result(command, "pending"), timer: null, cancelCapture: null };
         remoteMedia[command.device] = entry;
-        entry.timer = setTimeout(function () { finishRemoteMedia(entry, "rejected", "disconnected"); }, Math.max(1, command.expiresAt - Date.now()));
+        entry.timer = setTimeout(function () { finishRemoteMedia(entry, "rejected", "expired"); }, remaining);
         sendMediaResult(entry);
         applyRemoteMedia(entry).then(function (result) {
           finishRemoteMedia(entry, result.ok ? "applied" : "rejected", result.reason);
@@ -1126,9 +1142,11 @@
         } : null);
       }
 
-      function setBoardRoster(roster, endpoint) {
+      function setBoardRoster(roster, endpoint, roundTripMs) {
         if (boardEnded || !localEndpoint || endpoint !== localEndpoint) return;
         if (!roster) { mediaControllerRosterAt = 0; clearTeacherMedia("disconnected"); }
+        if (!mediaClock && typeof LarnesLessonMedia !== "undefined") mediaClock = LarnesLessonMedia.createClock();
+        if (mediaClock) mediaClock.synchronize(roster && roster.serverNow, roundTripMs);
         boardRoster = roster;
         boardRosterAt = Date.now();
         syncBoardChannel();
@@ -1282,8 +1300,8 @@
       }
 
       function setTeachers(ids, primary, controllers, observers, roomAudio) {
-        if (mediaControllerRosterAt && Date.now() - mediaControllerRosterAt > 5000) clearTeacherMedia("disconnected");
-        mediaControllerRosterAt = Date.now();
+        if (mediaControllerRosterAt && !hasFreshMediaRoster()) clearTeacherMedia("disconnected");
+        mediaControllerRosterAt = performance.now();
         function endpointIds(input) {
           return (input instanceof Array ? input : []).filter(function (id, index, all) {
             return typeof id === "string" && id && all.indexOf(id) === index;
@@ -2605,7 +2623,7 @@
         people = {};
         boardRoster = null;
         boardRosterAt = 0;
-        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0;
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0; mediaClock = null;
         clearBoardInbox();
         if (boardInstalled) window.LarnesBoard.bind(null);
         mediaHold = { audio: null, video: null };
@@ -2785,7 +2803,7 @@
         joining = false;
         callJoined = false;
         releaseDesktop();
-        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0;
+        teacherIds = []; teacherPrimary = ""; mediaControllerIds = []; observerIds = []; roomAudioIds = []; mediaControllerRosterAt = 0; mediaClock = null;
         boardRoster = null; boardRosterAt = 0; localEndpoint = "";
         people = {};
         for (var id in tileNodes) {
